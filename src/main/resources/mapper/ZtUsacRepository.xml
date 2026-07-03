@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="io.shinhanlife.axhub.common.session.domain.repository.ZtUsacRepository">
+
+    <select id="selectZtUsac" resultType="io.shinhanlife.axhub.common.session.dto.ZtUsacOutDto">
+
+        SELECT
+        AU.PRAF_NO,        -- 인사번호
+        AU.PRAF_NM,        -- 인사명
+        AU.OGNZ_NO,        -- 조직번호
+        OG.OGNZ_NM,        -- 조직명
+        AU.ADDRE,          -- 이메일주소
+        AU.PRAF_OFDU_CD,   -- 인사직무코드
+        AU.PRAF_OFDU_NM,   -- 인사직무명
+        AU.PRAF_OFLE_CD,   -- 인사직급코드
+        AU.PRAF_OFLE_NM,   -- 인사직급명
+        AU.PRAF_DUTY_CD,   -- 인사직책코드
+        AU.PRAF_DUTY_NM,   -- 인사직책명
+        AU.MNGR_PRAF_NO,   -- 관리자인사번호
+        AU.PUSE_YN,        -- 사용여부
+        LISTAGG(URR.ROLE_NO, ',') WITHIN GROUP (ORDER BY URR.ROLE_NO)         AS ROLE_NO_STR_LIST,
+        LISTAGG(UR.ROLE_NM, ',') WITHIN GROUP (ORDER BY URR.ROLE_NO)          AS ROLE_NM_STR_LIST,
+        LISTAGG(AM.TGTR_PRAF_NO, ',') WITHIN GROUP (ORDER BY AM.TGTR_PRAF_NO) AS TGTR_PRAF_NO_STR_LIST,
+        LISTAGG(AM.TGTR_OGNZ_NO, ',') WITHIN GROUP (ORDER BY AM.TGTR_PRAF_NO) AS TGTR_OGNZ_NO_STR_LIST
+        FROM
+        S_EIAM_TIS.AA_USAC AU
+        INNER JOIN
+        S_EIAM_TIS.AA_USAC_USER_GROU_RTNS UGR ON AU.PRAF_NO = UGR.PRAF_NO
+        INNER JOIN
+        S_EIAM_TIS.AA_USER_GROU UG ON UGR.USER_GROU_ID = UG.USER_GROU_ID
+        INNER JOIN
+        S_EIAM_TIS.AA_USER_GROU_ROLE_RTNS URR ON UG.USER_GROU_ID = URR.USER_GROU_ID
+        INNER JOIN
+        S_EIAM_TIS.AA_ROLE UR ON URR.ROLE_NO = UR.ROLE_NO
+        LEFT OUTER JOIN
+        S_EIAM_TIS.AA_MNDT AM ON AM.PRAF_NO = AU.PRAF_NO
+        INNER JOIN
+        S_EIAM_TIS.AA_OGNZ OG ON OG.OGNZ_NO = AU.OGNZ_NO
+        WHERE
+        AU.PRAF_NO = #{prafNo}
+        GROUP BY
+        AU.PRAF_NO, AU.PRAF_NM, AU.OGNZ_NO, AU.ADDRE, AU.PRAF_OFDU_CD, AU.PRAF_OFDU_NM, AU.PRAF_OFLE_CD, AU.PRAF_OFLE_NM, AU.PRAF_DUTY_CD, AU.PRAF_DUTY_NM, AU.MNGR_PRAF_NO, AU.PUSE_YN;
+    </select>
+
+</mapper>
