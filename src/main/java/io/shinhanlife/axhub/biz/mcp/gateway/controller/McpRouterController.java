@@ -124,7 +124,13 @@ public class McpRouterController {
         }
 
         try {
-            return ResponseEntity.ok(executeService.execute(payload, tenantId));
+            Object result = executeService.execute(payload, tenantId);
+            try {
+                log.info("\n [MCP Gateway -> AI Agent] 최종 응답 반환: {}", objectMapper.writeValueAsString(result));
+            } catch (Exception e) {
+                log.info("\n [MCP Gateway -> AI Agent] 최종 응답 반환: {}", result);
+            }
+            return ResponseEntity.ok(result);
         } catch (SecurityException se) {
             log.warn(" [보안 차단] 권한 오류: {}", se.getMessage());
             return ResponseEntity.status(403).body(Map.of("error", se.getMessage()));

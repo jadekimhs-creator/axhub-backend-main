@@ -180,10 +180,16 @@ public class BusinessToolController {
             }
             resultPayload.put("ai_insight", "다이렉트 메서드(" + targetMethod.getName() + ") 통신이 성공적으로 수행되었습니다.");
 
-            Map<String, Object> rpcResponse = new HashMap<>();
+            Map<String, Object> rpcResponse = new java.util.LinkedHashMap<>(); // 순서 보장을 위해 LinkedHashMap 사용
             rpcResponse.put("jsonrpc", "2.0");
             rpcResponse.put("result", resultPayload);
             rpcResponse.put("id", payload != null ? payload.get("id") : null);
+            
+            try {
+                log.info("\n [Tool -> MCP Gateway] 동적 툴 실행 결과 반환: {}", objectMapper.writeValueAsString(rpcResponse));
+            } catch (Exception e) {
+                log.info("\n [Tool -> MCP Gateway] 동적 툴 실행 결과 반환: {}", rpcResponse);
+            }
             return rpcResponse;
 
         } catch (Exception e) {
