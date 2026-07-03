@@ -15,15 +15,15 @@ import java.util.Scanner;
  *  - 콘솔 창에 뜨는 질문에 차례대로 값을 입력하기만 하면 파일이 생성됩니다.
  * 
  * 방법 2. 커맨드라인(터미널)에서 실행 (명령어 기반)
- *  - 컴파일: javac -encoding UTF-8 src/main/java/com/shinhan/mcp/tool/util/ToolScaffolder.java
- *  - 띄어쓰기를 포함한 인자와 함께 실행: java -cp src/main/java com.shinhan.mcp.tool.util.ToolScaffolder [이름] [ID] "[설명]"
- *  - 실행 예시: java -cp src/main/java com.shinhan.mcp.tool.util.ToolScaffolder ExchangeRate EXCH_001 "환율 조회 기능"
+ *  - 컴파일: javac -encoding UTF-8 src/main/java/io/shinhanlife/axhub/biz/mcp/tool/util/ToolScaffolder.java
+ *  - 띄어쓰기를 포함한 인자와 함께 실행: java -cp src/main/java io.shinhanlife.axhub.biz.mcp.tool.util.ToolScaffolder [이름] [ID] "[설명]"
+ *  - 실행 예시: java -cp src/main/java io.shinhanlife.axhub.biz.mcp.tool.util.ToolScaffolder ExchangeRate EXCH_001 "환율 조회 기능"
  */
 public class ToolScaffolder {
 
-    private static final String BASE_PACKAGE = "com.shinhan.mcp.tool";
+    private static final String BASE_PACKAGE = "io.shinhanlife.axhub.biz.mcp.tool";
     // 프로젝트 루트 기준 상대 경로
-    private static final String BASE_PATH = "src/main/java/com/shinhan/mcp/tool";
+    private static final String BASE_PATH = "src/main/java/io/shinhanlife/axhub/biz/mcp/tool";
 
     public static void main(String[] args) throws IOException {
         Scanner scanner = new Scanner(System.in);
