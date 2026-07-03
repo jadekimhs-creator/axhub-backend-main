@@ -115,6 +115,13 @@ public class McpRouterController {
     @PostMapping("/tools/call")
     public ResponseEntity<Object> callTool(@RequestBody Map<String, Object> payload, @RequestAttribute(value = "tenantId", required = false) String tenantId) {
         log.info("[MCP 표준] ExecuteService 파이프라인을 통한 툴 호출 시작 (Tenant: {})", tenantId);
+        if (payload != null) {
+            try {
+                log.info(" [Gateway] AI Agent 요청 파라미터: {}", objectMapper.writeValueAsString(payload));
+            } catch (Exception e) {
+                log.info(" [Gateway] AI Agent 요청 파라미터: {}", payload);
+            }
+        }
 
         try {
             return ResponseEntity.ok(executeService.execute(payload, tenantId));
