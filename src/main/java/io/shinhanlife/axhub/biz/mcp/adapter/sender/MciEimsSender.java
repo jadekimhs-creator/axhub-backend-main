@@ -1,0 +1,61 @@
+package io.shinhanlife.axhub.biz.mcp.adapter.sender;
+
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.dataformat.xml.XmlMapper;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.MediaType;
+import org.springframework.stereotype.Service;
+import org.springframework.util.StopWatch;
+import org.springframework.web.client.RestClient;
+
+@Slf4j
+@Service("mciEimsSender")
+public class MciEimsSender implements EimsSender {
+
+    private final ObjectMapper jsonMapper;
+    private final XmlMapper xmlMapper;
+    private final RestClient restClient; // Spring Boot 3.2+ 최신 HTTP 클라이언트
+    private final String mciUrl;
+
+    public MciEimsSender(ObjectMapper jsonMapper, XmlMapper xmlMapper, @Value("${eims.mci.url}") String mciUrl) {
+        this.jsonMapper = jsonMapper;
+        this.xmlMapper = xmlMapper;
+        this.mciUrl = mciUrl;
+        this.restClient = RestClient.create(); // 클라이언트 초기화
+    }
+
+    @Override
+    public String send(String interfaceId, String jsonPayload) throws Exception {
+        StopWatch stopWatch = new StopWatch(); stopWatch.start();
+
+        try {
+            JsonNode jsonNode = jsonMapper.readTree(jsonPayload);
+            String xmlData = xmlMapper.writer().withRootName("Body").writeValueAsString(jsonNode);
+            String esbStandardXml = wrapWithEsbHeader(interfaceId, xmlData);
+
+            log.info("🌐 [ESB 어댑터] 전송 준비 완료 - RestClient 호출 시작");
+
+            String responseXml = restClient.post()
+                    .uri(mciUrl)
+                    .contentType(MediaType.APPLICATION_XML)
+                    .body(esbStandardXml)
+                    .retrieve()
+                    .body(String.class);
+
+            log.info("🌐 [ESB 어댑터] 응답 수신 완료: {}", responseXml);
+
+            JsonNode responseNode = xmlMapper.readTree(responseXml);
+            return jsonMapper.writeValueAsString(responseNode);
+
+        } finally {
+            stopWatch.stop();
+            log.info("📊 [SLA 모니터링 - MCI] 소요시간: {} ms", stopWatch.getTotalTimeMillis());
+        }
+    }
+
+    private String wrapWithEsbHeader(String interfaceId, String xmlData) {
+        return String.format("<EsbMessage><Header><InterfaceId>%s</InterfaceId></Header><Body>%s</Body></EsbMessage>", interfaceId, xmlData);
+    }
+}
