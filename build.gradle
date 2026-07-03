@@ -1,0 +1,75 @@
+plugins {
+    id 'java'
+    id 'org.springframework.boot' version '4.0.5'
+    id 'io.spring.dependency-management' version '1.1.6'
+}
+
+group = 'io.shinhanlife'
+version = '0.0.1-SNAPSHOT'
+
+java {
+    sourceCompatibility = '21'
+}
+
+def springBootVersion = '4.0.5'
+def lombokVersion = '1.18.32'
+def mapstructVersion = '1.5.5.Final'
+
+bootRun {
+    if (project.hasProperty('mainClass')) {
+        mainClass = project.property('mainClass')
+    }
+    systemProperty "file.encoding", "UTF-8"
+    systemProperty "console.encoding", "UTF-8"
+}
+
+springBoot {
+    mainClass = 'io.shinhanlife.AxHubAdminApplication'
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation "org.springframework.boot:spring-boot-starter-web:${springBootVersion}"
+    implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+    
+    // Resilience4j
+    implementation 'io.github.resilience4j:resilience4j-spring-boot3:2.2.0'
+    implementation 'io.github.resilience4j:resilience4j-core:2.2.0'
+    implementation 'io.github.resilience4j:resilience4j-circuitbreaker:2.2.0'
+    implementation 'io.github.resilience4j:resilience4j-ratelimiter'
+    implementation 'io.github.resilience4j:resilience4j-retry:2.2.0'
+    
+    // AOP (needed by Resilience4j)
+    implementation 'org.springframework.boot:spring-boot-starter-aop:3.3.0'
+
+    // MyBatis & DB
+    implementation 'org.mybatis.spring.boot:mybatis-spring-boot-starter:3.0.3'
+    runtimeOnly 'com.h2database:h2'
+    implementation 'p6spy:p6spy:3.9.1'
+
+    // Redis explicit driver
+    implementation 'io.lettuce:lettuce-core:6.6.0.RELEASE'
+
+    // MapStruct
+    implementation "org.mapstruct:mapstruct:${mapstructVersion}"
+    
+    // Lombok
+    compileOnly "org.projectlombok:lombok:${lombokVersion}"
+    annotationProcessor "org.projectlombok:lombok:${lombokVersion}"
+    
+    // lombok-mapstruct-binding is usually needed if mapstruct is processed after lombok
+    annotationProcessor "org.projectlombok:lombok-mapstruct-binding:0.2.0"
+    annotationProcessor "org.mapstruct:mapstruct-processor:${mapstructVersion}"
+
+    // Test
+    testImplementation "org.springframework.boot:spring-boot-starter-test:${springBootVersion}"
+}
+
+tasks.withType(JavaCompile) {
+    options.compilerArgs = [
+            '-Amapstruct.defaultComponentModel=spring'
+    ]
+}
