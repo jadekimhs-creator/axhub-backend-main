@@ -364,6 +364,35 @@
 
         document.addEventListener('DOMContentLoaded', fetchTools);
 
+        function generateDummyArguments(schemaStr) {
+            try {
+                if (!schemaStr || schemaStr === "null") return {};
+                const schema = JSON.parse(schemaStr);
+                if (!schema || !schema.properties) return {};
+                
+                const dummy = {};
+                for (const [key, value] of Object.entries(schema.properties)) {
+                    if (value.type === 'string') {
+                        dummy[key] = "test_" + key;
+                    } else if (value.type === 'number' || value.type === 'integer') {
+                        dummy[key] = 123;
+                    } else if (value.type === 'boolean') {
+                        dummy[key] = true;
+                    } else if (value.type === 'array') {
+                        dummy[key] = [];
+                    } else if (value.type === 'object') {
+                        dummy[key] = {};
+                    } else {
+                        dummy[key] = "test";
+                    }
+                }
+                return dummy;
+            } catch (e) {
+                console.warn("Failed to parse schema", e);
+                return {};
+            }
+        }
+
         document.getElementById('mcpForm').addEventListener('submit', async function(e) {
             e.preventDefault();
             
@@ -378,16 +407,15 @@
             // Show Loading
             loadingOverlay.classList.add('active');
             
+            const selectedOption = toolSelect.options[toolSelect.selectedIndex];
+            const dummyArguments = generateDummyArguments(selectedOption.dataset.schema);
+
             const payload = {
                 jsonrpc: "2.0",
                 method: "tools/call",
                 params: {
-                    name: document.getElementById('toolName').value,
-                    arguments: {
-                        // arguments는 이제 순수 DTO이므로 테스트 UI에서는 빈 객체 또는 Mock 데이터를 보냅니다.
-                        // 실제 AI Agent는 parameterSchema를 보고 채워줍니다.
-                        ui_test_call: true
-                    }
+                    name: toolSelect.value,
+                    arguments: dummyArguments
                 },
                 id: Math.floor(Math.random() * 10000)
             };
