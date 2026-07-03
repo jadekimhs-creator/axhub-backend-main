@@ -40,23 +40,28 @@ public class RequestValidator {
             throw new IllegalArgumentException("params.arguments 객체가 누락되었습니다.");
         }
 
-        // 2. 필수 파라미터 누락 및 빈 값 검증 (arguments 내에서 검증)
+        // 2. 필수 파라미터 누락 및 빈 값 검증 (meta 내에서 검증)
+        Map<String, Object> meta = (Map<String, Object>) payload.get("meta");
+        if (meta == null) {
+            throw new IllegalArgumentException("메타데이터 객체(meta)가 누락되었습니다.");
+        }
+
         for (String field : REQUIRED_FIELDS) {
-            if (!arguments.containsKey(field)) {
-                log.error(" [Validator] 검증 실패: 필수 키 누락 [{}]", field);
+            if (!meta.containsKey(field)) {
+                log.error(" [Validator] 검증 실패: 필수 메타데이터 누락 [{}]", field);
                 throw new IllegalArgumentException("필수 파라미터가 누락되었습니다: " + field);
             }
 
-            Object value = arguments.get(field);
+            Object value = meta.get(field);
             if (value == null || value.toString().trim().isEmpty()) {
-                log.error(" [Validator] 검증 실패: 필수 키의 값이 비어 있음 [{}]", field);
+                log.error(" [Validator] 검증 실패: 필수 메타데이터의 값이 비어 있음 [{}]", field);
                 throw new IllegalArgumentException("필수 파라미터의 값이 비어있을 수 없습니다: " + field);
             }
         }
 
         // 3. 비즈니스 로직에 따른 추가 데이터 길이 또는 타입 검증 (예: 프롬프트 길이)
-        String traceId = arguments.get("traceId").toString();
-        String userPrompt = arguments.get("userPrompt").toString();
+        String traceId = meta.get("traceId").toString();
+        String userPrompt = meta.get("userPrompt").toString();
 
         if (userPrompt.length() > 2000) {
             log.warn(" [Validator] 프롬프트 길이 초과 (Trace ID: {})", traceId);

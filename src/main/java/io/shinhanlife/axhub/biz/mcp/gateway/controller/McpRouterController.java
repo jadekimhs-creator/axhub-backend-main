@@ -113,8 +113,21 @@ public class McpRouterController {
     // 1. [신규] 표준 MCP 파이프라인 호출 (가장 중요!)
     @Operation(summary = "MCP 파이프라인 호출", description = "MCP 표준 파이프라인(ExecuteService)을 통해 레거시 툴을 호출합니다.")
     @PostMapping("/tools/call")
-    public ResponseEntity<Object> callTool(@RequestBody Map<String, Object> payload, @RequestAttribute(value = "tenantId", required = false) String tenantId) {
-        log.info("[MCP 표준] ExecuteService 파이프라인을 통한 툴 호출 시작 (Tenant: {})", tenantId);
+    public ResponseEntity<Object> callTool(
+            @RequestHeader(value = "X-Trace-Id", required = false) String traceId,
+            @RequestHeader(value = "X-Agent-Id", required = false) String agentId,
+            @RequestHeader(value = "X-User-Prompt", required = false) String userPrompt,
+            @RequestBody Map<String, Object> payload, 
+            @RequestAttribute(value = "tenantId", required = false) String tenantId) {
+            
+        // 메타데이터 주입
+        java.util.Map<String, Object> meta = new java.util.HashMap<>();
+        meta.put("traceId", traceId != null ? traceId : java.util.UUID.randomUUID().toString());
+        meta.put("agentId", agentId != null ? agentId : "UNKNOWN");
+        meta.put("userPrompt", userPrompt != null ? userPrompt : "");
+        payload.put("meta", meta);
+        
+        log.info("[MCP 표준] ExecuteService 파이프라인을 통한 툴 호출 시작 (Tenant: {}, Trace: {})", tenantId, meta.get("traceId"));
         if (payload != null) {
             try {
                 log.info(" [Gateway] AI Agent 요청 파라미터: {}", objectMapper.writeValueAsString(payload));
