@@ -23,21 +23,6 @@ bootRun {
     systemProperty "console.encoding", "UTF-8"
 }
 
-// 개발 편의를 위한 Tool Group 전용 실행 태스크 (IntelliJ 우측 Gradle 패널에서 더블클릭으로 바로 실행 가능)
-task bootRunToolGroup1(type: org.springframework.boot.gradle.tasks.run.BootRun) {
-    group = "application"
-    description = "Run Tool Server for group_1 (Port: 8082)"
-    mainClass = 'io.shinhanlife.AxHubToolApplication'
-    args = ['--mcp.tool.target=group_1', '--server.port=8082']
-}
-
-task bootRunToolGroup2(type: org.springframework.boot.gradle.tasks.run.BootRun) {
-    group = "application"
-    description = "Run Tool Server for group_2 (Port: 8083)"
-    mainClass = 'io.shinhanlife.AxHubToolApplication'
-    args = ['--mcp.tool.target=group_2', '--server.port=8083']
-}
-
 springBoot {
     mainClass = 'io.shinhanlife.AxHubAdminApplication'
 }
