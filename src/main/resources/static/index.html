@@ -443,11 +443,18 @@
             loadingOverlay.classList.add('active');
             
             const payload = {
-                traceId: "MCP-REQ-" + Math.floor(Math.random() * 90000 + 10000),
-                agentId: document.getElementById('agentId').value,
-                userPrompt: document.getElementById('userPrompt').value || document.getElementById('userPrompt').placeholder,
-                toolName: document.getElementById('toolName').value,
-                action: document.getElementById('toolAction').value
+                jsonrpc: "2.0",
+                method: "tools/call",
+                params: {
+                    name: document.getElementById('toolName').value,
+                    arguments: {
+                        action: document.getElementById('toolAction').value,
+                        traceId: "MCP-REQ-" + Math.floor(Math.random() * 90000 + 10000),
+                        agentId: document.getElementById('agentId').value,
+                        userPrompt: document.getElementById('userPrompt').value || document.getElementById('userPrompt').placeholder
+                    }
+                },
+                id: Math.floor(Math.random() * 10000)
             };
 
             try {
