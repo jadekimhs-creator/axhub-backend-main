@@ -43,6 +43,13 @@ public class BusinessToolController {
     @PostMapping("/execute/{toolName}")
     public Map<String, Object> executeDynamicTool(@PathVariable String toolName, @RequestBody(required = false) Map<String, Object> payload) {
         log.info("\n [Tool] 동적 툴 실행 요청 수신: {}", toolName);
+        if (payload != null) {
+            try {
+                log.info(" [Tool] 호출 파라미터: {}", objectMapper.writeValueAsString(payload));
+            } catch (Exception e) {
+                log.info(" [Tool] 호출 파라미터: {}", payload);
+            }
+        }
 
         // 1. 등록된 툴 설정 조회
         ToolConfig config = toolRegistrar.getTools().stream()
