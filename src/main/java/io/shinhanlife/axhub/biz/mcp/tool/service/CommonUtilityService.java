@@ -10,7 +10,7 @@ import io.shinhanlife.axhub.biz.mcp.tool.dto.EmailSendReq;
 @McpTool(
     name = "common_utility_tool", 
     description = "전사 공통 유틸리티 툴 (HR 및 알림)", 
-    group = "group_1", 
+    group = "biz_core", 
     routingType = "HTTP"
 )
 public class CommonUtilityService extends AbstractMcpToolService {

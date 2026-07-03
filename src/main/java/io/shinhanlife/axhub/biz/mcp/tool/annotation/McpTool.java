@@ -15,6 +15,6 @@ public @interface McpTool {
 
     String name();
     String description();
-    String group() default "group_1";
+    String group() default "biz_core";
     String routingType() default "HTTP";
 }
