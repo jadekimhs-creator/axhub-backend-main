@@ -341,7 +341,13 @@
                 Object.keys(groupedTools).sort().forEach(group => {
                     const optgroup = document.createElement('optgroup');
                     let label = group;
-                    if (group.toLowerCase().startsWith('group_')) {
+                    if (group === 'biz_core') {
+                        label = '핵심 업무 (Biz Core)';
+                    } else if (group === 'biz_channel') {
+                        label = '채널/고객 (Biz Channel)';
+                    } else if (group === 'biz_support') {
+                        label = '지원/인사 (Biz Support)';
+                    } else if (group.toLowerCase().startsWith('group_')) {
                         label = 'Group ' + group.split('_')[1];
                     }
                     optgroup.label = label;

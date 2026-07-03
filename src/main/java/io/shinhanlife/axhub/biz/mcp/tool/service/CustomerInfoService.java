@@ -8,7 +8,7 @@ import io.shinhanlife.axhub.biz.mcp.tool.dto.CustomerDetailReq;
 @McpTool(
     name = "customer_info_tool", 
     description = "고객 등급 및 상세 정보 조회 툴", 
-    group = "group_3", 
+    group = "biz_support", 
     routingType = "TCP"
 )
 public class CustomerInfoService extends AbstractMcpToolService {

@@ -8,7 +8,7 @@ import io.shinhanlife.axhub.biz.mcp.tool.dto.ContractDetailReq;
 @McpTool(
     name = "contract_inquiry_tool", 
     description = "계약 상태 및 상세 정보 조회 툴", 
-    group = "group_2", 
+    group = "biz_channel", 
     routingType = "HTTP"
 )
 public class ContractInquiryService extends AbstractMcpToolService {
