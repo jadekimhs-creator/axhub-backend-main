@@ -2,8 +2,8 @@ package io.shinhanlife.axhub.biz.mcp.tool.service;
 
 import io.shinhanlife.axhub.biz.mcp.tool.annotation.McpFunction;
 import io.shinhanlife.axhub.biz.mcp.tool.annotation.McpTool;
-import io.shinhanlife.axhub.biz.mcp.tool.dto.CustomerGradeReq;
-import io.shinhanlife.axhub.biz.mcp.tool.dto.CustomerDetailReq;
+import io.shinhanlife.axhub.common.mcp.tool.dto.CustomerGradeReq;
+import io.shinhanlife.axhub.common.mcp.tool.dto.CustomerDetailReq;
 
 @McpTool(
     name = "customer_info_tool", 

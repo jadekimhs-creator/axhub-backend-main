@@ -1,4 +1,4 @@
-package io.shinhanlife.axhub.biz.mcp.tool.dto;
+package io.shinhanlife.axhub.common.mcp.tool.dto;
 
 import io.shinhanlife.axhub.biz.mcp.tool.annotation.McpParameter;
 import lombok.Getter;

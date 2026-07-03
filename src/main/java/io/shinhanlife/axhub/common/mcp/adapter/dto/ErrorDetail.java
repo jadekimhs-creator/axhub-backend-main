@@ -1,4 +1,4 @@
-package io.shinhanlife.axhub.biz.mcp.adapter.dto;
+package io.shinhanlife.axhub.common.mcp.adapter.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

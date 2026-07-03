@@ -2,8 +2,8 @@ package io.shinhanlife.axhub.biz.mcp.tool.service;
 
 import io.shinhanlife.axhub.biz.mcp.tool.annotation.McpFunction;
 import io.shinhanlife.axhub.biz.mcp.tool.annotation.McpTool;
-import io.shinhanlife.axhub.biz.mcp.tool.dto.ContractStatusReq;
-import io.shinhanlife.axhub.biz.mcp.tool.dto.ContractDetailReq;
+import io.shinhanlife.axhub.common.mcp.tool.dto.ContractStatusReq;
+import io.shinhanlife.axhub.common.mcp.tool.dto.ContractDetailReq;
 
 @McpTool(
     name = "contract_inquiry_tool", 

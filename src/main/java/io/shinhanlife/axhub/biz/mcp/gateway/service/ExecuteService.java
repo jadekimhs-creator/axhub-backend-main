@@ -1,6 +1,6 @@
 package io.shinhanlife.axhub.biz.mcp.gateway.service;
 
-import io.shinhanlife.axhub.biz.mcp.adapter.dto.Params;
+import io.shinhanlife.axhub.common.mcp.adapter.dto.Params;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -10,7 +10,7 @@ import io.shinhanlife.axhub.biz.mcp.gateway.router.ToolRouter;
 import io.shinhanlife.axhub.biz.mcp.gateway.router.ResponseAggregator;
 import io.shinhanlife.axhub.biz.mcp.gateway.client.ToolClient;
 import java.util.Map;
-import io.shinhanlife.axhub.biz.mcp.gateway.dto.ToolMetadata;
+import io.shinhanlife.axhub.common.mcp.gateway.dto.ToolMetadata;
 
 @Slf4j
 @Service

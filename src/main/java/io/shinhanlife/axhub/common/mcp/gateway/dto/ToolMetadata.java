@@ -1,4 +1,4 @@
-package io.shinhanlife.axhub.biz.mcp.gateway.dto;
+package io.shinhanlife.axhub.common.mcp.gateway.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

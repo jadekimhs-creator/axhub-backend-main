@@ -1,6 +1,6 @@
 package io.shinhanlife.axhub.biz.mcp.gateway.registry;
 
-import io.shinhanlife.axhub.biz.mcp.gateway.dto.ToolMetadata;
+import io.shinhanlife.axhub.common.mcp.gateway.dto.ToolMetadata;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;

@@ -1,10 +1,10 @@
 package io.shinhanlife.axhub.biz.mcp.adapter.support;
 
 import io.shinhanlife.axhub.biz.mcp.adapter.connector.LegacyEimsConnector;
-import io.shinhanlife.axhub.biz.mcp.adapter.dto.ErrorDetail;
-import io.shinhanlife.axhub.biz.mcp.adapter.dto.JsonRpcRequest;
-import io.shinhanlife.axhub.biz.mcp.adapter.dto.JsonRpcResponse;
-import io.shinhanlife.axhub.biz.mcp.adapter.dto.Params;
+import io.shinhanlife.axhub.common.mcp.adapter.dto.ErrorDetail;
+import io.shinhanlife.axhub.common.mcp.adapter.dto.JsonRpcRequest;
+import io.shinhanlife.axhub.common.mcp.adapter.dto.JsonRpcResponse;
+import io.shinhanlife.axhub.common.mcp.adapter.dto.Params;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;

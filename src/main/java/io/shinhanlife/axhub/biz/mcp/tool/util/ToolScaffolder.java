@@ -22,8 +22,9 @@ import java.util.Scanner;
 public class ToolScaffolder {
 
     private static final String BASE_PACKAGE = "io.shinhanlife.axhub.biz.mcp.tool";
-    // 프로젝트 루트 기준 상대 경로
     private static final String BASE_PATH = "src/main/java/io/shinhanlife/axhub/biz/mcp/tool";
+    private static final String COMMON_DTO_PACKAGE = "io.shinhanlife.axhub.common.mcp.tool.dto";
+    private static final String COMMON_DTO_PATH = "src/main/java/io/shinhanlife.axhub.common.mcp.tool.dto";
 
     public static void main(String[] args) throws IOException {
         Scanner scanner = new Scanner(System.in);
@@ -55,7 +56,7 @@ public class ToolScaffolder {
 
     private static void scaffold(String baseName, String interfaceId, String description, String group, String routingType) throws IOException {
         Path serviceDir = Paths.get(BASE_PATH, "service");
-        Path dtoDir = Paths.get(BASE_PATH, "dto");
+        Path dtoDir = Paths.get(COMMON_DTO_PATH);
 
         Files.createDirectories(serviceDir);
         Files.createDirectories(dtoDir);
@@ -65,7 +66,7 @@ public class ToolScaffolder {
 
         // Generate Req DTO
         String reqContent = """
-            package %s.dto;
+            package %s;
 
             import com.fasterxml.jackson.annotation.JsonInclude;
             import lombok.Data;
@@ -75,12 +76,12 @@ public class ToolScaffolder {
             public class %sReq {
                 // TODO: Add request fields here
             }
-            """.formatted(BASE_PACKAGE, baseName);
+            """.formatted(COMMON_DTO_PACKAGE, baseName);
         Files.writeString(dtoDir.resolve(baseName + "Req.java"), reqContent);
 
         // Generate Res DTO
         String resContent = """
-            package %s.dto;
+            package %s;
 
             import com.fasterxml.jackson.annotation.JsonInclude;
             import lombok.Data;
@@ -92,7 +93,7 @@ public class ToolScaffolder {
                 private String message;
                 // TODO: Add response fields here
             }
-            """.formatted(BASE_PACKAGE, baseName);
+            """.formatted(COMMON_DTO_PACKAGE, baseName);
         Files.writeString(dtoDir.resolve(baseName + "Res.java"), resContent);
 
         // Generate Service
@@ -101,8 +102,8 @@ public class ToolScaffolder {
 
             import %s.annotation.McpFunction;
             import %s.annotation.McpTool;
-            import %s.dto.%sReq;
-            import %s.dto.%sRes;
+            import %s.%sReq;
+            import %s.%sRes;
             import org.springframework.stereotype.Service;
 
             @Service
@@ -123,7 +124,7 @@ public class ToolScaffolder {
                     return executeLegacy("%s", "%s", req);
                 }
             }
-            """.formatted(BASE_PACKAGE, BASE_PACKAGE, BASE_PACKAGE, BASE_PACKAGE, baseName, BASE_PACKAGE, baseName,
+            """.formatted(BASE_PACKAGE, BASE_PACKAGE, BASE_PACKAGE, COMMON_DTO_PACKAGE, baseName, COMMON_DTO_PACKAGE, baseName,
                 toolName, description, group, routingType, baseName, description, interfaceId, baseName, routingType, interfaceId);
         
         Files.writeString(serviceDir.resolve(baseName + "Service.java"), serviceContent);

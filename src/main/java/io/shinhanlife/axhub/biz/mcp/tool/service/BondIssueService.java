@@ -2,8 +2,8 @@ package io.shinhanlife.axhub.biz.mcp.tool.service;
 
 import io.shinhanlife.axhub.biz.mcp.tool.annotation.McpFunction;
 import io.shinhanlife.axhub.biz.mcp.tool.annotation.McpTool;
-import io.shinhanlife.axhub.biz.mcp.tool.dto.BondCheckReq;
-import io.shinhanlife.axhub.biz.mcp.tool.dto.BondIssueReq;
+import io.shinhanlife.axhub.common.mcp.tool.dto.BondCheckReq;
+import io.shinhanlife.axhub.common.mcp.tool.dto.BondIssueReq;
 
 @McpTool(
     name = "bond_issue_tool", 
