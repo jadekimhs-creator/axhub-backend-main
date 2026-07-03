@@ -9,6 +9,9 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import java.util.HashMap;
 import java.util.Map;
 
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
 public abstract class AbstractMcpToolService {
 
     @Autowired
