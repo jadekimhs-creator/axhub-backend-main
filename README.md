@@ -8,10 +8,10 @@ Spring Boot 기반 AXHUB 관리자 백엔드 API 서버입니다.
 
 | 항목 | 버전 |
 |------|------|
-| Java | 17 |
-| Spring Boot | 3.5.x |
-| Build Tool | Maven |
-| 주요 라이브러리 | MyBatis, Lombok, MapStruct, P6Spy |
+| Java | 21 |
+| Spring Boot | 4.0.5 |
+| Build Tool | Gradle |
+| 주요 라이브러리 | MyBatis, Lombok, MapStruct, P6Spy, Resilience4j |
 | 데이터베이스 | H2 (in-memory, 로컬 개발용) |
 | 세션 저장소 | Redis |
 
@@ -26,7 +26,7 @@ src/main/java/io/shinhanlife/AxHubAdminApplication.java
 ```
 
 - IDE: 클래스 우클릭 → **Run 'AxHubAdminApplication'**
-- CLI: `./mvnw spring-boot:run`
+- CLI: `./gradlew bootRun`
 - 기본 포트: `8080`
 - H2 콘솔: `http://localhost:8080/h2-console` (로컬 환경에서만 활성화)
 
