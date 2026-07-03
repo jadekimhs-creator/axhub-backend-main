@@ -33,8 +33,10 @@ public abstract class AbstractMcpToolService {
         }
 
         try {
+            log.info("\n [Tool -> Adapter] 레거시 실행 요청 - RoutingType: {}, Interface: {}, Data: {}", routingType, interfaceId, inputMap);
             // 1. Adapter 공통 모듈 직접 호출
             String executionResult = legacyEimsConnector.executeByTool(routingType, interfaceId, inputMap, null);
+            log.info("\n [Adapter -> Tool] 레거시 실행 응답 수신: {}", executionResult);
             
             // 2. PII 마스킹 처리
             String maskedResult = PiiMaskingUtils.mask(executionResult);

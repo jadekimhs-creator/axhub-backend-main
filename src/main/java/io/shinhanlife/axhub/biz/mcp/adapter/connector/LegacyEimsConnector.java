@@ -42,35 +42,39 @@ public class LegacyEimsConnector {
         // 1. 데이터 조립 (방어 로직 포함)
         String payload = buildPayload(data, spec);
 
-        log.info(" MCP 요청 접수 - RoutingType: {}, Interface: {}", routingType, interfaceId);
+        log.info("\n [Adapter -> Legacy] EIMS 통신 요청 - RoutingType: {}, Interface: {}, Payload: {}", routingType, interfaceId, payload);
 
         // 2. 4단계 라우팅 분기 처리
+        String legacyResponse = null;
         if ("HTTP".equalsIgnoreCase(routingType)) {
             log.info("[라우팅] EIMS API (HTTP) 통신으로 전달");
-            return httpEimsSender.send(interfaceId, payload);
+            legacyResponse = httpEimsSender.send(interfaceId, payload);
         }
         else if ("TCP".equalsIgnoreCase(routingType)) {
             log.info("[라우팅] EIMS 소켓 (TCP) 통신으로 전달");
-            return tcpEimsSender.send(interfaceId, payload);
+            legacyResponse = tcpEimsSender.send(interfaceId, payload);
         }
         else if ("JSP_FORM".equalsIgnoreCase(routingType)) {
             log.info("[라우팅] JSP Form 통신으로 전달");
-            return jspFormEimsSender.send(interfaceId, payload);
+            legacyResponse = jspFormEimsSender.send(interfaceId, payload);
         }
         else if ("JSP_JSON".equalsIgnoreCase(routingType)) {
             log.info("[라우팅] JSP JSON 통신으로 전달");
-            return jspJsonEimsSender.send(interfaceId, payload);
+            legacyResponse = jspJsonEimsSender.send(interfaceId, payload);
         }
         else {
             //  3. 아키텍처 규격에 맞춘 라우팅 (실시간 vs 비동기)
             if (isMciRouting(routingType, interfaceId)) {
                 log.info("[라우팅] 실시간 AI 요청 -> MCI 연계 어댑터를 통해 EIMS 전달");
-                return mciEimsSender.send(interfaceId, payload);
+                legacyResponse = mciEimsSender.send(interfaceId, payload);
             } else {
                 log.info("[라우팅] 비동기/대용량 요청 -> EAI 연계 어댑터를 통해 EIMS 전달");
-                return eaiEimsSender.send(interfaceId, payload);
+                legacyResponse = eaiEimsSender.send(interfaceId, payload);
             }
         }
+        
+        log.info("\n [Legacy -> Adapter] EIMS 통신 응답 수신: {}", legacyResponse);
+        return legacyResponse;
     }
 
     //  라우팅 조건을 판단하는 내부 메서드 (관리를 위해 분리)
