@@ -1,184 +1,94 @@
 # AXHUB Backend
 
-Spring Boot 기반 AXHUB 관리자 백엔드 API 서버입니다.
+Spring Boot 기반 AXHUB 관리자 백엔드 API 서버 및 MCP(Model Context Protocol) Gateway / Tool 분산 서버 프로젝트입니다.
 
 ---
 
-## 환경
+## 🚀 아키텍처 개요 (Architecture Overview)
+
+AXHUB Backend는 3개의 주요 애플리케이션으로 분리 운영됩니다:
+
+1. **AXHUB Admin (`AxHubAdminApplication`)**: 관리자 웹 화면을 위한 REST API 서버
+2. **MCP Gateway (`AxHubGatewayApplication`)**: 외부 LLM(Claude, GPT 등) 서버의 MCP 통신을 받아, 내부 Tool 서버들로 분배(라우팅)하는 허브 서버 (포트: 8081)
+3. **MCP Tool (`AxHubToolApplication`)**: 실제 레거시 시스템(MCI, EAI 등)과 통신하여 비즈니스 로직(결제, 휴가신청 등)을 수행하는 어댑터 서버 (포트: 8082~8084 분산 구성 가능)
+
+---
+
+## 🛠 환경 (Environment)
 
 | 항목 | 버전 |
 |------|------|
 | Java | 21 |
 | Spring Boot | 4.0.5 |
 | Build Tool | Gradle |
-| 주요 라이브러리 | MyBatis, Lombok, MapStruct, P6Spy, Resilience4j |
+| 주요 기술 스택 | MyBatis, Lombok, MapStruct, P6Spy |
 | 데이터베이스 | H2 (in-memory, 로컬 개발용) |
-| 세션 저장소 | Redis |
+| 세션/캐시 저장소 | Redis |
+| **장애 격리 / 제어** | **Resilience4j (RateLimiter, CircuitBreaker, Retry)** |
+| **메시지 큐** | **Kafka (트래픽 폭주 시 대기열 전환용)** |
 
 ---
 
-## 실행 방법
+## ▶️ 실행 방법 (How to Run)
 
-`AxHubAdminApplication.java`를 실행합니다.
+### 1. Gateway & Tool 서버 실행 (MCP 연동용)
+- **Gateway 서버 기동:**
+  - `./gradlew bootRun -PmainClass=io.shinhanlife.AxHubGatewayApplication` (기본 포트: 8081)
+- **Tool 서버 기동 (필요에 따라 N대 스케일 아웃 가능):**
+  - `./gradlew bootRun -PmainClass=io.shinhanlife.AxHubToolApplication --args="--server.port=8082"`
+  - Tool 서버가 기동되면 자동으로 Gateway(8081)에 자신을 등록(Auto-Registration)합니다.
 
-```
-src/main/java/io/shinhanlife/AxHubAdminApplication.java
-```
-
-- IDE: 클래스 우클릭 → **Run 'AxHubAdminApplication'**
-- CLI: `./gradlew bootRun`
-- 기본 포트: `8080`
-- H2 콘솔: `http://localhost:8080/h2-console` (로컬 환경에서만 활성화)
+### 2. Admin 관리자 서버 실행
+- **Admin 서버 기동:**
+  - `./gradlew bootRun -PmainClass=io.shinhanlife.AxHubAdminApplication` (포트: 8080)
 
 ---
 
-## 패키지 구조
+## 🛡️ 안정성 및 트래픽 제어 (Resilience4j)
+
+MSA(Microservices Architecture) 환경의 안정성을 위해 완벽한 2-Track 방어막을 구축했습니다.
+1. **Gateway 계층 (동적 방어):** Tool이 등록할 때 제출한 메타데이터(SLA)를 기반으로 Gateway 내에서 동적 CircuitBreaker 및 RateLimiter를 가동합니다. 한계치 초과 시 트래픽을 Kafka 큐로 비동기 전환합니다.
+2. **Tool 계층 (정적 방어):** 레거시 시스템(EIMS/MCI)과 통신하는 커넥터 내부에 `@CircuitBreaker`, `@RateLimiter` 어노테이션이 적용되어 장애 전파를 차단합니다.
+
+---
+
+## 🧰 MCP Tool 코드 자동 생성 (ToolScaffolder)
+
+반복적인 Tool 모듈 생성 작업을 자동화하기 위해 **CLI 스캐폴더**를 제공합니다.
+다음 명령어를 터미널에 입력하면, Service 및 DTO 보일러플레이트 코드가 패키지 룰에 맞춰 자동 생성됩니다.
+
+```bash
+# 사용법: javac로 컴파일 후 실행
+javac -encoding UTF-8 src/main/java/io/shinhanlife/axhub/biz/mcp/tool/util/ToolScaffolder.java
+java -cp src/main/java io.shinhanlife.axhub.biz.mcp.tool.util.ToolScaffolder [Tool이름] [인터페이스ID] "[기능설명]" "[그룹명]" "[통신방식]"
+
+# 실행 예시
+java -cp src/main/java io.shinhanlife.axhub.biz.mcp.tool.util.ToolScaffolder ExchangeRate EXCH_001 "환율 조회 기능" "group_1" "HTTP"
+```
+
+---
+
+## 📂 패키지 구조 (Package Structure)
 
 ```
 io.shinhanlife
 ├── AxHubAdminApplication.java
+├── AxHubGatewayApplication.java  ← MCP 라우팅 허브
+├── AxHubToolApplication.java     ← 비즈니스 어댑터 (레거시 통신)
 │
 ├── axhub/
-│   ├── biz/                        # 업무 도메인
-│   │   ├── sm/mmg/                 # 메뉴 관리 (System Management - Menu Management)
-│   │   └── so/atm/                 # 접근 권한 관리 (System Operation - Access Management)
+│   ├── biz/                      
+│   │   ├── sm/                   # 관리자 메뉴 관리 도메인
+│   │   ├── so/                   # 관리자 접근 권한 도메인
+│   │   └── mcp/                  # 💡 [MCP 도메인] Gateway 및 Tool 로직 분리
+│   │       ├── gateway/          # API Key 인증, Tool 자동 등록, RPC 라우팅 처리
+│   │       ├── tool/             # 레거시 EIMS/MCI 통신 Service 및 DTO
+│   │       └── adapter/          # TCP/HTTP/ESB 레거시 모의(Mock) 서버 
 │   │
-│   ├── common/                     # 공통 모듈
-│   │   ├── config/                 # Spring 설정 (CORS 등)
-│   │   ├── session/                # 세션/SSO 처리 (biz와 동일한 레이어 구조)
-│   │   └── util/                   # 유틸리티
-│   │
-│   └── sample/                     # 개발 참고용 샘플
+│   ├── common/                   # 공통 모듈 (Security, Session, Config 등)
+│   └── sample/                   # 개발 참고용 샘플
 │
-└── glow/                           # Glow 프레임워크 호환 패키지 (하단 참고)
+└── glow/                         # 사내 표준 Glow 프레임워크 호환 패키지
 ```
 
-각 업무 패키지(`biz/**`, `common/session`, `sample`)는 아래 **5개 레이어**로 구성됩니다.
-
----
-
-## 레이어 구조
-
-```
-{업무패키지}/
-├── presentation/       ← HTTP 진입점
-│   └── io/             ← Request / Response 객체
-├── usecase/            ← 비즈니스 흐름 제어
-│   └── impl/
-├── dto/                ← 레이어 간 데이터 전달
-├── domain/             ← 핵심 비즈니스 로직
-│   ├── model/          ← 도메인 엔티티
-│   ├── repository/     ← DB 접근 인터페이스 (MyBatis Mapper)
-│   └── service/        ← 도메인 서비스
-│       └── impl/
-└── converter/          ← 객체 변환 (MapStruct)
-```
-
-### presentation
-
-**역할**: HTTP 요청을 받아 UseCase를 호출하고 응답을 반환합니다. 비즈니스 로직을 포함하지 않습니다.
-
-- `@RestController` 클래스
-- `io/` 하위에 해당 API 전용 Request/Response 클래스를 위치시킵니다.
-- Presentation이 직접 알아야 하는 타입은 `io/`의 Request/Response와 UseCase 인터페이스뿐입니다.
-
-```
-presentation/
-├── SmNmg0100MController.java       # @RestController
-└── io/
-    ├── SmNmg0100M01RRequest.java   # 조회 요청
-    └── SmNmg0100M01RResponse.java  # 조회 응답
-```
-
----
-
-### usecase
-
-**역할**: 하나의 업무 흐름(시나리오)을 조율합니다. 여러 Domain Service 또는 Repository를 순서에 맞게 호출하며, 트랜잭션 경계를 정의합니다.
-
-- 인터페이스(`UseCase`)와 구현체(`impl/UseCaseImpl`)를 분리합니다.
-- Presentation → **UseCase** → Domain 방향으로만 호출합니다.
-- DTO를 입출력 타입으로 사용합니다.
-
-```java
-public interface SmNmg0100MUseCase {
-    List<MenuOutDto> getMenuList(MenuInDto inDto);
-    void saveMenu(MenuSaveInDto inDto);
-}
-```
-
----
-
-### dto
-
-**역할**: 레이어 간 데이터를 운반하는 순수 데이터 객체입니다.
-
-- 비즈니스 로직을 포함하지 않습니다.
-- Presentation의 `io/` Request/Response와 구분됩니다.
-  - `io/` → HTTP 스펙에 종속된 입출력
-  - `dto/` → 내부 레이어 간 전달용
-- Converter가 `io/ ↔ dto ↔ domain model` 간 변환을 담당합니다.
-
----
-
-### domain
-
-**역할**: 핵심 비즈니스 규칙과 DB 접근을 담당합니다.
-
-- **`model/`**: 도메인 엔티티. DB 테이블에 대응하는 객체입니다.
-- **`repository/`**: MyBatis Mapper 인터페이스. SQL은 `resources/mapper/` 하위 XML에 작성합니다.
-- **`service/`**: 단일 도메인 내 재사용 가능한 비즈니스 로직. UseCase가 호출합니다.
-
-> UseCase와 Service의 구분 기준: 여러 업무에서 재사용 가능한 단위 로직은 `domain/service`, 특정 업무 흐름의 조율은 `usecase`에 둡니다.
-
----
-
-### converter
-
-**역할**: 레이어 간 객체 변환을 전담합니다. MapStruct를 사용합니다.
-
-- `Request → DTO`, `DTO → Model`, `Model → DTO`, `DTO → Response` 변환을 처리합니다.
-- Presentation과 UseCase가 직접 매핑 코드를 작성하지 않도록 분리합니다.
-
-```java
-@Mapper(componentModel = "spring")
-public interface MenuConverter {
-    MenuInDto toDto(SmNmg0100M01RRequest request);
-    MenuOutDto toDto(ZtMenu model);
-}
-```
-
----
-
-## 호출 흐름
-
-```
-HTTP 요청
-  └─▶ presentation (Controller)
-          │  Request → DTO (Converter)
-          └─▶ usecase (UseCase)
-                  │  비즈니스 흐름 조율
-                  └─▶ domain/service (Service)
-                          │
-                          └─▶ domain/repository (Mapper)
-                                  │
-                                  └─▶ DB (H2 / 운영 DB)
-```
-
----
-
-## io.shinhanlife.glow 패키지
-
-Glow 프레임워크(사내 공통 프레임워크) 호환을 위해 **임시로** 만들어놓은 패키지입니다.  
-추후 Glow 라이브러리 의존성으로 대체될 예정이며, 현재는 로컬 소스 형태로 포함되어 있습니다.
-
-| 클래스 | 역할 |
-|--------|------|
-| `BaseResponse` / `ResponseUtil` | 공통 API 응답 래퍼 |
-| `BaseException` / `BizException` | 공통 예외 |
-| `ResponseCode` | 응답 코드 정의 |
-| `GlowIndexPaging` / `PageInfo` | 페이징 |
-| `GlowLogger` | 로깅 |
-| `GlowMybatisMapper` | MyBatis Mapper 기반 인터페이스 |
-| `GlowAppServiceId` 등 | 서비스/컨트롤러 식별 애노테이션 |
-| `db/dto/AuditInfo` | 등록자/수정자 공통 필드 |
+각 관리자 업무 패키지는 기존처럼 `presentation`, `usecase`, `dto`, `domain`, `converter` 5계층 아키텍처를 엄격하게 따릅니다.
