@@ -46,6 +46,7 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-aop:3.3.0'
 
     // MyBatis & DB
+    implementation 'org.springframework.boot:spring-boot-starter-jdbc'
     implementation 'org.mybatis.spring.boot:mybatis-spring-boot-starter:3.0.3'
     runtimeOnly 'com.h2database:h2'
     implementation 'p6spy:p6spy:3.9.1'
