@@ -77,7 +77,6 @@ dependencies {
 }
 
 tasks.withType(JavaCompile) {
-    options.compilerArgs = [
-            '-Amapstruct.defaultComponentModel=spring'
-    ]
+    options.compilerArgs << '-parameters'
+    options.compilerArgs << '-Amapstruct.defaultComponentModel=spring'
 }

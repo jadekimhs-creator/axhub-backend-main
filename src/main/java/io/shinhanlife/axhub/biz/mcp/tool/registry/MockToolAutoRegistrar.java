@@ -212,6 +212,7 @@ public class MockToolAutoRegistrar {
         HttpHeaders headers = createHeaders();
         headers.setContentType(MediaType.TEXT_PLAIN);
         
+        boolean needsReRegistration = false;
         for (ToolConfig tool : TOOLS) {
             try {
                 String heartbeatUrl = gatewayUrl + "/registry/heartbeat";
@@ -224,7 +225,13 @@ public class MockToolAutoRegistrar {
                 log.info(" [MockTool] {} Heartbeat 서버 전송 완료", tool.getName());
             } catch (Exception e) {
                 log.error(" [MockTool] {} Heartbeat 전송 실패: {}", tool.getName(), e.getMessage());
+                needsReRegistration = true;
             }
+        }
+        
+        if (needsReRegistration) {
+            log.info(" [MockTool] 하트비트 실패로 인해 전체 툴 재등록을 시도합니다.");
+            registerOnStartup();
         }
     }
 

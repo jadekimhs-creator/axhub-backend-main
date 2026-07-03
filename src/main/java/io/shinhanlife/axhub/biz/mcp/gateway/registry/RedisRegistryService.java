@@ -34,13 +34,15 @@ public class RedisRegistryService {
     /**
      * 하트비트 갱신 (TTL 초기화)
      */
-    public void refreshHeartbeat(String toolName) {
+    public boolean refreshHeartbeat(String toolName) {
         String key = KEY_PREFIX + toolName;
         Boolean exists = redisTemplate.expire(key, DEFAULT_TTL);
         if (Boolean.TRUE.equals(exists)) {
             log.debug(" [RedisRegistry] 하트비트 갱신: {}", toolName);
+            return true;
         } else {
             log.warn(" [RedisRegistry] 존재하지 않는 툴에 대한 하트비트 요청: {}", toolName);
+            return false;
         }
     }
     public List<String> getAvailablePods(String toolName) {

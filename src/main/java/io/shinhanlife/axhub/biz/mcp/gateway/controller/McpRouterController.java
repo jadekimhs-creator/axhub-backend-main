@@ -153,7 +153,11 @@ public class McpRouterController {
 
     @PostMapping("/registry/heartbeat")
     public ResponseEntity<String> heartbeat(@RequestBody String toolName) {
-        redisRegistryService.refreshHeartbeat(toolName);
-        return ResponseEntity.ok("Heartbeat updated");
+        boolean success = redisRegistryService.refreshHeartbeat(toolName);
+        if (success) {
+            return ResponseEntity.ok("Heartbeat updated");
+        } else {
+            return ResponseEntity.status(404).body("Tool not found");
+        }
     }
 }
