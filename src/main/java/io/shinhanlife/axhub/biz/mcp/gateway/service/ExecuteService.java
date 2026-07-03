@@ -32,7 +32,8 @@ public class ExecuteService {
         killSwitchService.checkAgent(tenantId);
 
         // [비상 차단 2단계] Tool 단위 차단 검사
-        String toolName = (String) payload.get("toolName");
+        Map<String, Object> params = payload.containsKey("params") ? (Map<String, Object>) payload.get("params") : null;
+        String toolName = params != null ? (String) params.get("name") : (String) payload.get("toolName");
         killSwitchService.checkTool(toolName);
 
         // 1. 검증 (Validator)

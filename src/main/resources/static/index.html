@@ -192,13 +192,13 @@
             </div>
             <div class="inline-flex items-center px-3 py-1 rounded-full border border-brand-500/30 bg-brand-500/10 text-brand-400 text-[10px] font-bold uppercase tracking-[0.2em] mb-2">
                 <span class="w-1.5 h-1.5 rounded-full bg-brand-400 mr-2 animate-pulse"></span>
-                Next-Gen Router
+                Next-Gen Router (Flattened)
             </div>
             <h1 class="text-5xl font-outfit font-extrabold tracking-tight bg-clip-text text-transparent bg-gradient-to-br from-white via-slate-200 to-slate-500 drop-shadow-sm">
                 AI MCP Gateway
             </h1>
             <p class="text-sm text-slate-400 font-medium tracking-wide">
-                엔터프라이즈 환경을 위한 차세대 통합 라우팅 시스템
+                함수 단위로 독립된 엔터프라이즈 통합 라우팅 시스템
             </p>
         </div>
 
@@ -219,12 +219,12 @@
 
             <form id="mcpForm" class="space-y-6">
                 
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="grid grid-cols-1 gap-6">
                     <!-- Target Tool Selection -->
                     <div class="group">
                         <label for="toolName" class="flex items-center text-xs font-bold text-slate-400 mb-2 uppercase tracking-widest transition-colors group-focus-within:text-brand-400">
                             <svg class="w-3.5 h-3.5 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
-                            대상 툴 (Target Tool)
+                            대상 함수 (Function Tool)
                         </label>
                         <div class="relative">
                             <select id="toolName" name="toolName" class="input-premium block w-full pl-4 pr-10 py-3 text-sm rounded-xl appearance-none cursor-pointer font-medium">
@@ -235,24 +235,7 @@
                             </div>
                         </div>
                     </div>
-
-                    <!-- Target Action Selection -->
-                    <div class="group">
-                        <label for="toolAction" class="flex items-center text-xs font-bold text-slate-400 mb-2 uppercase tracking-widest transition-colors group-focus-within:text-brand-400">
-                            <svg class="w-3.5 h-3.5 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
-                            실행 함수 (Action)
-                        </label>
-                        <div class="relative">
-                            <select id="toolAction" name="toolAction" class="input-premium block w-full pl-4 pr-10 py-3 text-sm rounded-xl appearance-none cursor-pointer font-medium">
-                            </select>
-                            <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-slate-500">
-                                <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"></path></svg>
-                            </div>
-                        </div>
-                    </div>
                 </div>
-
-                <!-- Agent ID moved to Header -->
 
                 <!-- User Prompt -->
                 <div class="group">
@@ -304,11 +287,9 @@
     </div>
 
     <script>
-        let toolFunctions = {};
         let actionPrompts = {};
 
         const toolSelect = document.getElementById('toolName');
-        const toolActionSelect = document.getElementById('toolAction');
 
         async function fetchTools() {
             try {
@@ -318,14 +299,12 @@
                 const data = await response.json();
                 
                 toolSelect.innerHTML = '';
-                toolFunctions = {};
                 actionPrompts = {};
 
                 const tools = data.result?.tools || [];
                 
                 if (tools.length === 0) {
                     toolSelect.innerHTML = '<option value="">등록된 툴이 없습니다</option>';
-                    updateActionDropdown();
                     return;
                 }
 
@@ -354,30 +333,12 @@
                     
                     groupedTools[group].forEach(tool => {
                         const option = document.createElement('option');
-                        option.value = tool.toolName;
+                        option.value = tool.toolName; // Now the function name
                         const commType = tool.integrationType ? tool.integrationType : 'HTTP';
                         option.textContent = tool.description ? `[${commType}] ${tool.description} (${tool.toolName})` : `[${commType}] ${tool.toolName}`;
                         option.dataset.schema = JSON.stringify(tool.parametersSchema);
                         option.dataset.prompts = JSON.stringify(tool.actionPrompts || {});
                         optgroup.appendChild(option);
-
-                        const enums = tool.parametersSchema?.properties?.action?.enum || [];
-                        const descStr = tool.parametersSchema?.properties?.action?.description || "";
-                        
-                        let descMap = {};
-                        if(descStr.includes(":")) {
-                            const items = descStr.split(":")[1].split(",");
-                            items.forEach(item => {
-                                const parts = item.trim().split("(");
-                                if(parts.length > 1) {
-                                    descMap[parts[0]] = parts[1].replace(")","");
-                                }
-                            });
-                        }
-
-                        toolFunctions[tool.toolName] = enums.map(e => {
-                            return { value: e, label: descMap[e] || e };
-                        });
 
                         if (tool.actionPrompts) {
                             Object.assign(actionPrompts, tool.actionPrompts);
@@ -387,50 +348,19 @@
                     toolSelect.appendChild(optgroup);
                 });
 
-                updateActionDropdown();
+                updatePrompt();
             } catch (err) {
                 console.error("Failed to fetch tools", err);
                 toolSelect.innerHTML = '<option value="">데이터 로드 실패</option>';
             }
         }
 
-        function updateActionDropdown() {
+        function updatePrompt() {
             const toolName = toolSelect.value;
-            const actions = toolFunctions[toolName] || [];
-            
-            toolActionSelect.innerHTML = '';
-            
-            if (actions.length === 0) {
-                const defaultOption = document.createElement('option');
-                defaultOption.value = 'default';
-                defaultOption.textContent = '기본 동작';
-                toolActionSelect.appendChild(defaultOption);
-                document.getElementById('userPrompt').value = "";
-            } else {
-                actions.forEach(action => {
-                    const option = document.createElement('option');
-                    option.value = action.value;
-                    option.textContent = action.label;
-                    toolActionSelect.appendChild(option);
-                });
-                
-                updatePrompt(actions[0].value, toolName);
-            }
+            document.getElementById('userPrompt').value = actionPrompts[toolName] || "작업을 실행해주세요.";
         }
 
-        function updatePrompt(actionValue, toolName) {
-            let promptKey = actionValue;
-            if (toolName === "customer_info_tool" && actionValue === "detail") {
-                promptKey = "detail_cust";
-            }
-            document.getElementById('userPrompt').value = actionPrompts[promptKey] || "작업을 실행해주세요.";
-        }
-
-        toolSelect.addEventListener('change', updateActionDropdown);
-
-        toolActionSelect.addEventListener('change', function() {
-            updatePrompt(this.value, toolSelect.value);
-        });
+        toolSelect.addEventListener('change', updatePrompt);
 
         document.addEventListener('DOMContentLoaded', fetchTools);
 
@@ -454,10 +384,9 @@
                 params: {
                     name: document.getElementById('toolName').value,
                     arguments: {
-                        action: document.getElementById('toolAction').value,
-                        traceId: "MCP-REQ-" + Math.floor(Math.random() * 90000 + 10000),
-                        agentId: document.getElementById('agentId').value,
-                        userPrompt: document.getElementById('userPrompt').value || document.getElementById('userPrompt').placeholder
+                        // arguments는 이제 순수 DTO이므로 테스트 UI에서는 빈 객체 또는 Mock 데이터를 보냅니다.
+                        // 실제 AI Agent는 parameterSchema를 보고 채워줍니다.
+                        ui_test_call: true
                     }
                 },
                 id: Math.floor(Math.random() * 10000)
@@ -467,14 +396,19 @@
                 const startTime = Date.now();
                 const response = await fetch('/mcp/api/v1/tools/call', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'X-API-KEY': 'SHINHAN_MCP_TEST_KEY_9999' },
+                    headers: { 
+                        'Content-Type': 'application/json', 
+                        'X-API-KEY': 'SHINHAN_MCP_TEST_KEY_9999',
+                        'X-Trace-Id': "MCP-REQ-" + Math.floor(Math.random() * 90000 + 10000),
+                        'X-Agent-Id': document.getElementById('agentId').value,
+                        'X-User-Prompt': encodeURIComponent(document.getElementById('userPrompt').value || document.getElementById('userPrompt').placeholder)
+                    },
                     body: JSON.stringify(payload)
                 });
 
                 const data = await response.json();
                 const latency = Date.now() - startTime;
                 
-                // Dark theme optimized syntax highlighting
                 let formattedJson = JSON.stringify(data, null, 4)
                     .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
                     .replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g, function (match) {
@@ -517,7 +451,7 @@
                     resultContainer.classList.remove('hidden');
                     void resultContainer.offsetWidth; // Force reflow
                     resultContainer.classList.remove('opacity-0', 'translate-y-8');
-                }, 800); // slightly longer loading effect for premium feel
+                }, 800);
             }
         });
     </script>
