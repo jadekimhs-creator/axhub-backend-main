@@ -2,10 +2,10 @@ package io.shinhanlife.axhub.biz.mcp.tool.service;
 
 import io.shinhanlife.axhub.biz.mcp.tool.annotation.McpFunction;
 import io.shinhanlife.axhub.biz.mcp.tool.annotation.McpTool;
-import io.shinhanlife.axhub.common.mcp.tool.dto.VacationRegisterReq;
-import io.shinhanlife.axhub.common.mcp.tool.dto.LeaveCountReq;
-import io.shinhanlife.axhub.common.mcp.tool.dto.SmsSendReq;
-import io.shinhanlife.axhub.common.mcp.tool.dto.EmailSendReq;
+import io.shinhanlife.axhub.biz.mcp.tool.dto.VacationRegisterReq;
+import io.shinhanlife.axhub.biz.mcp.tool.dto.LeaveCountReq;
+import io.shinhanlife.axhub.biz.mcp.tool.dto.SmsSendReq;
+import io.shinhanlife.axhub.biz.mcp.tool.dto.EmailSendReq;
 
 @McpTool(
     name = "common_utility_tool", 

@@ -1,4 +1,4 @@
-package io.shinhanlife.axhub.common.mcp.adapter.dto;
+package io.shinhanlife.axhub.biz.mcp.adapter.dto;
 
 import java.util.List;
 import java.util.Map;

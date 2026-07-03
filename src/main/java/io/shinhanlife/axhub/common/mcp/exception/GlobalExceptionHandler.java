@@ -1,7 +1,7 @@
 package io.shinhanlife.axhub.common.mcp.exception;
 
-import io.shinhanlife.axhub.common.mcp.adapter.dto.ErrorDetail;
-import io.shinhanlife.axhub.common.mcp.adapter.dto.JsonRpcResponse;
+import io.shinhanlife.axhub.biz.mcp.adapter.dto.ErrorDetail;
+import io.shinhanlife.axhub.biz.mcp.adapter.dto.JsonRpcResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;

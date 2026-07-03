@@ -2,7 +2,7 @@ package io.shinhanlife.axhub.biz.mcp.tool.registry;
 
 import io.shinhanlife.axhub.biz.mcp.tool.annotation.McpFunction;
 import io.shinhanlife.axhub.biz.mcp.tool.annotation.McpTool;
-import io.shinhanlife.axhub.common.mcp.gateway.dto.ToolMetadata;
+import io.shinhanlife.axhub.biz.mcp.gateway.dto.ToolMetadata;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.shinhanlife.axhub.biz.mcp.tool.util.JsonSchemaGenerator;
 

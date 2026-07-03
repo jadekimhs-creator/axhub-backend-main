@@ -6,8 +6,8 @@ import java.util.Map;
 import java.util.HashMap;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.core.type.TypeReference;
-import io.shinhanlife.axhub.common.mcp.tool.dto.BillingStatusReq;
-import io.shinhanlife.axhub.common.mcp.tool.dto.BillingProcessReq;
+import io.shinhanlife.axhub.biz.mcp.tool.dto.BillingStatusReq;
+import io.shinhanlife.axhub.biz.mcp.tool.dto.BillingProcessReq;
 
 @McpTool(
     name = "billing_process_tool", 

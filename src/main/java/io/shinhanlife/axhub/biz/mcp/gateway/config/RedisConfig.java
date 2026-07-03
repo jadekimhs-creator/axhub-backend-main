@@ -1,6 +1,6 @@
 package io.shinhanlife.axhub.biz.mcp.gateway.config;
 
-import io.shinhanlife.axhub.common.mcp.gateway.dto.ToolMetadata;
+import io.shinhanlife.axhub.biz.mcp.gateway.dto.ToolMetadata;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
