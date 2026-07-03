@@ -22,14 +22,32 @@ public class RequestValidator {
             throw new IllegalArgumentException("요청 페이로드가 존재하지 않습니다.");
         }
 
-        // 2. 필수 파라미터 누락 및 빈 값 검증
+        // JSON-RPC 2.0 껍데기 검증
+        if (!"2.0".equals(payload.get("jsonrpc"))) {
+            throw new IllegalArgumentException("지원하지 않는 규격입니다. 'jsonrpc': '2.0' 이 필요합니다.");
+        }
+        if (!"tools/call".equals(payload.get("method"))) {
+            throw new IllegalArgumentException("지원하지 않는 method 입니다. 'tools/call' 이 필요합니다.");
+        }
+
+        Map<String, Object> params = (Map<String, Object>) payload.get("params");
+        if (params == null || params.isEmpty()) {
+            throw new IllegalArgumentException("params 객체가 누락되었습니다.");
+        }
+
+        Map<String, Object> arguments = (Map<String, Object>) params.get("arguments");
+        if (arguments == null) {
+            throw new IllegalArgumentException("params.arguments 객체가 누락되었습니다.");
+        }
+
+        // 2. 필수 파라미터 누락 및 빈 값 검증 (arguments 내에서 검증)
         for (String field : REQUIRED_FIELDS) {
-            if (!payload.containsKey(field)) {
+            if (!arguments.containsKey(field)) {
                 log.error(" [Validator] 검증 실패: 필수 키 누락 [{}]", field);
                 throw new IllegalArgumentException("필수 파라미터가 누락되었습니다: " + field);
             }
 
-            Object value = payload.get(field);
+            Object value = arguments.get(field);
             if (value == null || value.toString().trim().isEmpty()) {
                 log.error(" [Validator] 검증 실패: 필수 키의 값이 비어 있음 [{}]", field);
                 throw new IllegalArgumentException("필수 파라미터의 값이 비어있을 수 없습니다: " + field);
@@ -37,8 +55,8 @@ public class RequestValidator {
         }
 
         // 3. 비즈니스 로직에 따른 추가 데이터 길이 또는 타입 검증 (예: 프롬프트 길이)
-        String traceId = payload.get("traceId").toString();
-        String userPrompt = payload.get("userPrompt").toString();
+        String traceId = arguments.get("traceId").toString();
+        String userPrompt = arguments.get("userPrompt").toString();
 
         if (userPrompt.length() > 2000) {
             log.warn(" [Validator] 프롬프트 길이 초과 (Trace ID: {})", traceId);

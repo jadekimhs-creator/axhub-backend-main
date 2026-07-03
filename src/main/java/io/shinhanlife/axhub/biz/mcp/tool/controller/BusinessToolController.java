@@ -60,13 +60,16 @@ public class BusinessToolController {
         if (config == null) {
             log.error(" [Tool] 등록되지 않은 툴 호출: {}", toolName);
             Map<String, Object> error = new HashMap<>();
-            error.put("status", "ERROR");
-            error.put("message", "등록되지 않은 툴입니다: " + toolName);
+            error.put("jsonrpc", "2.0");
+            error.put("error", Map.of("code", -32601, "message", "등록되지 않은 툴입니다: " + toolName));
+            error.put("id", payload != null ? payload.get("id") : null);
             return error;
         }
 
-        // 2. 파라미터에서 실행할 함수(action) 추출 및 라우팅 결정
-        String action = payload != null && payload.containsKey("action") ? payload.get("action").toString() : null;
+        // 2. 파라미터에서 실행할 함수(action) 추출 및 라우팅 결정 (JSON-RPC)
+        Map<String, Object> params = payload != null ? (Map<String, Object>) payload.get("params") : null;
+        Map<String, Object> arguments = params != null ? (Map<String, Object>) params.get("arguments") : null;
+        String action = arguments != null && arguments.containsKey("action") ? arguments.get("action").toString() : null;
         
         ToolFunction targetFunction = null;
         if (action != null) {
@@ -93,16 +96,17 @@ public class BusinessToolController {
                 JsonSchemaFactory factory = JsonSchemaFactory.getInstance(SpecVersion.VersionFlag.V7);
                 JsonSchema schema = factory.getSchema(fullSchemaJson);
                 
-                Set<ValidationMessage> errors = schema.validate(objectMapper.valueToTree(payload));
+                Set<ValidationMessage> errors = schema.validate(objectMapper.valueToTree(arguments));
                 if (!errors.isEmpty()) {
                     log.error("[Tool] 파라미터 유효성 검증 실패: {}", errors);
                     Map<String, Object> error = new HashMap<>();
-                    error.put("status", "ERROR");
+                    error.put("jsonrpc", "2.0");
                     List<String> errorMessages = new ArrayList<>();
                     for (ValidationMessage vm : errors) {
                         errorMessages.add(vm.getMessage());
                     }
-                    error.put("message", "파라미터 유효성 검증 실패: " + String.join(", ", errorMessages));
+                    error.put("error", Map.of("code", -32602, "message", "파라미터 유효성 검증 실패: " + String.join(", ", errorMessages)));
+                    error.put("id", payload != null ? payload.get("id") : null);
                     return error;
                 }
             } catch (Exception e) {
@@ -124,8 +128,9 @@ public class BusinessToolController {
         if (targetBean == null) {
             log.error("[Tool] 실행할 Tool Bean을 찾을 수 없습니다: {}", toolName);
             Map<String, Object> error = new HashMap<>();
-            error.put("status", "ERROR");
-            error.put("message", "실행할 Tool Bean을 찾을 수 없습니다: " + toolName);
+            error.put("jsonrpc", "2.0");
+            error.put("error", Map.of("code", -32601, "message", "실행할 Tool Bean을 찾을 수 없습니다: " + toolName));
+            error.put("id", payload != null ? payload.get("id") : null);
             return error;
         }
 
@@ -143,8 +148,9 @@ public class BusinessToolController {
         if (targetMethod == null) {
             log.error("[Tool] 실행할 함수(Method)를 찾을 수 없습니다: {}", actionName);
             Map<String, Object> error = new HashMap<>();
-            error.put("status", "ERROR");
-            error.put("message", "실행할 함수(Method)를 찾을 수 없습니다: " + actionName);
+            error.put("jsonrpc", "2.0");
+            error.put("error", Map.of("code", -32601, "message", "실행할 함수(Method)를 찾을 수 없습니다: " + actionName));
+            error.put("id", payload != null ? payload.get("id") : null);
             return error;
         }
 
@@ -152,11 +158,11 @@ public class BusinessToolController {
 
         try {
             // 5. DTO 파라미터 자동 매핑 (Map -> DTO)
-            Object invokeArgument = payload;
-            if (targetMethod.getParameterCount() > 0) {
+            Object invokeArgument = arguments;
+            if (targetMethod.getParameterCount() > 0 && arguments != null) {
                 Class<?> paramType = targetMethod.getParameterTypes()[0];
                 if (!Map.class.isAssignableFrom(paramType)) {
-                    invokeArgument = objectMapper.convertValue(payload, paramType);
+                    invokeArgument = objectMapper.convertValue(arguments, paramType);
                     log.info("[Tool] DTO 자동 매핑 성공: {}", paramType.getSimpleName());
                 }
             }
@@ -164,24 +170,28 @@ public class BusinessToolController {
             // 6. 메서드 실행
             Object methodResult = targetMethod.invoke(targetBean, invokeArgument);
             
-            // 6. 결과 반환 (Map 타입으로 캐스팅 보장)
+            // 7. 결과 조립 (JSON-RPC 응답)
+            Map<String, Object> resultPayload = new HashMap<>();
             if (methodResult instanceof Map) {
-                @SuppressWarnings("unchecked")
-                Map<String, Object> resultMap = (Map<String, Object>) methodResult;
-                resultMap.put("ai_insight", "다이렉트 메서드(" + targetMethod.getName() + ") 통신이 성공적으로 수행되었습니다.");
-                return resultMap;
+                resultPayload = (Map<String, Object>) methodResult;
             } else {
-                Map<String, Object> resultMap = new HashMap<>();
-                resultMap.put("status", "SUCCESS");
-                resultMap.put("legacy_response", methodResult);
-                resultMap.put("ai_insight", "다이렉트 메서드(" + targetMethod.getName() + ") 통신이 성공적으로 수행되었습니다.");
-                return resultMap;
+                resultPayload.put("status", "SUCCESS");
+                resultPayload.put("legacy_response", methodResult);
             }
+            resultPayload.put("ai_insight", "다이렉트 메서드(" + targetMethod.getName() + ") 통신이 성공적으로 수행되었습니다.");
+
+            Map<String, Object> rpcResponse = new HashMap<>();
+            rpcResponse.put("jsonrpc", "2.0");
+            rpcResponse.put("result", resultPayload);
+            rpcResponse.put("id", payload != null ? payload.get("id") : null);
+            return rpcResponse;
+
         } catch (Exception e) {
             log.error("[Tool] 리플렉션 실행 중 예외 발생: {}", e.getMessage());
             Map<String, Object> error = new HashMap<>();
-            error.put("status", "ERROR");
-            error.put("message", "메서드 실행 중 예외 발생: " + e.getCause().getMessage());
+            error.put("jsonrpc", "2.0");
+            error.put("error", Map.of("code", -32000, "message", "메서드 실행 중 예외 발생: " + (e.getCause() != null ? e.getCause().getMessage() : e.getMessage())));
+            error.put("id", payload != null ? payload.get("id") : null);
             return error;
         }
     }
