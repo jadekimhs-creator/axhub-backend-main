@@ -1,1 +1,8 @@
 rootProject.name = 'axhub-admin'
+
+include 'axhub-common'
+include 'axhub-gateway'
+include 'axhub-tool-core'
+include 'axhub-tool-sms'
+include 'axhub-tool-email'
+include 'axhub-tool-other'
