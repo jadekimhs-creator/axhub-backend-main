@@ -6,9 +6,6 @@ import io.shinhanlife.axhub.biz.mcp.tool.dto.BondCheckReq;
 import io.shinhanlife.axhub.biz.mcp.tool.dto.BondIssueReq;
 
 @McpTool(
-    name = "bond_issue_tool", 
-    description = "디지털 증권 발행 가능 여부 조회 툴", 
-    group = "biz_support", 
     routingType = "EAI"
 )
 public class BondIssueService extends AbstractMcpToolService {

@@ -10,9 +10,6 @@ import io.shinhanlife.axhub.biz.mcp.tool.dto.BillingStatusReq;
 import io.shinhanlife.axhub.biz.mcp.tool.dto.BillingProcessReq;
 
 @McpTool(
-    name = "billing_process_tool", 
-    description = "청구 심사 및 처리 상태 툴", 
-    group = "biz_channel", 
     routingType = "MCI"
 )
 @lombok.extern.slf4j.Slf4j

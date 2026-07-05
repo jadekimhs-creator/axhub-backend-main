@@ -107,9 +107,6 @@ public class ToolScaffolder {
 
             @Service
             @McpTool(
-                name = "%s", 
-                description = "%s", 
-                group = "%s", 
                 routingType = "%s"
             )
             public class %sService extends AbstractMcpToolService {
