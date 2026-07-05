@@ -21,7 +21,7 @@ public class ThirdPartySecurityConnector {
         log.info("🔐 [3rd Party Security] 보안 모듈 연동 시작 - Interface: {}", interfaceId);
 
         // 보안 모듈 통신을 위한 특수 페이로드 조립 (예시)
-        // 실제로는 RestTemplate이나 WebClient를 통해 보안 VM의 전용 엔드포인트로 호출합니다.
+        // 실제로는 RestClient나 WebClient를 통해 보안 VM의 전용 엔드포인트로 호출합니다.
         
         String resultJson;
         

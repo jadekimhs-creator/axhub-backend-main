@@ -12,7 +12,6 @@ import io.shinhanlife.axhub.common.mcp.security.SecurityProperties;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.client.RestTemplate;
 
 import java.util.Map;
 import java.util.UUID;
@@ -30,7 +29,6 @@ public class McpRouterController {
     private final ExecuteService executeService;
     private final SecurityProperties securityProperties;
     private final ObjectMapper objectMapper;
-    private final RestTemplate restTemplate = new RestTemplate();
 
     public McpRouterController(RedisRegistryService redisRegistryService,
                                ExecuteService executeService,

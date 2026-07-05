@@ -100,7 +100,7 @@ public class LegacyEimsConnector {
         // 2. Circuit Breaker에 의해 차단된 경우 (레거시 시스템 장애/지연)
         log.error(" [서킷 브레이커 발동] 레거시 통신 차단! 원인: {}", t.getMessage());
         return String.format(
-                "{\"status\":\"CIRCUIT_OPEN\", \"message\":\"신한은행 내부 시스템 장애로 인해 일시적으로 차단되었습니다. 복구 후 재시도 부탁드립니다.\", \"interfaceId\":\"%s\"}",
+                "{\"status\":\"CIRCUIT_OPEN\", \"message\":\"신한라이프 내부 시스템 장애로 인해 일시적으로 차단되었습니다. 복구 후 재시도 부탁드립니다.\", \"interfaceId\":\"%s\"}",
                 interfaceId
         );
     }

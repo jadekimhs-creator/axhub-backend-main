@@ -5,8 +5,7 @@ import io.shinhanlife.axhub.biz.mcp.gateway.dto.ToolMetadata;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
-import org.springframework.http.ResponseEntity;
+import org.springframework.web.client.RestClient;
 
 import java.util.Map;
 import java.util.List;
@@ -18,7 +17,7 @@ public class ExecuteService {
 
     private final ToolPlanner planner;
     private final KillSwitchService killSwitchService;
-    private final RestTemplate restTemplate = new RestTemplate();
+    private final RestClient restClient = RestClient.create();
 
     public Object execute(Map<String, Object> payload, String tenantId) {
         log.info(" [ExecuteService] 전체 실행 흐름 제어 시작");
@@ -45,19 +44,33 @@ public class ExecuteService {
         log.info(" [ExecuteService] 라우팅 목적지: {}", targetUrl);
         String executeApiUrl = targetUrl + "/mcp/api/v1/tools/call";
 
-        // Forward the request to the target tool pod
+        // Forward the request to the target tool pod using RestClient with fallback
         try {
-            org.springframework.http.HttpHeaders headers = new org.springframework.http.HttpHeaders();
-            headers.setContentType(org.springframework.http.MediaType.APPLICATION_JSON);
-            headers.set("X-API-KEY", "SHINHAN_MCP_TEST_KEY_9999"); // TODO: Use actual tenant's key
-            headers.set("X-Trace-Id", java.util.UUID.randomUUID().toString());
-            
-            org.springframework.http.HttpEntity<Map<String, Object>> entity = new org.springframework.http.HttpEntity<>(payload, headers);
-            ResponseEntity<Object> response = restTemplate.postForEntity(executeApiUrl, entity, Object.class);
-            return response.getBody();
+            return executeWithUrl(payload, executeApiUrl);
         } catch (Exception e) {
+            if (executeApiUrl.contains("http://tool-")) {
+                String fallbackUrl = executeApiUrl.replaceAll("http://tool-[a-zA-Z0-9-]+", "http://localhost");
+                log.warn(" [ExecuteService] 호스트를 찾을 수 없어 localhost로 재시도합니다: {}", fallbackUrl);
+                try {
+                    return executeWithUrl(payload, fallbackUrl);
+                } catch (Exception ex) {
+                    log.error(" [ExecuteService] localhost 재시도 실패: {}", ex.getMessage());
+                    throw new RuntimeException("Tool Pod 호출 실패 (localhost 재시도 포함): " + ex.getMessage());
+                }
+            }
             log.error(" [ExecuteService] Tool Pod 호출 실패: {}", e.getMessage());
             throw new RuntimeException("Tool Pod 호출 실패: " + e.getMessage());
         }
+    }
+
+    private Object executeWithUrl(Map<String, Object> payload, String url) {
+        return restClient.post()
+                .uri(url)
+                .contentType(org.springframework.http.MediaType.APPLICATION_JSON)
+                .header("X-API-KEY", "SHINHAN_MCP_TEST_KEY_9999") // TODO: Use actual tenant's key
+                .header("X-Trace-Id", java.util.UUID.randomUUID().toString())
+                .body(payload)
+                .retrieve()
+                .body(Object.class);
     }
 }

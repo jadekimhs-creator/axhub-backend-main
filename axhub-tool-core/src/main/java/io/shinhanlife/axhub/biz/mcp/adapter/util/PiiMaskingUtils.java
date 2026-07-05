@@ -11,8 +11,8 @@ public class PiiMaskingUtils {
     // 2. 휴대전화번호 패턴 (ex: 010-1234-5678)
     private static final Pattern PHONE_PATTERN = Pattern.compile("(01[016789])[-]?(\\d{3,4})[-]?(\\d{4})");
 
-    // 3. 신한은행 계좌번호 패턴 (단순 숫자 연속 또는 하이픈 조합으로 11~14자리)
-    private static final Pattern ACCOUNT_PATTERN = Pattern.compile("(\\d{3})[-]?(\\d{3})[-]?(\\d{5,8})");
+    // 3. 신한라이프 계좌/증권번호 패턴 (단순 예시용 계좌번호 11~14자리)
+    private static final Pattern ACCOUNT_PATTERN = Pattern.compile("(\\d{3}-\\d{3}-\\d{5,8})|(\\d{11,14})");
 
     public static String mask(String input) {
         if (input == null || input.isEmpty()) {
