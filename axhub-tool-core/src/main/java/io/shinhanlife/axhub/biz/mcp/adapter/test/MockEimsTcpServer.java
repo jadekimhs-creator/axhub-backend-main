@@ -41,10 +41,8 @@ public class MockEimsTcpServer {
 
     @EventListener(ApplicationReadyEvent.class)
     public void startTcpServer() {
-        if (serverPort != 8081) {
-            log.info(" [가짜 EIMS 서버] Gateway 포트(8081)가 아니므로 EIMS TCP 서버를 중복해서 띄우지 않습니다.");
-            return;
-        }
+        // MSA 환경에서는 각 툴 Pod 내부에서 독립적인 가짜 EIMS 서버가 실행되도록 허용
+        log.info(" [가짜 EIMS 서버] 로컬 테스트 환경용 EIMS TCP 서버 가동을 준비합니다.");
 
         // Java 21 가상 스레드를 사용하여 메인 서버 가동에 방해 없이 백그라운드에서 실행
         Thread.ofVirtual().start(() -> {
