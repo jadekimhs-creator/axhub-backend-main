@@ -3,12 +3,63 @@ version: '3.8'
 services:
   redis:
     image: redis:latest
-    container_name: axhub-redis
     ports:
       - "6379:6379"
-    volumes:
-      - redis_data:/data
-    restart: always
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
 
-volumes:
-  redis_data:
+  gateway:
+    build: 
+      context: ./axhub-gateway
+    ports:
+      - "8081:8081"
+    depends_on:
+      redis:
+        condition: service_healthy
+    environment:
+      - SPRING_REDIS_HOST=redis
+      - SPRING_REDIS_PORT=6379
+      - SPRING_DATA_REDIS_HOST=redis
+      - SPRING_DATA_REDIS_PORT=6379
+
+  tool-sms:
+    build: 
+      context: ./axhub-tool-sms
+    ports:
+      - "8082:8082"
+    depends_on:
+      - redis
+    environment:
+      - SPRING_REDIS_HOST=redis
+      - SPRING_REDIS_PORT=6379
+      - SPRING_DATA_REDIS_HOST=redis
+      - SPRING_DATA_REDIS_PORT=6379
+
+  tool-email:
+    build: 
+      context: ./axhub-tool-email
+    ports:
+      - "8083:8083"
+    depends_on:
+      - redis
+    environment:
+      - SPRING_REDIS_HOST=redis
+      - SPRING_REDIS_PORT=6379
+      - SPRING_DATA_REDIS_HOST=redis
+      - SPRING_DATA_REDIS_PORT=6379
+
+  tool-other:
+    build: 
+      context: ./axhub-tool-other
+    ports:
+      - "8084:8084"
+    depends_on:
+      - redis
+    environment:
+      - SPRING_REDIS_HOST=redis
+      - SPRING_REDIS_PORT=6379
+      - SPRING_DATA_REDIS_HOST=redis
+      - SPRING_DATA_REDIS_PORT=6379

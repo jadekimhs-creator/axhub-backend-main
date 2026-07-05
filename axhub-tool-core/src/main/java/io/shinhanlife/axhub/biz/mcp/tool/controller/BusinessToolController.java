@@ -29,16 +29,19 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @RestController
-@RequestMapping("/api/tool")
+@RequestMapping("/")
 @RequiredArgsConstructor
 public class BusinessToolController {
 
     private final ApplicationContext applicationContext;
     private final ObjectMapper objectMapper;
 
-    // 함수명(functionName) 기반의 단일 동적 라우팅 엔드포인트
-    @PostMapping("/execute/{functionName}")
-    public Map<String, Object> executeDynamicTool(@PathVariable String functionName, @RequestBody(required = false) Map<String, Object> payload) {
+    // JSON RPC 기반 단일 라우팅 엔드포인트
+    @PostMapping("/mcp/api/v1/tools/call")
+    public Map<String, Object> executeDynamicTool(@RequestBody(required = false) Map<String, Object> payload) {
+        Map<String, Object> params = payload != null ? (Map<String, Object>) payload.get("params") : null;
+        String functionName = params != null ? (String) params.get("name") : null;
+        
         log.info("\n [Tool] 동적 툴 실행 요청 수신 (함수명): {}", functionName);
         if (payload != null) {
             try {
@@ -48,10 +51,8 @@ public class BusinessToolController {
             }
         }
 
-        Map<String, Object> params = payload != null ? (Map<String, Object>) payload.get("params") : null;
-        Map<String, Object> arguments = params != null ? (Map<String, Object>) params.get("arguments") : null;
-
         // 1. 대상 Bean 및 Method 찾기 (ApplicationContext 활용)
+        Map<String, Object> arguments = params != null ? (Map<String, Object>) params.get("arguments") : null;
         Object targetBean = null;
         Method targetMethod = null;
         McpFunction targetFunctionAnnotation = null;

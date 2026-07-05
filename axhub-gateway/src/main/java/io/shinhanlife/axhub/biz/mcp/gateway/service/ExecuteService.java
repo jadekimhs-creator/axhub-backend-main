@@ -47,7 +47,13 @@ public class ExecuteService {
 
         // Forward the request to the target tool pod
         try {
-            ResponseEntity<Object> response = restTemplate.postForEntity(executeApiUrl, payload, Object.class);
+            org.springframework.http.HttpHeaders headers = new org.springframework.http.HttpHeaders();
+            headers.setContentType(org.springframework.http.MediaType.APPLICATION_JSON);
+            headers.set("X-API-KEY", "SHINHAN_MCP_TEST_KEY_9999"); // TODO: Use actual tenant's key
+            headers.set("X-Trace-Id", java.util.UUID.randomUUID().toString());
+            
+            org.springframework.http.HttpEntity<Map<String, Object>> entity = new org.springframework.http.HttpEntity<>(payload, headers);
+            ResponseEntity<Object> response = restTemplate.postForEntity(executeApiUrl, entity, Object.class);
             return response.getBody();
         } catch (Exception e) {
             log.error(" [ExecuteService] Tool Pod 호출 실패: {}", e.getMessage());
