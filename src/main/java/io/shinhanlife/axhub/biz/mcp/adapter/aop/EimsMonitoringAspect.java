@@ -13,8 +13,8 @@ import java.util.Arrays;
 @Component
 public class EimsMonitoringAspect {
 
-    //  포인트컷: com.shinhan.mcp.adapter.service 패키지 내의 EimsSender를 구현한 모든 클래스의 메서드를 타겟으로 지정합니다.
-    @Around("execution(* com.shinhan.mcp.adapter.service.*EimsSender.*(..))")
+    //  포인트컷: io.shinhanlife.axhub.biz.mcp.adapter.sender 패키지 내의 EimsSender를 구현한 모든 클래스의 메서드를 타겟으로 지정합니다.
+    @Around("execution(* io.shinhanlife.axhub.biz.mcp.adapter.sender.*EimsSender.*(..))")
     public Object monitorEimsCommunication(ProceedingJoinPoint joinPoint) throws Throwable {
 
         // 1. 호출되는 클래스와 메서드 이름 추출

@@ -12,9 +12,10 @@ import org.springframework.util.StopWatch;
 @Component
 public class GatewayLoggingAspect {
 
-    // connector 패키지 하위의 모든 클래스/메서드 실행 시 작동
-    @Around("execution(* com.shinhan.mcp.adapter.controller..*(..)) " +
-            "|| execution(* com.shinhan.mcp.adapter.connector..*(..))")
+    // controller 및 connector 패키지 하위의 모든 클래스/메서드 실행 시 작동
+    @Around("execution(* io.shinhanlife.axhub.biz.mcp.gateway.controller..*(..)) " +
+            "|| execution(* io.shinhanlife.axhub.biz.mcp.tool.controller..*(..)) " +
+            "|| execution(* io.shinhanlife.axhub.biz.mcp.adapter.connector..*(..))")
     public Object logConnectorExecutionTime(ProceedingJoinPoint joinPoint) throws Throwable {
         String targetMethod = joinPoint.getSignature().toShortString();
         StopWatch stopWatch = new StopWatch();
