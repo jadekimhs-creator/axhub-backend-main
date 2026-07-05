@@ -35,8 +35,9 @@ services:
     environment:
       - SPRING_REDIS_HOST=redis
       - SPRING_REDIS_PORT=6379
-      - SPRING_DATA_REDIS_HOST=redis
       - SPRING_DATA_REDIS_PORT=6379
+      - AXHUB_GATEWAY_URL=http://gateway:8081
+      - AXHUB_TOOL_URL=http://tool-sms:8082
 
   tool-email:
     build: 
@@ -48,8 +49,9 @@ services:
     environment:
       - SPRING_REDIS_HOST=redis
       - SPRING_REDIS_PORT=6379
-      - SPRING_DATA_REDIS_HOST=redis
       - SPRING_DATA_REDIS_PORT=6379
+      - AXHUB_GATEWAY_URL=http://gateway:8081
+      - AXHUB_TOOL_URL=http://tool-email:8083
 
   tool-other:
     build: 
@@ -61,5 +63,6 @@ services:
     environment:
       - SPRING_REDIS_HOST=redis
       - SPRING_REDIS_PORT=6379
-      - SPRING_DATA_REDIS_HOST=redis
       - SPRING_DATA_REDIS_PORT=6379
+      - AXHUB_GATEWAY_URL=http://gateway:8081
+      - AXHUB_TOOL_URL=http://tool-other:8084

@@ -1,0 +1,128 @@
+package io.shinhanlife.axhub.biz.mcp.tool.service;
+
+import io.shinhanlife.axhub.biz.mcp.tool.annotation.McpFunction;
+import io.shinhanlife.axhub.biz.mcp.tool.annotation.McpTool;
+import io.shinhanlife.axhub.biz.mcp.tool.dto.ToolMetadata;
+import io.shinhanlife.axhub.biz.mcp.tool.util.JsonSchemaGenerator;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.scheduling.annotation.EnableScheduling;
+import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.stereotype.Component;
+import org.springframework.web.client.RestClient;
+
+import jakarta.annotation.PostConstruct;
+import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+@Slf4j
+@Component
+@Configuration
+@EnableScheduling
+@RequiredArgsConstructor
+public class ToolRegistryHeartbeatSender {
+
+    private final ApplicationContext applicationContext;
+    private final ObjectMapper objectMapper;
+    private final RestClient restClient = RestClient.create();
+
+    @Value("${axhub.gateway.url:http://localhost:8081}")
+    private String gatewayUrl;
+
+    @Value("${axhub.tool.url:http://localhost:8080}")
+    private String podUrl;
+
+    private List<ToolMetadata> registeredTools = new ArrayList<>();
+
+    @PostConstruct
+    public void init() {
+        log.info(" [HeartbeatSender] 초기화 시작. Gateway URL: {}, Pod URL: {}", gatewayUrl, podUrl);
+        scanAndBuildMetadata();
+    }
+
+    private void scanAndBuildMetadata() {
+        Map<String, Object> toolBeans = applicationContext.getBeansWithAnnotation(McpTool.class);
+        for (Object bean : toolBeans.values()) {
+            McpTool toolAnnotation = bean.getClass().getAnnotation(McpTool.class);
+            
+            for (Method method : bean.getClass().getDeclaredMethods()) {
+                McpFunction functionAnnotation = method.getAnnotation(McpFunction.class);
+                if (functionAnnotation != null) {
+                    ToolMetadata meta = new ToolMetadata();
+                    meta.setToolName(functionAnnotation.name());
+                    meta.setDescription(functionAnnotation.description());
+                    meta.setDomainGroup(toolAnnotation.group());
+                    meta.setIntegrationType(toolAnnotation.routingType());
+                    meta.setMciServiceId(functionAnnotation.mappingId());
+                    meta.setPodUrl(podUrl);
+                    
+                    Map<String, String> prompts = new HashMap<>();
+                    prompts.put(functionAnnotation.name(), functionAnnotation.prompt());
+                    meta.setActionPrompts(prompts);
+                    
+                    if (method.getParameterCount() > 0) {
+                        try {
+                            Class<?> paramType = method.getParameterTypes()[0];
+                            Map<String, Object> schema = JsonSchemaGenerator.generatePropertiesSchema(paramType);
+                            Map<String, Object> finalSchema = new HashMap<>();
+                            finalSchema.put("type", "object");
+                            finalSchema.put("properties", schema);
+                            meta.setParametersSchema(finalSchema);
+                        } catch (Exception e) {
+                            log.error("Failed to generate schema for {}", functionAnnotation.name(), e);
+                        }
+                    }
+
+                    registeredTools.add(meta);
+                    log.info(" [HeartbeatSender] 도구 메타데이터 생성: {}", meta.getToolName());
+                }
+            }
+        }
+    }
+
+    @Scheduled(fixedRate = 30000)
+    public void sendHeartbeats() {
+        if (registeredTools.isEmpty()) return;
+
+        for (ToolMetadata tool : registeredTools) {
+            try {
+                org.springframework.http.ResponseEntity<String> response = restClient.post()
+                        .uri(gatewayUrl + "/mcp/api/v1/registry/heartbeat")
+                        .header("Content-Type", "application/json")
+                        .header("X-API-KEY", "SHINHAN_MCP_TEST_KEY_9999")
+                        .body(tool.getToolName())
+                        .retrieve()
+                        .toEntity(String.class);
+
+                if (response.getStatusCode().is2xxSuccessful()) {
+                    log.debug(" [HeartbeatSender] 하트비트 전송 성공: {}", tool.getToolName());
+                }
+            } catch (Exception e) {
+                log.warn(" [HeartbeatSender] 하트비트 전송 실패 ({}): {}. 재등록을 시도합니다.", tool.getToolName(), e.getMessage());
+                registerTool(tool);
+            }
+        }
+    }
+
+    private void registerTool(ToolMetadata tool) {
+        try {
+            restClient.post()
+                    .uri(gatewayUrl + "/mcp/api/v1/registry/register")
+                    .header("Content-Type", "application/json")
+                    .header("X-API-KEY", "SHINHAN_MCP_TEST_KEY_9999")
+                    .body(tool)
+                    .retrieve()
+                    .toBodilessEntity();
+            log.info(" [HeartbeatSender] 툴 재등록 성공: {}", tool.getToolName());
+        } catch (Exception ex) {
+            log.error(" [HeartbeatSender] 툴 등록 실패: {}", ex.getMessage());
+        }
+    }
+}

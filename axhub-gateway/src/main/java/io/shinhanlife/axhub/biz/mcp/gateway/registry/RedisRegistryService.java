@@ -19,7 +19,7 @@ public class RedisRegistryService {
 
     private final RedisTemplate<String, ToolMetadata> redisTemplate;
     private static final String KEY_PREFIX = "mcp:tool:";
-    private static final Duration DEFAULT_TTL = Duration.ofDays(365); // 임시: 수동 등록 시 만료 방지
+    private static final Duration DEFAULT_TTL = Duration.ofSeconds(45); // 실무 하트비트 주기 반영
 
     /**
      * 툴 등록 및 갱신 (TTL 기반으로 60초 뒤 자동 만료)
