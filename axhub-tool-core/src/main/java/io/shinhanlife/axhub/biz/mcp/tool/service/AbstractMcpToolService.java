@@ -37,7 +37,7 @@ public abstract class AbstractMcpToolService {
 
         try {
             log.info("\n=======================================================");
-            log.info(" [AI -> Legacy] 레거시 시스템 통신 시작");
+            log.info(" [Tool -> Legacy] 레거시 시스템 통신 시작");
             log.info(" - Routing Type: {}", routingType);
             log.info(" - Interface ID: {}", interfaceId);
             log.info(" - 호출 파라미터 (Request): \n{}", objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(inputMap));
@@ -47,7 +47,7 @@ public abstract class AbstractMcpToolService {
             String executionResult = legacyEimsConnector.executeByTool(routingType, interfaceId, inputMap, null);
 
             log.info("\n=======================================================");
-            log.info(" [Legacy -> AI] 레거시 시스템 통신 완료");
+            log.info(" [Legacy -> Tool] 레거시 시스템 통신 완료");
             log.info(" - 응답 파라미터 (Response, 마스킹 전): \n{}", executionResult);
             log.info("=======================================================\n");
             
