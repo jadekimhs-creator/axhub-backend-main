@@ -20,6 +20,7 @@ services:
       redis:
         condition: service_healthy
     environment:
+      - TZ=Asia/Seoul
       - SPRING_REDIS_HOST=redis
       - SPRING_REDIS_PORT=6379
       - SPRING_DATA_REDIS_HOST=redis
@@ -33,6 +34,7 @@ services:
     depends_on:
       - redis
     environment:
+      - TZ=Asia/Seoul
       - SPRING_REDIS_HOST=redis
       - SPRING_REDIS_PORT=6379
       - SPRING_DATA_REDIS_PORT=6379
@@ -47,6 +49,7 @@ services:
     depends_on:
       - redis
     environment:
+      - TZ=Asia/Seoul
       - SPRING_REDIS_HOST=redis
       - SPRING_REDIS_PORT=6379
       - SPRING_DATA_REDIS_PORT=6379
@@ -61,6 +64,7 @@ services:
     depends_on:
       - redis
     environment:
+      - TZ=Asia/Seoul
       - SPRING_REDIS_HOST=redis
       - SPRING_REDIS_PORT=6379
       - SPRING_DATA_REDIS_PORT=6379
