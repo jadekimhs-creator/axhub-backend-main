@@ -15,6 +15,8 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 
+import io.shinhanlife.axhub.biz.mcp.tool.config.McpProperties;
+
 import jakarta.annotation.PostConstruct;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
@@ -31,6 +33,7 @@ public class ToolRegistryHeartbeatSender {
 
     private final ApplicationContext applicationContext;
     private final ObjectMapper objectMapper;
+    private final McpProperties mcpProperties;
     private final RestClient restClient = RestClient.create();
 
     @Value("${axhub.gateway.url:http://localhost:8081}")
@@ -55,16 +58,22 @@ public class ToolRegistryHeartbeatSender {
             for (Method method : bean.getClass().getDeclaredMethods()) {
                 McpFunction functionAnnotation = method.getAnnotation(McpFunction.class);
                 if (functionAnnotation != null) {
+                    McpProperties.FunctionProp prop = null;
+                    if (mcpProperties.getFunctions() != null) {
+                        prop = mcpProperties.getFunctions().get(functionAnnotation.name());
+                    }
+
                     ToolMetadata meta = new ToolMetadata();
                     meta.setToolName(functionAnnotation.name());
-                    meta.setDescription(functionAnnotation.description());
+                    meta.setDescription(prop != null && prop.getDescription() != null ? prop.getDescription() : functionAnnotation.description());
                     meta.setDomainGroup(toolAnnotation.group());
                     meta.setIntegrationType(toolAnnotation.routingType());
-                    meta.setMciServiceId(functionAnnotation.mappingId());
+                    meta.setMciServiceId(prop != null && prop.getMappingId() != null ? prop.getMappingId() : functionAnnotation.mappingId());
                     meta.setPodUrl(podUrl);
                     
                     Map<String, String> prompts = new HashMap<>();
-                    prompts.put(functionAnnotation.name(), functionAnnotation.prompt());
+                    String promptText = prop != null && prop.getPrompt() != null ? prop.getPrompt() : functionAnnotation.prompt();
+                    prompts.put(functionAnnotation.name(), promptText);
                     meta.setActionPrompts(prompts);
                     
                     if (method.getParameterCount() > 0) {
