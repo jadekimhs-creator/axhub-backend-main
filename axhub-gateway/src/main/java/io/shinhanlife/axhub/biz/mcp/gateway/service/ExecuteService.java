@@ -7,6 +7,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
 
+import org.springframework.http.MediaType;
 import java.util.Map;
 import java.util.List;
 
@@ -66,7 +67,7 @@ public class ExecuteService {
     private Object executeWithUrl(Map<String, Object> payload, String url) {
         return restClient.post()
                 .uri(url)
-                .contentType(org.springframework.http.MediaType.APPLICATION_JSON)
+                .contentType(MediaType.APPLICATION_JSON)
                 .header("X-API-KEY", "SHINHAN_MCP_TEST_KEY_9999") // TODO: Use actual tenant's key
                 .header("X-Trace-Id", java.util.UUID.randomUUID().toString())
                 .body(payload)
