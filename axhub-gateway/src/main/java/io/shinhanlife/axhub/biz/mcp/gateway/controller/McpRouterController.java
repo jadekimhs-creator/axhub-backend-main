@@ -56,9 +56,22 @@ public class McpRouterController {
         payload.put("meta", meta);
         
         log.info("[MCP 표준] ExecuteService 파이프라인을 통한 툴 호출 시작 (Tenant: {}, Trace: {})", tenantId, meta.get("traceId"));
+        
+        try {
+            log.info("[AI -> MCP Gateway] 동적 툴 실행 요청 수신: {}", objectMapper.writeValueAsString(payload));
+        } catch (Exception ex) {
+            log.info("[AI -> MCP Gateway] 동적 툴 실행 요청 수신: {}", payload);
+        }
 
         try {
             Object result = executeService.execute(payload, tenantId);
+            
+            try {
+                log.info("[MCP Gateway -> AI] 동적 툴 실행 결과 반환: {}", objectMapper.writeValueAsString(result));
+            } catch (Exception ex) {
+                log.info("[MCP Gateway -> AI] 동적 툴 실행 결과 반환: {}", result);
+            }
+            
             return ResponseEntity.ok(result);
         } catch (SecurityException se) {
             log.warn(" [보안 차단] 권한 오류: {}", se.getMessage());
