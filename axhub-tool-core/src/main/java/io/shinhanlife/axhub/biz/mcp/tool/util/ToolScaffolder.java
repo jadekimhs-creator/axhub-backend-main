@@ -15,15 +15,13 @@ import java.util.Scanner;
  *  - 콘솔 창에 뜨는 질문에 차례대로 값을 입력하기만 하면 파일이 생성됩니다.
  * 
  * 방법 2. 커맨드라인(터미널)에서 실행 (명령어 기반)
- *  - 컴파일: javac -encoding UTF-8 src/main/java/io/shinhanlife/axhub/biz/mcp/tool/util/ToolScaffolder.java
- *  - 띄어쓰기를 포함한 인자와 함께 실행: java -cp src/main/java io.shinhanlife.axhub.biz.mcp.tool.util.ToolScaffolder [이름] [ID] "[설명]"
- *  - 실행 예시: java -cp src/main/java io.shinhanlife.axhub.biz.mcp.tool.util.ToolScaffolder ExchangeRate EXCH_001 "환율 조회 기능"
+ *  - 컴파일: javac -encoding UTF-8 axhub-tool-core/src/main/java/io/shinhanlife/axhub/biz/mcp/tool/util/ToolScaffolder.java
+ *  - 실행: java -cp axhub-tool-core/src/main/java io.shinhanlife.axhub.biz.mcp.tool.util.ToolScaffolder [이름] [ID] "[설명]" "[그룹]" "[통신방식]" "[모듈명]"
  */
 public class ToolScaffolder {
 
     private static final String BASE_PACKAGE = "io.shinhanlife.axhub.biz.mcp.tool";
-    // 프로젝트 루트 기준 상대 경로
-    private static final String BASE_PATH = "src/main/java/io/shinhanlife/axhub/biz/mcp/tool";
+    private static final String BASE_PACKAGE_PATH = "src/main/java/io/shinhanlife/axhub/biz/mcp/tool";
 
     public static void main(String[] args) throws IOException {
         Scanner scanner = new Scanner(System.in);
@@ -35,14 +33,18 @@ public class ToolScaffolder {
         String baseName = getOrAsk(args, 0, scanner, "1. 생성할 Tool의 기본 이름 (예: ExchangeRate) [영문 PascalCase]: ");
         String interfaceId = getOrAsk(args, 1, scanner, "2. 레거시 API 인터페이스 ID (예: EXCH_001): ");
         String description = getOrAsk(args, 2, scanner, "3. Tool 기능 설명 (예: 환율 조회): ");
-        String group = getOrAsk(args, 3, scanner, "4. Tool 소속 그룹 (기본: biz_core): ");
-        if (group.isEmpty()) group = "biz_core";
-        String routingType = getOrAsk(args, 4, scanner, "5. 통신 프로토콜 (예: HTTP, TCP, MCI): ");
+        String group = getOrAsk(args, 3, scanner, "4. Tool 소속 그룹 (예: NOTIFICATION, CLAIM, POLICY, HR, CONTRACT, CUSTOMER 등): ");
+        if (group.isEmpty()) group = "COMMON";
+        String routingType = getOrAsk(args, 4, scanner, "5. 통신 프로토콜 (예: HTTP, TCP, MCI, EAI): ");
         if (routingType.trim().isEmpty()) {
             routingType = "HTTP";
         }
+        String moduleName = getOrAsk(args, 5, scanner, "6. 코드를 생성할 모듈 (기본: axhub-tool-other): ");
+        if (moduleName.trim().isEmpty()) {
+            moduleName = "axhub-tool-other";
+        }
 
-        scaffold(baseName, interfaceId, description, group, routingType);
+        scaffold(baseName, interfaceId, description, group, routingType, moduleName);
     }
 
     private static String getOrAsk(String[] args, int index, Scanner scanner, String prompt) {
@@ -53,15 +55,12 @@ public class ToolScaffolder {
         return scanner.nextLine().trim();
     }
 
-    private static void scaffold(String baseName, String interfaceId, String description, String group, String routingType) throws IOException {
-        Path serviceDir = Paths.get(BASE_PATH, "service");
-        Path dtoDir = Paths.get(BASE_PATH, "dto");
+    private static void scaffold(String baseName, String interfaceId, String description, String group, String routingType, String moduleName) throws IOException {
+        Path serviceDir = Paths.get(moduleName, BASE_PACKAGE_PATH, "service");
+        Path dtoDir = Paths.get(moduleName, BASE_PACKAGE_PATH, "dto");
 
         Files.createDirectories(serviceDir);
         Files.createDirectories(dtoDir);
-
-        String camelCaseName = baseName.substring(0, 1).toLowerCase() + baseName.substring(1);
-        String toolName = camelCaseName + "_tool";
 
         // Generate Req DTO
         String reqContent = """
@@ -107,21 +106,37 @@ public class ToolScaffolder {
 
             @Service
             @McpTool(
-                routingType = "%s"
+                routingType = "%s",
+                group = "%s"
             )
             public class %sService extends AbstractMcpToolService {
 
                 @McpFunction(
                     name = "execute",
-                    description = "%s 처리",
+                    description = "%s",
+                    prompt = "%s",
                     mappingId = "%s"
                 )
                 public Object execute(%sReq req) {
                     return executeLegacy("%s", "%s", req);
                 }
             }
-            """.formatted(BASE_PACKAGE, BASE_PACKAGE, BASE_PACKAGE, BASE_PACKAGE, baseName, BASE_PACKAGE, baseName,
-                toolName, description, group, routingType, baseName, description, interfaceId, baseName, routingType, interfaceId);
+            """.formatted(
+                BASE_PACKAGE, 
+                BASE_PACKAGE, 
+                BASE_PACKAGE, 
+                BASE_PACKAGE, baseName, 
+                BASE_PACKAGE, baseName,
+                routingType, 
+                group, 
+                baseName, 
+                description, 
+                description + " 해줘.", 
+                interfaceId, 
+                baseName, 
+                routingType, 
+                interfaceId
+            );
         
         Files.writeString(serviceDir.resolve(baseName + "Service.java"), serviceContent);
 

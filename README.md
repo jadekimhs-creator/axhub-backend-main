@@ -69,11 +69,11 @@ MSA(Microservices Architecture) 환경의 안정성을 위해 완벽한 2-Track 
 
 ```bash
 # 사용법: javac로 컴파일 후 실행
-javac -encoding UTF-8 src/main/java/io/shinhanlife/axhub/biz/mcp/tool/util/ToolScaffolder.java
-java -cp src/main/java io.shinhanlife.axhub.biz.mcp.tool.util.ToolScaffolder [Tool이름] [인터페이스ID] "[기능설명]" "[그룹명]" "[통신방식]"
+javac -encoding UTF-8 axhub-tool-core/src/main/java/io/shinhanlife/axhub/biz/mcp/tool/util/ToolScaffolder.java
+java -cp axhub-tool-core/src/main/java io.shinhanlife.axhub.biz.mcp.tool.util.ToolScaffolder [Tool이름] [인터페이스ID] "[기능설명]" "[그룹명]" "[통신방식]" "[모듈명]"
 
 # 실행 예시
-java -cp src/main/java io.shinhanlife.axhub.biz.mcp.tool.util.ToolScaffolder ExchangeRate EXCH_001 "환율 조회 기능" "group_1" "HTTP"
+java -cp axhub-tool-core/src/main/java io.shinhanlife.axhub.biz.mcp.tool.util.ToolScaffolder ExchangeRate EXCH_001 "환율 조회 기능" "CLAIM" "HTTP" "axhub-tool-other"
 ```
 
 ---
