@@ -1,0 +1,6 @@
+mcp:
+  functions:
+    send_sms:
+      description: "고객에게 SMS 문자를 전송합니다. (프로퍼티 오버라이드 됨)"
+      prompt: "이 SMS 메시지 전송해줘. (프로퍼티 기반 작동)"
+      mappingId: "SMS_SEND_001"
