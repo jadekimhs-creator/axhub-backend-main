@@ -102,7 +102,7 @@ public class ToolRegistryHeartbeatSender {
                         .toEntity(String.class);
 
                 if (response.getStatusCode().is2xxSuccessful()) {
-                    log.debug(" [HeartbeatSender] 하트비트 전송 성공: {}", tool.getToolName());
+                    log.info(" [HeartbeatSender] 하트비트 전송 성공: {}", tool.getToolName());
                 }
             } catch (Exception e) {
                 log.warn(" [HeartbeatSender] 하트비트 전송 실패 ({}): {}. 재등록을 시도합니다.", tool.getToolName(), e.getMessage());
