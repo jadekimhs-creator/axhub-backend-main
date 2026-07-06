@@ -17,7 +17,7 @@ mcp:
       prompt: "디지털 증권 발행 프로세스를 실행해."
       mappingId: "BOND_002"
     register_vacation:
-      description: "휴가 등록"
+      description: "휴가 등록(프로퍼티 오버라이드 됨)"
       prompt: "내일 하루 연차 휴가를 등록해줘."
       mappingId: "HR_VAC_01"
     get_leave_count:
@@ -33,7 +33,7 @@ mcp:
       prompt: "김신한 고객의 계약 상세 내역을 알려줘."
       mappingId: "CNTR_002"
     grade:
-      description: "고객등급 조회"
+      description: "고객등급 조회(프로퍼티 오버라이드 됨)"
       prompt: "이 고객의 VIP 등급을 조회해줘."
       mappingId: "CRM_001"
     detail:
