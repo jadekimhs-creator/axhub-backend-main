@@ -142,9 +142,9 @@ public class BusinessToolController {
             rpcResponse.put("id", payload != null ? payload.get("id") : null);
             
             try {
-                log.info("\n [Tool -> MCP Gateway] 동적 툴 실행 결과 반환: {}", objectMapper.writeValueAsString(rpcResponse));
+                log.info("[Tool -> MCP Gateway] 동적 툴 실행 결과 반환: {}", objectMapper.writeValueAsString(rpcResponse));
             } catch (Exception e) {
-                log.info("\n [Tool -> MCP Gateway] 동적 툴 실행 결과 반환: {}", rpcResponse);
+                log.info("[Tool -> MCP Gateway] 동적 툴 실행 결과 반환: {}", rpcResponse);
             }
             return rpcResponse;
 
