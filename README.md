@@ -38,8 +38,15 @@ AXHUB Backend는 3개의 주요 애플리케이션으로 분리 운영됩니다:
   - `./gradlew bootRun -PmainClass=io.shinhanlife.AxHubToolApplication --args="--server.port=8082"`
   - Tool 서버가 기동되면 자동으로 Gateway(8081)에 자신을 등록(Auto-Registration)합니다.
   - **(선택) 특정 Tool 그룹만 실행하기:** 
-    - 특정 그룹(예: `group_1`)에 속한 Tool만 띄우고 싶다면, 실행 인수에 `--mcp.tool.target=group_1`을 추가합니다.
-    - IntelliJ IDEA: `Run/Debug Configurations` ➔ `AxHubToolApplication` ➔ `Program arguments` 에 `--mcp.tool.target=group_1` 입력
+    - 업무 특성에 따라 세분화된 그룹에 속한 Tool만 띄우고 싶다면, 실행 인수에 `--mcp.tool.target=그룹명`을 추가합니다.
+    - **지원되는 그룹명:**
+      - `NOTIFICATION`: 이메일, SMS 발송
+      - `CLAIM`: 청구 처리, 심사 상태 조회
+      - `POLICY`: 증권 발행, 발행 가능 여부 조회
+      - `HR`: 휴가 등록, 연차 갯수 조회
+      - `CONTRACT`: 계약 상태, 계약 상세 조회
+      - `CUSTOMER`: 고객 등급, 고객 상세 정보 조회
+    - IntelliJ IDEA: `Run/Debug Configurations` ➔ `AxHubToolApplication` ➔ `Program arguments` 에 `--mcp.tool.target=NOTIFICATION` 입력
 
 ### 2. Admin 관리자 서버 실행
 - **Admin 서버 기동:**
