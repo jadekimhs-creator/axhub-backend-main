@@ -80,25 +80,14 @@ java -cp axhub-tool-core/src/main/java io.shinhanlife.axhub.biz.mcp.tool.util.To
 
 ## 📂 패키지 구조 (Package Structure)
 
-```
-io.shinhanlife
-├── AxHubAdminApplication.java
-├── AxHubGatewayApplication.java  ← MCP 라우팅 허브
-├── AxHubToolApplication.java     ← 비즈니스 어댑터 (레거시 통신)
-│
-├── axhub/
-│   ├── biz/                      
-│   │   ├── sm/                   # 관리자 메뉴 관리 도메인
-│   │   ├── so/                   # 관리자 접근 권한 도메인
-│   │   └── mcp/                  # 💡 [MCP 도메인] Gateway 및 Tool 로직 분리
-│   │       ├── gateway/          # API Key 인증, Tool 자동 등록, RPC 라우팅 처리
-│   │       ├── tool/             # 레거시 EIMS/MCI 통신 Service 및 DTO
-│   │       └── adapter/          # TCP/HTTP/ESB 레거시 모의(Mock) 서버 
-│   │
-│   ├── common/                   # 공통 모듈 (Security, Session, Config 등)
-│   └── sample/                   # 개발 참고용 샘플
-│
-└── glow/                         # 사내 표준 Glow 프레임워크 호환 패키지
+```text
+axhub-backend-main (Root)
+├── axhub-gateway           # 💡 MCP 라우팅 허브 서버 (외부 LLM과 통신 및 Tool 분배)
+├── axhub-common            # 공통 모듈 (Security, Session, Config 등)
+├── axhub-tool-core         # Tool 공통 기능 (AbstractMcpToolService, Annotation, Scaffolder)
+├── axhub-tool-email        # [Tool] 이메일 발송 특화 어댑터 모듈
+├── axhub-tool-sms          # [Tool] SMS 발송 특화 어댑터 모듈
+└── axhub-tool-other        # [Tool] 기타 비즈니스(청구, 계약, 고객, HR 등) 어댑터 모듈
 ```
 
-각 관리자 업무 패키지는 기존처럼 `presentation`, `usecase`, `dto`, `domain`, `converter` 5계층 아키텍처를 엄격하게 따릅니다.
+*(참고: 기존 단일 모듈 프로젝트에서 마이크로서비스 확장을 위해 모듈별로 분리되었으며, 각 Tool 서버는 독립적으로 확장 및 배포할 수 있습니다.)*
