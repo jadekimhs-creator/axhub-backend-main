@@ -94,6 +94,8 @@ public class ToolScaffolder {
             """.formatted(BASE_PACKAGE, baseName);
         Files.writeString(dtoDir.resolve(baseName + "Res.java"), resContent);
 
+        String toolName = baseName.toLowerCase();
+
         // Generate Service
         String serviceContent = """
             package %s.service;
@@ -112,7 +114,7 @@ public class ToolScaffolder {
             public class %sService extends AbstractMcpToolService {
 
                 @McpFunction(
-                    name = "execute",
+                    name = "%s",
                     description = "%s",
                     prompt = "%s",
                     mappingId = "%s"
@@ -130,6 +132,7 @@ public class ToolScaffolder {
                 routingType, 
                 group, 
                 baseName, 
+                toolName,
                 description, 
                 description + " 해줘.", 
                 interfaceId, 
@@ -139,6 +142,24 @@ public class ToolScaffolder {
             );
         
         Files.writeString(serviceDir.resolve(baseName + "Service.java"), serviceContent);
+
+        // Append to YAML if exists
+        Path yamlPath = Paths.get(moduleName, "src/main/resources", "application-local.yml");
+        if (Files.exists(yamlPath)) {
+            String yamlContent = Files.readString(yamlPath);
+            if (yamlContent.contains("functions:")) {
+                String newFunctionYaml = """
+                    
+                        %s:
+                          description: "%s"
+                          prompt: "%s"
+                          mappingId: "%s"
+                """.formatted(toolName, description, description + " 해줘.", interfaceId);
+                yamlContent = yamlContent.replaceFirst("functions:", "functions:" + newFunctionYaml);
+                Files.writeString(yamlPath, yamlContent);
+                System.out.println("[YAML] " + yamlPath + " (함수 설정 자동 등록됨)");
+            }
+        }
 
         System.out.println("\n=========================================");
         System.out.println("✅ Scaffolding Complete!");
