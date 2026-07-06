@@ -6,7 +6,8 @@ import io.shinhanlife.axhub.biz.mcp.tool.dto.BondCheckReq;
 import io.shinhanlife.axhub.biz.mcp.tool.dto.BondIssueReq;
 
 @McpTool(
-    routingType = "EAI"
+    routingType = "EAI",
+    group = "POLICY"
 )
 public class BondIssueService extends AbstractMcpToolService {
 

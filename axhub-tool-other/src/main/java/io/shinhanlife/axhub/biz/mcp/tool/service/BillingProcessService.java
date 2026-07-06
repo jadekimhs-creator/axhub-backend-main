@@ -10,7 +10,8 @@ import io.shinhanlife.axhub.biz.mcp.tool.dto.BillingStatusReq;
 import io.shinhanlife.axhub.biz.mcp.tool.dto.BillingProcessReq;
 
 @McpTool(
-    routingType = "MCI"
+    routingType = "MCI",
+    group = "CLAIM"
 )
 @lombok.extern.slf4j.Slf4j
 public class BillingProcessService extends AbstractMcpToolService {

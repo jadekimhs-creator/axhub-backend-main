@@ -10,7 +10,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 @Slf4j
-@McpTool(routingType = "EAI")
+@McpTool(routingType = "EAI", group = "NOTIFICATION")
 public class EmailToolService extends AbstractMcpToolService {
 
     @McpFunction(name = "send_email", description = "이메일 발송", prompt = "고객에게 이메일을 발송해줘.", mappingId = "EMAIL_SEND_001")

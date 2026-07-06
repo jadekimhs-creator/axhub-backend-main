@@ -10,7 +10,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 @Slf4j
-@McpTool(routingType = "EAI")
+@McpTool(routingType = "EAI", group = "NOTIFICATION")
 public class SmsToolService extends AbstractMcpToolService {
 
     @McpFunction(name = "send_sms", description = "SMS 발송", prompt = "고객에게 SMS 메시지를 발송해줘.", mappingId = "SMS_SEND_001")

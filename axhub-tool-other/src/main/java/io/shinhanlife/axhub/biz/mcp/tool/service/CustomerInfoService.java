@@ -6,7 +6,8 @@ import io.shinhanlife.axhub.biz.mcp.tool.dto.CustomerGradeReq;
 import io.shinhanlife.axhub.biz.mcp.tool.dto.CustomerDetailReq;
 
 @McpTool(
-    routingType = "TCP"
+    routingType = "TCP",
+    group = "CUSTOMER"
 )
 public class CustomerInfoService extends AbstractMcpToolService {
 

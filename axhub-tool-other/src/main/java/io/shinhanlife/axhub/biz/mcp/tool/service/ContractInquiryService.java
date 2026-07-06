@@ -6,7 +6,8 @@ import io.shinhanlife.axhub.biz.mcp.tool.dto.ContractStatusReq;
 import io.shinhanlife.axhub.biz.mcp.tool.dto.ContractDetailReq;
 
 @McpTool(
-    routingType = "HTTP"
+    routingType = "HTTP",
+    group = "CONTRACT"
 )
 public class ContractInquiryService extends AbstractMcpToolService {
 

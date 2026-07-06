@@ -7,7 +7,8 @@ import io.shinhanlife.axhub.biz.mcp.tool.dto.LeaveCountReq;
 import io.shinhanlife.axhub.biz.mcp.tool.dto.LeaveCountReq;
 
 @McpTool(
-    routingType = "HTTP"
+    routingType = "HTTP",
+    group = "HR"
 )
 public class CommonUtilityService extends AbstractMcpToolService {
 
