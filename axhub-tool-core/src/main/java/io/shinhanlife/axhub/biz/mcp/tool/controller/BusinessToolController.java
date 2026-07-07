@@ -22,6 +22,7 @@ import com.networknt.schema.ValidationMessage;
 import org.springframework.context.ApplicationContext;
 import io.shinhanlife.axhub.biz.mcp.tool.annotation.McpTool;
 import io.shinhanlife.axhub.biz.mcp.tool.annotation.McpFunction;
+import io.shinhanlife.axhub.biz.mcp.tool.config.McpProperties;
 import java.lang.reflect.Method;
 import io.shinhanlife.axhub.biz.mcp.tool.util.JsonSchemaGenerator;
 
@@ -35,6 +36,7 @@ public class BusinessToolController {
 
     private final ApplicationContext applicationContext;
     private final ObjectMapper objectMapper;
+    private final McpProperties mcpProperties;
 
     // JSON RPC 기반 단일 라우팅 엔드포인트
     @PostMapping("/mcp/api/v1/tools/call")
@@ -76,6 +78,22 @@ public class BusinessToolController {
             Map<String, Object> error = new HashMap<>();
             error.put("jsonrpc", "2.0");
             error.put("error", Map.of("code", -32601, "message", "실행할 함수를 찾을 수 없습니다: " + functionName));
+            error.put("id", payload != null ? payload.get("id") : null);
+            return error;
+        }
+
+        // --- 비공개 툴(register=false)에 대한 강제 실행 접근 원천 차단 로직 ---
+        McpProperties.FunctionProp prop = null;
+        if (mcpProperties != null && mcpProperties.getFunctions() != null) {
+            prop = mcpProperties.getFunctions().get(targetFunctionAnnotation.name());
+        }
+        boolean isRegister = prop != null && prop.getRegister() != null ? prop.getRegister() : targetFunctionAnnotation.register();
+
+        if (!isRegister) {
+            log.warn("[Tool] 비공개 툴에 대한 강제 접근 시도 차단: {}", functionName);
+            Map<String, Object> error = new HashMap<>();
+            error.put("jsonrpc", "2.0");
+            error.put("error", Map.of("code", -32001, "message", "접근이 차단된 비공개 툴입니다: " + functionName));
             error.put("id", payload != null ? payload.get("id") : null);
             return error;
         }
