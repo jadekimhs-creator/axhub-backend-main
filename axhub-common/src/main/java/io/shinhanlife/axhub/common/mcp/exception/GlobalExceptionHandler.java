@@ -11,6 +11,12 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 @RestControllerAdvice //  이 어노테이션이 전역 적용의 핵심입니다!
 public class GlobalExceptionHandler {
 
+    @ExceptionHandler(org.springframework.web.servlet.resource.NoResourceFoundException.class)
+    public ResponseEntity<Void> handleNoResourceFound(org.springframework.web.servlet.resource.NoResourceFoundException e) {
+        log.warn(" [Gateway Not Found] 요청하신 리소스를 찾을 수 없습니다: {}", e.getResourcePath());
+        return ResponseEntity.notFound().build();
+    }
+
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<JsonRpcResponse> handleIllegalArgument(IllegalArgumentException e) {
         log.warn(" [Gateway Bad Request] 잘못된 요청: {}", e.getMessage());

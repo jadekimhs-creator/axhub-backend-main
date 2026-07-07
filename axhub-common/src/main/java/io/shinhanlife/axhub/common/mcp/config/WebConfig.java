@@ -22,7 +22,8 @@ public class WebConfig implements WebMvcConfigurer {
                 .addPathPatterns("/rpc/**", "/mcp/api/v1/**")     //  /rpc/, /mcp/api/v1/ 로 시작하는 모든 API는 API Key 검사 수행!
                 .excludePathPatterns(
                         "/test/**", "/health", "/error", "/mcp/api/v1/admin/**",
-                        "/swagger-ui/**", "/v3/api-docs/**", "/swagger-resources/**", "/webjars/**" // Swagger UI 경로는 인증 제외
+                        "/swagger-ui/**", "/v3/api-docs/**", "/swagger-resources/**", "/webjars/**", // Swagger UI 경로는 인증 제외
+                        "/mcp/api/v1/tools/docs/markdown", "/favicon.ico"
                 );
     }
 
