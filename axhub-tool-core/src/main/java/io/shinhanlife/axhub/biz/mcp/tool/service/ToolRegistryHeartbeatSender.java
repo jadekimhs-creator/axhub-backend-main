@@ -63,6 +63,12 @@ public class ToolRegistryHeartbeatSender {
                         prop = mcpProperties.getFunctions().get(functionAnnotation.name());
                     }
 
+                    boolean isRegister = prop != null && prop.getRegister() != null ? prop.getRegister() : functionAnnotation.register();
+                    if (!isRegister) {
+                        log.info(" [HeartbeatSender] '{}' 툴은 설정에 의해 외부 등록(Redis) 대상에서 제외되었습니다.", functionAnnotation.name());
+                        continue;
+                    }
+
                     ToolMetadata meta = new ToolMetadata();
                     meta.setToolName(functionAnnotation.name());
                     meta.setDescription(prop != null && prop.getDescription() != null ? prop.getDescription() : functionAnnotation.description());
