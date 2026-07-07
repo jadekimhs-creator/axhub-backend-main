@@ -93,6 +93,71 @@ public class McpRouterController {
         return ResponseEntity.ok(response);
     }
 
+    @GetMapping(value = "/tools/docs/markdown", produces = "text/markdown;charset=UTF-8")
+    public ResponseEntity<String> generateToolsMarkdown() {
+        List<ToolMetadata> tools = redisRegistryService.getAllTools();
+        
+        StringBuilder md = new StringBuilder();
+        md.append("# \uD83E\uDD16 Shinhan AI Tool Catalog\n\n");
+        md.append("**총 등록된 툴:** ").append(tools.size()).append("개\n");
+        java.time.format.DateTimeFormatter formatter = java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+        md.append("**마지막 업데이트:** ").append(java.time.LocalDateTime.now().format(formatter)).append("\n\n");
+        md.append("---\n\n");
+        
+        // Group by Domain Group
+        Map<String, List<ToolMetadata>> groupedTools = new java.util.HashMap<>();
+        for (ToolMetadata tool : tools) {
+            String group = tool.getDomainGroup() != null ? tool.getDomainGroup() : "기타 (Others)";
+            groupedTools.computeIfAbsent(group, k -> new java.util.ArrayList<>()).add(tool);
+        }
+        
+        for (Map.Entry<String, List<ToolMetadata>> entry : groupedTools.entrySet()) {
+            md.append("## \uD83D\uDCC1 도메인: ").append(entry.getKey()).append("\n\n");
+            
+            int index = 1;
+            for (ToolMetadata tool : entry.getValue()) {
+                md.append("### ").append(index++).append(". ").append(tool.getToolName()).append("\n");
+                if (tool.getDescription() != null) {
+                    md.append("- **설명**: ").append(tool.getDescription()).append("\n");
+                }
+                md.append("- **연동 방식**: `").append(tool.getIntegrationType() != null ? tool.getIntegrationType() : "DIRECT").append("`\n\n");
+                
+                // Parameters Table
+                if (tool.getParametersSchema() != null && tool.getParametersSchema().containsKey("properties")) {
+                    md.append("#### \u2699\uFE0F 파라미터 (Parameters)\n");
+                    md.append("| 파라미터명 | 타입 | 필수 여부 | 설명 |\n");
+                    md.append("|---|---|---|---|\n");
+                    
+                    Map<String, Object> properties = (Map<String, Object>) tool.getParametersSchema().get("properties");
+                    List<String> required = (List<String>) tool.getParametersSchema().get("required");
+                    
+                    for (Map.Entry<String, Object> prop : properties.entrySet()) {
+                        String name = prop.getKey();
+                        Map<String, Object> details = (Map<String, Object>) prop.getValue();
+                        String type = details.containsKey("type") ? String.valueOf(details.get("type")) : "string";
+                        String desc = details.containsKey("description") ? String.valueOf(details.get("description")) : "";
+                        String req = (required != null && required.contains(name)) ? "Y" : "N";
+                        
+                        md.append("| `").append(name).append("` | `").append(type).append("` | ").append(req).append(" | ").append(desc).append(" |\n");
+                    }
+                    md.append("\n");
+                }
+                
+                // Action Prompts
+                if (tool.getActionPrompts() != null && !tool.getActionPrompts().isEmpty()) {
+                    md.append("#### \uD83D\uDCAC 프롬프트 예시 (Action Prompts)\n");
+                    for (Map.Entry<String, String> prompt : tool.getActionPrompts().entrySet()) {
+                        md.append("- \"").append(prompt.getValue()).append("\"\n");
+                    }
+                    md.append("\n");
+                }
+                md.append("---\n\n");
+            }
+        }
+        
+        return ResponseEntity.ok(md.toString());
+    }
+
     @PostMapping("/registry/register")
     public ResponseEntity<String> registerTool(@RequestBody ToolMetadata meta) {
         redisRegistryService.saveTool(meta);
