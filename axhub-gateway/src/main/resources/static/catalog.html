@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="ko" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shinhan AI Tool Catalog</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Pretendard:wght@300;400;500;600;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Pretendard', 'sans-serif'],
+                        outfit: ['Outfit', 'sans-serif'],
+                        mono: ['Fira Code', 'monospace']
+                    },
+                    colors: {
+                        brand: {
+                            50: '#eff6ff',
+                            100: '#dbeafe',
+                            400: '#60a5fa',
+                            500: '#3b82f6',
+                            600: '#2563eb',
+                            900: '#1e3a8a',
+                            950: '#172554',
+                        }
+                    },
+                    animation: {
+                        'float': 'float 8s ease-in-out infinite',
+                        'float-delayed': 'float 8s ease-in-out 4s infinite',
+                    },
+                    keyframes: {
+                        'float': {
+                            '0%, 100%': { transform: 'translateY(0px) scale(1)' },
+                            '50%': { transform: 'translateY(-20px) scale(1.05)' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            background-color: #020617; 
+            color: #f8fafc;
+            overflow-x: hidden;
+            min-height: 100vh;
+            padding: 2rem 0;
+        }
+        
+        .bg-grid {
+            position: fixed;
+            inset: 0;
+            background-size: 40px 40px;
+            background-image: 
+                linear-gradient(to right, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+            pointer-events: none;
+            z-index: 0;
+            mask-image: radial-gradient(circle at center, black 30%, transparent 80%);
+            -webkit-mask-image: radial-gradient(circle at center, black 30%, transparent 80%);
+        }
+
+        .glass-panel {
+            background: rgba(15, 23, 42, 0.6);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+        }
+
+        .card-premium {
+            background: rgba(30, 41, 59, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            transition: all 0.3s ease;
+        }
+        
+        .card-premium:hover {
+            background: rgba(30, 41, 59, 0.7);
+            border-color: rgba(96, 165, 250, 0.3);
+            transform: translateY(-4px);
+            box-shadow: 0 10px 30px -10px rgba(59, 130, 246, 0.2);
+        }
+
+        .param-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.8rem;
+            margin-top: 1rem;
+        }
+        
+        .param-table th {
+            text-align: left;
+            padding: 8px;
+            background: rgba(15, 23, 42, 0.6);
+            color: #94a3b8;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            font-weight: 600;
+        }
+        
+        .param-table td {
+            padding: 8px;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            color: #cbd5e1;
+        }
+        
+        .param-table tr:last-child td { border-bottom: none; }
+
+        .btn-glow {
+            position: relative;
+            z-index: 1;
+        }
+        .btn-glow::before {
+            content: '';
+            position: absolute;
+            inset: -2px;
+            background: linear-gradient(90deg, #3b82f6, #8b5cf6, #ec4899, #3b82f6);
+            background-size: 200% auto;
+            z-index: -1;
+            border-radius: 12px;
+            filter: blur(10px);
+            opacity: 0;
+            transition: opacity 0.4s ease;
+            animation: gradient-shift 3s linear infinite;
+        }
+        .btn-glow:hover::before {
+            opacity: 0.8;
+        }
+        @keyframes gradient-shift {
+            0% { background-position: 0% center; }
+            100% { background-position: 200% center; }
+        }
+
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: rgba(15, 23, 42, 0.5); }
+        ::-webkit-scrollbar-thumb { background: rgba(71, 85, 105, 0.8); border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(100, 116, 139, 1); }
+    </style>
+</head>
+<body class="antialiased selection:bg-brand-500/30 selection:text-brand-50">
+
+    <div class="bg-grid"></div>
+
+    <div class="fixed top-0 left-[10%] w-[500px] h-[500px] bg-brand-600/20 rounded-full mix-blend-screen filter blur-[120px] animate-float pointer-events-none"></div>
+    <div class="fixed bottom-0 right-[10%] w-[600px] h-[600px] bg-purple-600/20 rounded-full mix-blend-screen filter blur-[150px] animate-float-delayed pointer-events-none"></div>
+
+    <div class="max-w-[1200px] mx-auto w-full px-5 z-10 relative flex flex-col">
+        
+        <div class="flex flex-col md:flex-row justify-between items-center mb-10 pt-6">
+            <div class="text-left space-y-2">
+                <div class="inline-flex items-center px-3 py-1 rounded-full border border-purple-500/30 bg-purple-500/10 text-purple-400 text-[10px] font-bold uppercase tracking-[0.2em] mb-2">
+                    <span class="w-1.5 h-1.5 rounded-full bg-purple-400 mr-2 animate-pulse"></span>
+                    Live Dashboard
+                </div>
+                <h1 class="text-4xl md:text-5xl font-outfit font-extrabold tracking-tight bg-clip-text text-transparent bg-gradient-to-br from-white via-slate-200 to-slate-500">
+                    AI Tool Catalog
+                </h1>
+                <p class="text-sm text-slate-400 font-medium tracking-wide flex items-center">
+                    현재 시스템에 연동된 모든 AI 플러그인의 실시간 명세서입니다.
+                    <span class="ml-3 text-xs bg-slate-800 px-2 py-0.5 rounded text-slate-300" id="totalCount">Loading...</span>
+                </p>
+            </div>
+            
+            <div class="mt-6 md:mt-0 flex space-x-3">
+                <a href="/playground.html" class="px-5 py-2.5 rounded-xl text-sm font-bold text-slate-300 bg-slate-800/80 border border-slate-700 hover:bg-slate-700 transition-colors flex items-center">
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    Playground
+                </a>
+                <div class="btn-glow">
+                    <button id="copyMdBtn" class="relative inline-flex items-center px-5 py-2.5 text-sm font-bold rounded-xl text-white bg-gradient-to-r from-purple-600 to-brand-600 hover:from-purple-500 hover:to-brand-500 shadow-lg shadow-purple-500/25 transition-all transform hover:-translate-y-0.5">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"></path></svg>
+                        <span id="copyBtnText">Copy Markdown</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div id="catalogContainer" class="space-y-12 pb-16">
+            <!-- Loading State -->
+            <div class="flex justify-center py-20">
+                <div class="w-8 h-8 border-4 border-brand-500/30 border-t-brand-500 rounded-full animate-spin"></div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        async function fetchTools() {
+            try {
+                const response = await fetch('/mcp/api/v1/tools/list', {
+                    headers: { 'X-API-KEY': 'SHINHAN_MCP_TEST_KEY_9999' }
+                });
+                const data = await response.json();
+                const tools = data.result?.tools || [];
+                
+                document.getElementById('totalCount').textContent = `Total: ${tools.length}`;
+                renderCatalog(tools);
+            } catch (err) {
+                document.getElementById('catalogContainer').innerHTML = `
+                    <div class="glass-panel p-8 text-center text-rose-400 rounded-2xl">
+                        데이터를 불러오는데 실패했습니다. 서버 상태를 확인해주세요.
+                    </div>
+                `;
+            }
+        }
+
+        function renderCatalog(tools) {
+            const container = document.getElementById('catalogContainer');
+            container.innerHTML = '';
+
+            if (tools.length === 0) {
+                container.innerHTML = `<div class="glass-panel p-8 text-center text-slate-400 rounded-2xl">등록된 툴이 없습니다.</div>`;
+                return;
+            }
+
+            // Group by domain
+            const grouped = {};
+            tools.forEach(tool => {
+                const group = tool.domainGroup || '기타 (Others)';
+                if (!grouped[group]) grouped[group] = [];
+                grouped[group].push(tool);
+            });
+
+            // Render groups
+            Object.keys(grouped).sort().forEach(group => {
+                const section = document.createElement('section');
+                section.className = 'glass-panel p-6 rounded-3xl';
+                
+                const header = document.createElement('div');
+                header.className = 'flex items-center mb-6 pb-4 border-b border-white/5';
+                header.innerHTML = `
+                    <div class="w-10 h-10 rounded-xl bg-brand-500/20 text-brand-400 flex items-center justify-center mr-4">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 002-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
+                    </div>
+                    <div>
+                        <h2 class="text-xl font-bold text-white tracking-wide">${group}</h2>
+                        <p class="text-xs text-slate-400 mt-1">${grouped[group].length} Tools available</p>
+                    </div>
+                `;
+                section.appendChild(header);
+
+                const grid = document.createElement('div');
+                grid.className = 'grid grid-cols-1 lg:grid-cols-2 gap-5';
+                
+                grouped[group].forEach(tool => {
+                    grid.appendChild(createToolCard(tool));
+                });
+                
+                section.appendChild(grid);
+                container.appendChild(section);
+            });
+        }
+
+        function createToolCard(tool) {
+            const card = document.createElement('div');
+            card.className = 'card-premium rounded-2xl p-5 flex flex-col h-full relative overflow-hidden';
+            
+            // Top right badge
+            const typeClass = tool.integrationType === 'DIRECT' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : 'bg-amber-500/10 text-amber-400 border-amber-500/20';
+            
+            let paramHtml = '';
+            if (tool.parametersSchema && tool.parametersSchema.properties) {
+                const props = tool.parametersSchema.properties;
+                const required = tool.parametersSchema.required || [];
+                paramHtml = `
+                    <div class="mt-4 pt-4 border-t border-white/5">
+                        <div class="text-xs font-bold text-slate-400 mb-2 flex items-center">
+                            <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                            PARAMETERS
+                        </div>
+                        <div class="overflow-x-auto rounded-lg border border-slate-700/50 bg-slate-900/50">
+                            <table class="param-table">
+                                <thead>
+                                    <tr>
+                                        <th>Name</th>
+                                        <th>Type</th>
+                                        <th>Req</th>
+                                        <th>Description</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${Object.entries(props).map(([k,v]) => `
+                                        <tr>
+                                            <td class="font-mono text-[11px] text-cyan-400">${k}</td>
+                                            <td class="font-mono text-[11px] text-purple-400">${v.type || 'string'}</td>
+                                            <td class="text-center">${required.includes(k) ? '<span class="text-rose-400 font-bold">*</span>' : ''}</td>
+                                            <td class="text-xs text-slate-400">${v.description || ''}</td>
+                                        </tr>
+                                    `).join('')}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                `;
+            }
+
+            let promptHtml = '';
+            if (tool.actionPrompts && Object.keys(tool.actionPrompts).length > 0) {
+                promptHtml = `
+                    <div class="mt-4 pt-4 border-t border-white/5">
+                        <div class="text-xs font-bold text-slate-400 mb-2 flex items-center">
+                            <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"></path></svg>
+                            PROMPT EXAMPLES
+                        </div>
+                        <ul class="space-y-1.5">
+                            ${Object.values(tool.actionPrompts).map(p => `
+                                <li class="text-xs bg-slate-800/80 px-3 py-2 rounded-lg text-slate-300 border border-slate-700/50 italic border-l-2 border-l-brand-500">"${p}"</li>
+                            `).join('')}
+                        </ul>
+                    </div>
+                `;
+            }
+
+            card.innerHTML = `
+                <div class="absolute top-4 right-4 px-2 py-0.5 rounded text-[9px] font-bold font-mono border tracking-wider ${typeClass}">
+                    ${tool.integrationType || 'DIRECT'}
+                </div>
+                <h3 class="text-lg font-bold text-white mb-1 pr-16">${tool.toolName}</h3>
+                <p class="text-sm text-slate-400 leading-relaxed min-h-[40px]">${tool.description || '설명이 없습니다.'}</p>
+                
+                ${paramHtml}
+                ${promptHtml}
+            `;
+            return card;
+        }
+
+        document.getElementById('copyMdBtn').addEventListener('click', async (e) => {
+            const btn = e.currentTarget;
+            const textSpan = document.getElementById('copyBtnText');
+            const originalText = textSpan.textContent;
+            
+            try {
+                // 이전에 우리가 만들어둔 백엔드 마크다운 생성기 호출!
+                const res = await fetch('/mcp/api/v1/tools/docs/markdown');
+                const mdText = await res.text();
+                
+                await navigator.clipboard.writeText(mdText);
+                
+                // 성공 UI (초록색 반짝)
+                btn.classList.remove('from-purple-600', 'to-brand-600');
+                btn.classList.add('from-emerald-500', 'to-teal-500');
+                textSpan.textContent = 'Copied!';
+                
+                setTimeout(() => {
+                    btn.classList.remove('from-emerald-500', 'to-teal-500');
+                    btn.classList.add('from-purple-600', 'to-brand-600');
+                    textSpan.textContent = originalText;
+                }, 2000);
+            } catch (err) {
+                alert('마크다운 복사에 실패했습니다.');
+            }
+        });
+
+        document.addEventListener('DOMContentLoaded', fetchTools);
+    </script>
+</body>
+</html>
