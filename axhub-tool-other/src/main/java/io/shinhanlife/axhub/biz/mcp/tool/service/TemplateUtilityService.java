@@ -17,7 +17,8 @@ public class TemplateUtilityService extends AbstractMcpToolService {
         name = "get_template_file_url", 
         description = "각종 양식(엑셀, PDF 등) 샘플 파일의 다운로드 URL을 제공합니다.", 
         prompt = "고객 등록 엑셀 샘플 파일 다운로드 링크 줘.", 
-        mappingId = "COM_TMPL_01"
+        mappingId = "COM_TMPL_01",
+        register = false
     )
     public Map<String, Object> getTemplateFileUrl(TemplateDownloadReq data) {
         try {
