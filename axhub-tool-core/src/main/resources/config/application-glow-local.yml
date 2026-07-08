@@ -1,0 +1,41 @@
+# ==============================================================================
+# [AXHub 공통 환경 설정 파일] (Glow Framework 연동용)
+# 이 파일은 axhub-tool-core에 위치하며, 각 툴 파드들이 상속받아 사용합니다.
+# ==============================================================================
+
+# 1. 로깅(Logging) 공통 설정
+logging:
+  level:
+    root: INFO
+    io.shinhanlife.axhub: DEBUG
+    io.shinhanlife.glow: INFO
+    org.springframework.web: INFO
+  pattern:
+    console: "[%d{yyyy-MM-dd HH:mm:ss.SSS}] [%-5level] [%thread] %logger{36} - %msg%n"
+
+# 2. Redis 공통 설정 (Gateway 연동 및 캐싱)
+spring:
+  data:
+    redis:
+      host: 127.0.0.1      # TODO: 실제 Redis 망 IP로 변경
+      port: 6379           # TODO: 실제 Redis 포트로 변경
+      password: ""         # TODO: 실제 비밀번호 입력
+
+# 3. 신한라이프 Glow Framework 통신 (MCI / EAI) 설정
+glow:
+  communication:
+    http:
+      timeout: 5000               # HTTP 타임아웃 (ms)
+      max-connections: 100
+    mci:
+      url: "http://mci-dev.shinhanlife.io"  # TODO: 실제 대내 MCI 주소
+      port: 8080
+    extmci:
+      url: "http://extmci-dev.shinhanlife.io" # TODO: 실제 대외 MCI 주소
+      port: 8090
+    eai:
+      url: "tcp://eai-dev.shinhanlife.io"     # TODO: 실제 EAI 주소
+      port: 9999
+    websocket:
+      endpoint: "/ws-glow"
+      allowed-origins: "*"

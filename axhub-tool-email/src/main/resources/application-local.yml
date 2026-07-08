@@ -1,3 +1,7 @@
+spring:
+  config:
+    import: "classpath:config/application-glow-local.yml"
+
 mcp:
   functions:
     send_email:
