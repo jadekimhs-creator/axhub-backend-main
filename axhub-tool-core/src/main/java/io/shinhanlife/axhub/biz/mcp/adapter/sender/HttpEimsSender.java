@@ -22,7 +22,10 @@ public class HttpEimsSender implements EimsSender {
         this.glowProps = glowProps;
         // yml의 대내 MCI host, port, uri를 조합하여 EIMS 호출 주소 생성
         this.eimsUrl = glowProps.getMci().getHost() + ":" + glowProps.getMci().getPort() + glowProps.getMci().getUri();
-        this.restClient = RestClient.builder().build(); // 필요시 타임아웃 팩토리 추가
+        org.springframework.http.client.SimpleClientHttpRequestFactory factory = new org.springframework.http.client.SimpleClientHttpRequestFactory();
+        factory.setConnectTimeout(glowProps.getMci().getConnectionTimeout() * 1000);
+        factory.setReadTimeout(glowProps.getMci().getReadTimeout() * 1000);
+        this.restClient = RestClient.builder().requestFactory(factory).build();
     }
 
     @Override

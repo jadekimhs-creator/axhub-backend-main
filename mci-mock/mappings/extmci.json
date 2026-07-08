@@ -1,0 +1,21 @@
+{
+  "request": {
+    "method": "POST",
+    "urlPath": "/extmci"
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "Content-Type": "application/json;charset=UTF-8"
+    },
+    "jsonBody": {
+      "resCode": "0000",
+      "resMsg": "정상 처리되었습니다.",
+      "data": {
+        "status": "SUCCESS",
+        "mock": true,
+        "detail": "가짜 응답 서버(extmci)에서 내려주는 샘플 데이터입니다."
+      }
+    }
+  }
+}

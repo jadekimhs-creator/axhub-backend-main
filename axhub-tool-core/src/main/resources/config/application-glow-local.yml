@@ -30,7 +30,7 @@ glow:
       connection-timeout: 5 # 연결 타임아웃 시간 (초 단위)
       read-timeout: 5 # 읽기 타임아웃 시간 (초 단위)
     mci: # 대내MCI 통신 설정
-      host: http://localhost # 대내MCI 호스트 주소
+      host: http://host.docker.internal # 대내MCI 호스트 주소
       port: 8080 # 대내MCI 포트 번호
       uri: /mciSend # 대내MCI URI 정보
       receive-uri: /app/mciReceive # 대내MCI 수신 URI
@@ -38,7 +38,7 @@ glow:
       read-timeout: 30 # 읽기 타임아웃 시간 (초 단위)
       encoding: UTF-8 # 대내MCI 인코딩 정보
     extmci: # 대외MCI 통신 설정
-      host: http://localhost # 대외MCI 호스트 주소
+      host: http://host.docker.internal # 대외MCI 호스트 주소
       port: 8080 # 대외MCI 포트 번호
       uri: /extmci # 대외MCI URI 정보
       json-uri: /extmciJson # 대외MCI JSON방식 URI 정보
@@ -47,7 +47,7 @@ glow:
       read-timeout: 30 # 읽기 타임아웃 시간 (초 단위)
       encoding: EUC-KR # 대외MCI 인코딩 정보
     eai: # EAI 통신 설정
-      host: tcp://localhost # EAI 호스트 주소 (TODO: 실제 주소로 변경)
+      host: tcp://host.docker.internal # EAI 호스트 주소 (TODO: 실제 주소로 변경)
       port: 9999 # EAI 포트 번호
     websocket:
       endpoint: "/ws-glow"
