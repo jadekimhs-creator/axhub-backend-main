@@ -64,11 +64,18 @@ public class BusinessToolController {
         for (Object bean : toolBeans.values()) {
             for (Method method : bean.getClass().getDeclaredMethods()) {
                 McpFunction mcpFunc = method.getAnnotation(McpFunction.class);
-                if (mcpFunc != null && mcpFunc.name().equals(functionName)) {
-                    targetBean = bean;
-                    targetMethod = method;
-                    targetFunctionAnnotation = mcpFunc;
-                    break outerLoop;
+                if (mcpFunc != null) {
+                    String baseName = mcpFunc.name();
+                    String expectedName = mcpProperties.getNamespace() != null && !mcpProperties.getNamespace().isEmpty()
+                            ? mcpProperties.getNamespace() + "_" + baseName
+                            : baseName;
+                    
+                    if (expectedName.equals(functionName)) {
+                        targetBean = bean;
+                        targetMethod = method;
+                        targetFunctionAnnotation = mcpFunc;
+                        break outerLoop;
+                    }
                 }
             }
         }

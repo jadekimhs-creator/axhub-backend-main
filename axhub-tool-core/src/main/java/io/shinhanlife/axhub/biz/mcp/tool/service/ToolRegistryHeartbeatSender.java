@@ -58,19 +58,24 @@ public class ToolRegistryHeartbeatSender {
             for (Method method : bean.getClass().getDeclaredMethods()) {
                 McpFunction functionAnnotation = method.getAnnotation(McpFunction.class);
                 if (functionAnnotation != null) {
+                    String baseName = functionAnnotation.name();
+                    String finalName = mcpProperties.getNamespace() != null && !mcpProperties.getNamespace().isEmpty()
+                            ? mcpProperties.getNamespace() + "_" + baseName
+                            : baseName;
+
                     McpProperties.FunctionProp prop = null;
                     if (mcpProperties.getFunctions() != null) {
-                        prop = mcpProperties.getFunctions().get(functionAnnotation.name());
+                        prop = mcpProperties.getFunctions().get(baseName);
                     }
 
                     boolean isRegister = prop != null && prop.getRegister() != null ? prop.getRegister() : functionAnnotation.register();
                     if (!isRegister) {
-                        log.info(" [HeartbeatSender] '{}' 툴은 설정에 의해 외부 등록(Redis) 대상에서 제외되었습니다.", functionAnnotation.name());
+                        log.info(" [HeartbeatSender] '{}' 툴은 설정에 의해 외부 등록(Redis) 대상에서 제외되었습니다. (최종 이름: {})", baseName, finalName);
                         continue;
                     }
 
                     ToolMetadata meta = new ToolMetadata();
-                    meta.setToolName(functionAnnotation.name());
+                    meta.setToolName(finalName);
                     meta.setDescription(prop != null && prop.getDescription() != null ? prop.getDescription() : functionAnnotation.description());
                     meta.setDomainGroup(toolAnnotation.group());
                     meta.setIntegrationType(toolAnnotation.routingType());
@@ -82,7 +87,7 @@ public class ToolRegistryHeartbeatSender {
                     
                     Map<String, String> prompts = new HashMap<>();
                     String promptText = prop != null && prop.getPrompt() != null ? prop.getPrompt() : functionAnnotation.prompt();
-                    prompts.put(functionAnnotation.name(), promptText);
+                    prompts.put(finalName, promptText);
                     meta.setActionPrompts(prompts);
                     
                     if (method.getParameterCount() > 0) {
@@ -94,7 +99,7 @@ public class ToolRegistryHeartbeatSender {
                             finalSchema.put("properties", schema);
                             meta.setParametersSchema(finalSchema);
                         } catch (Exception e) {
-                            log.error("Failed to generate schema for {}", functionAnnotation.name(), e);
+                            log.error("Failed to generate schema for {}", finalName, e);
                         }
                     }
 

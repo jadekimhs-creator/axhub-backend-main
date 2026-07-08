@@ -11,6 +11,7 @@ import java.util.Map;
 @ConfigurationProperties(prefix = "mcp")
 public class McpProperties {
 
+    private String namespace;
     private Map<String, FunctionProp> functions;
 
     @Data
