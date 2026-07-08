@@ -8,15 +8,20 @@ import org.springframework.web.client.RestClient;
 
 import java.util.Map;
 
+import io.shinhanlife.axhub.biz.mcp.tool.config.GlowCommunicationProperties;
+
 @Slf4j
 @Component
 public class HttpEimsSender implements EimsSender {
 
     private final RestClient restClient;
     private final String eimsUrl;
+    private final GlowCommunicationProperties glowProps;
 
-    public HttpEimsSender(@Value("${eims.http.url}") String eimsUrl) {
-        this.eimsUrl = eimsUrl;
+    public HttpEimsSender(GlowCommunicationProperties glowProps) {
+        this.glowProps = glowProps;
+        // yml의 대내 MCI host, port, uri를 조합하여 EIMS 호출 주소 생성
+        this.eimsUrl = glowProps.getMci().getHost() + ":" + glowProps.getMci().getPort() + glowProps.getMci().getUri();
         this.restClient = RestClient.builder().build(); // 필요시 타임아웃 팩토리 추가
     }
 
