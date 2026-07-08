@@ -20,18 +20,23 @@ public class TemplateUtilityService extends AbstractMcpToolService {
         mappingId = "COM_TMPL_01"
     )
     public Map<String, Object> getTemplateFileUrl(TemplateDownloadReq data) {
-        log.info("MCP 툴 호출됨: get_template_file_url, 요청 템플릿 ID: {}", data.getTemplateId());
-        
-        // 실제 운영 환경에서는 S3 URL이나 내부 파일 다운로드 API URL을 생성합니다.
-        // 여기서는 샘플로 가짜(Dummy) URL을 반환합니다.
-        String fileName = "sample_" + (data.getTemplateId() != null ? data.getTemplateId().toLowerCase() : "default") + ".xlsx";
-        String downloadUrl = "https://axhub-file-server.shinhanlife.io/downloads/" + fileName;
-        
-        return Map.of(
-            "status", "success",
-            "fileName", fileName,
-            "downloadUrl", downloadUrl,
-            "message", "다운로드 링크가 성공적으로 생성되었습니다. AI는 이 링크를 마크다운 형식으로 사용자에게 전달해야 합니다."
-        );
+        try {
+            String templateId = (data != null && data.getTemplateId() != null) ? data.getTemplateId().toLowerCase() : "default";
+            log.info("MCP 툴 호출됨: get_template_file_url, 요청 템플릿 ID: {}", templateId);
+            
+            String fileName = "sample_" + templateId + ".xlsx";
+            String downloadUrl = "https://axhub-file-server.shinhanlife.io/downloads/" + fileName;
+            
+            Map<String, Object> result = new java.util.HashMap<>();
+            result.put("status", "success");
+            result.put("fileName", fileName);
+            result.put("downloadUrl", downloadUrl);
+            result.put("message", "다운로드 링크가 성공적으로 생성되었습니다. AI는 이 링크를 마크다운 형식으로 사용자에게 전달해야 합니다.");
+            
+            return result;
+        } catch (Exception e) {
+            log.error("getTemplateFileUrl 내부 예외 발생", e);
+            throw new RuntimeException("템플릿 URL 생성 실패", e);
+        }
     }
 }
