@@ -1,7 +1,17 @@
 package io.shinhanlife.glow.db.dto;
 
+import lombok.Getter;
+import lombok.Setter;
+import lombok.Builder;
+import lombok.NoArgsConstructor;
+import lombok.AllArgsConstructor;
+
 import java.util.Date;
 
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
 public class AuditInfo {
     private Date systRgiDt;         // 시스템등록일시
     private String systRgiPrafNo;   // 시스템등록인사번호

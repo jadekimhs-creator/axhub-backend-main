@@ -1,11 +1,18 @@
 package io.shinhanlife.axhub.biz.mcp.tool.dto;
 
+import lombok.Builder;
+import lombok.NoArgsConstructor;
+import lombok.AllArgsConstructor;
+
 import io.shinhanlife.axhub.biz.mcp.tool.annotation.McpParameter;
 import lombok.Getter;
 import lombok.Setter;
 
 @Getter
 @Setter
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class VacationRegisterReq {
 
     @McpParameter(description = "연차를 등록할 사원 번호", required = true)

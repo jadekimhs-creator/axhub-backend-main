@@ -1,5 +1,8 @@
 package io.shinhanlife.axhub.biz.mcp.gateway.dto;
 
+import lombok.Getter;
+import lombok.Setter;
+
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -11,10 +14,11 @@ import java.util.Map;
  * Tool(Agent)의 명세 및 라우팅 정보를 담고 있는 메타데이터 클래스
  * Redis 레지스트리에 저장되며, Planner와 Router 간의 통신 객체(Plan)로 사용됩니다.
  */
-@Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@Getter
+@Setter
 public class ToolMetadata {
 
     // 1. Tool 기본 정보

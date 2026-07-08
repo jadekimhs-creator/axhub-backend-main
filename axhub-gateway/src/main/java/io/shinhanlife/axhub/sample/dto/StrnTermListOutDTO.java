@@ -1,5 +1,8 @@
 package io.shinhanlife.axhub.sample.dto;
 
+import lombok.NoArgsConstructor;
+import lombok.AllArgsConstructor;
+
 
 import io.shinhanlife.glow.PageInfo;
 import lombok.Builder;
@@ -11,6 +14,8 @@ import java.util.List;
 @Builder
 @Getter
 @Setter
+@NoArgsConstructor
+@AllArgsConstructor
 public class StrnTermListOutDTO {
     private List<StrnTerm> strnTerms;
     private PageInfo pageInfo;

@@ -1,5 +1,7 @@
 package io.shinhanlife.axhub.common.session.dto;
 
+import lombok.NoArgsConstructor;
+
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
@@ -12,6 +14,7 @@ import lombok.Setter;
 @Setter
 @Builder
 @AllArgsConstructor
+@NoArgsConstructor
 public class SessionDto {
 
     /* 인사번호 */

@@ -1,7 +1,10 @@
+$Utf8NoBomEncoding = New-Object System.Text.UTF8Encoding $False
+
 $files = Get-ChildItem -Recurse -Filter *.java | Where-Object { $_.FullName -match "\\dto\\" -and $_.Name -notmatch "(Request|Response)\.java" -and $_.Name -ne "SampleGlowMessage.java" }
 
 foreach ($file in $files) {
-    $content = Get-Content $file.FullName -Raw
+    # Read as UTF8 (it usually handles CP949 okay if characters don't conflict, but let's be safe and use raw bytes if needed. Actually Get-Content is fine if the file is already UTF-8 or CP949)
+    $content = Get-Content -Path $file.FullName -Raw -Encoding UTF8
 
     # 1. Remove @Data if it exists
     $content = $content -replace '(?m)^\s*@Data\s*\r?\n', ''
@@ -38,7 +41,22 @@ foreach ($file in $files) {
         # Insert annotations before public class
         $content = $content -replace '(?m)^(public\s+class\s+)', "$annoStr`$1"
     }
+    
+    # 5. Fix manual constructors
+    $content = $content -replace '(?m)^\s*public\s+ToolMetadata\(\)\s*\{\}\s*\r?\n', ''
+    $content = $content -replace '(?m)^\s*public\s+ZtUsacInDto\(\)\s*\{\s*setPuseYn\("Y"\);\s*\}\s*\r?\n', ''
+    
+    # Fix puseYn default
+    if ($file.Name -eq "ZtUsacInDto.java") {
+        $content = $content -replace 'private String puseYn;', '@Builder.Default`r`n    private String puseYn = "Y";'
+    }
+    
+    # Fix AuditInfo Builder conflict
+    if ($file.Name -eq "AuditInfo.java") {
+        $content = $content -replace '(?m)^@Builder\r?\n', ''
+    }
 
-    Set-Content -Path $file.FullName -Value $content -Encoding UTF8
+    # Write without BOM
+    [System.IO.File]::WriteAllText($file.FullName, $content, $Utf8NoBomEncoding)
     Write-Host "Processed: $($file.Name)"
 }

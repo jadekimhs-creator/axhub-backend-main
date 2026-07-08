@@ -1,5 +1,7 @@
 package io.shinhanlife.axhub.common.session.dto;
 
+import lombok.Setter;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -13,6 +15,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
+@Setter
 public class ZtUsacOutDto {
 
     /* 인사번호 */
