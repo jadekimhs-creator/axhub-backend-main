@@ -3,6 +3,7 @@ package io.shinhanlife.axhub.biz.mcp.gateway.service;
 import io.shinhanlife.axhub.common.mcp.security.SecurityProperties;
 import io.shinhanlife.axhub.biz.mcp.gateway.registry.RedisRegistryService;
 import io.shinhanlife.axhub.biz.mcp.gateway.dto.ToolMetadata;
+import io.shinhanlife.axhub.biz.mcp.gateway.config.GatewayFallbackProperties;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -17,6 +18,7 @@ public class ToolPlanner {
 
     private final RedisRegistryService redisRegistryService;
     private final SecurityProperties securityProperties;
+    private final GatewayFallbackProperties fallbackProperties;
 
     /**
      * 요청(payload)을 분석하여 실행해야 할 Tool의 계획을 생성합니다.
@@ -37,8 +39,30 @@ public class ToolPlanner {
         var toolMetadata = redisRegistryService.getTool(toolName);
 
         if (toolMetadata == null) {
-            log.warn(" [Planner] 등록되지 않은 툴 요청: {}", toolName);
-            throw new RuntimeException("해당 툴(" + toolName + ")이 레지스트리에 존재하지 않습니다.");
+            log.warn(" [Planner] 등록되지 않은 툴 요청: {}. Fallback 라우팅 규칙을 확인합니다.", toolName);
+
+            String fallbackPodUrl = fallbackProperties.getDefaultUrl();
+            if (fallbackProperties.getRoutes() != null) {
+                for (Map.Entry<String, String> entry : fallbackProperties.getRoutes().entrySet()) {
+                    if (toolName.contains(entry.getKey())) {
+                        fallbackPodUrl = entry.getValue();
+                        break;
+                    }
+                }
+            }
+
+            if (fallbackPodUrl == null || fallbackPodUrl.isEmpty()) {
+                log.error(" [Planner] Fallback 라우팅 대상이 아닙니다. 툴: {}", toolName);
+                throw new RuntimeException("해당 툴(" + toolName + ")이 레지스트리에 존재하지 않습니다.");
+            }
+
+            log.info(" [Planner] Fallback 라우팅 매칭됨: {} -> {}", toolName, fallbackPodUrl);
+
+            toolMetadata = ToolMetadata.builder()
+                .toolName(toolName)
+                .integrationType("DIRECT")
+                .podUrl(fallbackPodUrl)
+                .build();
         }
 
         // 2-1. [신규] 도메인 그룹핑 기반 권한 검증
