@@ -10,7 +10,6 @@ import java.util.Map;
 import java.util.UUID;
 
 import org.slf4j.MDC;
-import org.springframework.http.client.SimpleClientHttpRequestFactory;
 
 import io.shinhanlife.axhub.biz.mcp.tool.config.GlowCommunicationProperties;
 
@@ -26,10 +25,7 @@ public class HttpEimsSender implements EimsSender {
         this.glowProps = glowProps;
         // yml의 대내 MCI host, port, uri를 조합하여 EIMS 호출 주소 생성
         this.eimsUrl = glowProps.getMci().getHost() + ":" + glowProps.getMci().getPort() + glowProps.getMci().getUri();
-        SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
-        factory.setConnectTimeout(glowProps.getMci().getConnectionTimeout() * 1000);
-        factory.setReadTimeout(glowProps.getMci().getReadTimeout() * 1000);
-        this.restClient = RestClient.builder().requestFactory(factory).build();
+        this.restClient = RestClient.builder().build();
     }
 
     @Override
