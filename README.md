@@ -54,6 +54,26 @@ AXHUB Backend는 3개의 주요 애플리케이션으로 분리 운영됩니다:
 
 ---
 
+## 🔒 비공개 Tool 관리 및 Fallback 연동 (Visibility & Routing)
+
+저희 시스템은 MSA 보안 및 아키텍처 원칙에 따라 Tool의 **레지스트리 등록 여부(라우팅)**와 **API 노출 여부(가시성)**를 완벽히 분리하여 관리합니다.
+
+1. **`visible = false`**: 
+   레지스트리에 정상적으로 등록되어 게이트웨이가 동적으로 라우팅하지만, 클라이언트에게 제공되는 `/tools/list` API 목록에서는 숨겨집니다.
+2. **`register = false`**: 
+   내부 레지스트리(Redis)에 툴 정보를 등록하지 않습니다 (외부 레지스트리를 독자적으로 사용할 경우 등). 
+   이 경우 게이트웨이는 `application.properties`의 `mcp.gateway.fallback.routes` 설정을 참조하여 **Fallback 정적 라우팅**을 수행하므로 연동이 100% 보장됩니다.
+
+```java
+@McpFunction(
+    name = "secret_tool",
+    visible = false, // 목록 숨김 여부 (기본값: true)
+    register = false // 내부 Redis 등록 여부 (기본값: true)
+)
+```
+
+---
+
 ## 🛡️ 안정성 및 트래픽 제어 (Resilience4j)
 
 MSA(Microservices Architecture) 환경의 안정성을 위해 완벽한 2-Track 방어막을 구축했습니다.
