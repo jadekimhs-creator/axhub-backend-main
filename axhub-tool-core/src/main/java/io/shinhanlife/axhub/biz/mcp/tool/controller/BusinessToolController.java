@@ -82,21 +82,8 @@ public class BusinessToolController {
             return error;
         }
 
-        // --- 비공개 툴(register=false)에 대한 강제 실행 접근 원천 차단 로직 ---
-        McpProperties.FunctionProp prop = null;
-        if (mcpProperties != null && mcpProperties.getFunctions() != null) {
-            prop = mcpProperties.getFunctions().get(targetFunctionAnnotation.name());
-        }
-        boolean isRegister = prop != null && prop.getRegister() != null ? prop.getRegister() : targetFunctionAnnotation.register();
-
-        if (!isRegister) {
-            log.warn("[Tool] 비공개 툴에 대한 강제 접근 시도 차단: {}", functionName);
-            Map<String, Object> error = new HashMap<>();
-            error.put("jsonrpc", "2.0");
-            error.put("error", Map.of("code", -32001, "message", "접근이 차단된 비공개 툴입니다: " + functionName));
-            error.put("id", payload != null ? payload.get("id") : null);
-            return error;
-        }
+        // --- 비공개 툴(register=false)은 외부 노출(Redis)만 제외하고, 직접 실행은 허용하도록 변경 ---
+        // (기존 차단 로직 제거됨)
 
         // 2. 파라미터 유효성 검증 (JSON Schema)
         if (targetMethod.getParameterCount() > 0) {

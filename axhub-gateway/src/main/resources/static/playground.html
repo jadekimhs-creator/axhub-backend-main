@@ -234,6 +234,21 @@
                     <!-- Fields will be dynamically injected here -->
                 </div>
 
+                <!-- NEW: Manual Input Container for Hidden Tools -->
+                <div id="manualInputContainer" class="grid grid-cols-1 gap-4 mt-4 p-5 bg-slate-900/40 rounded-xl border border-rose-500/30 hidden">
+                    <div class="col-span-full">
+                        <h3 class="text-sm font-bold text-rose-400 mb-2 border-b border-rose-500/20 pb-2">히든 툴 직접 입력 (Manual Override)</h3>
+                    </div>
+                    <div class="group">
+                        <label class="block text-xs font-bold text-slate-400 mb-2">실행할 툴 이름 (Tool Name)</label>
+                        <input type="text" id="manualToolName" class="input-premium block w-full py-2 px-3 text-sm rounded-lg" value="get_template_file_url" placeholder="예: get_template_file_url">
+                    </div>
+                    <div class="group">
+                        <label class="block text-xs font-bold text-slate-400 mb-2">파라미터 (JSON 형식)</label>
+                        <textarea id="manualToolArgs" rows="3" class="input-premium block w-full py-2 px-3 text-sm rounded-lg font-mono" placeholder='{"templateId": "test"}'>{"templateId": "test_excel"}</textarea>
+                    </div>
+                </div>
+
                 <div class="group pt-2">
                     <label for="userPrompt" class="flex items-center text-xs font-bold text-slate-400 mb-2 uppercase tracking-widest transition-colors group-focus-within:text-brand-400">
                         <svg class="w-3.5 h-3.5 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"></path></svg>
@@ -297,11 +312,6 @@
 
                 const tools = data.result?.tools || [];
                 
-                if (tools.length === 0) {
-                    toolSelect.innerHTML = '<option value="">등록된 툴이 없습니다</option>';
-                    return;
-                }
-
                 const groupedTools = {};
                 tools.forEach(tool => {
                     const group = tool.domainGroup || '기타 그룹';
@@ -327,6 +337,17 @@
                     });
                     toolSelect.appendChild(optgroup);
                 });
+
+                // Add Manual Input Option
+                const optgroupManual = document.createElement('optgroup');
+                optgroupManual.label = '고급 (Advanced)';
+                const optionManual = document.createElement('option');
+                optionManual.value = 'MANUAL_INPUT';
+                optionManual.textContent = '🛠️ 비공개 툴 직접 입력 (Hidden Tool Test)';
+                optionManual.dataset.schema = "null";
+                optgroupManual.appendChild(optionManual);
+                toolSelect.appendChild(optgroupManual);
+
             } catch (err) {
                 toolSelect.innerHTML = '<option value="">데이터 로드 실패</option>';
             }
@@ -398,8 +419,15 @@
         }
 
         toolSelect.addEventListener('change', () => {
-            updatePrompt();
-            renderDynamicForm();
+            if (toolSelect.value === 'MANUAL_INPUT') {
+                document.getElementById('manualInputContainer').classList.remove('hidden');
+                dynamicFormContainer.classList.add('hidden');
+                document.getElementById('userPrompt').value = "숨겨진 툴 강제 호출 테스트";
+            } else {
+                document.getElementById('manualInputContainer').classList.add('hidden');
+                updatePrompt();
+                renderDynamicForm();
+            }
         });
 
         document.addEventListener('DOMContentLoaded', fetchTools);
@@ -429,6 +457,26 @@
                 return;
             }
             
+            let finalToolName = toolSelect.value;
+            let finalArguments = {};
+
+            if (finalToolName === 'MANUAL_INPUT') {
+                finalToolName = document.getElementById('manualToolName').value.trim();
+                if (!finalToolName) {
+                    alert("실행할 히든 툴의 이름을 입력해주세요.");
+                    return;
+                }
+                try {
+                    const argsVal = document.getElementById('manualToolArgs').value.trim();
+                    finalArguments = argsVal ? JSON.parse(argsVal) : {};
+                } catch(err) {
+                    alert("JSON 파라미터 형식이 올바르지 않습니다.");
+                    return;
+                }
+            } else {
+                finalArguments = collectArguments();
+            }
+
             const loadingOverlay = document.getElementById('loadingOverlay');
             const resultContainer = document.getElementById('resultContainer');
             const jsonResponse = document.getElementById('jsonResponse');
@@ -439,14 +487,12 @@
 
             loadingOverlay.classList.add('active');
             
-            const actualArguments = collectArguments();
-
             const payload = {
                 jsonrpc: "2.0",
                 method: "tools/call",
                 params: {
-                    name: toolSelect.value,
-                    arguments: actualArguments
+                    name: finalToolName,
+                    arguments: finalArguments
                 },
                 id: Math.floor(Math.random() * 10000)
             };
