@@ -1,16 +1,12 @@
 package io.shinhanlife.axhub.sample.presentation;
 
 
-import io.shinhanlife.glow.BaseResponse;
-import io.shinhanlife.glow.GlowControllerId;
-import io.shinhanlife.glow.GlowLogTarget;
-import io.shinhanlife.glow.GlowLogger;
-import io.shinhanlife.glow.ResponseUtil;
 import io.shinhanlife.axhub.sample.presentation.io.AppliSystNtfyPatiRequest;
 import io.shinhanlife.axhub.sample.presentation.io.AppliSystNtfyPatiResponse;
 import io.shinhanlife.axhub.sample.presentation.io.StrnTermRequest;
 import io.shinhanlife.axhub.sample.presentation.io.StrnTermResponse;
 import io.shinhanlife.axhub.sample.usecase.GlowSampleUseCase;
+import io.shinhanlife.glow.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -19,6 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequiredArgsConstructor
+
 public class GlowSampleController {
     @GlowLogTarget({GlowLogTarget.Target.CONSOLE, GlowLogTarget.Target.FILE})
     private final GlowLogger log;
@@ -29,6 +26,7 @@ public class GlowSampleController {
     public ResponseEntity<BaseResponse<StrnTermResponse>> getStrnTerms(@RequestBody StrnTermRequest request) {
         return ResponseUtil.ok(glowSampleUseCase.getStrnTerms(request));
     }
+
 
     @GlowControllerId(value = "insertAp")
     @PostMapping("/insertAppliSystNtfyPati")
