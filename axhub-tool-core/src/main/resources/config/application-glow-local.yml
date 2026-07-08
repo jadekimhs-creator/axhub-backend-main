@@ -23,19 +23,32 @@ spring:
 
 # 3. 신한라이프 Glow Framework 통신 (MCI / EAI) 설정
 glow:
-  communication:
-    http:
-      timeout: 5000               # HTTP 타임아웃 (ms)
-      max-connections: 100
-    mci:
-      url: "http://mci-dev.shinhanlife.io"  # TODO: 실제 대내 MCI 주소
-      port: 8080
-    extmci:
-      url: "http://extmci-dev.shinhanlife.io" # TODO: 실제 대외 MCI 주소
-      port: 8090
-    eai:
-      url: "tcp://eai-dev.shinhanlife.io"     # TODO: 실제 EAI 주소
-      port: 9999
+  communication: #Communication 설정
+    common:
+      env-type: D # 대내표준 헤더의 환경 타입정보 (D: 개발, T: 테스트, P: 운영)
+    http: # HTTP 비표준 통신 설정
+      connection-timeout: 5 # 연결 타임아웃 시간 (초 단위)
+      read-timeout: 5 # 읽기 타임아웃 시간 (초 단위)
+    mci: # 대내MCI 통신 설정
+      host: http://localhost # 대내MCI 호스트 주소
+      port: 8080 # 대내MCI 포트 번호
+      uri: /mciSend # 대내MCI URI 정보
+      receive-uri: /app/mciReceive # 대내MCI 수신 URI
+      connection-timeout: 5 # 연결 타임아웃 시간 (초 단위)
+      read-timeout: 30 # 읽기 타임아웃 시간 (초 단위)
+      encoding: UTF-8 # 대내MCI 인코딩 정보
+    extmci: # 대외MCI 통신 설정
+      host: http://localhost # 대외MCI 호스트 주소
+      port: 8080 # 대외MCI 포트 번호
+      uri: /extmci # 대외MCI URI 정보
+      json-uri: /extmciJson # 대외MCI JSON방식 URI 정보
+      receive-uri: /app/extMciReceive # 대외MCI 수신 URI
+      connection-timeout: 5 # 연결 타임아웃 시간 (초 단위)
+      read-timeout: 30 # 읽기 타임아웃 시간 (초 단위)
+      encoding: EUC-KR # 대외MCI 인코딩 정보
+    eai: # EAI 통신 설정
+      host: tcp://localhost # EAI 호스트 주소 (TODO: 실제 주소로 변경)
+      port: 9999 # EAI 포트 번호
     websocket:
       endpoint: "/ws-glow"
       allowed-origins: "*"
