@@ -49,4 +49,9 @@ public class ToolMetadata {
 
     public String getMciServiceId() { return mciServiceId; }
     public void setMciServiceId(String mciServiceId) { this.mciServiceId = mciServiceId; }
+
+    private boolean visible = true;
+
+    public boolean isVisible() { return visible; }
+    public void setVisible(boolean visible) { this.visible = visible; }
 }

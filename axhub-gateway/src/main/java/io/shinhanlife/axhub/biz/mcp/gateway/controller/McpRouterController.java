@@ -84,7 +84,10 @@ public class McpRouterController {
 
     @GetMapping("/tools/list")
     public ResponseEntity<JsonRpcResponse> listTools() {
-        List<ToolMetadata> activeTools = redisRegistryService.getAllTools();
+        List<ToolMetadata> activeTools = redisRegistryService.getAllTools()
+                .stream()
+                .filter(ToolMetadata::isVisible)
+                .collect(java.util.stream.Collectors.toList());
         
         JsonRpcResponse response = new JsonRpcResponse();
         response.setId(UUID.randomUUID().toString());
@@ -95,7 +98,10 @@ public class McpRouterController {
 
     @GetMapping(value = "/tools/docs/markdown", produces = "text/markdown;charset=UTF-8")
     public ResponseEntity<String> generateToolsMarkdown() {
-        List<ToolMetadata> tools = redisRegistryService.getAllTools();
+        List<ToolMetadata> tools = redisRegistryService.getAllTools()
+                .stream()
+                .filter(ToolMetadata::isVisible)
+                .collect(java.util.stream.Collectors.toList());
         
         StringBuilder md = new StringBuilder();
         md.append("# \uD83E\uDD16 Shinhan AI Tool Catalog\n\n");

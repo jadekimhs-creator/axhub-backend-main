@@ -19,5 +19,6 @@ public class McpProperties {
         private String prompt;
         private String mappingId;
         private Boolean register;
+        private Boolean visible;
     }
 }

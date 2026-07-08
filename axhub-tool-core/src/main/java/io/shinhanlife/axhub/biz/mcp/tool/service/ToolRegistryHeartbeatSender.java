@@ -77,6 +77,9 @@ public class ToolRegistryHeartbeatSender {
                     meta.setMciServiceId(prop != null && prop.getMappingId() != null ? prop.getMappingId() : functionAnnotation.mappingId());
                     meta.setPodUrl(podUrl);
                     
+                    boolean isVisible = prop != null && prop.getVisible() != null ? prop.getVisible() : functionAnnotation.visible();
+                    meta.setVisible(isVisible);
+                    
                     Map<String, String> prompts = new HashMap<>();
                     String promptText = prop != null && prop.getPrompt() != null ? prop.getPrompt() : functionAnnotation.prompt();
                     prompts.put(functionAnnotation.name(), promptText);

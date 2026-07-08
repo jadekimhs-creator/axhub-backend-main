@@ -37,17 +37,8 @@ public class ToolPlanner {
         var toolMetadata = redisRegistryService.getTool(toolName);
 
         if (toolMetadata == null) {
-            log.warn(" [Planner] 등록되지 않은 툴 요청: {}. 레지스트리를 참조하지 않고 강제 연동 모드로 전환합니다.", toolName);
-            // 히든 툴(register=false)에 대한 강제 라우팅 폴백
-            String fallbackPodUrl = "http://tool-other:8084"; // 기본값 (get_template_file_url 등)
-            if (toolName.contains("email")) fallbackPodUrl = "http://tool-email:8083";
-            else if (toolName.contains("sms")) fallbackPodUrl = "http://tool-sms:8082";
-
-            toolMetadata = ToolMetadata.builder()
-                .toolName(toolName)
-                .integrationType("DIRECT")
-                .podUrl(fallbackPodUrl)
-                .build();
+            log.warn(" [Planner] 등록되지 않은 툴 요청: {}", toolName);
+            throw new RuntimeException("해당 툴(" + toolName + ")이 레지스트리에 존재하지 않습니다.");
         }
 
         // 2-1. [신규] 도메인 그룹핑 기반 권한 검증
