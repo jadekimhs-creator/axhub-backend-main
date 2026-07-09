@@ -28,7 +28,7 @@ public class MciStringEimsSender implements EimsSender {
     private final RestClient restClient;
     private final String mciUrl;
 
-    public MciStringEimsSender(@Value("${eims.mci.url}") String mciUrl) {
+    public MciStringEimsSender(@Value("${eims.mcistring.url}") String mciUrl) {
         this.mciUrl = mciUrl;
         this.restClient = RestClient.create();
     }

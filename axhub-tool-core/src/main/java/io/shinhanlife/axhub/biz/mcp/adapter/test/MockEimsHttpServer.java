@@ -71,4 +71,15 @@ public class MockEimsHttpServer {
         // MciEimsSender가 기대하는 JSON 변환용 XML 포맷 응답
         return "<Response><status>SUCCESS</status><message>MOCK_MCI_EIMS_RECEIVE_SUCCESS</message><data><info>정상 처리되었습니다.</info></data></Response>";
     }
+
+    @PostMapping("/mock/esb/string")
+    public String mockEsbStringReceiver(@RequestBody(required = false) String payload) {
+        log.info(" [가짜 ESB 서버] MCI String 요청 수신 완료!");
+        log.info(" 수신된 String 전문: {}", payload);
+        
+        // MciSampleStringRes 에 맞게 고정 길이 응답 생성
+        // name (10), age (3), joinDate (8), statusCode (2)
+        // targetList (30) -> MciSampleTargetDto (itemCode 5, itemValue 5) x 3
+        return "홍길동       03020260901OKA0001B0001A0002B0002A0003B0003";
+    }
 }
