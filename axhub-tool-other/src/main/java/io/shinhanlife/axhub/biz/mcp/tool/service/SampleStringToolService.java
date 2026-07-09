@@ -2,9 +2,8 @@ package io.shinhanlife.axhub.biz.mcp.tool.service;
 
 import io.shinhanlife.axhub.biz.mcp.tool.annotation.McpFunction;
 import io.shinhanlife.axhub.biz.mcp.tool.annotation.McpTool;
+import io.shinhanlife.axhub.biz.mcp.tool.dto.MciSampleStringRes;
 import io.shinhanlife.axhub.biz.mcp.tool.dto.SampleStringReq;
-import io.shinhanlife.axhub.biz.mcp.tool.dto.SampleStringRes;
-import io.shinhanlife.glow.util.GlowTrgmParser;
 import org.springframework.stereotype.Service;
 
 /**
@@ -44,7 +43,7 @@ public class SampleStringToolService extends AbstractMcpToolService {
         
         String rawStringResponse = (String) result.get("legacy_response");
         
-        // 2. 받아온 고정 길이 전문(String)을 GlowTrgmParser를 이용해 DTO로 파싱합니다.
-        return GlowTrgmParser.parse(rawStringResponse, SampleStringRes.class);
+        // 2. 받아온 고정 길이 전문(String)을 GlowMciParser를 이용해 DTO로 파싱합니다.
+        return io.shinhanlife.glow.util.GlowMciParser.parse(rawStringResponse, MciSampleStringRes.class);
     }
 }
