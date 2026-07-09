@@ -26,6 +26,8 @@ import io.shinhanlife.axhub.biz.mcp.tool.config.McpProperties;
 import java.lang.reflect.Method;
 import io.shinhanlife.axhub.biz.mcp.tool.util.JsonSchemaGenerator;
 import org.springframework.util.ClassUtils;
+import org.springframework.aop.support.AopUtils;
+import org.springframework.core.annotation.AnnotationUtils;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -71,15 +73,12 @@ public class BusinessToolController {
         // 1. 대상 Bean 및 Method 찾기 (ApplicationContext 활용)
         Map<String, Object> arguments = params != null ? (Map<String, Object>) params.get("arguments") : null;
         Object targetBean = null;
-        Method targetMethod = null;
-        McpFunction targetFunctionAnnotation = null;
-
         Map<String, Object> toolBeans = applicationContext.getBeansWithAnnotation(McpTool.class);
         outerLoop:
         for (Object bean : toolBeans.values()) {
-            Class<?> userClass = ClassUtils.getUserClass(bean);
-            for (Method method : userClass.getDeclaredMethods()) {
-                McpFunction mcpFunc = method.getAnnotation(McpFunction.class);
+            Class<?> targetClass = AopUtils.getTargetClass(bean);
+            for (Method method : targetClass.getDeclaredMethods()) {
+                McpFunction mcpFunc = AnnotationUtils.findAnnotation(method, McpFunction.class);
                 if (mcpFunc != null) {
                     String baseName = mcpFunc.name();
                     String expectedName = mcpProperties.getNamespace() != null && !mcpProperties.getNamespace().isEmpty()
@@ -97,15 +96,26 @@ public class BusinessToolController {
         }
 
         if (targetBean == null || targetMethod == null) {
-            log.error("[Tool] 실행할 함수(Method)를 찾을 수 없습니다: {}", functionName);
+            List<String> availableFunctions = new ArrayList<>();
+            for (Object bean : toolBeans.values()) {
+                Class<?> targetCls = AopUtils.getTargetClass(bean);
+                for (Method m : targetCls.getDeclaredMethods()) {
+                    McpFunction func = AnnotationUtils.findAnnotation(m, McpFunction.class);
+                    if (func != null) {
+                        String baseName = func.name();
+                        String expName = mcpProperties.getNamespace() != null && !mcpProperties.getNamespace().isEmpty()
+                                ? mcpProperties.getNamespace() + "_" + baseName : baseName;
+                        availableFunctions.add(expName + " (in " + targetCls.getSimpleName() + ")");
+                    }
+                }
+            }
+            log.error("[Tool] 실행할 함수(Method)를 찾을 수 없습니다: {}. 현재 스캔된 툴 메서드 목록: {}", functionName, availableFunctions);
             Map<String, Object> error = new HashMap<>();
             error.put("jsonrpc", "2.0");
             error.put("error", Map.of("code", -32601, "message", "실행할 함수를 찾을 수 없습니다: " + functionName));
             error.put("id", payload != null ? payload.get("id") : null);
             return error;
         }
-
-        // --- 비공개 툴(register=false)은 외부 노출(Redis)만 제외하고, 직접 실행은 허용하도록 변경 ---
         // (기존 차단 로직 제거됨)
 
         // 2. 파라미터 유효성 검증 (JSON Schema)
