@@ -39,7 +39,7 @@ public class SampleStringToolService extends AbstractMcpToolService {
         // 1. EIMS(Legacy)를 통해 원본 고정 길이 문자열을 받아옵니다.
         Map<String, Object> result = executeLegacy("MCI_STRING", "TRGM_001", req);
         
-        if ("ERROR".equals(result.get("status"))) {
+        if (!"SUCCESS".equals(result.get("status"))) {
             return result;
         }
         
