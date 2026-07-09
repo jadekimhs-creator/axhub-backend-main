@@ -4,8 +4,8 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.shinhanlife.axhub.biz.mcp.adapter.exception.MciCommunicationException;
 import io.shinhanlife.axhub.biz.mcp.adapter.sender.EimsSender;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 
 /**
@@ -24,11 +24,15 @@ import org.springframework.stereotype.Component;
  */
 @Slf4j
 @Component
-@RequiredArgsConstructor
 public class MciTemplate {
 
     private final EimsSender eimsSender;
     private final ObjectMapper objectMapper;
+
+    public MciTemplate(@Qualifier("httpEimsSender") EimsSender eimsSender, ObjectMapper objectMapper) {
+        this.eimsSender = eimsSender;
+        this.objectMapper = objectMapper;
+    }
 
     /**
      * MCI 인터페이스를 호출하고 결과를 지정된 타입으로 반환합니다.
