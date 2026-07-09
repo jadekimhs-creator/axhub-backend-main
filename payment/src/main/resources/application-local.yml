@@ -1,0 +1,12 @@
+spring:
+  application:
+    name: payment
+  config:
+    import: "classpath:config/application-glow-local.yml"
+
+server:
+  port: 8085
+
+axhub:
+  tool:
+    url: "http://payment:8085"
