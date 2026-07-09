@@ -23,6 +23,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import org.springframework.util.ClassUtils;
 
 /**
  * @package io.shinhanlife.axhub.biz.mcp.tool.service
@@ -67,7 +68,7 @@ public class ToolRegistryHeartbeatSender {
     private void scanAndBuildMetadata() {
         Map<String, Object> toolBeans = applicationContext.getBeansWithAnnotation(McpTool.class);
         for (Object bean : toolBeans.values()) {
-            Class<?> userClass = org.springframework.util.ClassUtils.getUserClass(bean);
+            Class<?> userClass = ClassUtils.getUserClass(bean);
             McpTool toolAnnotation = userClass.getAnnotation(McpTool.class);
             
             for (Method method : userClass.getDeclaredMethods()) {

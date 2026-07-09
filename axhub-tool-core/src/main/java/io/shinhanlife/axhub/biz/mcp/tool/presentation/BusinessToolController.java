@@ -25,6 +25,7 @@ import io.shinhanlife.axhub.biz.mcp.tool.annotation.McpFunction;
 import io.shinhanlife.axhub.biz.mcp.tool.config.McpProperties;
 import java.lang.reflect.Method;
 import io.shinhanlife.axhub.biz.mcp.tool.util.JsonSchemaGenerator;
+import org.springframework.util.ClassUtils;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -76,7 +77,7 @@ public class BusinessToolController {
         Map<String, Object> toolBeans = applicationContext.getBeansWithAnnotation(McpTool.class);
         outerLoop:
         for (Object bean : toolBeans.values()) {
-            Class<?> userClass = org.springframework.util.ClassUtils.getUserClass(bean);
+            Class<?> userClass = ClassUtils.getUserClass(bean);
             for (Method method : userClass.getDeclaredMethods()) {
                 McpFunction mcpFunc = method.getAnnotation(McpFunction.class);
                 if (mcpFunc != null) {
