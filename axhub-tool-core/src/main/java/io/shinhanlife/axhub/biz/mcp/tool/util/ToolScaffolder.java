@@ -41,7 +41,7 @@ public class ToolScaffolder {
         Scanner scanner = new Scanner(System.in);
 
         System.out.println("=========================================");
-        System.out.println(" 🛠️  MCP Tool Scaffolder (Java CLI)  🛠️ ");
+        System.out.println("   MCP Tool Scaffolder (Java CLI)   ");
         System.out.println("=========================================\n");
 
         String baseName = getOrAsk(args, 0, scanner, "1. 생성할 Tool의 기본 이름 (예: ExchangeRate) [영문 PascalCase]: ");
@@ -83,12 +83,26 @@ public class ToolScaffolder {
             import com.fasterxml.jackson.annotation.JsonInclude;
             import lombok.Data;
 
+            /**
+             * @package %s.dto
+             * @className %sReq
+             * @description AX HUB 시스템 처리 클래스
+             * @author 김형식
+             * @create 2026.09.01
+             * <pre>
+             * ---------- 개정이력 ----------
+             * 수정일      수정자    수정내용
+             * ---------- -------- ---------------------------
+             * 2026.09.01  김형식    최초생성
+             * 
+             * </pre>
+             */
             @Data
             @JsonInclude(JsonInclude.Include.NON_NULL)
             public class %sReq {
                 // TODO: Add request fields here
             }
-            """.formatted(BASE_PACKAGE, baseName);
+            """.formatted(BASE_PACKAGE, BASE_PACKAGE, baseName, baseName);
         Files.writeString(dtoDir.resolve(baseName + "Req.java"), reqContent);
 
         // Generate Res DTO
@@ -98,6 +112,20 @@ public class ToolScaffolder {
             import com.fasterxml.jackson.annotation.JsonInclude;
             import lombok.Data;
 
+            /**
+             * @package %s.dto
+             * @className %sRes
+             * @description AX HUB 시스템 처리 클래스
+             * @author 김형식
+             * @create 2026.09.01
+             * <pre>
+             * ---------- 개정이력 ----------
+             * 수정일      수정자    수정내용
+             * ---------- -------- ---------------------------
+             * 2026.09.01  김형식    최초생성
+             * 
+             * </pre>
+             */
             @Data
             @JsonInclude(JsonInclude.Include.NON_NULL)
             public class %sRes {
@@ -105,7 +133,7 @@ public class ToolScaffolder {
                 private String message;
                 // TODO: Add response fields here
             }
-            """.formatted(BASE_PACKAGE, baseName);
+            """.formatted(BASE_PACKAGE, BASE_PACKAGE, baseName, baseName);
         Files.writeString(dtoDir.resolve(baseName + "Res.java"), resContent);
 
         String toolName = baseName.toLowerCase();
@@ -120,6 +148,20 @@ public class ToolScaffolder {
             import %s.dto.%sRes;
             import org.springframework.stereotype.Service;
 
+            /**
+             * @package %s.service
+             * @className %sService
+             * @description AX HUB 시스템 처리 클래스
+             * @author 김형식
+             * @create 2026.09.01
+             * <pre>
+             * ---------- 개정이력 ----------
+             * 수정일      수정자    수정내용
+             * ---------- -------- ---------------------------
+             * 2026.09.01  김형식    최초생성
+             * 
+             * </pre>
+             */
             @Service
             @McpTool(
                 routingType = "%s",
@@ -142,6 +184,7 @@ public class ToolScaffolder {
                 BASE_PACKAGE, 
                 BASE_PACKAGE, 
                 BASE_PACKAGE, baseName, 
+                BASE_PACKAGE, baseName,
                 BASE_PACKAGE, baseName,
                 routingType, 
                 group, 
@@ -176,11 +219,11 @@ public class ToolScaffolder {
         }
 
         System.out.println("\n=========================================");
-        System.out.println("✅ Scaffolding Complete!");
+        System.out.println(" Scaffolding Complete!");
         System.out.println("=========================================");
         System.out.println("[Service] " + serviceDir.resolve(baseName + "Service.java"));
         System.out.println("[Req DTO] " + dtoDir.resolve(baseName + "Req.java"));
         System.out.println("[Res DTO] " + dtoDir.resolve(baseName + "Res.java"));
-        System.out.println("\n💡 팁: " + interfaceId + " 목업 데이터를 mock-responses.json에 추가하세요.");
+        System.out.println("\n Tip: " + interfaceId + " 목업 데이터를 mock-responses.json에 추가하세요.");
     }
 }
