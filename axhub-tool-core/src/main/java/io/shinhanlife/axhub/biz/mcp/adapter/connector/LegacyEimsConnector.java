@@ -40,6 +40,7 @@ public class LegacyEimsConnector {
     private final EimsSender jspJsonEimsSender;   // 41~50 (JSP JSON)
 
     private final EimsSender mciEimsSender;   // 실시간 연계 (기존 HTTP/TCP 대체, 동기식 API)
+    private final EimsSender mciStringEimsSender; // 실시간 연계 (String 전문 버전)
     private final EimsSender eaiEimsSender;   // 비동기/대용량 연계 (배치 통신 등)
 
     private final ObjectMapper jsonMapper;
@@ -75,6 +76,10 @@ public class LegacyEimsConnector {
         else if ("JSP_JSON".equalsIgnoreCase(routingType)) {
             log.info("[라우팅] JSP JSON 통신으로 전달");
             legacyResponse = jspJsonEimsSender.send(interfaceId, payload);
+        }
+        else if ("MCI_STRING".equalsIgnoreCase(routingType)) {
+            log.info("[라우팅] 실시간 AI 요청 -> MCI 연계 어댑터(String)를 통해 EIMS 전달");
+            legacyResponse = mciStringEimsSender.send(interfaceId, payload);
         }
         else {
             //  3. 아키텍처 규격에 맞춘 라우팅 (실시간 vs 비동기)
