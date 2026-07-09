@@ -4,9 +4,10 @@ import io.shinhanlife.axhub.biz.mcp.tool.annotation.McpFunction;
 import io.shinhanlife.axhub.biz.mcp.tool.annotation.McpTool;
 import io.shinhanlife.axhub.biz.mcp.tool.dto.SmsSendReq;
 import io.shinhanlife.axhub.biz.mcp.tool.service.AbstractMcpToolService;
+import io.shinhanlife.axhub.biz.mcp.tool.sms.dto.SmsMciReqDto;
+import io.shinhanlife.axhub.biz.mcp.tool.sms.mapper.SmsMciMapper;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -31,13 +32,11 @@ public class SmsToolService extends AbstractMcpToolService {
     public Object sendSms(SmsSendReq req) {
         log.info("📱 [SMS] SMS 발송 요청 수신. 수신자: {}", req.getPhoneNumber());
 
-        // EAI 연동을 위한 파라미터 변환
-        Map<String, Object> payload = new HashMap<>();
-        payload.put("phone", req.getPhoneNumber());
-        payload.put("content", req.getMessage());
+        // MapStruct를 이용한 자동 매핑 (AI DTO -> MCI DTO)
+        SmsMciReqDto mciReq = SmsMciMapper.INSTANCE.toMciReq(req);
 
-        // 레거시 시스템 연동 (EAI)
-        Map<String, Object> result = executeLegacy("EAI", "SMS_SEND_001", payload);
+        // 레거시 시스템 연동 (EAI) - DTO 객체를 그대로 넘김
+        Map<String, Object> result = executeLegacy("EAI", "SMS_SEND_001", mciReq);
 
         // 결과 가공
         if ("SUCCESS".equals(result.get("status"))) {
