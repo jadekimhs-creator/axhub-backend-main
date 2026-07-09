@@ -77,8 +77,9 @@ public class PodScaffolder {
             import org.springframework.boot.autoconfigure.SpringBootApplication;
             import org.springframework.cache.annotation.EnableCaching;
             
+            @SpringBootApplication(scanBasePackages = {"io.shinhanlife.axhub.biz.mcp.tool", "io.shinhanlife.axhub.biz.mcp.adapter", "io.shinhanlife.axhub.common.mcp", "io.shinhanlife.axhub.common.config"})
+            @org.springframework.boot.context.properties.ConfigurationPropertiesScan(basePackages = {"io.shinhanlife.axhub.biz.mcp.tool", "io.shinhanlife.axhub.biz.mcp.adapter", "io.shinhanlife.axhub.common.mcp", "io.shinhanlife.axhub.common.config"})
             @EnableCaching
-            @SpringBootApplication(scanBasePackages = "io.shinhanlife.axhub.biz.mcp")
             public class %sToolApplication {
                 public static void main(String[] args) {
                     SpringApplication.run(%sToolApplication.class, args);
@@ -145,6 +146,34 @@ public class PodScaffolder {
             logging.level.org.apache.kafka=ERROR
             """;
         Files.writeString(resPath.resolve("application-local.properties"), applicationLocalProperties);
+
+        String logbackXml = """
+            <?xml version="1.0" encoding="UTF-8"?>
+            <configuration>
+                <property name="LOG_PATTERN" value="%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] [%X{traceId}] %-5level %logger{36} - %msg%n" />
+                <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+                    <encoder>
+                        <pattern>${LOG_PATTERN}</pattern>
+                    </encoder>
+                </appender>
+                <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+                    <file>logs/%s.log</file>
+                    <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+                        <fileNamePattern>logs/%s-%%d{yyyy-MM-dd}.log</fileNamePattern>
+                        <maxHistory>30</maxHistory>
+                    </rollingPolicy>
+                    <encoder>
+                        <pattern>${LOG_PATTERN}</pattern>
+                    </encoder>
+                </appender>
+                <root level="INFO">
+                    <appender-ref ref="CONSOLE" />
+                    <appender-ref ref="FILE" />
+                </root>
+                <logger name="io.shinhanlife" level="DEBUG" />
+            </configuration>
+            """.formatted(moduleName, moduleName);
+        Files.writeString(resPath.resolve("logback-spring.xml"), logbackXml);
 
         System.out.println("[5/6] settings.gradle 에 모듈 등록 중...");
         Path settingsPath = Paths.get("settings.gradle");
