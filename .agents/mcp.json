@@ -1,0 +1,10 @@
+{
+  "mcpServers": {
+    "axhub-gateway": {
+      "command": "java",
+      "args": [
+        "C:/Users/jade/.gemini/antigravity/scratch/axhub-backend-main/McpBridge.java"
+      ]
+    }
+  }
+}
