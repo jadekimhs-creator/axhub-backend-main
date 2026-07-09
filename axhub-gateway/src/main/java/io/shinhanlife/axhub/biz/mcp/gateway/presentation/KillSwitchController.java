@@ -1,4 +1,4 @@
-package io.shinhanlife.axhub.biz.mcp.gateway.controller;
+package io.shinhanlife.axhub.biz.mcp.gateway.presentation;
 
 import io.shinhanlife.axhub.biz.mcp.gateway.service.KillSwitchService;
 import lombok.RequiredArgsConstructor;
@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.Map;
 
 /**
- * @package io.shinhanlife.axhub.biz.mcp.gateway.controller
+ * @package io.shinhanlife.axhub.biz.mcp.gateway.presentation
  * @className KillSwitchController
  * @description AX HUB 시스템 처리 클래스
  * @author 김형식

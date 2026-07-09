@@ -1,4 +1,4 @@
-package io.shinhanlife.axhub.biz.mcp.gateway.controller;
+package io.shinhanlife.axhub.biz.mcp.gateway.presentation;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.shinhanlife.axhub.biz.mcp.adapter.dto.JsonRpcRequest;
@@ -20,7 +20,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
 /**
- * @package io.shinhanlife.axhub.biz.mcp.gateway.controller
+ * @package io.shinhanlife.axhub.biz.mcp.gateway.presentation
  * @className McpRouterController
  * @description AX HUB 시스템 처리 클래스
  * @author 김형식

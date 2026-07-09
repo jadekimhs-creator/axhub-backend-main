@@ -27,7 +27,7 @@ import org.springframework.util.StopWatch;
 public class GatewayLoggingAspect {
 
     // gateway의 controller 패키지 하위의 모든 클래스/메서드 실행 시 작동
-    @Around("execution(* io.shinhanlife.axhub.biz.mcp.gateway.controller..*(..))")
+    @Around("execution(* io.shinhanlife.axhub.biz.mcp.gateway.presentation..*(..))")
     public Object logGatewayExecutionTime(ProceedingJoinPoint joinPoint) throws Throwable {
         String targetMethod = joinPoint.getSignature().toShortString();
         StopWatch stopWatch = new StopWatch();

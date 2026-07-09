@@ -1,11 +1,11 @@
-package io.shinhanlife.axhub.biz.mcp.gateway.controller;
+package io.shinhanlife.axhub.biz.mcp.gateway.presentation;
 
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RestController;
 import java.util.Map;
 
 /**
- * @package io.shinhanlife.axhub.biz.mcp.gateway.controller
+ * @package io.shinhanlife.axhub.biz.mcp.gateway.presentation
  * @className MciMockController
  * @description AX HUB 시스템 처리 클래스
  * @author 김형식

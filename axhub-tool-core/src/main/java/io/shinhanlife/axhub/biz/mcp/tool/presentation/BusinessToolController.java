@@ -1,4 +1,4 @@
-package io.shinhanlife.axhub.biz.mcp.tool.controller;
+package io.shinhanlife.axhub.biz.mcp.tool.presentation;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -29,7 +29,7 @@ import io.shinhanlife.axhub.biz.mcp.tool.util.JsonSchemaGenerator;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * @package io.shinhanlife.axhub.biz.mcp.tool.controller
+ * @package io.shinhanlife.axhub.biz.mcp.tool.presentation
  * @className BusinessToolController
  * @description AX HUB 시스템 처리 클래스
  * @author 김형식
