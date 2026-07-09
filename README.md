@@ -101,18 +101,32 @@ MSA(Microservices Architecture) 환경의 안정성을 위해 완벽한 2-Track 
 
 ---
 
-## 🧰 MCP Tool 코드 자동 생성 (ToolScaffolder)
+## 🏗️ 모듈(Pod) 및 Tool 코드 자동 생성 (Scaffolders)
 
-반복적인 Tool 모듈 생성 작업을 자동화하기 위해 **CLI 스캐폴더**를 제공합니다.
-다음 명령어를 터미널에 입력하면, Service 및 DTO 보일러플레이트 코드가 패키지 룰에 맞춰 자동 생성됩니다.
+새로운 도메인의 기능을 추가할 때 발생하는 반복적인 설정(보일러플레이트, 설정 파일 복사 등)을 1초 만에 자동화하기 위해 **CLI 스캐폴더 2종**을 제공합니다.
+
+### 1️⃣ 새로운 Pod(모듈) 전체를 생성할 때: `PodScaffolder`
+새로운 도메인(예: 결제, HR)을 위한 완전히 독립적인 Spring Boot 모듈을 생성합니다. 폴더 구조, 빌드 스크립트, 각종 프로퍼티 및 도커 설정까지 완벽하게 세팅됩니다.
+
+```bash
+# 사용법: javac로 컴파일 후 실행
+javac -encoding UTF-8 axhub-tool-core/src/main/java/io/shinhanlife/axhub/biz/mcp/tool/util/PodScaffolder.java
+java -cp axhub-tool-core/src/main/java io.shinhanlife.axhub.biz.mcp.tool.util.PodScaffolder [모듈명] [포트번호]
+
+# 실행 예시 (axhub-tool-hr 모듈을 8086 포트로 생성)
+java -cp axhub-tool-core/src/main/java io.shinhanlife.axhub.biz.mcp.tool.util.PodScaffolder hr 8086
+```
+
+### 2️⃣ 생성된 모듈에 새로운 툴(Function)을 추가할 때: `ToolScaffolder`
+어노테이션(`@McpTool`, `@McpFunction`)이 완벽히 달린 Service와 입출력 DTO 코드를 지정된 모듈 패키지 룰에 맞춰 자동 생성합니다.
 
 ```bash
 # 사용법: javac로 컴파일 후 실행
 javac -encoding UTF-8 axhub-tool-core/src/main/java/io/shinhanlife/axhub/biz/mcp/tool/util/ToolScaffolder.java
 java -cp axhub-tool-core/src/main/java io.shinhanlife.axhub.biz.mcp.tool.util.ToolScaffolder [Tool이름] [인터페이스ID] "[기능설명]" "[그룹명]" "[통신방식]" "[모듈명]"
 
-# 실행 예시
-java -cp axhub-tool-core/src/main/java io.shinhanlife.axhub.biz.mcp.tool.util.ToolScaffolder ExchangeRate EXCH_001 "환율 조회 기능" "CLAIM" "HTTP" "axhub-tool-other"
+# 실행 예시 (payment 모듈에 결제 승인 기능 추가)
+java -cp axhub-tool-core/src/main/java io.shinhanlife.axhub.biz.mcp.tool.util.ToolScaffolder PaymentApproval PAY_001 "결제 승인 처리 기능" "COMMON" "HTTP" "axhub-tool-payment"
 ```
 
 ---
@@ -126,6 +140,7 @@ axhub-backend-main (Root)
 ├── axhub-tool-core         # Tool 공통 기능 (AbstractMcpToolService, Annotation, Scaffolder)
 ├── axhub-tool-email        # [Tool] 이메일 발송 특화 어댑터 모듈
 ├── axhub-tool-sms          # [Tool] SMS 발송 특화 어댑터 모듈
+├── axhub-tool-payment      # [Tool] 결제 비즈니스 어댑터 모듈 (Scaffolded)
 └── axhub-tool-other        # [Tool] 기타 비즈니스(청구, 계약, 고객, HR 등) 어댑터 모듈
 ```
 
