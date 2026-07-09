@@ -68,6 +68,14 @@ public abstract class AbstractMcpToolService {
             // 2. PII 마스킹 처리
             String maskedResult = PiiMaskingUtils.mask(executionResult);
 
+            if (executionResult != null && (executionResult.contains("\"status\":\"CIRCUIT_OPEN\"") || executionResult.contains("\"status\":\"TOO_MANY_REQUESTS\""))) {
+                try {
+                    return objectMapper.readValue(executionResult, new TypeReference<Map<String, Object>>() {});
+                } catch (Exception e) {
+                    log.error("Fallback JSON 파싱 에러: {}", e.getMessage());
+                }
+            }
+
             Map<String, Object> result = new HashMap<>();
             result.put("status", "SUCCESS");
             result.put("legacy_response", maskedResult);
