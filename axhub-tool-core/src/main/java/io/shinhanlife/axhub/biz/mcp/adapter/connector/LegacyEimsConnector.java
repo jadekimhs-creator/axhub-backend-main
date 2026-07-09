@@ -59,40 +59,43 @@ public class LegacyEimsConnector {
 
         log.info("\n [Adapter -> Legacy] EIMS 통신 요청 - RoutingType: {}, Interface: {}, Payload: {}", routingType, interfaceId, payload);
 
-        // 2. 4단계 라우팅 분기 처리
-        String legacyResponse = null;
-        if ("HTTP".equalsIgnoreCase(routingType)) {
-            log.info("[라우팅] EIMS API (HTTP) 통신으로 전달");
-            legacyResponse = httpEimsSender.send(interfaceId, payload);
-        }
-        else if ("TCP".equalsIgnoreCase(routingType)) {
-            log.info("[라우팅] EIMS 소켓 (TCP) 통신으로 전달");
-            legacyResponse = tcpEimsSender.send(interfaceId, payload);
-        }
-        else if ("JSP_FORM".equalsIgnoreCase(routingType)) {
-            log.info("[라우팅] JSP Form 통신으로 전달");
-            legacyResponse = jspFormEimsSender.send(interfaceId, payload);
-        }
-        else if ("JSP_JSON".equalsIgnoreCase(routingType)) {
-            log.info("[라우팅] JSP JSON 통신으로 전달");
-            legacyResponse = jspJsonEimsSender.send(interfaceId, payload);
-        }
-        else if ("MCI_STRING".equalsIgnoreCase(routingType)) {
-            log.info("[라우팅] 실시간 AI 요청 -> MCI 연계 어댑터(String)를 통해 EIMS 전달");
-            legacyResponse = mciStringEimsSender.send(interfaceId, payload);
-        }
-        else if ("MCI".equalsIgnoreCase(routingType)) {
-            log.info("[라우팅] 실시간 AI 요청 -> MCI 연계 어댑터를 통해 EIMS 전달");
-            legacyResponse = mciEimsSender.send(interfaceId, payload);
-        }
-        else if ("EAI".equalsIgnoreCase(routingType)) {
-            log.info("[라우팅] 비동기/대용량 요청 -> EAI 연계 어댑터를 통해 EIMS 전달");
-            legacyResponse = eaiEimsSender.send(interfaceId, payload);
-        }
-        else {
-            log.error("[라우팅] 알 수 없는 라우팅 타입: {}", routingType);
-            throw new IllegalArgumentException("지원하지 않는 라우팅 타입입니다: " + routingType);
-        }
+        // 2. 4단계 라우팅 분기 처리 (Switch Expression 활용)
+        String upperRoutingType = routingType != null ? routingType.toUpperCase() : "";
+        
+        String legacyResponse = switch (upperRoutingType) {
+            case "HTTP" -> {
+                log.info("[라우팅] EIMS API (HTTP) 통신으로 전달");
+                yield httpEimsSender.send(interfaceId, payload);
+            }
+            case "TCP" -> {
+                log.info("[라우팅] EIMS 소켓 (TCP) 통신으로 전달");
+                yield tcpEimsSender.send(interfaceId, payload);
+            }
+            case "JSP_FORM" -> {
+                log.info("[라우팅] JSP Form 통신으로 전달");
+                yield jspFormEimsSender.send(interfaceId, payload);
+            }
+            case "JSP_JSON" -> {
+                log.info("[라우팅] JSP JSON 통신으로 전달");
+                yield jspJsonEimsSender.send(interfaceId, payload);
+            }
+            case "MCI_STRING" -> {
+                log.info("[라우팅] 실시간 AI 요청 -> MCI 연계 어댑터(String)를 통해 EIMS 전달");
+                yield mciStringEimsSender.send(interfaceId, payload);
+            }
+            case "MCI" -> {
+                log.info("[라우팅] 실시간 AI 요청 -> MCI 연계 어댑터를 통해 EIMS 전달");
+                yield mciEimsSender.send(interfaceId, payload);
+            }
+            case "EAI" -> {
+                log.info("[라우팅] 비동기/대용량 요청 -> EAI 연계 어댑터를 통해 EIMS 전달");
+                yield eaiEimsSender.send(interfaceId, payload);
+            }
+            default -> {
+                log.error("[라우팅] 알 수 없는 라우팅 타입: {}", routingType);
+                throw new IllegalArgumentException("지원하지 않는 라우팅 타입입니다: " + routingType);
+            }
+        };
         
         log.info("\n [Legacy -> Adapter] EIMS 통신 응답 수신: {}", legacyResponse);
         return legacyResponse;
