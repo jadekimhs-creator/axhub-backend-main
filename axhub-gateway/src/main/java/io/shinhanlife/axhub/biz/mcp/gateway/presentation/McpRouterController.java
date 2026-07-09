@@ -6,8 +6,12 @@ import io.shinhanlife.axhub.biz.mcp.adapter.dto.JsonRpcResponse;
 import io.shinhanlife.axhub.biz.mcp.adapter.dto.Params;
 import io.shinhanlife.axhub.biz.mcp.gateway.dto.ToolMetadata;
 import io.shinhanlife.axhub.biz.mcp.gateway.service.ExecuteService;
+import io.shinhanlife.axhub.biz.mcp.gateway.config.GatewayFallbackProperties;
 import io.shinhanlife.axhub.biz.mcp.gateway.registry.RedisRegistryService;
 import io.shinhanlife.axhub.common.mcp.security.SecurityProperties;
+
+import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.web.client.RestClient;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -43,15 +47,20 @@ public class McpRouterController {
     private final ExecuteService executeService;
     private final SecurityProperties securityProperties;
     private final ObjectMapper objectMapper;
+    private final GatewayFallbackProperties gatewayFallbackProperties;
+    private final RestClient restClient;
 
     public McpRouterController(RedisRegistryService redisRegistryService,
                                ExecuteService executeService,
                                SecurityProperties securityProperties,
-                               ObjectMapper objectMapper) {
+                               ObjectMapper objectMapper,
+                               GatewayFallbackProperties gatewayFallbackProperties) {
         this.redisRegistryService = redisRegistryService;
         this.executeService = executeService;
         this.securityProperties = securityProperties;
         this.objectMapper = objectMapper;
+        this.gatewayFallbackProperties = gatewayFallbackProperties;
+        this.restClient = RestClient.create();
     }
 
     @Operation(summary = "MCP 파이프라인 호출", description = "MCP 표준 파이프라인(ExecuteService)을 통해 레거시 툴을 호출합니다.")
@@ -102,6 +111,35 @@ public class McpRouterController {
                 .stream()
                 .filter(ToolMetadata::isVisible)
                 .collect(java.util.stream.Collectors.toList());
+                
+        java.util.Set<String> knownTools = activeTools.stream()
+                .map(ToolMetadata::getToolName)
+                .collect(java.util.stream.Collectors.toSet());
+
+        java.util.Set<String> fallbackUrls = new java.util.HashSet<>(gatewayFallbackProperties.getRoutes().values());
+        if (gatewayFallbackProperties.getDefaultUrl() != null) {
+            fallbackUrls.add(gatewayFallbackProperties.getDefaultUrl());
+        }
+
+        for (String url : fallbackUrls) {
+            try {
+                List<ToolMetadata> localTools = restClient.get()
+                        .uri(url + "/mcp/api/v1/tools/local")
+                        .retrieve()
+                        .body(new ParameterizedTypeReference<List<ToolMetadata>>() {});
+                        
+                if (localTools != null) {
+                    for (ToolMetadata t : localTools) {
+                        if (!t.isRegistered() && t.isVisible() && !knownTools.contains(t.getToolName())) {
+                            activeTools.add(t);
+                            knownTools.add(t.getToolName());
+                        }
+                    }
+                }
+            } catch (Exception e) {
+                log.warn("Failed to fetch local tools from fallback URL: {}", url);
+            }
+        }
         
         JsonRpcResponse response = new JsonRpcResponse();
         response.setId(UUID.randomUUID().toString());

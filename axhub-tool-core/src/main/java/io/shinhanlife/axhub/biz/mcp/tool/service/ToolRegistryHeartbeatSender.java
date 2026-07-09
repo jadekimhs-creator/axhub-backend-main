@@ -5,6 +5,7 @@ import io.shinhanlife.axhub.biz.mcp.tool.annotation.McpTool;
 import io.shinhanlife.axhub.biz.mcp.tool.dto.ToolMetadata;
 import io.shinhanlife.axhub.biz.mcp.tool.util.JsonSchemaGenerator;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -60,6 +61,9 @@ public class ToolRegistryHeartbeatSender {
     private String podUrl;
 
     private List<ToolMetadata> registeredTools = new ArrayList<>();
+    
+    @Getter
+    private List<ToolMetadata> allScannedTools = new ArrayList<>();
 
     @PostConstruct
     public void init() {
@@ -89,7 +93,6 @@ public class ToolRegistryHeartbeatSender {
                     boolean isRegister = prop != null && prop.getRegister() != null ? prop.getRegister() : functionAnnotation.register();
                     if (!isRegister) {
                         log.info(" [HeartbeatSender] '{}' 툴은 설정에 의해 외부 등록(Redis) 대상에서 제외되었습니다. (최종 이름: {})", baseName, finalName);
-                        continue;
                     }
 
                     ToolMetadata meta = new ToolMetadata();
@@ -102,6 +105,7 @@ public class ToolRegistryHeartbeatSender {
                     
                     boolean isVisible = prop != null && prop.getVisible() != null ? prop.getVisible() : functionAnnotation.visible();
                     meta.setVisible(isVisible);
+                    meta.setRegistered(isRegister);
                     
                     Map<String, String> prompts = new HashMap<>();
                     String promptText = prop != null && prop.getPrompt() != null ? prop.getPrompt() : functionAnnotation.prompt();
@@ -121,8 +125,11 @@ public class ToolRegistryHeartbeatSender {
                         }
                     }
 
-                    registeredTools.add(meta);
-                    log.info(" [HeartbeatSender] 도구 메타데이터 생성: {}", meta.getToolName());
+                    if (isRegister) {
+                        registeredTools.add(meta);
+                    }
+                    allScannedTools.add(meta);
+                    log.info(" [HeartbeatSender] 도구 메타데이터 생성: {} (isRegistered: {})", meta.getToolName(), isRegister);
                 }
             }
         }

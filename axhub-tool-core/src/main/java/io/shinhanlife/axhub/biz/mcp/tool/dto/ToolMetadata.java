@@ -39,7 +39,10 @@ public class ToolMetadata {
     private String mciServiceId;
 
 
+    @Builder.Default
     private boolean visible = true;
 
+    @Builder.Default
+    private boolean isRegistered = true;
 
 }

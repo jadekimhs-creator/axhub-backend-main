@@ -54,6 +54,13 @@ public class ToolMetadata {
     // 2-3. Pod 실행 URL (독립적인 Microservice 라우팅용, 예: http://localhost:8082)
     private String podUrl;
 
+    // 2-4. 가시성 여부
+    private boolean visible = true;
+    
+    // 2-5. Redis 등록 여부 (UI 표출용)
+    @Builder.Default
+    private boolean isRegistered = true;
+
     // 3. 연동 아키텍처 구분 (DIRECT / MCI_EAI)
     private String integrationType;   // 연동 타입: "DIRECT" 또는 "MCI_EAI"
 

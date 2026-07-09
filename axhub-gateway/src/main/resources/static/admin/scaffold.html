@@ -326,11 +326,17 @@
                 <!-- Tool List Form -->
                 <div class="tab-pane fade" id="list" role="tabpanel">
                     <div class="d-flex justify-content-between align-items-center mb-3">
-                        <h5 class="mb-0 text-secondary">현재 시스템에 등록되어 라우팅 가능한 Tool 목록입니다.</h5>
-                        <button class="btn btn-sm btn-outline-primary" onclick="loadToolList()">🔄 새로고침</button>
+                        <div>
+                            <h5 class="mb-1 text-secondary">현재 시스템에 라우팅 가능한 Tool 목록입니다.</h5>
+                            <small class="text-muted">Redis에 등록되지 않은(비공개) Tool도 포함되어 조회됩니다.</small>
+                        </div>
+                        <div class="d-flex gap-2">
+                            <input type="text" id="toolFilter" class="form-control form-control-sm" placeholder="🔍 이름 또는 그룹 검색..." onkeyup="filterTools()">
+                            <button class="btn btn-sm btn-outline-primary text-nowrap" onclick="loadToolList()">🔄 새로고침</button>
+                        </div>
                     </div>
                     <div class="table-responsive">
-                        <table class="table table-hover align-middle">
+                        <table class="table table-hover align-middle" id="toolTable">
                             <thead class="table-light">
                                 <tr>
                                     <th style="width: 10%; min-width: 100px;">그룹</th>
@@ -422,18 +428,41 @@
                 return;
             }
             
-            tbody.innerHTML = tools.map(t => `
-                <tr>
-                    <td class="text-nowrap"><span class="badge bg-secondary">${t.domainGroup || 'UNKNOWN'}</span></td>
-                    <td class="fw-bold text-primary text-break">${t.toolName}</td>
+            tbody.innerHTML = tools.map(t => {
+                const isReg = t.registered !== false; // default true
+                const badgeHtml = isReg ? '' : ' <span class="badge bg-warning text-dark border border-warning" title="Redis 미등록 (직접 호출만 가능)">비공개 (미등록)</span>';
+                
+                return `
+                <tr class="tool-row">
+                    <td class="text-nowrap"><span class="badge bg-secondary tool-group">${t.domainGroup || 'UNKNOWN'}</span></td>
+                    <td class="fw-bold text-primary text-break tool-name">${t.toolName}${badgeHtml}</td>
                     <td class="text-break">${t.description}</td>
                     <td class="text-nowrap"><span class="badge bg-light text-dark border">${t.podUrl}</span></td>
                     <td class="text-nowrap"><span class="badge bg-info text-dark">${t.integrationType}</span> <small class="text-muted ms-1">${t.mciServiceId || '-'}</small></td>
                 </tr>
-            `).join('');
+            `}).join('');
+            
+            // Re-apply filter if text is already present
+            filterTools();
         })
         .catch(err => {
             tbody.innerHTML = `<tr><td colspan="5" class="text-center py-4 text-danger">목록을 불러오는 중 오류가 발생했습니다: ${err.message}</td></tr>`;
+        });
+    }
+
+    function filterTools() {
+        const input = document.getElementById('toolFilter').value.toLowerCase();
+        const rows = document.querySelectorAll('.tool-row');
+        
+        rows.forEach(row => {
+            const name = row.querySelector('.tool-name').textContent.toLowerCase();
+            const group = row.querySelector('.tool-group').textContent.toLowerCase();
+            
+            if (name.includes(input) || group.includes(input)) {
+                row.style.display = '';
+            } else {
+                row.style.display = 'none';
+            }
         });
     }
 </script>

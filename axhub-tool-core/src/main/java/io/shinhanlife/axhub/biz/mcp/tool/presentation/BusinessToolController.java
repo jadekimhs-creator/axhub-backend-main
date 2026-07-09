@@ -1,6 +1,7 @@
 package io.shinhanlife.axhub.biz.mcp.tool.presentation;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -23,6 +24,8 @@ import org.springframework.context.ApplicationContext;
 import io.shinhanlife.axhub.biz.mcp.tool.annotation.McpTool;
 import io.shinhanlife.axhub.biz.mcp.tool.annotation.McpFunction;
 import io.shinhanlife.axhub.biz.mcp.tool.config.McpProperties;
+import io.shinhanlife.axhub.biz.mcp.tool.dto.ToolMetadata;
+import io.shinhanlife.axhub.biz.mcp.tool.service.ToolRegistryHeartbeatSender;
 import java.lang.reflect.Method;
 import io.shinhanlife.axhub.biz.mcp.tool.util.JsonSchemaGenerator;
 import org.springframework.util.ClassUtils;
@@ -54,6 +57,13 @@ public class BusinessToolController {
     private final ApplicationContext applicationContext;
     private final ObjectMapper objectMapper;
     private final McpProperties mcpProperties;
+    private final ToolRegistryHeartbeatSender toolRegistryHeartbeatSender;
+
+    // 내부 조회용 로컬 Tool 목록 엔드포인트
+    @GetMapping("/mcp/api/v1/tools/local")
+    public List<ToolMetadata> getLocalTools() {
+        return toolRegistryHeartbeatSender.getAllScannedTools();
+    }
 
     // JSON RPC 기반 단일 라우팅 엔드포인트
     @PostMapping("/mcp/api/v1/tools/call")
