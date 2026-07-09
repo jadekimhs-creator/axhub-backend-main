@@ -3,6 +3,20 @@ package io.shinhanlife.axhub.biz.mcp.adapter.util;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+/**
+ * @package io.shinhanlife.axhub.biz.mcp.adapter.util
+ * @className PiiMaskingUtils
+ * @description AX HUB 시스템 처리 클래스
+ * @author 김형식
+ * @create 2026.09.01
+ * <pre>
+ * ---------- 개정이력 ----------
+ * 수정일      수정자    수정내용
+ * ---------- -------- ---------------------------
+ * 2026.09.01  김형식    최초생성
+ * 
+ * </pre>
+ */
 public class PiiMaskingUtils {
     
     // 1. 주민등록번호 패턴 (ex: 900101-1234567 또는 9001011234567)

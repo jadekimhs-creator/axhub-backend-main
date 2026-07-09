@@ -19,6 +19,20 @@ import java.util.List;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
+/**
+ * @package io.shinhanlife.axhub.biz.mcp.gateway.controller
+ * @className McpRouterController
+ * @description AX HUB 시스템 처리 클래스
+ * @author 김형식
+ * @create 2026.09.01
+ * <pre>
+ * ---------- 개정이력 ----------
+ * 수정일      수정자    수정내용
+ * ---------- -------- ---------------------------
+ * 2026.09.01  김형식    최초생성
+ * 
+ * </pre>
+ */
 @Slf4j
 @RestController
 @RequestMapping("/mcp/api/v1")

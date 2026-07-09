@@ -8,6 +8,20 @@ import ch.qos.logback.classic.spi.ILoggingEvent;
  * 모든 로그 메시지(%msg)가 파일이나 콘솔에 찍히기 직전에 이 클래스를 거쳐가게 됩니다.
  * 여기서 PiiMaskingUtils.mask()를 호출하여 PII(주민번호, 계좌번호 등)를 안전하게 별표(*) 처리합니다.
  */
+/**
+ * @package io.shinhanlife.axhub.biz.mcp.adapter.util
+ * @className PiiMaskingLogbackConverter
+ * @description AX HUB 시스템 처리 클래스
+ * @author 김형식
+ * @create 2026.09.01
+ * <pre>
+ * ---------- 개정이력 ----------
+ * 수정일      수정자    수정내용
+ * ---------- -------- ---------------------------
+ * 2026.09.01  김형식    최초생성
+ * 
+ * </pre>
+ */
 public class PiiMaskingLogbackConverter extends MessageConverter {
 
     @Override

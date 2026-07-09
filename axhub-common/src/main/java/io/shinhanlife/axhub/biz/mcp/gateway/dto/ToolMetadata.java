@@ -14,6 +14,20 @@ import java.util.Map;
  * Tool(Agent)의 명세 및 라우팅 정보를 담고 있는 메타데이터 클래스
  * Redis 레지스트리에 저장되며, Planner와 Router 간의 통신 객체(Plan)로 사용됩니다.
  */
+/**
+ * @package io.shinhanlife.axhub.biz.mcp.gateway.dto
+ * @className ToolMetadata
+ * @description AX HUB 시스템 처리 클래스
+ * @author 김형식
+ * @create 2026.09.01
+ * <pre>
+ * ---------- 개정이력 ----------
+ * 수정일      수정자    수정내용
+ * ---------- -------- ---------------------------
+ * 2026.09.01  김형식    최초생성
+ * 
+ * </pre>
+ */
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor

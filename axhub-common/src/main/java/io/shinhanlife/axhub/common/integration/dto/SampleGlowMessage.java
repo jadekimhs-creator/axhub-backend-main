@@ -15,6 +15,20 @@ import java.util.List;
  * Glow Framework 개발표준정의서(2.2.1 IO 작성) 규칙을 100% 준수한 샘플입니다.
  * 새로운 대외 통신 전문을 만들 때 이 파일을 복사해서 필드명과 길이만 수정하여 사용하세요.
  */
+/**
+ * @package io.shinhanlife.axhub.common.integration.dto
+ * @className SampleGlowMessage
+ * @description AX HUB 시스템 처리 클래스
+ * @author 김형식
+ * @create 2026.09.01
+ * <pre>
+ * ---------- 개정이력 ----------
+ * 수정일      수정자    수정내용
+ * ---------- -------- ---------------------------
+ * 2026.09.01  김형식    최초생성
+ * 
+ * </pre>
+ */
 @Getter
 @Builder
 @AllArgsConstructor

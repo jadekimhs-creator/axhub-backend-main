@@ -13,6 +13,20 @@ import java.util.Map;
  * application-local.properties 파일에 정의된 mcp.security.api-keys.* 설정들을
  * Map 자료구조로 자동 바인딩(주입) 받기 위한 설정 클래스입니다.
  */
+/**
+ * @package io.shinhanlife.axhub.common.mcp.security
+ * @className SecurityProperties
+ * @description AX HUB 시스템 처리 클래스
+ * @author 김형식
+ * @create 2026.09.01
+ * <pre>
+ * ---------- 개정이력 ----------
+ * 수정일      수정자    수정내용
+ * ---------- -------- ---------------------------
+ * 2026.09.01  김형식    최초생성
+ * 
+ * </pre>
+ */
 @Data
 @Component
 @ConfigurationProperties(prefix = "mcp.security")
@@ -24,4 +38,3 @@ public class SecurityProperties {
     // 만약 "ALL" 이 포함되어 있다면 모든 도메인에 접근 허용
     private Map<String, List<String>> tenantDomains = new HashMap<>();
 }
-

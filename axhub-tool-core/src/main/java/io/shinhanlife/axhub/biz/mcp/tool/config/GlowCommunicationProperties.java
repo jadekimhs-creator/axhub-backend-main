@@ -10,6 +10,20 @@ import org.springframework.stereotype.Component;
  * application-glow-local.yml 의 'glow.communication' 하위 설정값들을 
  * 자바 객체(Bean)로 매핑하여 제공합니다.
  */
+/**
+ * @package io.shinhanlife.axhub.biz.mcp.tool.config
+ * @className GlowCommunicationProperties
+ * @description AX HUB 시스템 처리 클래스
+ * @author 김형식
+ * @create 2026.09.01
+ * <pre>
+ * ---------- 개정이력 ----------
+ * 수정일      수정자    수정내용
+ * ---------- -------- ---------------------------
+ * 2026.09.01  김형식    최초생성
+ * 
+ * </pre>
+ */
 @Component
 @Getter
 @Setter

@@ -21,6 +21,20 @@ import java.util.Map;
 @Slf4j
 @Component
 // 대신 "local" 환경(application-local.properties)에서만 가짜 소켓 서버가 켜지도록 보장합니다.
+/**
+ * @package io.shinhanlife.axhub.biz.mcp.adapter.test
+ * @className MockEimsTcpServer
+ * @description AX HUB 시스템 처리 클래스
+ * @author 김형식
+ * @create 2026.09.01
+ * <pre>
+ * ---------- 개정이력 ----------
+ * 수정일      수정자    수정내용
+ * ---------- -------- ---------------------------
+ * 2026.09.01  김형식    최초생성
+ * 
+ * </pre>
+ */
 @Profile("local")
 public class MockEimsTcpServer {
 

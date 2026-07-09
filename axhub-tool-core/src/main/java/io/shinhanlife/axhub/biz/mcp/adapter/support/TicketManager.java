@@ -10,6 +10,20 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
+/**
+ * @package io.shinhanlife.axhub.biz.mcp.adapter.support
+ * @className TicketManager
+ * @description AX HUB 시스템 처리 클래스
+ * @author 김형식
+ * @create 2026.09.01
+ * <pre>
+ * ---------- 개정이력 ----------
+ * 수정일      수정자    수정내용
+ * ---------- -------- ---------------------------
+ * 2026.09.01  김형식    최초생성
+ * 
+ * </pre>
+ */
 @Slf4j
 @Component
 public class TicketManager {
@@ -80,4 +94,3 @@ public class TicketManager {
         }
     }
 }
-

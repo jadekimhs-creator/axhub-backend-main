@@ -16,6 +16,20 @@ import org.springframework.stereotype.Component;
  * 신한라이프 Glow Framework 개발표준정의서를 바탕으로 대내/대외망/EAI 통신을 
  * MCP 툴에서 손쉽게 호출할 수 있도록 일원화한 컴포넌트입니다.
  */
+/**
+ * @package io.shinhanlife.axhub.common.integration
+ * @className GlowIntegrationCall
+ * @description AX HUB 시스템 처리 클래스
+ * @author 김형식
+ * @create 2026.09.01
+ * <pre>
+ * ---------- 개정이력 ----------
+ * 수정일      수정자    수정내용
+ * ---------- -------- ---------------------------
+ * 2026.09.01  김형식    최초생성
+ * 
+ * </pre>
+ */
 @Component
 @RequiredArgsConstructor
 public class GlowIntegrationCall {

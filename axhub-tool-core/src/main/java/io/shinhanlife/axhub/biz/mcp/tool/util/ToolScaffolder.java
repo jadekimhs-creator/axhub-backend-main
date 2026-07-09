@@ -18,6 +18,20 @@ import java.util.Scanner;
  *  - 컴파일: javac -encoding UTF-8 axhub-tool-core/src/main/java/io/shinhanlife/axhub/biz/mcp/tool/util/ToolScaffolder.java
  *  - 실행: java -cp axhub-tool-core/src/main/java io.shinhanlife.axhub.biz.mcp.tool.util.ToolScaffolder [이름] [ID] "[설명]" "[그룹]" "[통신방식]" "[모듈명]"
  */
+/**
+ * @package io.shinhanlife.axhub.biz.mcp.tool.util
+ * @className ToolScaffolder
+ * @description AX HUB 시스템 처리 클래스
+ * @author 김형식
+ * @create 2026.09.01
+ * <pre>
+ * ---------- 개정이력 ----------
+ * 수정일      수정자    수정내용
+ * ---------- -------- ---------------------------
+ * 2026.09.01  김형식    최초생성
+ * 
+ * </pre>
+ */
 public class ToolScaffolder {
 
     private static final String BASE_PACKAGE = "io.shinhanlife.axhub.biz.mcp.tool";
