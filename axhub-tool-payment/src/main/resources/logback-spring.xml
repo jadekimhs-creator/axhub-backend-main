@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+
+    <!-- 1. 로그 패턴 설정 (MDC traceId 포함) -->
+    <property name="LOG_PATTERN" value="%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] [%X{traceId}] %-5level %logger{36} - %msg%n" />
+
+    <!-- 2. 콘솔(Console) 출력 설정 (로컬 개발용) -->
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>${LOG_PATTERN}</pattern>
+        </encoder>
+    </appender>
+
+    <!-- 3. 파일(File) 출력 설정 (서버 운영용) -->
+    <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>logs/axhub-tool-other.log</file> <!-- 현재 로그가 쌓이는 파일 -->
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <!-- 매일 자정에 날짜를 붙여서 지난 로그를 분리 저장 -->
+            <fileNamePattern>logs/axhub-tool-other-%d{yyyy-MM-dd}.log</fileNamePattern>
+            <!-- 최대 30일치 로그만 보관하고 오래된 것은 자동 삭제 -->
+            <maxHistory>30</maxHistory>
+        </rollingPolicy>
+        <encoder>
+            <pattern>${LOG_PATTERN}</pattern>
+        </encoder>
+    </appender>
+
+    <!-- 4. 기본 로깅 레벨 설정 -->
+    <root level="INFO">
+        <appender-ref ref="CONSOLE" />
+        <appender-ref ref="FILE" />
+    </root>
+
+    <!-- 5. 우리 프로젝트 패키지는 디버그 레벨까지 상세히 보기 -->
+    <logger name="io.shinhanlife" level="DEBUG" />
+</configuration>
