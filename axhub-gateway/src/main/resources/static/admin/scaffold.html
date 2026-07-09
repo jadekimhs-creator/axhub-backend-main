@@ -37,8 +37,8 @@
         }
 
         .container {
-            max-width: 850px;
-            width: 100%;
+            max-width: 1200px;
+            width: 95%;
             margin: 0 auto;
         }
 
@@ -333,11 +333,11 @@
                         <table class="table table-hover align-middle">
                             <thead class="table-light">
                                 <tr>
-                                    <th>그룹</th>
-                                    <th>Tool 이름</th>
-                                    <th>설명</th>
-                                    <th>Pod 모듈</th>
-                                    <th>인터페이스 (ID)</th>
+                                    <th style="width: 10%; min-width: 100px;">그룹</th>
+                                    <th style="width: 20%; min-width: 150px;">Tool 이름</th>
+                                    <th style="width: 35%; min-width: 200px;">설명</th>
+                                    <th style="width: 15%; min-width: 180px;">Pod 모듈</th>
+                                    <th style="width: 20%; min-width: 150px;">인터페이스 (ID)</th>
                                 </tr>
                             </thead>
                             <tbody id="toolListBody">
@@ -424,11 +424,11 @@
             
             tbody.innerHTML = tools.map(t => `
                 <tr>
-                    <td><span class="badge bg-secondary">${t.domainGroup || 'UNKNOWN'}</span></td>
-                    <td class="fw-bold text-primary">${t.toolName}</td>
-                    <td>${t.description}</td>
-                    <td><span class="badge bg-light text-dark border">${t.podUrl}</span></td>
-                    <td><span class="badge bg-info text-dark">${t.integrationType}</span> <small class="text-muted">${t.mciServiceId || '-'}</small></td>
+                    <td class="text-nowrap"><span class="badge bg-secondary">${t.domainGroup || 'UNKNOWN'}</span></td>
+                    <td class="fw-bold text-primary text-break">${t.toolName}</td>
+                    <td class="text-break">${t.description}</td>
+                    <td class="text-nowrap"><span class="badge bg-light text-dark border">${t.podUrl}</span></td>
+                    <td class="text-nowrap"><span class="badge bg-info text-dark">${t.integrationType}</span> <small class="text-muted ms-1">${t.mciServiceId || '-'}</small></td>
                 </tr>
             `).join('');
         })
