@@ -70,15 +70,15 @@ public class BusinessToolController {
             }
         }
 
-        // 1. 대상 Bean 및 Method 찾기 (ApplicationContext 활용)
         Map<String, Object> arguments = params != null ? (Map<String, Object>) params.get("arguments") : null;
         Object targetBean = null;
         Method targetMethod = null;
         McpFunction targetFunctionAnnotation = null;
         
-        Map<String, Object> toolBeans = applicationContext.getBeansWithAnnotation(McpTool.class);
+        // McpTool 어노테이션 기반 조회가 프록시 문제로 누락될 수 있으므로, 전체 빈을 순회하며 @McpFunction을 찾습니다.
+        Map<String, Object> allBeans = applicationContext.getBeansOfType(Object.class);
         outerLoop:
-        for (Object bean : toolBeans.values()) {
+        for (Object bean : allBeans.values()) {
             Class<?> targetClass = AopUtils.getTargetClass(bean);
             for (Method method : targetClass.getDeclaredMethods()) {
                 McpFunction mcpFunc = AnnotationUtils.findAnnotation(method, McpFunction.class);
@@ -100,7 +100,7 @@ public class BusinessToolController {
 
         if (targetBean == null || targetMethod == null) {
             List<String> availableFunctions = new ArrayList<>();
-            for (Object bean : toolBeans.values()) {
+            for (Object bean : allBeans.values()) {
                 Class<?> targetCls = AopUtils.getTargetClass(bean);
                 for (Method m : targetCls.getDeclaredMethods()) {
                     McpFunction func = AnnotationUtils.findAnnotation(m, McpFunction.class);

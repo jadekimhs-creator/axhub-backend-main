@@ -4,9 +4,11 @@ import io.shinhanlife.axhub.biz.mcp.tool.annotation.McpFunction;
 import io.shinhanlife.axhub.biz.mcp.tool.annotation.McpTool;
 import io.shinhanlife.axhub.biz.mcp.tool.dto.TemplateDownloadReq;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
 import java.util.Map;
 
 @Slf4j
+@Service
 @McpTool(
     routingType = "HTTP",
     group = "COMMON"

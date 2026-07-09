@@ -68,8 +68,8 @@ public class ToolRegistryHeartbeatSender {
     }
 
     private void scanAndBuildMetadata() {
-        Map<String, Object> toolBeans = applicationContext.getBeansWithAnnotation(McpTool.class);
-        for (Object bean : toolBeans.values()) {
+        Map<String, Object> allBeans = applicationContext.getBeansOfType(Object.class);
+        for (Object bean : allBeans.values()) {
             Class<?> targetClass = AopUtils.getTargetClass(bean);
             McpTool toolAnnotation = AnnotationUtils.findAnnotation(targetClass, McpTool.class);
             
