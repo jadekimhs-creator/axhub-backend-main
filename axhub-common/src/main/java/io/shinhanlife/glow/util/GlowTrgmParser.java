@@ -57,10 +57,10 @@ public class GlowTrgmParser {
                 }
                 
                 int endIndex = Math.min(currentIndex + length, trgmString.length());
-                String value = trgmString.substring(currentIndex, endIndex).trim();
+                String value = trgmString.substring(currentIndex, endIndex);
 
                 field.setAccessible(true);
-                setFieldValue(instance, field, value);
+                setFieldValue(instance, field, value, annotation);
 
                 currentIndex += length;
             }
@@ -72,21 +72,47 @@ public class GlowTrgmParser {
         }
     }
 
-    private static void setFieldValue(Object instance, Field field, String value) throws IllegalAccessException {
+    private static void setFieldValue(Object instance, Field field, String value, GlowTrgmField annotation) throws IllegalAccessException {
         Class<?> fieldType = field.getType();
+        String trimmedValue = value.trim();
 
         if (fieldType == String.class) {
-            field.set(instance, value);
+            field.set(instance, trimmedValue);
         } else if (fieldType == int.class || fieldType == Integer.class) {
-            field.set(instance, value.isEmpty() ? 0 : Integer.parseInt(value));
+            field.set(instance, trimmedValue.isEmpty() ? 0 : Integer.parseInt(trimmedValue));
         } else if (fieldType == long.class || fieldType == Long.class) {
-            field.set(instance, value.isEmpty() ? 0L : Long.parseLong(value));
+            field.set(instance, trimmedValue.isEmpty() ? 0L : Long.parseLong(trimmedValue));
         } else if (fieldType == boolean.class || fieldType == Boolean.class) {
-            field.set(instance, Boolean.parseBoolean(value));
+            field.set(instance, Boolean.parseBoolean(trimmedValue));
         } else if (fieldType == double.class || fieldType == Double.class) {
-            field.set(instance, value.isEmpty() ? 0.0 : Double.parseDouble(value));
+            field.set(instance, trimmedValue.isEmpty() ? 0.0 : Double.parseDouble(trimmedValue));
+        } else if (List.class.isAssignableFrom(fieldType)) {
+            Class<?> targetClass = annotation.target();
+            if (targetClass != void.class) {
+                List<Object> list = new ArrayList<>();
+                int itemLength = calculateTotalLength(targetClass);
+                if (itemLength > 0) {
+                    for (int i = 0; i < value.length(); i += itemLength) {
+                        int end = Math.min(i + itemLength, value.length());
+                        String itemStr = value.substring(i, end);
+                        if (itemStr.trim().isEmpty()) continue;
+                        list.add(parse(itemStr, targetClass));
+                    }
+                }
+                field.set(instance, list);
+            }
         } else {
-            field.set(instance, value);
+            field.set(instance, trimmedValue);
         }
+    }
+
+    private static int calculateTotalLength(Class<?> clazz) {
+        int total = 0;
+        for (Field field : clazz.getDeclaredFields()) {
+            if (field.isAnnotationPresent(GlowTrgmField.class)) {
+                total += field.getAnnotation(GlowTrgmField.class).length();
+            }
+        }
+        return total;
     }
 }

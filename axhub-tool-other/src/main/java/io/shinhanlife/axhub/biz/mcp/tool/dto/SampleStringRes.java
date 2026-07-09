@@ -33,6 +33,6 @@ public class SampleStringRes {
     @GlowTrgmField(order = 4, length = 2, description = "상태코드")
     private String statusCode;
 
-    @GlowTrgmField(order = 5, length = 10, description = "타겟")
-    private String target;
+    @GlowTrgmField(order = 5, length = 30, description = "타겟 리스트", target = SampleTargetDto.class)
+    private java.util.List<SampleTargetDto> target;
 }
