@@ -29,7 +29,7 @@ public class EmailToolService extends AbstractMcpToolService {
 
     @McpFunction(name = "send_email", description = "이메일 발송", prompt = "고객에게 이메일을 발송해줘.", mappingId = "EMAIL_SEND_001")
     public Object sendEmail(EmailSendReq req) {
-        log.info("📧 [Email] 이메일 발송 요청 수신. 수신자: {}", req.getEmailAddress());
+        log.info("[Email] 이메일 발송 요청 수신. 수신자: {}", req.getEmailAddress());
 
         // EAI 연동을 위한 파라미터 변환
         Map<String, Object> payload = new HashMap<>();
