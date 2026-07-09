@@ -81,25 +81,21 @@ public class LegacyEimsConnector {
             log.info("[라우팅] 실시간 AI 요청 -> MCI 연계 어댑터(String)를 통해 EIMS 전달");
             legacyResponse = mciStringEimsSender.send(interfaceId, payload);
         }
+        else if ("MCI".equalsIgnoreCase(routingType)) {
+            log.info("[라우팅] 실시간 AI 요청 -> MCI 연계 어댑터를 통해 EIMS 전달");
+            legacyResponse = mciEimsSender.send(interfaceId, payload);
+        }
+        else if ("EAI".equalsIgnoreCase(routingType)) {
+            log.info("[라우팅] 비동기/대용량 요청 -> EAI 연계 어댑터를 통해 EIMS 전달");
+            legacyResponse = eaiEimsSender.send(interfaceId, payload);
+        }
         else {
-            //  3. 아키텍처 규격에 맞춘 라우팅 (실시간 vs 비동기)
-            if (isMciRouting(routingType, interfaceId)) {
-                log.info("[라우팅] 실시간 AI 요청 -> MCI 연계 어댑터를 통해 EIMS 전달");
-                legacyResponse = mciEimsSender.send(interfaceId, payload);
-            } else {
-                log.info("[라우팅] 비동기/대용량 요청 -> EAI 연계 어댑터를 통해 EIMS 전달");
-                legacyResponse = eaiEimsSender.send(interfaceId, payload);
-            }
+            log.error("[라우팅] 알 수 없는 라우팅 타입: {}", routingType);
+            throw new IllegalArgumentException("지원하지 않는 라우팅 타입입니다: " + routingType);
         }
         
         log.info("\n [Legacy -> Adapter] EIMS 통신 응답 수신: {}", legacyResponse);
         return legacyResponse;
-    }
-
-    //  라우팅 조건을 판단하는 내부 메서드 (관리를 위해 분리)
-    private boolean isMciRouting(String routingType, String interfaceId) {
-        // AI 에이전트가 툴을 호출하는 경우는 대부분 즉각적인 대답이 필요한 '실시간 조회(MCI)'입니다.
-        return "MCI".equalsIgnoreCase(routingType) || (interfaceId != null && interfaceId.startsWith("MCI"));
     }
 
 
