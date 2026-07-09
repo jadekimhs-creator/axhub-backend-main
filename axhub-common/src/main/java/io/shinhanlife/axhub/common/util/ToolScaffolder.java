@@ -68,7 +68,7 @@ public class ToolScaffolder {
         String createDate = getOrAsk(args, 7, scanner, "8. 작성일 (엔터 입력 시 '" + defaultDate + "'): ");
         if (createDate.trim().isEmpty()) createDate = defaultDate;
 
-        String result = scaffold(baseName, interfaceId, description, group, routingType, moduleName, author, createDate);
+        String result = scaffold(baseName, interfaceId, description, group, routingType, moduleName, author, createDate, true);
         System.out.println(result);
     }
 
@@ -80,7 +80,7 @@ public class ToolScaffolder {
         return scanner.nextLine().trim();
     }
 
-    public static String scaffold(String baseName, String interfaceId, String description, String group, String routingType, String moduleName, String author, String createDate) throws IOException {
+    public static String scaffold(String baseName, String interfaceId, String description, String group, String routingType, String moduleName, String author, String createDate, boolean register) throws IOException {
         Path serviceDir = Paths.get(moduleName, BASE_PACKAGE_PATH, "service");
         Path dtoDir = Paths.get(moduleName, BASE_PACKAGE_PATH, "dto");
 
@@ -186,38 +186,54 @@ public class ToolScaffolder {
                     name = "%s",
                     description = "%s",
                     prompt = "%s",
-                    mappingId = "%s"
+                    mappingId = "%s",
+                    register = %s
                 )
                 public Object execute(%sReq req) {
                     return executeLegacy("%s", "%s", req);
                 }
             }
             """.formatted(
+                BASE_PACKAGE, BASE_PACKAGE, BASE_PACKAGE, BASE_PACKAGE, BASE_PACKAGE,
                 BASE_PACKAGE, baseName, author, createDate, createDate, author,
                 routingType, group, baseName,
-                toolName, description, description + " 해줘.", interfaceId,
+                toolName, description, description + " 해줘.", interfaceId, register,
                 baseName, routingType, interfaceId
             );
         
         Files.writeString(serviceDir.resolve(baseName + "Service.java"), serviceContent);
 
-        // Append to YAML if exists
-        Path yamlPath = Paths.get(moduleName, "src/main/resources", "application-local.yml");
+        // Append to YAML
+        Path resourcesDir = Paths.get(moduleName, "src/main/resources");
+        Files.createDirectories(resourcesDir);
+        Path yamlPath = resourcesDir.resolve("application-local.yml");
+
+        String yamlContent = "";
         if (Files.exists(yamlPath)) {
-            String yamlContent = Files.readString(yamlPath);
-            if (yamlContent.contains("functions:")) {
-                String newFunctionYaml = """
-                    
-                        %s:
-                          description: "%s"
-                          prompt: "%s"
-                          mappingId: "%s"
-                """.formatted(toolName, description, description + " 해줘.", interfaceId);
-                yamlContent = yamlContent.replaceFirst("functions:", "functions:" + newFunctionYaml);
-                Files.writeString(yamlPath, yamlContent);
-                log.append("[YAML] ").append(yamlPath).append(" (함수 설정 자동 등록됨)\n");
-            }
+            yamlContent = Files.readString(yamlPath);
         }
+
+        String newFunctionYaml = """
+            
+                %s:
+                  description: "%s"
+                  prompt: "%s"
+                  mappingId: "%s"
+        """.formatted(toolName, description, description + " 해줘.", interfaceId);
+
+        if (yamlContent.contains("functions:")) {
+            yamlContent = yamlContent.replaceFirst("functions:", "functions:" + newFunctionYaml);
+        } else {
+            if (!yamlContent.isEmpty() && !yamlContent.endsWith("\n")) {
+                yamlContent += "\n";
+            }
+            yamlContent += """
+mcp:
+  functions:%s""".formatted(newFunctionYaml);
+        }
+
+        Files.writeString(yamlPath, yamlContent);
+        log.append("[YAML] ").append(yamlPath).append(" (함수 설정 자동 등록됨)\n");
 
         log.append("\n=========================================\n");
         log.append(" Scaffolding Complete!\n");

@@ -36,8 +36,24 @@ public class ScaffoldingController {
             String moduleName = req.getOrDefault("moduleName", "axhub-tool-other");
             String author = req.getOrDefault("author", "System");
             String date = req.getOrDefault("date", java.time.LocalDate.now().format(java.time.format.DateTimeFormatter.ofPattern("yyyy.MM.dd")));
+            boolean register = Boolean.parseBoolean(req.getOrDefault("register", "true"));
             
-            return ToolScaffolder.scaffold(baseName, interfaceId, description, group, routingType, moduleName, author, date);
+            return ToolScaffolder.scaffold(baseName, interfaceId, description, group, routingType, moduleName, author, date, register);
+        } catch (Exception e) {
+            return "오류 발생: " + e.getMessage();
+        }
+    }
+
+    @PostMapping("/tool/update")
+    public String updateTool(@RequestBody Map<String, String> req) {
+        try {
+            String toolName = req.get("toolName");
+            String domainGroup = req.get("domainGroup");
+            String description = req.get("description");
+            boolean register = Boolean.parseBoolean(req.getOrDefault("register", "true"));
+            
+            io.shinhanlife.axhub.common.util.ToolSourceUpdater.updateToolSource(toolName, domainGroup, description, register);
+            return "성공";
         } catch (Exception e) {
             return "오류 발생: " + e.getMessage();
         }

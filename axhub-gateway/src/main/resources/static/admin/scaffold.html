@@ -301,11 +301,21 @@
                                 </select>
                             </div>
                         </div>
-                        
-                        <div class="mb-4">
-                            <label class="form-label">타겟 모듈명</label>
-                            <input type="text" class="form-control" name="moduleName" value="axhub-tool-other" required>
-                            <div class="input-hint">코드가 생성될 대상 프로젝트(Pod) 폴더명입니다.</div>
+
+                        <div class="row mb-4">
+                            <div class="col-md-6">
+                                <label class="form-label">타겟 모듈명</label>
+                                <input type="text" class="form-control" name="moduleName" value="axhub-tool-other" required>
+                                <div class="input-hint">코드가 생성될 대상 프로젝트(Pod) 폴더명입니다.</div>
+                            </div>
+                            <div class="col-md-6 mt-3 mt-md-0">
+                                <label class="form-label">레지스트리 등록 (register)</label>
+                                <select class="form-select" name="register">
+                                    <option value="true">True (공개)</option>
+                                    <option value="false">False (비공개)</option>
+                                </select>
+                                <div class="input-hint">Gateway에서 자동 라우팅될지 여부입니다.</div>
+                            </div>
                         </div>
                         
                         <div class="row mb-4">
@@ -331,6 +341,9 @@
                             <small class="text-muted">Redis에 등록되지 않은(비공개) Tool도 포함되어 조회됩니다.</small>
                         </div>
                         <div class="d-flex gap-2">
+                            <select id="groupFilterSelect" class="form-select form-select-sm" style="width: auto; min-width: 140px;" onchange="filterTools()">
+                                <option value="ALL">ALL (전체 그룹)</option>
+                            </select>
                             <input type="text" id="toolFilter" class="form-control form-control-sm" placeholder="🔍 이름 또는 그룹 검색..." onkeyup="filterTools()">
                             <button class="btn btn-sm btn-outline-primary text-nowrap" onclick="loadToolList()">🔄 새로고침</button>
                         </div>
@@ -360,6 +373,48 @@
     </div>
     
     <div id="resultBox"></div>
+</div>
+
+<!-- Edit Tool Modal -->
+<div class="modal fade" id="editToolModal" tabindex="-1" aria-labelledby="editToolModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="editToolModalLabel">Tool 소스 코드 수정</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <form id="editToolForm">
+          <div class="mb-3">
+            <label class="form-label">Tool 이름 (수정불가)</label>
+            <input type="text" class="form-control" id="editToolName" name="toolName" readonly>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">소속 도메인 그룹</label>
+            <input type="text" class="form-control" id="editDomainGroup" name="domainGroup" oninput="this.value = this.value.toUpperCase()">
+          </div>
+          <div class="mb-3">
+            <label class="form-label">설명</label>
+            <textarea class="form-control" id="editDescription" name="description" rows="3"></textarea>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">레지스트리 등록 (register)</label>
+            <select class="form-select" id="editRegister" name="register">
+                <option value="true">True (공개)</option>
+                <option value="false">False (비공개)</option>
+            </select>
+          </div>
+          <div class="alert alert-warning p-2" style="font-size: 0.85rem;">
+            ⚠️ <strong>주의</strong>: 수정을 적용하면 물리적인 자바 소스 코드가 변경됩니다. 반영을 위해서는 백엔드 컨테이너의 재빌드가 필요합니다!
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">취소</button>
+        <button type="button" class="btn btn-primary" onclick="submitToolUpdate()">소스 수정 적용</button>
+      </div>
+    </div>
+  </div>
 </div>
 
 <!-- Bootstrap JS -->
@@ -422,20 +477,49 @@
         })
         .then(res => res.json())
         .then(data => {
-            const tools = data.result.tools || [];
+            let tools = data.result.tools || [];
             if (tools.length === 0) {
                 tbody.innerHTML = '<tr><td colspan="5" class="text-center py-4 text-muted">등록된 Tool이 없습니다.</td></tr>';
                 return;
             }
             
+            // 그룹명 기준으로 오름차순 정렬
+            tools.sort((a, b) => {
+                const gA = a.domainGroup || '';
+                const gB = b.domainGroup || '';
+                return gA.localeCompare(gB);
+            });
+            
+            // 그룹 필터 옵션 채우기
+            const groupSet = new Set();
+            tools.forEach(t => groupSet.add(t.domainGroup || 'UNKNOWN'));
+            const groupSelect = document.getElementById('groupFilterSelect');
+            const currentSelectedGroup = groupSelect.value;
+            groupSelect.innerHTML = '<option value="ALL">ALL (전체 그룹)</option>';
+            Array.from(groupSet).sort().forEach(g => {
+                const opt = document.createElement('option');
+                opt.value = g;
+                opt.textContent = g;
+                groupSelect.appendChild(opt);
+            });
+            if (groupSet.has(currentSelectedGroup)) {
+                groupSelect.value = currentSelectedGroup;
+            }
+            
             tbody.innerHTML = tools.map(t => {
                 const isReg = t.registered !== false; // default true
                 const badgeHtml = isReg ? '' : ' <span class="badge bg-warning text-dark border border-warning" title="Redis 미등록 (직접 호출만 가능)">비공개 (미등록)</span>';
+                const escDesc = (t.description || '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
                 
                 return `
                 <tr class="tool-row">
                     <td class="text-nowrap"><span class="badge bg-secondary tool-group">${t.domainGroup || 'UNKNOWN'}</span></td>
-                    <td class="fw-bold text-primary text-break tool-name">${t.toolName}${badgeHtml}</td>
+                    <td class="fw-bold text-primary text-break tool-name">
+                        <a href="javascript:void(0)" onclick="openEditModal('${t.toolName}', '${t.domainGroup}', '${escDesc}', ${isReg})" class="text-decoration-none">
+                            ${t.toolName}
+                        </a>
+                        ${badgeHtml}
+                    </td>
                     <td class="text-break">${t.description}</td>
                     <td class="text-nowrap"><span class="badge bg-light text-dark border">${t.podUrl}</span></td>
                     <td class="text-nowrap"><span class="badge bg-info text-dark">${t.integrationType}</span> <small class="text-muted ms-1">${t.mciServiceId || '-'}</small></td>
@@ -452,17 +536,74 @@
 
     function filterTools() {
         const input = document.getElementById('toolFilter').value.toLowerCase();
+        const selectedGroup = document.getElementById('groupFilterSelect').value;
         const rows = document.querySelectorAll('.tool-row');
         
         rows.forEach(row => {
             const name = row.querySelector('.tool-name').textContent.toLowerCase();
-            const group = row.querySelector('.tool-group').textContent.toLowerCase();
+            const group = row.querySelector('.tool-group').textContent;
             
-            if (name.includes(input) || group.includes(input)) {
+            const matchText = name.includes(input) || group.toLowerCase().includes(input);
+            const matchGroup = (selectedGroup === 'ALL' || group === selectedGroup);
+            
+            if (matchText && matchGroup) {
                 row.style.display = '';
             } else {
                 row.style.display = 'none';
             }
+        });
+    }
+
+    let editModalInstance = null;
+    function openEditModal(toolName, domainGroup, description, isReg) {
+        document.getElementById('editToolName').value = toolName;
+        document.getElementById('editDomainGroup').value = domainGroup !== 'null' ? domainGroup : '';
+        document.getElementById('editDescription').value = description;
+        document.getElementById('editRegister').value = isReg ? 'true' : 'false';
+        
+        if (!editModalInstance) {
+            editModalInstance = new bootstrap.Modal(document.getElementById('editToolModal'));
+        }
+        editModalInstance.show();
+    }
+
+    function submitToolUpdate() {
+        const toolName = document.getElementById('editToolName').value;
+        const domainGroup = document.getElementById('editDomainGroup').value;
+        const description = document.getElementById('editDescription').value;
+        const register = document.getElementById('editRegister').value;
+        
+        const btn = document.querySelector('#editToolModal .btn-primary');
+        const originalText = btn.innerHTML;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> 처리중...';
+        btn.disabled = true;
+
+        fetch('/api/v1/scaffold/tool/update', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                toolName: toolName,
+                domainGroup: domainGroup,
+                description: description,
+                register: register
+            })
+        })
+        .then(response => response.text())
+        .then(result => {
+            if (result.includes('[오류]') || result.includes('오류 발생:')) {
+                alert('수정 중 오류가 발생했습니다.\n' + result);
+            } else {
+                alert('소스 코드가 성공적으로 수정되었습니다!\n반영을 위해 모듈(Pod)을 재빌드해주세요.');
+                editModalInstance.hide();
+                loadToolList(); // Refresh list
+            }
+        })
+        .catch(err => {
+            alert('네트워크 오류 발생: ' + err);
+        })
+        .finally(() => {
+            btn.innerHTML = originalText;
+            btn.disabled = false;
         });
     }
 </script>

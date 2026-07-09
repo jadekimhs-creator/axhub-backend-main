@@ -40,9 +40,21 @@ public class ToolMetadata {
 
 
     @Builder.Default
-    private boolean visible = true;
+    private Boolean visible = true;
 
     @Builder.Default
-    private boolean isRegistered = true;
+    private Boolean isRegistered = true;
+
+    public boolean isVisible() {
+        return visible != null ? visible : true;
+    }
+
+    public boolean isRegistered() {
+        return isRegistered != null ? isRegistered : true;
+    }
+    
+    public void setRegistered(Boolean isRegistered) {
+        this.isRegistered = isRegistered;
+    }
 
 }
