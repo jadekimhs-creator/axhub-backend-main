@@ -73,6 +73,9 @@ public class BusinessToolController {
         // 1. 대상 Bean 및 Method 찾기 (ApplicationContext 활용)
         Map<String, Object> arguments = params != null ? (Map<String, Object>) params.get("arguments") : null;
         Object targetBean = null;
+        Method targetMethod = null;
+        McpFunction targetFunctionAnnotation = null;
+        
         Map<String, Object> toolBeans = applicationContext.getBeansWithAnnotation(McpTool.class);
         outerLoop:
         for (Object bean : toolBeans.values()) {
