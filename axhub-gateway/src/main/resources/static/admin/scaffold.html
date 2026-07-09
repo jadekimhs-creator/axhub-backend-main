@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AXHUB Developer Portal</title>
+    <title>신한라이프 AXHUB Developer Portal</title>
     <!-- Google Fonts: Inter -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -213,7 +213,7 @@
 
 <div class="container">
     <div class="page-header">
-        <h1>AXHUB Developer Portal</h1>
+        <h1>신한라이프 AXHUB Developer Portal</h1>
         <p>No-Code 스캐폴딩 마법사로 모듈과 툴을 즉시 생성하세요</p>
     </div>
 
@@ -280,12 +280,13 @@
                         <div class="row mb-3">
                             <div class="col-md-6">
                                 <label class="form-label">소속 도메인 그룹</label>
-                                <select class="form-select" name="group">
+                                <input type="text" class="form-control" name="group" list="groupList" placeholder="선택 또는 직접 입력 (대문자)" oninput="this.value = this.value.toUpperCase()" required>
+                                <datalist id="groupList">
                                     <option value="COMMON">COMMON (공통)</option>
                                     <option value="CUSTOMER">CUSTOMER (고객)</option>
                                     <option value="CONTRACT">CONTRACT (계약)</option>
                                     <option value="CLAIM">CLAIM (보상)</option>
-                                </select>
+                                </datalist>
                             </div>
                             <div class="col-md-6 mt-3 mt-md-0">
                                 <label class="form-label">통신 프로토콜</label>
