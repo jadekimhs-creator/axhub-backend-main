@@ -5,6 +5,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.Scanner;
 
 public class PodScaffolder {
@@ -21,10 +23,13 @@ public class PodScaffolder {
         String portStr = getOrAsk(args, 1, scanner, "2. 사용할 포트 번호 (예: 8085): ");
         String shortName = moduleName.replace("axhub-tool-", "").replace("-", "");
 
-        String author = getOrAsk(args, 2, scanner, "3. 작성자 (예: 김형식): ");
-        if (author.trim().isEmpty()) author = "김형식";
-        String createDate = getOrAsk(args, 3, scanner, "4. 작성일 (예: 2026.09.01): ");
-        if (createDate.trim().isEmpty()) createDate = "2026.09.01";
+        String defaultAuthor = System.getProperty("user.name");
+        String defaultDate = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy.MM.dd"));
+
+        String author = getOrAsk(args, 2, scanner, "3. 작성자 (엔터 입력 시 '" + defaultAuthor + "'): ");
+        if (author.trim().isEmpty()) author = defaultAuthor;
+        String createDate = getOrAsk(args, 3, scanner, "4. 작성일 (엔터 입력 시 '" + defaultDate + "'): ");
+        if (createDate.trim().isEmpty()) createDate = defaultDate;
 
         scaffoldPod(moduleName, portStr, shortName, author, createDate);
     }

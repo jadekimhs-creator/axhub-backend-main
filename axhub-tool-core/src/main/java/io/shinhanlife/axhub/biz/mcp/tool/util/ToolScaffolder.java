@@ -4,6 +4,8 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.Scanner;
 
 /**
@@ -57,10 +59,14 @@ public class ToolScaffolder {
         if (moduleName.trim().isEmpty()) {
             moduleName = "axhub-tool-other";
         }
-        String author = getOrAsk(args, 6, scanner, "7. 작성자 (예: 김형식): ");
-        if (author.trim().isEmpty()) author = "김형식";
-        String createDate = getOrAsk(args, 7, scanner, "8. 작성일 (예: 2026.09.01): ");
-        if (createDate.trim().isEmpty()) createDate = "2026.09.01";
+        
+        String defaultAuthor = System.getProperty("user.name");
+        String defaultDate = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy.MM.dd"));
+
+        String author = getOrAsk(args, 6, scanner, "7. 작성자 (엔터 입력 시 '" + defaultAuthor + "'): ");
+        if (author.trim().isEmpty()) author = defaultAuthor;
+        String createDate = getOrAsk(args, 7, scanner, "8. 작성일 (엔터 입력 시 '" + defaultDate + "'): ");
+        if (createDate.trim().isEmpty()) createDate = defaultDate;
 
         scaffold(baseName, interfaceId, description, group, routingType, moduleName, author, createDate);
     }
