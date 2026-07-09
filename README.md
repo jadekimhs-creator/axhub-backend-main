@@ -54,6 +54,25 @@ AXHUB Backend는 3개의 주요 애플리케이션으로 분리 운영됩니다:
 
 ---
 
+## 🤖 Gemini MCP 연동 (Integration)
+
+본 시스템은 REST API(JSON-RPC)를 사용하므로, **표준 MCP 통신(Stdio)**을 지원하기 위한 브릿지 스크립트를 내장하고 있습니다. 이를 통해 제미나이(Gemini Code Assist, Gemini CLI 등)와 코드 수정 없이 완벽히 연동됩니다.
+
+- **표준 브릿지 파일**: `McpBridge.java` (루트 디렉토리)
+- **제미나이 설정 방법**:
+  제미나이 도구의 `settings.json` (또는 `mcp.json`)에 다음과 같이 프로세스를 등록합니다.
+  ```json
+  "mcpServers": {
+    "axhub-gateway": {
+      "command": "java",
+      "args": ["/프로젝트절대경로/axhub-backend-main/McpBridge.java"]
+    }
+  }
+  ```
+  *(참고: Antigravity IDE 환경에서는 이미 `.agents/mcp.json`에 설정되어 자동 연동됩니다.)*
+
+---
+
 ## 🔒 비공개 Tool 관리 및 Fallback 연동 (Visibility & Routing)
 
 저희 시스템은 MSA 보안 및 아키텍처 원칙에 따라 Tool의 **레지스트리 등록 여부(라우팅)**와 **API 노출 여부(가시성)**를 완벽히 분리하여 관리합니다.
