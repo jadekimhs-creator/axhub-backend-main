@@ -10,8 +10,8 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 public class SampleMciMapperTest {
 
-    // MapStruct가 자동 생성한 구현체를 직접 가져와서 테스트합니다. (의존성 주입 불필요)
-    private final SampleMciMapper sampleMciMapper = new SampleMciMapperImpl();
+    // MapStruct가 자동 생성한 구현체를 가져와서 테스트합니다. (IDE 에러 방지를 위해 INSTANCE 참조)
+    private final SampleMciMapper sampleMciMapper = SampleMciMapper.INSTANCE;
 
     @Test
     @DisplayName("AI 파라미터 DTO가 MCI DTO로 정확히 매핑되는지 테스트")

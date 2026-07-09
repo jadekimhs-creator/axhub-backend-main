@@ -8,6 +8,9 @@ import org.mapstruct.Mapping;
 @Mapper(componentModel = "spring")
 public interface SampleMciMapper {
 
+    // 테스트 환경 등에서 Spring Bean 주입 없이 직접 접근하기 위한 INSTANCE 제공 (IDE 에러 방지용)
+    SampleMciMapper INSTANCE = org.mapstruct.factory.Mappers.getMapper(SampleMciMapper.class);
+
     /**
      * AI Agent의 DTO를 MCI 통신용 DTO로 변환합니다.
      * 필드명이 달라도 @Mapping 어노테이션으로 손쉽게 연결할 수 있습니다.
