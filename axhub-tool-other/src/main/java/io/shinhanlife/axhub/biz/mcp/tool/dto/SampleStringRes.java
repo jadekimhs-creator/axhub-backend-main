@@ -32,4 +32,7 @@ public class SampleStringRes {
 
     @GlowTrgmField(order = 4, length = 2, description = "상태코드")
     private String statusCode;
+
+    @GlowTrgmField(order = 5, length = 10, description = "타겟")
+    private String target;
 }
