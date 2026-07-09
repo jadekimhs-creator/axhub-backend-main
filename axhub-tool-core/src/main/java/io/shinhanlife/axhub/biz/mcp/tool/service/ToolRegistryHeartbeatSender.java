@@ -24,6 +24,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import org.springframework.util.ClassUtils;
+import org.springframework.aop.support.AopUtils;
+import org.springframework.core.annotation.AnnotationUtils;
 
 /**
  * @package io.shinhanlife.axhub.biz.mcp.tool.service
@@ -68,11 +70,11 @@ public class ToolRegistryHeartbeatSender {
     private void scanAndBuildMetadata() {
         Map<String, Object> toolBeans = applicationContext.getBeansWithAnnotation(McpTool.class);
         for (Object bean : toolBeans.values()) {
-            Class<?> targetClass = org.springframework.aop.support.AopUtils.getTargetClass(bean);
-            McpTool toolAnnotation = org.springframework.core.annotation.AnnotationUtils.findAnnotation(targetClass, McpTool.class);
+            Class<?> targetClass = AopUtils.getTargetClass(bean);
+            McpTool toolAnnotation = AnnotationUtils.findAnnotation(targetClass, McpTool.class);
             
             for (Method method : targetClass.getDeclaredMethods()) {
-                McpFunction functionAnnotation = org.springframework.core.annotation.AnnotationUtils.findAnnotation(method, McpFunction.class);
+                McpFunction functionAnnotation = AnnotationUtils.findAnnotation(method, McpFunction.class);
                 if (functionAnnotation != null) {
                     String baseName = functionAnnotation.name();
                     String finalName = mcpProperties.getNamespace() != null && !mcpProperties.getNamespace().isEmpty()
