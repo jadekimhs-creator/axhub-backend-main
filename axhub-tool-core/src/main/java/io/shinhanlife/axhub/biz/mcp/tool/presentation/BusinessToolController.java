@@ -88,7 +88,7 @@ public class BusinessToolController {
                             ? mcpProperties.getNamespace() + "_" + baseName
                             : baseName;
                     
-                    if (expectedName.equals(functionName)) {
+                    if (expectedName.equals(functionName) || baseName.equals(functionName)) {
                         targetBean = bean;
                         targetMethod = method;
                         targetFunctionAnnotation = mcpFunc;

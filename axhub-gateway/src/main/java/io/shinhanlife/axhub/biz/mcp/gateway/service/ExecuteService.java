@@ -51,7 +51,7 @@ public class ExecuteService {
         }
 
         // Dynamic Routing: Find the target Pod from the Redis registry
-        String targetUrl = "http://localhost:8082"; // Fallback
+        String targetUrl = "http://localhost:8084"; // Fallback (tool-other)
         if (plan.getPodUrl() != null && !plan.getPodUrl().isEmpty()) {
             targetUrl = plan.getPodUrl();
         }
