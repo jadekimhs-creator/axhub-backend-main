@@ -57,8 +57,12 @@ public class ToolScaffolder {
         if (moduleName.trim().isEmpty()) {
             moduleName = "axhub-tool-other";
         }
+        String author = getOrAsk(args, 6, scanner, "7. 작성자 (예: 김형식): ");
+        if (author.trim().isEmpty()) author = "김형식";
+        String createDate = getOrAsk(args, 7, scanner, "8. 작성일 (예: 2026.09.01): ");
+        if (createDate.trim().isEmpty()) createDate = "2026.09.01";
 
-        scaffold(baseName, interfaceId, description, group, routingType, moduleName);
+        scaffold(baseName, interfaceId, description, group, routingType, moduleName, author, createDate);
     }
 
     private static String getOrAsk(String[] args, int index, Scanner scanner, String prompt) {
@@ -69,7 +73,7 @@ public class ToolScaffolder {
         return scanner.nextLine().trim();
     }
 
-    private static void scaffold(String baseName, String interfaceId, String description, String group, String routingType, String moduleName) throws IOException {
+    private static void scaffold(String baseName, String interfaceId, String description, String group, String routingType, String moduleName, String author, String createDate) throws IOException {
         Path serviceDir = Paths.get(moduleName, BASE_PACKAGE_PATH, "service");
         Path dtoDir = Paths.get(moduleName, BASE_PACKAGE_PATH, "dto");
 
@@ -87,13 +91,13 @@ public class ToolScaffolder {
              * @package %s.dto
              * @className %sReq
              * @description AX HUB 시스템 처리 클래스
-             * @author 김형식
-             * @create 2026.09.01
+             * @author %s
+             * @create %s
              * <pre>
              * ---------- 개정이력 ----------
              * 수정일      수정자    수정내용
              * ---------- -------- ---------------------------
-             * 2026.09.01  김형식    최초생성
+             * %s  %s    최초생성
              * 
              * </pre>
              */
@@ -102,7 +106,7 @@ public class ToolScaffolder {
             public class %sReq {
                 // TODO: Add request fields here
             }
-            """.formatted(BASE_PACKAGE, BASE_PACKAGE, baseName, baseName);
+            """.formatted(BASE_PACKAGE, baseName, author, createDate, createDate, author, baseName);
         Files.writeString(dtoDir.resolve(baseName + "Req.java"), reqContent);
 
         // Generate Res DTO
@@ -116,13 +120,13 @@ public class ToolScaffolder {
              * @package %s.dto
              * @className %sRes
              * @description AX HUB 시스템 처리 클래스
-             * @author 김형식
-             * @create 2026.09.01
+             * @author %s
+             * @create %s
              * <pre>
              * ---------- 개정이력 ----------
              * 수정일      수정자    수정내용
              * ---------- -------- ---------------------------
-             * 2026.09.01  김형식    최초생성
+             * %s  %s    최초생성
              * 
              * </pre>
              */
@@ -133,7 +137,7 @@ public class ToolScaffolder {
                 private String message;
                 // TODO: Add response fields here
             }
-            """.formatted(BASE_PACKAGE, BASE_PACKAGE, baseName, baseName);
+            """.formatted(BASE_PACKAGE, baseName, author, createDate, createDate, author, baseName);
         Files.writeString(dtoDir.resolve(baseName + "Res.java"), resContent);
 
         String toolName = baseName.toLowerCase();
@@ -152,13 +156,13 @@ public class ToolScaffolder {
              * @package %s.service
              * @className %sService
              * @description AX HUB 시스템 처리 클래스
-             * @author 김형식
-             * @create 2026.09.01
+             * @author %s
+             * @create %s
              * <pre>
              * ---------- 개정이력 ----------
              * 수정일      수정자    수정내용
              * ---------- -------- ---------------------------
-             * 2026.09.01  김형식    최초생성
+             * %s  %s    최초생성
              * 
              * </pre>
              */
@@ -180,22 +184,10 @@ public class ToolScaffolder {
                 }
             }
             """.formatted(
-                BASE_PACKAGE, 
-                BASE_PACKAGE, 
-                BASE_PACKAGE, 
-                BASE_PACKAGE, baseName, 
-                BASE_PACKAGE, baseName,
-                BASE_PACKAGE, baseName,
-                routingType, 
-                group, 
-                baseName, 
-                toolName,
-                description, 
-                description + " 해줘.", 
-                interfaceId, 
-                baseName, 
-                routingType, 
-                interfaceId
+                BASE_PACKAGE, baseName, author, createDate, createDate, author,
+                routingType, group, baseName,
+                toolName, description, description + " 해줘.", interfaceId,
+                baseName, routingType, interfaceId
             );
         
         Files.writeString(serviceDir.resolve(baseName + "Service.java"), serviceContent);

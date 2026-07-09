@@ -95,5 +95,12 @@
       "address": "서울특별시 중구 세종대로 9",
       "phoneNumber": "010-XXXX-XXXX"
     }
+  },
+  "PAY_001": {
+    "status": "SUCCESS",
+    "message": "결제가 성공적으로 승인되었습니다.",
+    "data": {
+      "processStatus": "COMPLETED"
+    }
   }
 }

@@ -21,7 +21,12 @@ public class PodScaffolder {
         String portStr = getOrAsk(args, 1, scanner, "2. 사용할 포트 번호 (예: 8085): ");
         String shortName = moduleName.replace("axhub-tool-", "").replace("-", "");
 
-        scaffoldPod(moduleName, portStr, shortName);
+        String author = getOrAsk(args, 2, scanner, "3. 작성자 (예: 김형식): ");
+        if (author.trim().isEmpty()) author = "김형식";
+        String createDate = getOrAsk(args, 3, scanner, "4. 작성일 (예: 2026.09.01): ");
+        if (createDate.trim().isEmpty()) createDate = "2026.09.01";
+
+        scaffoldPod(moduleName, portStr, shortName, author, createDate);
     }
 
     private static String getOrAsk(String[] args, int index, Scanner scanner, String prompt) {
@@ -32,7 +37,7 @@ public class PodScaffolder {
         return scanner.nextLine().trim();
     }
 
-    private static void scaffoldPod(String moduleName, String portStr, String shortName) throws IOException {
+    private static void scaffoldPod(String moduleName, String portStr, String shortName, String author, String createDate) throws IOException {
         Path modulePath = Paths.get(moduleName);
         if (Files.exists(modulePath)) {
             System.out.println("[오류] 이미 존재하는 모듈입니다: " + moduleName);
@@ -77,6 +82,20 @@ public class PodScaffolder {
             import org.springframework.boot.autoconfigure.SpringBootApplication;
             import org.springframework.cache.annotation.EnableCaching;
             
+            /**
+             * @package io.shinhanlife.axhub.biz.mcp.tool.%s
+             * @className %sToolApplication
+             * @description AX HUB 시스템 처리 클래스
+             * @author %s
+             * @create %s
+             * <pre>
+             * ---------- 개정이력 ----------
+             * 수정일      수정자    수정내용
+             * ---------- -------- ---------------------------
+             * %s  %s    최초생성
+             * 
+             * </pre>
+             */
             @SpringBootApplication(scanBasePackages = {"io.shinhanlife.axhub.biz.mcp.tool", "io.shinhanlife.axhub.biz.mcp.adapter", "io.shinhanlife.axhub.common.mcp", "io.shinhanlife.axhub.common.config"})
             @org.springframework.boot.context.properties.ConfigurationPropertiesScan(basePackages = {"io.shinhanlife.axhub.biz.mcp.tool", "io.shinhanlife.axhub.biz.mcp.adapter", "io.shinhanlife.axhub.common.mcp", "io.shinhanlife.axhub.common.config"})
             @EnableCaching
@@ -85,7 +104,7 @@ public class PodScaffolder {
                     SpringApplication.run(%sToolApplication.class, args);
                 }
             }
-            """.formatted(shortName, capitalize(shortName), capitalize(shortName));
+            """.formatted(shortName, shortName, capitalize(shortName), author, createDate, createDate, author, capitalize(shortName), capitalize(shortName));
         Files.writeString(srcPath.resolve(capitalize(shortName) + "ToolApplication.java"), appClass);
 
         Path resPath = modulePath.resolve("src/main/resources");
@@ -108,7 +127,8 @@ public class PodScaffolder {
 
         String applicationProperties = """
             spring.profiles.active=local
-            """;
+            mcp.namespace=%s
+            """.formatted(shortName);
         Files.writeString(resPath.resolve("application.properties"), applicationProperties);
 
         String applicationLocalProperties = """
