@@ -1,4 +1,4 @@
-package io.shinhanlife.axhub.biz.mcp.tool.util;
+package io.shinhanlife.axhub.common.util;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -31,7 +31,8 @@ public class PodScaffolder {
         String createDate = getOrAsk(args, 3, scanner, "4. 작성일 (엔터 입력 시 '" + defaultDate + "'): ");
         if (createDate.trim().isEmpty()) createDate = defaultDate;
 
-        scaffoldPod(moduleName, portStr, shortName, author, createDate);
+        String result = scaffoldPod(moduleName, portStr, shortName, author, createDate);
+        System.out.println(result);
     }
 
     private static String getOrAsk(String[] args, int index, Scanner scanner, String prompt) {
@@ -42,17 +43,17 @@ public class PodScaffolder {
         return scanner.nextLine().trim();
     }
 
-    private static void scaffoldPod(String moduleName, String portStr, String shortName, String author, String createDate) throws IOException {
+    public static String scaffoldPod(String moduleName, String portStr, String shortName, String author, String createDate) throws IOException {
         Path modulePath = Paths.get(moduleName);
         if (Files.exists(modulePath)) {
-            System.out.println("[오류] 이미 존재하는 모듈입니다: " + moduleName);
-            return;
+            return "[오류] 이미 존재하는 모듈입니다: " + moduleName;
         }
 
-        System.out.println("\n[1/6] 모듈 디렉터리 생성 중...");
+        StringBuilder log = new StringBuilder();
+        log.append("[1/6] 모듈 디렉터리 생성 중...\n");
         Files.createDirectories(modulePath);
 
-        System.out.println("[2/6] build.gradle 생성 중...");
+        log.append("[2/6] build.gradle 생성 중...\n");
         String buildGradle = """
             plugins {
                 id 'org.springframework.boot'
@@ -67,7 +68,7 @@ public class PodScaffolder {
             """;
         Files.writeString(modulePath.resolve("build.gradle"), buildGradle);
 
-        System.out.println("[3/6] Dockerfile 생성 중...");
+        log.append("[3/6] Dockerfile 생성 중...\n");
         String dockerfile = """
             FROM eclipse-temurin:21-jdk-alpine
             WORKDIR /app
@@ -76,7 +77,7 @@ public class PodScaffolder {
             """.formatted(moduleName);
         Files.writeString(modulePath.resolve("Dockerfile"), dockerfile);
 
-        System.out.println("[4/6] Application 클래스 및 설정 파일 생성 중...");
+        log.append("[4/6] Application 클래스 및 설정 파일 생성 중...\n");
         Path srcPath = modulePath.resolve("src/main/java/io/shinhanlife/axhub/biz/mcp/tool/" + shortName);
         Files.createDirectories(srcPath);
 
@@ -200,7 +201,7 @@ public class PodScaffolder {
             """.formatted(moduleName, moduleName);
         Files.writeString(resPath.resolve("logback-spring.xml"), logbackXml);
 
-        System.out.println("[5/6] settings.gradle 에 모듈 등록 중...");
+        log.append("[5/6] settings.gradle 에 모듈 등록 중...\n");
         Path settingsPath = Paths.get("settings.gradle");
         if (Files.exists(settingsPath)) {
             String settings = Files.readString(settingsPath);
@@ -209,7 +210,7 @@ public class PodScaffolder {
             }
         }
 
-        System.out.println("[6/6] docker-compose.yml 에 서비스 추가 중...");
+        log.append("[6/6] docker-compose.yml 에 서비스 추가 중...\n");
         Path dockerComposePath = Paths.get("docker-compose.yml");
         if (Files.exists(dockerComposePath)) {
             String compose = Files.readString(dockerComposePath);
@@ -241,12 +242,13 @@ public class PodScaffolder {
             }
         }
 
-        System.out.println("\\n=========================================");
-        System.out.println(" 🎉 Pod Scaffolding Complete! ");
-        System.out.println("=========================================");
-        System.out.println("1. [새로운 모듈] " + moduleName + " 폴더가 생성되었습니다.");
-        System.out.println("2. [ToolScaffolder]를 사용해 이 모듈 안에 툴을 추가하세요.");
-        System.out.println("3. 실행 전 Gradle 동기화(Sync)를 한 번 진행해 주세요.");
+        log.append("\n=========================================\n");
+        log.append(" 🎉 Pod Scaffolding Complete! \n");
+        log.append("=========================================\n");
+        log.append("1. [새로운 모듈] ").append(moduleName).append(" 폴더가 생성되었습니다.\n");
+        log.append("2. [ToolScaffolder]를 사용해 이 모듈 안에 툴을 추가하세요.\n");
+        log.append("3. 실행 전 Gradle 동기화(Sync)를 한 번 진행해 주세요.\n");
+        return log.toString();
     }
 
     private static String capitalize(String str) {

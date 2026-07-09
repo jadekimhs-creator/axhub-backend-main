@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>AXHUB Developer Portal - Scaffolding</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body { background-color: #f8f9fa; }
+        .container { max-width: 800px; margin-top: 50px; }
+        .card { box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .nav-tabs .nav-link.active { font-weight: bold; color: #0d6efd; }
+        #resultBox { display: none; margin-top: 20px; white-space: pre-wrap; font-family: monospace; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2 class="mb-4">🚀 AXHUB Developer Portal</h2>
+    <div class="card">
+        <div class="card-header">
+            <ul class="nav nav-tabs card-header-tabs" id="myTab" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="tool-tab" data-bs-toggle="tab" data-bs-target="#tool" type="button" role="tab">Tool (기능) 생성</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="pod-tab" data-bs-toggle="tab" data-bs-target="#pod" type="button" role="tab">Pod (모듈) 생성</button>
+                </li>
+            </ul>
+        </div>
+        <div class="card-body">
+            <div class="tab-content" id="myTabContent">
+                
+                <!-- Tool Creation Form -->
+                <div class="tab-pane fade show active" id="tool" role="tabpanel">
+                    <form id="toolForm">
+                        <div class="mb-3">
+                            <label class="form-label">기본 이름 (PascalCase)</label>
+                            <input type="text" class="form-control" name="baseName" placeholder="예: ExchangeRate" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">레거시 API 인터페이스 ID</label>
+                            <input type="text" class="form-control" name="interfaceId" placeholder="예: EXCH_001" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">기능 설명</label>
+                            <input type="text" class="form-control" name="description" placeholder="예: 환율 조회 기능" required>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">소속 그룹</label>
+                                <select class="form-select" name="group">
+                                    <option value="COMMON">COMMON</option>
+                                    <option value="CUSTOMER">CUSTOMER</option>
+                                    <option value="CONTRACT">CONTRACT</option>
+                                    <option value="CLAIM">CLAIM</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">통신 프로토콜</label>
+                                <select class="form-select" name="routingType">
+                                    <option value="HTTP">HTTP</option>
+                                    <option value="TCP">TCP</option>
+                                    <option value="MCI">MCI</option>
+                                    <option value="EAI">EAI</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">타겟 모듈명</label>
+                            <input type="text" class="form-control" name="moduleName" value="axhub-tool-other" required>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">작성자</label>
+                                <input type="text" class="form-control" name="author" placeholder="시스템 사용자명">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">작성일</label>
+                                <input type="text" class="form-control" name="date" placeholder="오늘 날짜">
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100">Tool 자동 생성</button>
+                    </form>
+                </div>
+
+                <!-- Pod Creation Form -->
+                <div class="tab-pane fade" id="pod" role="tabpanel">
+                    <form id="podForm">
+                        <div class="mb-3">
+                            <label class="form-label">새로운 모듈 이름</label>
+                            <input type="text" class="form-control" name="moduleName" placeholder="예: hr (axhub-tool-hr 로 자동 변환됨)" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">포트 번호</label>
+                            <input type="number" class="form-control" name="port" placeholder="예: 8086" required>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">작성자</label>
+                                <input type="text" class="form-control" name="author" placeholder="시스템 사용자명">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">작성일</label>
+                                <input type="text" class="form-control" name="date" placeholder="오늘 날짜">
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-success w-100">Pod 자동 생성</button>
+                    </form>
+                </div>
+
+            </div>
+        </div>
+    </div>
+    
+    <div id="resultBox" class="alert alert-info"></div>
+</div>
+
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    function handleFormSubmit(formId, apiUrl) {
+        document.getElementById(formId).addEventListener('submit', function(e) {
+            e.preventDefault();
+            const formData = new FormData(this);
+            const data = Object.fromEntries(formData.entries());
+
+            fetch(apiUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            })
+            .then(response => response.text())
+            .then(result => {
+                const resultBox = document.getElementById('resultBox');
+                resultBox.style.display = 'block';
+                resultBox.className = 'alert alert-success';
+                resultBox.textContent = result;
+                
+                // Add a gentle reminder to run gradle build
+                resultBox.textContent += "\n\n💡 변경사항 반영을 위해 IDE에서 Gradle 리로드(Sync)를 수행해주세요!";
+            })
+            .catch(error => {
+                const resultBox = document.getElementById('resultBox');
+                resultBox.style.display = 'block';
+                resultBox.className = 'alert alert-danger';
+                resultBox.textContent = "오류 발생: " + error;
+            });
+        });
+    }
+
+    handleFormSubmit('toolForm', '/api/v1/scaffold/tool');
+    handleFormSubmit('podForm', '/api/v1/scaffold/pod');
+</script>
+
+</body>
+</html>

@@ -1,4 +1,4 @@
-package io.shinhanlife.axhub.biz.mcp.tool.util;
+package io.shinhanlife.axhub.common.util;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -68,7 +68,8 @@ public class ToolScaffolder {
         String createDate = getOrAsk(args, 7, scanner, "8. 작성일 (엔터 입력 시 '" + defaultDate + "'): ");
         if (createDate.trim().isEmpty()) createDate = defaultDate;
 
-        scaffold(baseName, interfaceId, description, group, routingType, moduleName, author, createDate);
+        String result = scaffold(baseName, interfaceId, description, group, routingType, moduleName, author, createDate);
+        System.out.println(result);
     }
 
     private static String getOrAsk(String[] args, int index, Scanner scanner, String prompt) {
@@ -79,12 +80,14 @@ public class ToolScaffolder {
         return scanner.nextLine().trim();
     }
 
-    private static void scaffold(String baseName, String interfaceId, String description, String group, String routingType, String moduleName, String author, String createDate) throws IOException {
+    public static String scaffold(String baseName, String interfaceId, String description, String group, String routingType, String moduleName, String author, String createDate) throws IOException {
         Path serviceDir = Paths.get(moduleName, BASE_PACKAGE_PATH, "service");
         Path dtoDir = Paths.get(moduleName, BASE_PACKAGE_PATH, "dto");
 
         Files.createDirectories(serviceDir);
         Files.createDirectories(dtoDir);
+
+        StringBuilder log = new StringBuilder();
 
         // Generate Req DTO
         String reqContent = """
@@ -212,16 +215,18 @@ public class ToolScaffolder {
                 """.formatted(toolName, description, description + " 해줘.", interfaceId);
                 yamlContent = yamlContent.replaceFirst("functions:", "functions:" + newFunctionYaml);
                 Files.writeString(yamlPath, yamlContent);
-                System.out.println("[YAML] " + yamlPath + " (함수 설정 자동 등록됨)");
+                log.append("[YAML] ").append(yamlPath).append(" (함수 설정 자동 등록됨)\n");
             }
         }
 
-        System.out.println("\n=========================================");
-        System.out.println(" Scaffolding Complete!");
-        System.out.println("=========================================");
-        System.out.println("[Service] " + serviceDir.resolve(baseName + "Service.java"));
-        System.out.println("[Req DTO] " + dtoDir.resolve(baseName + "Req.java"));
-        System.out.println("[Res DTO] " + dtoDir.resolve(baseName + "Res.java"));
-        System.out.println("\n Tip: " + interfaceId + " 목업 데이터를 mock-responses.json에 추가하세요.");
+        log.append("\n=========================================\n");
+        log.append(" Scaffolding Complete!\n");
+        log.append("=========================================\n");
+        log.append("[Service] ").append(serviceDir.resolve(baseName + "Service.java")).append("\n");
+        log.append("[Req DTO] ").append(dtoDir.resolve(baseName + "Req.java")).append("\n");
+        log.append("[Res DTO] ").append(dtoDir.resolve(baseName + "Res.java")).append("\n");
+        log.append("\n Tip: ").append(interfaceId).append(" 목업 데이터를 mock-responses.json에 추가하세요.\n");
+        
+        return log.toString();
     }
 }
