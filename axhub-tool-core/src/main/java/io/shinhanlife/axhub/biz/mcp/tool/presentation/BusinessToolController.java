@@ -76,7 +76,8 @@ public class BusinessToolController {
         Map<String, Object> toolBeans = applicationContext.getBeansWithAnnotation(McpTool.class);
         outerLoop:
         for (Object bean : toolBeans.values()) {
-            for (Method method : bean.getClass().getDeclaredMethods()) {
+            Class<?> userClass = org.springframework.util.ClassUtils.getUserClass(bean);
+            for (Method method : userClass.getDeclaredMethods()) {
                 McpFunction mcpFunc = method.getAnnotation(McpFunction.class);
                 if (mcpFunc != null) {
                     String baseName = mcpFunc.name();

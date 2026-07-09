@@ -67,9 +67,10 @@ public class ToolRegistryHeartbeatSender {
     private void scanAndBuildMetadata() {
         Map<String, Object> toolBeans = applicationContext.getBeansWithAnnotation(McpTool.class);
         for (Object bean : toolBeans.values()) {
-            McpTool toolAnnotation = bean.getClass().getAnnotation(McpTool.class);
+            Class<?> userClass = org.springframework.util.ClassUtils.getUserClass(bean);
+            McpTool toolAnnotation = userClass.getAnnotation(McpTool.class);
             
-            for (Method method : bean.getClass().getDeclaredMethods()) {
+            for (Method method : userClass.getDeclaredMethods()) {
                 McpFunction functionAnnotation = method.getAnnotation(McpFunction.class);
                 if (functionAnnotation != null) {
                     String baseName = functionAnnotation.name();
