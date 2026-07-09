@@ -4,12 +4,13 @@ import io.shinhanlife.axhub.biz.mcp.sample.dto.SampleAiReqDto;
 import io.shinhanlife.axhub.biz.mcp.sample.dto.SampleMciReqDto;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
+import org.mapstruct.factory.Mappers;
 
 @Mapper(componentModel = "spring")
 public interface SampleMciMapper {
 
     // 테스트 환경 등에서 Spring Bean 주입 없이 직접 접근하기 위한 INSTANCE 제공 (IDE 에러 방지용)
-    SampleMciMapper INSTANCE = org.mapstruct.factory.Mappers.getMapper(SampleMciMapper.class);
+    SampleMciMapper INSTANCE = Mappers.getMapper(SampleMciMapper.class);
 
     /**
      * AI Agent의 DTO를 MCI 통신용 DTO로 변환합니다.
