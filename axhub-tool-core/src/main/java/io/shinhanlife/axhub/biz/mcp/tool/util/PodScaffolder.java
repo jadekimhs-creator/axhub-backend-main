@@ -16,7 +16,8 @@ public class PodScaffolder {
         System.out.println("   MCP Tool Pod Scaffolder (Java CLI)   ");
         System.out.println("=========================================\n");
 
-        String moduleName = getOrAsk(args, 0, scanner, "1. 생성할 모듈(Pod) 이름 (예: axhub-tool-payment): ");
+        String rawModuleName = getOrAsk(args, 0, scanner, "1. 생성할 모듈(Pod) 이름 (예: payment 또는 axhub-tool-payment): ");
+        String moduleName = rawModuleName.startsWith("axhub-tool-") ? rawModuleName : "axhub-tool-" + rawModuleName;
         String portStr = getOrAsk(args, 1, scanner, "2. 사용할 포트 번호 (예: 8085): ");
         String shortName = moduleName.replace("axhub-tool-", "").replace("-", "");
 
