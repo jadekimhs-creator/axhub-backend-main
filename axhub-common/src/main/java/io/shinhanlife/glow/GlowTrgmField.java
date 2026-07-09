@@ -22,8 +22,4 @@ public @interface GlowTrgmField {
      */
     String description() default "";
 
-    /**
-     * List 매핑 시 대상 클래스 (제네릭 타입 소거 우회용)
-     */
-    Class<?> target() default void.class;
 }
