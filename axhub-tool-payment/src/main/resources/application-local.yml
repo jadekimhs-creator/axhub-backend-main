@@ -1,6 +1,6 @@
 spring:
   application:
-    name: payment
+    name: axhub-tool-payment
   config:
     import: "classpath:config/application-glow-local.yml"
 
@@ -9,4 +9,4 @@ server:
 
 axhub:
   tool:
-    url: "http://payment:8085"
+    url: "http://tool-payment:8085"

@@ -6,4 +6,4 @@ include 'axhub-tool-core'
 include 'axhub-tool-sms'
 include 'axhub-tool-email'
 include 'axhub-tool-other'
-\ninclude 'payment'\n
+include 'axhub-tool-payment'

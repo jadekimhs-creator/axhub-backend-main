@@ -109,7 +109,7 @@ public class PodScaffolder {
         if (Files.exists(settingsPath)) {
             String settings = Files.readString(settingsPath);
             if (!settings.contains("include '" + moduleName + "'")) {
-                Files.writeString(settingsPath, "\\ninclude '" + moduleName + "'\\n", StandardOpenOption.APPEND);
+                Files.writeString(settingsPath, System.lineSeparator() + "include '" + moduleName + "'" + System.lineSeparator(), StandardOpenOption.APPEND);
             }
         }
 
@@ -141,7 +141,7 @@ public class PodScaffolder {
                           - GLOW_COMMUNICATION_EAI_HOST=tcp://gateway
                           - GLOW_COMMUNICATION_EAI_PORT=8081
                     """.formatted(serviceName, moduleName, portStr, portStr, serviceName, portStr);
-                Files.writeString(dockerComposePath, "\\n" + newService, StandardOpenOption.APPEND);
+                Files.writeString(dockerComposePath, System.lineSeparator() + newService, StandardOpenOption.APPEND);
             }
         }
 
