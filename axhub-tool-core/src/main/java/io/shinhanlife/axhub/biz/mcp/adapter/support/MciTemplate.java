@@ -4,8 +4,8 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.shinhanlife.axhub.biz.mcp.adapter.exception.MciCommunicationException;
 import io.shinhanlife.axhub.biz.mcp.adapter.sender.EimsSender;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 
 /**
@@ -19,24 +19,20 @@ import org.springframework.stereotype.Component;
  * 수정일      수정자    수정내용
  * ---------- -------- ---------------------------
  * 2026.09.01  김형식    최초생성
- * 
+ *
  * </pre>
  */
 @Slf4j
 @Component
+@RequiredArgsConstructor
 public class MciTemplate {
 
-    private final EimsSender eimsSender;
+    private final EimsSender httpEimsSender;
     private final ObjectMapper objectMapper;
-
-    public MciTemplate(@Qualifier("httpEimsSender") EimsSender eimsSender, ObjectMapper objectMapper) {
-        this.eimsSender = eimsSender;
-        this.objectMapper = objectMapper;
-    }
 
     /**
      * MCI 인터페이스를 호출하고 결과를 지정된 타입으로 반환합니다.
-     * 
+     *
      * @param interfaceId 호출할 MCI 인터페이스 ID
      * @param requestDto 요청 데이터 객체
      * @param responseType 응답을 매핑할 클래스 타입
@@ -52,12 +48,12 @@ public class MciTemplate {
             String payload = objectMapper.writeValueAsString(requestDto);
             log.debug("📤 [MciTemplate] 전송 페이로드: {}", payload);
 
-            String responseJson = eimsSender.send(interfaceId, payload);
+            String responseJson = httpEimsSender.send(interfaceId, payload);
             log.debug("📥 [MciTemplate] 수신 응답 JSON: {}", responseJson);
 
             R response = objectMapper.readValue(responseJson, responseType);
             log.info("✅ [MciTemplate] 완료 - Interface ID: {}", interfaceId);
-            
+
             return response;
 
         } catch (JsonProcessingException e) {
