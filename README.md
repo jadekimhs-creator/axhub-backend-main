@@ -103,18 +103,28 @@ MSA(Microservices Architecture) 환경의 안정성을 위해 완벽한 2-Track 
 
 ## 🏗️ 모듈(Pod) 및 Tool 코드 자동 생성 (Scaffolders)
 
-새로운 도메인의 기능을 추가할 때 발생하는 반복적인 설정(보일러플레이트, 설정 파일 복사 등)을 1초 만에 자동화하기 위해 **CLI 스캐폴더 2종**을 제공합니다.
+새로운 도메인의 기능을 추가할 때 발생하는 반복적인 설정(보일러플레이트, 설정 파일 복사 등)을 1초 만에 자동화하기 위해 **AXHUB Developer Portal (Web UI)** 및 **CLI 스캐폴더 2종**을 제공합니다.
+
+### 🌟 1. AXHUB Developer Portal (Web UI) - 가장 추천하는 방식!
+이제 더 이상 터미널에서 명령어를 칠 필요가 없습니다. Gateway 모듈에 내장된 웹 화면에서 빈칸만 채우면 코드가 마법처럼 찍혀 나옵니다.
+
+1. **접속 방법**: Gateway 서버 기동 후 브라우저에서 `http://localhost:8081/admin/scaffold.html` 접속
+2. **Pod (모듈) 생성 탭**: 모듈명(예: hr)과 포트만 입력하면 독립적인 Spring Boot 모듈이 디렉토리부터 빌드 스크립트까지 완벽히 생성됩니다.
+3. **Tool (기능) 생성 탭**: 생성된 모듈에 새로운 툴(서비스/DTO) 코드를 자동으로 주입합니다.
+
+### 2. CLI 스캐폴더 (기존 터미널 방식)
+웹 화면을 사용할 수 없는 환경이거나 터미널이 익숙한 경우, 아래 명령어를 통해 CLI 마법사를 사용할 수 있습니다.
 
 ### 1️⃣ 새로운 Pod(모듈) 전체를 생성할 때: `PodScaffolder`
 새로운 도메인(예: 결제, HR)을 위한 완전히 독립적인 Spring Boot 모듈을 생성합니다. 폴더 구조, 빌드 스크립트, 각종 프로퍼티 및 도커 설정까지 완벽하게 세팅됩니다.
 
 ```bash
 # 사용법: javac로 컴파일 후 실행
-javac -encoding UTF-8 axhub-tool-core/src/main/java/io/shinhanlife/axhub/biz/mcp/tool/util/PodScaffolder.java
-java -cp axhub-tool-core/src/main/java io.shinhanlife.axhub.biz.mcp.tool.util.PodScaffolder [모듈명] [포트번호]
+javac -encoding UTF-8 axhub-common/src/main/java/io/shinhanlife/axhub/common/util/PodScaffolder.java
+java -cp axhub-common/src/main/java io.shinhanlife.axhub.common.util.PodScaffolder [모듈명] [포트번호]
 
 # 실행 예시 (axhub-tool-hr 모듈을 8086 포트로 생성)
-java -cp axhub-tool-core/src/main/java io.shinhanlife.axhub.biz.mcp.tool.util.PodScaffolder hr 8086
+java -cp axhub-common/src/main/java io.shinhanlife.axhub.common.util.PodScaffolder hr 8086
 ```
 
 ### 2️⃣ 생성된 모듈에 새로운 툴(Function)을 추가할 때: `ToolScaffolder`
@@ -122,11 +132,11 @@ java -cp axhub-tool-core/src/main/java io.shinhanlife.axhub.biz.mcp.tool.util.Po
 
 ```bash
 # 사용법: javac로 컴파일 후 실행
-javac -encoding UTF-8 axhub-tool-core/src/main/java/io/shinhanlife/axhub/biz/mcp/tool/util/ToolScaffolder.java
-java -cp axhub-tool-core/src/main/java io.shinhanlife.axhub.biz.mcp.tool.util.ToolScaffolder [Tool이름] [인터페이스ID] "[기능설명]" "[그룹명]" "[통신방식]" "[모듈명]"
+javac -encoding UTF-8 axhub-common/src/main/java/io/shinhanlife/axhub/common/util/ToolScaffolder.java
+java -cp axhub-common/src/main/java io.shinhanlife.axhub.common.util.ToolScaffolder [Tool이름] [인터페이스ID] "[기능설명]" "[그룹명]" "[통신방식]" "[모듈명]"
 
 # 실행 예시 (payment 모듈에 결제 승인 기능 추가)
-java -cp axhub-tool-core/src/main/java io.shinhanlife.axhub.biz.mcp.tool.util.ToolScaffolder PaymentApproval PAY_001 "결제 승인 처리 기능" "COMMON" "HTTP" "axhub-tool-payment"
+java -cp axhub-common/src/main/java io.shinhanlife.axhub.common.util.ToolScaffolder PaymentApproval PAY_001 "결제 승인 처리 기능" "COMMON" "HTTP" "axhub-tool-payment"
 ```
 
 ---

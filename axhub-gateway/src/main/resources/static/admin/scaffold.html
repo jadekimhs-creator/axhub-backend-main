@@ -2,110 +2,320 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <title>AXHUB Developer Portal - Scaffolding</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AXHUB Developer Portal</title>
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
-        body { background-color: #f8f9fa; }
-        .container { max-width: 800px; margin-top: 50px; }
-        .card { box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-        .nav-tabs .nav-link.active { font-weight: bold; color: #0d6efd; }
-        #resultBox { display: none; margin-top: 20px; white-space: pre-wrap; font-family: monospace; }
+        :root {
+            --primary-gradient: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+            --surface-color: rgba(255, 255, 255, 0.95);
+            --bg-color: #f3f4f6;
+            --text-primary: #1f2937;
+            --text-secondary: #6b7280;
+            --border-radius: 16px;
+        }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-color);
+            background-image: 
+                radial-gradient(at 0% 0%, hsla(253,16%,7%,0.05) 0, transparent 50%), 
+                radial-gradient(at 50% 0%, hsla(225,39%,30%,0.05) 0, transparent 50%), 
+                radial-gradient(at 100% 0%, hsla(339,49%,30%,0.05) 0, transparent 50%);
+            background-attachment: fixed;
+            color: var(--text-primary);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem 0;
+        }
+
+        .container {
+            max-width: 850px;
+            width: 100%;
+            margin: 0 auto;
+        }
+
+        .page-header {
+            text-align: center;
+            margin-bottom: 2.5rem;
+        }
+
+        .page-header h1 {
+            font-weight: 700;
+            font-size: 2.5rem;
+            letter-spacing: -0.025em;
+            background: var(--primary-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 0.5rem;
+        }
+
+        .page-header p {
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+            font-weight: 400;
+        }
+
+        .glass-card {
+            background: var(--surface-color);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: var(--border-radius);
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.01);
+            overflow: hidden;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .glass-card:hover {
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.08), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+
+        /* Custom Tabs */
+        .nav-tabs {
+            border-bottom: 1px solid rgba(0,0,0,0.08);
+            background: rgba(249, 250, 251, 0.5);
+            padding: 0.5rem 1rem 0;
+        }
+
+        .nav-tabs .nav-item {
+            margin-bottom: -1px;
+        }
+
+        .nav-tabs .nav-link {
+            border: none;
+            color: var(--text-secondary);
+            font-weight: 500;
+            padding: 1rem 1.5rem;
+            border-bottom: 3px solid transparent;
+            transition: all 0.2s ease;
+            font-size: 1.05rem;
+        }
+
+        .nav-tabs .nav-link:hover {
+            color: #4f46e5;
+            background: transparent;
+            border-color: transparent;
+        }
+
+        .nav-tabs .nav-link.active {
+            color: #4f46e5;
+            background: transparent;
+            border-bottom: 3px solid #4f46e5;
+            font-weight: 600;
+        }
+
+        .tab-content {
+            padding: 2rem;
+        }
+
+        /* Form Controls */
+        .form-label {
+            font-weight: 500;
+            color: #374151;
+            font-size: 0.95rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .form-control, .form-select {
+            border-radius: 8px;
+            border: 1px solid #d1d5db;
+            padding: 0.75rem 1rem;
+            font-size: 0.95rem;
+            transition: all 0.2s;
+            background-color: #f9fafb;
+        }
+
+        .form-control:focus, .form-select:focus {
+            border-color: #4f46e5;
+            box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.1);
+            background-color: #fff;
+        }
+        
+        .form-control::placeholder {
+            color: #9ca3af;
+        }
+
+        /* Buttons */
+        .btn-gradient {
+            background: var(--primary-gradient);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 0.8rem 1.5rem;
+            font-weight: 600;
+            font-size: 1.05rem;
+            letter-spacing: 0.025em;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 6px -1px rgba(79, 70, 229, 0.2), 0 2px 4px -1px rgba(79, 70, 229, 0.1);
+        }
+
+        .btn-gradient:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px -3px rgba(79, 70, 229, 0.3), 0 4px 6px -2px rgba(79, 70, 229, 0.15);
+            color: white;
+        }
+        
+        .btn-gradient:active {
+            transform: translateY(0);
+        }
+
+        /* Result Box */
+        #resultBox {
+            display: none;
+            margin-top: 2rem;
+            border-radius: 12px;
+            padding: 1.5rem;
+            white-space: pre-wrap;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 0.9rem;
+            line-height: 1.5;
+            border: none;
+            box-shadow: inset 0 2px 4px 0 rgba(0, 0, 0, 0.06);
+            background-color: #f8fafc;
+            color: #334155;
+            animation: fadeIn 0.4s ease forwards;
+        }
+        
+        #resultBox.success {
+            border-left: 4px solid #10b981;
+        }
+        
+        #resultBox.error {
+            border-left: 4px solid #ef4444;
+            background-color: #fef2f2;
+            color: #991b1b;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Input Groups */
+        .input-icon-wrapper {
+            position: relative;
+        }
+        .input-hint {
+            font-size: 0.8rem;
+            color: #6b7280;
+            margin-top: 0.25rem;
+        }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h2 class="mb-4">🚀 AXHUB Developer Portal</h2>
-    <div class="card">
-        <div class="card-header">
-            <ul class="nav nav-tabs card-header-tabs" id="myTab" role="tablist">
-                <li class="nav-item" role="presentation">
-                    <button class="nav-link active" id="tool-tab" data-bs-toggle="tab" data-bs-target="#tool" type="button" role="tab">Tool (기능) 생성</button>
-                </li>
-                <li class="nav-item" role="presentation">
-                    <button class="nav-link" id="pod-tab" data-bs-toggle="tab" data-bs-target="#pod" type="button" role="tab">Pod (모듈) 생성</button>
-                </li>
-            </ul>
-        </div>
-        <div class="card-body">
+    <div class="page-header">
+        <h1>AXHUB Developer Portal</h1>
+        <p>No-Code 스캐폴딩 마법사로 모듈과 툴을 즉시 생성하세요</p>
+    </div>
+
+    <div class="glass-card">
+        <ul class="nav nav-tabs" id="myTab" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="pod-tab" data-bs-toggle="tab" data-bs-target="#pod" type="button" role="tab">📦 Pod (모듈) 생성</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="tool-tab" data-bs-toggle="tab" data-bs-target="#tool" type="button" role="tab">⚙️ Tool (기능) 생성</button>
+            </li>
+        </ul>
+        
+        <div class="card-body p-0">
             <div class="tab-content" id="myTabContent">
                 
-                <!-- Tool Creation Form -->
-                <div class="tab-pane fade show active" id="tool" role="tabpanel">
-                    <form id="toolForm">
-                        <div class="mb-3">
-                            <label class="form-label">기본 이름 (PascalCase)</label>
-                            <input type="text" class="form-control" name="baseName" placeholder="예: ExchangeRate" required>
+                <!-- Pod Creation Form -->
+                <div class="tab-pane fade show active" id="pod" role="tabpanel">
+                    <form id="podForm">
+                        <div class="mb-4">
+                            <label class="form-label">새로운 모듈 이름</label>
+                            <input type="text" class="form-control" name="moduleName" placeholder="예: hr (입력 시 axhub-tool-hr 로 자동 변환)" required>
                         </div>
-                        <div class="mb-3">
-                            <label class="form-label">레거시 API 인터페이스 ID</label>
-                            <input type="text" class="form-control" name="interfaceId" placeholder="예: EXCH_001" required>
+                        <div class="mb-4">
+                            <label class="form-label">서비스 포트 번호</label>
+                            <input type="number" class="form-control" name="port" placeholder="예: 8086" required>
+                            <div class="input-hint">Gateway 라우팅 및 Local 실행 시 사용할 고유 포트 번호입니다.</div>
                         </div>
-                        <div class="mb-3">
-                            <label class="form-label">기능 설명</label>
-                            <input type="text" class="form-control" name="description" placeholder="예: 환율 조회 기능" required>
-                        </div>
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label">소속 그룹</label>
-                                <select class="form-select" name="group">
-                                    <option value="COMMON">COMMON</option>
-                                    <option value="CUSTOMER">CUSTOMER</option>
-                                    <option value="CONTRACT">CONTRACT</option>
-                                    <option value="CLAIM">CLAIM</option>
-                                </select>
+                        <div class="row mb-4">
+                            <div class="col-md-6">
+                                <label class="form-label">작성자 (선택)</label>
+                                <input type="text" class="form-control" name="author" placeholder="미입력 시 OS 사용자명">
                             </div>
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label">통신 프로토콜</label>
-                                <select class="form-select" name="routingType">
-                                    <option value="HTTP">HTTP</option>
-                                    <option value="TCP">TCP</option>
-                                    <option value="MCI">MCI</option>
-                                    <option value="EAI">EAI</option>
-                                </select>
+                            <div class="col-md-6 mt-3 mt-md-0">
+                                <label class="form-label">작성일 (선택)</label>
+                                <input type="text" class="form-control" name="date" placeholder="미입력 시 오늘 날짜">
                             </div>
                         </div>
-                        <div class="mb-3">
-                            <label class="form-label">타겟 모듈명</label>
-                            <input type="text" class="form-control" name="moduleName" value="axhub-tool-other" required>
-                        </div>
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label">작성자</label>
-                                <input type="text" class="form-control" name="author" placeholder="시스템 사용자명">
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label">작성일</label>
-                                <input type="text" class="form-control" name="date" placeholder="오늘 날짜">
-                            </div>
-                        </div>
-                        <button type="submit" class="btn btn-primary w-100">Tool 자동 생성</button>
+                        <button type="submit" class="btn btn-gradient w-100">🚀 Pod 모듈 자동 생성</button>
                     </form>
                 </div>
 
-                <!-- Pod Creation Form -->
-                <div class="tab-pane fade" id="pod" role="tabpanel">
-                    <form id="podForm">
-                        <div class="mb-3">
-                            <label class="form-label">새로운 모듈 이름</label>
-                            <input type="text" class="form-control" name="moduleName" placeholder="예: hr (axhub-tool-hr 로 자동 변환됨)" required>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">포트 번호</label>
-                            <input type="number" class="form-control" name="port" placeholder="예: 8086" required>
-                        </div>
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label">작성자</label>
-                                <input type="text" class="form-control" name="author" placeholder="시스템 사용자명">
+                <!-- Tool Creation Form -->
+                <div class="tab-pane fade" id="tool" role="tabpanel">
+                    <form id="toolForm">
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label">기본 이름 (PascalCase)</label>
+                                <input type="text" class="form-control" name="baseName" placeholder="예: ExchangeRate" required>
+                                <div class="input-hint">클래스명 생성에 사용됩니다. (ExchangeRateService 등)</div>
                             </div>
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label">작성일</label>
-                                <input type="text" class="form-control" name="date" placeholder="오늘 날짜">
+                            <div class="col-md-6 mt-3 mt-md-0">
+                                <label class="form-label">레거시 API 인터페이스 ID</label>
+                                <input type="text" class="form-control" name="interfaceId" placeholder="예: EXCH_001" required>
                             </div>
                         </div>
-                        <button type="submit" class="btn btn-success w-100">Pod 자동 생성</button>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">기능 설명 (LLM 프롬프트용)</label>
+                            <input type="text" class="form-control" name="description" placeholder="예: 고객의 현재 환율을 조회합니다." required>
+                            <div class="input-hint">AI 에이전트가 이 설명을 보고 툴 호출 여부를 결정하므로 상세히 적어주세요.</div>
+                        </div>
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label">소속 도메인 그룹</label>
+                                <select class="form-select" name="group">
+                                    <option value="COMMON">COMMON (공통)</option>
+                                    <option value="CUSTOMER">CUSTOMER (고객)</option>
+                                    <option value="CONTRACT">CONTRACT (계약)</option>
+                                    <option value="CLAIM">CLAIM (보상)</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6 mt-3 mt-md-0">
+                                <label class="form-label">통신 프로토콜</label>
+                                <select class="form-select" name="routingType">
+                                    <option value="HTTP">HTTP (REST)</option>
+                                    <option value="TCP">TCP (Socket)</option>
+                                    <option value="MCI">MCI (대내외 연계)</option>
+                                    <option value="EAI">EAI (내부 연계)</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-4">
+                            <label class="form-label">타겟 모듈명</label>
+                            <input type="text" class="form-control" name="moduleName" value="axhub-tool-other" required>
+                            <div class="input-hint">코드가 생성될 대상 프로젝트(Pod) 폴더명입니다.</div>
+                        </div>
+                        
+                        <div class="row mb-4">
+                            <div class="col-md-6">
+                                <label class="form-label">작성자 (선택)</label>
+                                <input type="text" class="form-control" name="author" placeholder="미입력 시 OS 사용자명">
+                            </div>
+                            <div class="col-md-6 mt-3 mt-md-0">
+                                <label class="form-label">작성일 (선택)</label>
+                                <input type="text" class="form-control" name="date" placeholder="미입력 시 오늘 날짜">
+                            </div>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-gradient w-100">✨ Tool 기능 자동 생성</button>
                     </form>
                 </div>
 
@@ -113,7 +323,7 @@
         </div>
     </div>
     
-    <div id="resultBox" class="alert alert-info"></div>
+    <div id="resultBox"></div>
 </div>
 
 <!-- Bootstrap JS -->
@@ -124,6 +334,11 @@
             e.preventDefault();
             const formData = new FormData(this);
             const data = Object.fromEntries(formData.entries());
+            const btn = this.querySelector('button[type="submit"]');
+            const originalText = btn.innerHTML;
+            
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> 생성 중...';
+            btn.disabled = true;
 
             fetch(apiUrl, {
                 method: 'POST',
@@ -134,23 +349,30 @@
             .then(result => {
                 const resultBox = document.getElementById('resultBox');
                 resultBox.style.display = 'block';
-                resultBox.className = 'alert alert-success';
-                resultBox.textContent = result;
                 
-                // Add a gentle reminder to run gradle build
-                resultBox.textContent += "\n\n💡 변경사항 반영을 위해 IDE에서 Gradle 리로드(Sync)를 수행해주세요!";
+                if (result.includes('[오류]') || result.includes('오류 발생:')) {
+                    resultBox.className = 'error';
+                    resultBox.textContent = result;
+                } else {
+                    resultBox.className = 'success';
+                    resultBox.textContent = result + "\n\n💡 변경사항 반영을 위해 IDE에서 반드시 Gradle 리로드(Sync)를 수행해주세요!";
+                }
             })
             .catch(error => {
                 const resultBox = document.getElementById('resultBox');
                 resultBox.style.display = 'block';
-                resultBox.className = 'alert alert-danger';
-                resultBox.textContent = "오류 발생: " + error;
+                resultBox.className = 'error';
+                resultBox.textContent = "네트워크 오류 발생: " + error;
+            })
+            .finally(() => {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
             });
         });
     }
 
-    handleFormSubmit('toolForm', '/api/v1/scaffold/tool');
     handleFormSubmit('podForm', '/api/v1/scaffold/pod');
+    handleFormSubmit('toolForm', '/api/v1/scaffold/tool');
 </script>
 
 </body>
