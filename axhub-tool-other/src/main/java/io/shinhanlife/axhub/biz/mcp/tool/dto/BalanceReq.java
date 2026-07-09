@@ -1,4 +1,4 @@
-package io.shinhanlife.axhub.biz.mcp.tool.balance.dto;
+package io.shinhanlife.axhub.biz.mcp.tool.dto;
 
 import io.shinhanlife.axhub.biz.mcp.tool.annotation.McpParameter;
 import lombok.Data;

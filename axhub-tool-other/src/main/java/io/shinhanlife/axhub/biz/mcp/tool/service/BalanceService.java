@@ -1,8 +1,8 @@
-package io.shinhanlife.axhub.biz.mcp.tool.balance.service;
+package io.shinhanlife.axhub.biz.mcp.tool.service;
 
 import io.shinhanlife.axhub.biz.mcp.tool.annotation.McpFunction;
 import io.shinhanlife.axhub.biz.mcp.tool.annotation.McpTool;
-import io.shinhanlife.axhub.biz.mcp.tool.balance.dto.BalanceReq;
+import io.shinhanlife.axhub.biz.mcp.tool.dto.BalanceReq;
 import io.shinhanlife.axhub.biz.mcp.tool.service.AbstractMcpToolService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
