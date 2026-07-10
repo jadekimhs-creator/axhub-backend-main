@@ -310,7 +310,7 @@
 
                 const groupedTools = {};
                 tools.forEach(tool => {
-                    const group = tool.domainGroup || '기타 그룹';
+                    const group = tool.categoryKey || '기타 그룹';
                     if (!groupedTools[group]) {
                         groupedTools[group] = [];
                     }
