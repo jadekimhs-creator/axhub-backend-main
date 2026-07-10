@@ -85,30 +85,25 @@ public class ToolRegistryHeartbeatSender {
                             ? mcpProperties.getNamespace() + "_" + baseName
                             : baseName;
 
-                    McpProperties.FunctionProp prop = null;
-                    if (mcpProperties.getFunctions() != null) {
-                        prop = mcpProperties.getFunctions().get(baseName);
-                    }
-
-                    boolean isRegister = prop != null && prop.getRegister() != null ? prop.getRegister() : functionAnnotation.register();
+                    boolean isRegister = functionAnnotation.register();
                     if (!isRegister) {
-                        log.info(" [HeartbeatSender] '{}' 툴은 설정에 의해 외부 등록(Redis) 대상에서 제외되었습니다. (최종 이름: {})", baseName, finalName);
+                        log.info(" [HeartbeatSender] '{}' 툴은 어노테이션 설정에 의해 외부 등록(Redis) 대상에서 제외되었습니다. (최종 이름: {})", baseName, finalName);
                     }
 
                     ToolMetadata meta = new ToolMetadata();
                     meta.setToolName(finalName);
-                    meta.setDescription(prop != null && prop.getDescription() != null ? prop.getDescription() : functionAnnotation.description());
+                    meta.setDescription(functionAnnotation.description());
                     meta.setDomainGroup(toolAnnotation.group());
                     meta.setIntegrationType(toolAnnotation.routingType());
-                    meta.setMciServiceId(prop != null && prop.getMappingId() != null ? prop.getMappingId() : functionAnnotation.mappingId());
+                    meta.setMciServiceId(functionAnnotation.mappingId());
                     meta.setPodUrl(podUrl);
                     
-                    boolean isVisible = prop != null && prop.getVisible() != null ? prop.getVisible() : functionAnnotation.visible();
+                    boolean isVisible = functionAnnotation.visible();
                     meta.setVisible(isVisible);
                     meta.setRegistered(isRegister);
                     
                     Map<String, String> prompts = new HashMap<>();
-                    String promptText = prop != null && prop.getPrompt() != null ? prop.getPrompt() : functionAnnotation.prompt();
+                    String promptText = functionAnnotation.prompt();
                     prompts.put(finalName, promptText);
                     meta.setActionPrompts(prompts);
                     

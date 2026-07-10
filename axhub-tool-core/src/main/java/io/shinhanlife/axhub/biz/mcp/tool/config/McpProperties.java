@@ -26,14 +26,5 @@ import java.util.Map;
 public class McpProperties {
 
     private String namespace;
-    private Map<String, FunctionProp> functions;
 
-    @Data
-    public static class FunctionProp {
-        private String description;
-        private String prompt;
-        private String mappingId;
-        private Boolean register;
-        private Boolean visible;
-    }
 }

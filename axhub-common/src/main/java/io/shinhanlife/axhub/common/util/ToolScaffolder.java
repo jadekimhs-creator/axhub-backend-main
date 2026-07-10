@@ -206,37 +206,7 @@ public class ToolScaffolder {
         
         Files.writeString(serviceDir.resolve(baseName + "Service.java"), serviceContent);
 
-        // Append to YAML
-        Path resourcesDir = rootDir.resolve(Paths.get(moduleName, "src/main/resources"));
-        Files.createDirectories(resourcesDir);
-        Path yamlPath = resourcesDir.resolve("application-local.yml");
 
-        String yamlContent = "";
-        if (Files.exists(yamlPath)) {
-            yamlContent = Files.readString(yamlPath);
-        }
-
-        String newFunctionYaml = """
-            
-                %s:
-                  description: "%s"
-                  prompt: "%s"
-                  mappingId: "%s"
-        """.formatted(toolName, description, description + " 해줘.", interfaceId);
-
-        if (yamlContent.contains("functions:")) {
-            yamlContent = yamlContent.replaceFirst("functions:", "functions:" + newFunctionYaml);
-        } else {
-            if (!yamlContent.isEmpty() && !yamlContent.endsWith("\n")) {
-                yamlContent += "\n";
-            }
-            yamlContent += """
-mcp:
-  functions:%s""".formatted(newFunctionYaml);
-        }
-
-        Files.writeString(yamlPath, yamlContent);
-        log.append("[YAML] ").append(yamlPath).append(" (함수 설정 자동 등록됨)\n");
 
         log.append("\n=========================================\n");
         log.append(" Scaffolding Complete!\n");
