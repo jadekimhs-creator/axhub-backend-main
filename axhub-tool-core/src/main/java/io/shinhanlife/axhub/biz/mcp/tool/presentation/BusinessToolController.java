@@ -67,7 +67,7 @@ public class BusinessToolController {
 
     // JSON RPC 기반 단일 라우팅 엔드포인트
     @PostMapping("/mcp/api/v1/tools/call")
-    public Map<String, Object> executeDynamicTool(@RequestBody(required = false) Map<String, Object> payload) {
+    public org.springframework.http.ResponseEntity<Map<String, Object>> executeDynamicTool(@RequestBody(required = false) Map<String, Object> payload) {
         Map<String, Object> params = payload != null ? (Map<String, Object>) payload.get("params") : null;
         String functionName = params != null ? (String) params.get("name") : null;
         
@@ -134,7 +134,7 @@ public class BusinessToolController {
             error.put("jsonrpc", "2.0");
             error.put("error", errorBody);
             error.put("id", payload != null ? payload.get("id") : null);
-            return error;
+            return org.springframework.http.ResponseEntity.ok(error);
         }
         // (기존 차단 로직 제거됨)
 
@@ -167,7 +167,7 @@ public class BusinessToolController {
                         error.put("jsonrpc", "2.0");
                         error.put("error", errorBody);
                         error.put("id", payload != null ? payload.get("id") : null);
-                        return error;
+                        return org.springframework.http.ResponseEntity.ok(error);
                     }
                 } catch (Exception e) {
                     log.error("[Tool] 스키마 검증 중 오류 발생: {}", e.getMessage());
@@ -189,7 +189,46 @@ public class BusinessToolController {
             }
 
             // 4. 메서드 실행
-            Object methodResult = targetMethod.invoke(targetBean, invokeArgument);
+            
+            long startTime = System.currentTimeMillis();
+            Object methodResult = null;
+            final Object finalTargetBean = targetBean;
+            final Object finalInvokeArgument = invokeArgument;
+            final java.lang.reflect.Method finalTargetMethod = targetMethod;
+            int timeoutMs = targetFunctionAnnotation != null ? targetFunctionAnnotation.timeoutMs() : 300000;
+            
+            try {
+                methodResult = java.util.concurrent.CompletableFuture.supplyAsync(() -> {
+                    try {
+                        return finalTargetMethod.invoke(finalTargetBean, finalInvokeArgument);
+                    } catch (Exception ex) {
+                        throw new java.util.concurrent.CompletionException(ex);
+                    }
+                }).get(timeoutMs, java.util.concurrent.TimeUnit.MILLISECONDS);
+            } catch (java.util.concurrent.TimeoutException te) {
+                long elapsed = System.currentTimeMillis() - startTime;
+                Map<String, Object> errorBody = new HashMap<>();
+                errorBody.put("code", "TOOLBOX_EXEC_TIMEOUT");
+                errorBody.put("message", "Tool execution timed out after " + timeoutMs + " ms");
+                Map<String, Object> error = new HashMap<>();
+                error.put("jsonrpc", "2.0");
+                error.put("error", errorBody);
+                error.put("id", payload != null ? payload.get("id") : null);
+                
+                Map<String, Object> resultPayload = new HashMap<>();
+                resultPayload.put("status", "timeout");
+                resultPayload.put("result", null);
+                resultPayload.put("error_code", "TOOLBOX_EXEC_TIMEOUT");
+                resultPayload.put("error_message", "Tool execution timed out");
+                resultPayload.put("elapsed_ms", elapsed);
+                resultPayload.put("truncated", false);
+                resultPayload.put("original_size", 0);
+                
+                error.put("result", resultPayload);
+                return org.springframework.http.ResponseEntity.status(504).body(error);
+            }
+            
+            long elapsed = System.currentTimeMillis() - startTime;
             
             // 5. 결과 조립 (JSON-RPC 응답 - Agent Builder 규격 적용)
             Map<String, Object> innerResult = new HashMap<>();
@@ -209,7 +248,7 @@ public class BusinessToolController {
             resultPayload.put("result", innerResult);
             resultPayload.put("error_code", null);
             resultPayload.put("error_message", null);
-            resultPayload.put("elapsed_ms", 0);
+            resultPayload.put("elapsed_ms", elapsed);
             resultPayload.put("truncated", false);
             resultPayload.put("original_size", 0);
 
@@ -223,7 +262,36 @@ public class BusinessToolController {
             } catch (Exception e) {
                 log.info("[Tool -> MCP Gateway] 동적 툴 실행 결과 반환: {}", rpcResponse);
             }
-            return rpcResponse;
+            
+            try {
+                String resultJson = objectMapper.writeValueAsString(innerResult);
+                int size = resultJson.getBytes(java.nio.charset.StandardCharsets.UTF_8).length;
+                resultPayload.put("original_size", size);
+                
+                if (size > 1048576) {
+                    Map<String, Object> errorBody = new HashMap<>();
+                    errorBody.put("code", "TOOLBOX_RESPONSE_TOO_LARGE");
+                    errorBody.put("message", "Response size exceeds 1 MiB limit");
+                    Map<String, Object> error = new HashMap<>();
+                    error.put("jsonrpc", "2.0");
+                    error.put("error", errorBody);
+                    error.put("id", payload != null ? payload.get("id") : null);
+                    
+                    resultPayload.put("status", "error");
+                    resultPayload.put("result", null);
+                    resultPayload.put("error_code", "TOOLBOX_RESPONSE_TOO_LARGE");
+                    resultPayload.put("error_message", "Response size exceeds 1 MiB limit");
+                    error.put("result", resultPayload);
+                    return org.springframework.http.ResponseEntity.status(413).body(error);
+                } else if (size > 30000) {
+                    String truncatedStr = resultJson.substring(0, 30000) + "... (truncated)";
+                    resultPayload.put("result", truncatedStr);
+                    resultPayload.put("truncated", true);
+                }
+            } catch (Exception e) {
+                log.warn("Failed to measure size", e);
+            }
+            return org.springframework.http.ResponseEntity.ok(rpcResponse);
 
         } catch (Exception e) {
             log.error("[Tool] 리플렉션 실행 중 예외 발생: {}", e.getMessage());
@@ -238,7 +306,7 @@ public class BusinessToolController {
             error.put("jsonrpc", "2.0");
             error.put("error", errorBody);
             error.put("id", payload != null ? payload.get("id") : null);
-            return error;
+            return org.springframework.http.ResponseEntity.ok(error);
         }
     }
 }
