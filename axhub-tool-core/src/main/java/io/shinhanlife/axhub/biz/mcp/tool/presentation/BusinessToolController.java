@@ -204,15 +204,20 @@ public class BusinessToolController {
             
             // 5. 결과 조립 (JSON-RPC 응답 - Agent Builder 규격 적용)
             Map<String, Object> innerResult = new HashMap<>();
-            if (methodResult instanceof Map) {
+            if (methodResult instanceof Map && ((Map<?, ?>) methodResult).containsKey("contracts")) {
                 innerResult.putAll((Map<String, Object>) methodResult);
-            }
-            if (!innerResult.containsKey("contracts")) {
+            } else {
                 List<Object> contracts = new ArrayList<>();
                 if (methodResult != null) {
                     contracts.add(methodResult);
                 }
                 innerResult.put("contracts", contracts);
+                
+                if (methodResult instanceof Map && ((Map<?, ?>) methodResult).containsKey("status")) {
+                    innerResult.put("status", ((Map<?, ?>) methodResult).get("status"));
+                } else {
+                    innerResult.put("status", "SUCCESS");
+                }
             }
 
             Map<String, Object> resultPayload = new HashMap<>();
@@ -222,7 +227,21 @@ public class BusinessToolController {
             resultPayload.put("error_message", null);
             resultPayload.put("elapsed_ms", elapsed);
             resultPayload.put("truncated", false);
-            resultPayload.put("original_size", 0);
+                        int originalSize = 0;
+            try {
+                if (methodResult instanceof Map && ((Map<?, ?>) methodResult).containsKey("legacy_response")) {
+                    Object legacyResp = ((Map<?, ?>) methodResult).get("legacy_response");
+                    if (legacyResp instanceof String) {
+                        originalSize = ((String) legacyResp).getBytes(java.nio.charset.StandardCharsets.UTF_8).length;
+                    }
+                } else {
+                    String jsonStr = objectMapper.writeValueAsString(innerResult);
+                    originalSize = jsonStr.getBytes(java.nio.charset.StandardCharsets.UTF_8).length;
+                }
+            } catch (Exception e) {
+                log.warn("Failed to calculate original_size", e);
+            }
+            resultPayload.put("original_size", originalSize);
 
             Map<String, Object> rpcResponse = new java.util.LinkedHashMap<>(); // 순서 보장을 위해 LinkedHashMap 사용
             rpcResponse.put("jsonrpc", "2.0");

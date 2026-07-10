@@ -44,9 +44,14 @@ public class TemplateUtilityService extends AbstractMcpToolService {
             
             Map<String, Object> result = new java.util.HashMap<>();
             result.put("status", "success");
-            result.put("fileName", fileName);
-            result.put("downloadUrl", downloadUrl);
-            result.put("message", "다운로드 링크가 성공적으로 생성되었습니다. AI는 이 링크를 마크다운 형식으로 사용자에게 전달해야 합니다.");
+            
+            Map<String, Object> contract = new java.util.HashMap<>();
+            contract.put("fileName", fileName);
+            contract.put("downloadUrl", downloadUrl);
+            contract.put("message", "다운로드 링크가 성공적으로 생성되었습니다. AI는 이 링크를 마크다운 형식으로 사용자에게 전달해야 합니다.");
+            contract.put("status", "success");
+            
+            result.put("contracts", java.util.Collections.singletonList(contract));
             
             return result;
         } catch (Exception e) {
