@@ -33,7 +33,7 @@ public class McpBridge {
                     try {
                         HttpRequest req = HttpRequest.newBuilder()
                                 .uri(URI.create("http://localhost:8081/mcp/api/v1/tools/list"))
-                                .header("X-API-KEY", "SHINHAN_MCP_TEST_KEY_9999")
+                                
                                 .GET()
                                 .build();
                         HttpResponse<String> response = client.send(req, HttpResponse.BodyHandlers.ofString());
@@ -44,7 +44,7 @@ public class McpBridge {
                         String rawJson = response.body();
                         // For simplicity, we can just proxy the response if it matches closely, but it doesn't.
                         // Let's just do a naive conversion by replacing "subToolName" with "name" and "parametersSchema" with "inputSchema"
-                        String transformed = rawJson.replace("\"name\"", "\"displayName\"").replace("\"subToolName\"", "\"name\"").replace("\"parametersSchema\"", "\"inputSchema\"");
+                        String transformed = rawJson;
                         // Add type: "object" to inputSchema if missing - too complex with string replace, let's hope axhub-gateway already provides correct schema
                         
                         // The result format expects: {"tools": [ ... ]}
@@ -68,7 +68,7 @@ public class McpBridge {
                                 .uri(URI.create("http://localhost:8081/mcp/api/v1/tools/call"))
                                 .header("Content-Type", "application/json")
                                 .header("X-Agent-Id", "Antigravity")
-                                .header("X-API-KEY", "SHINHAN_MCP_TEST_KEY_9999")
+                                
                                 .POST(HttpRequest.BodyPublishers.ofString(line))
                                 .build();
                         HttpResponse<String> response = client.send(req, HttpResponse.BodyHandlers.ofString());

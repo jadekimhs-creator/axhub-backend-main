@@ -303,7 +303,7 @@
         async function fetchTools() {
             try {
                 const response = await fetch('/mcp/api/v1/tools/list', {
-                    headers: { 'X-API-KEY': 'SHINHAN_MCP_TEST_KEY_9999' }
+                    
                 });
                 const data = await response.json();
                 
@@ -503,7 +503,7 @@
                     method: 'POST',
                     headers: { 
                         'Content-Type': 'application/json', 
-                        'X-API-KEY': 'SHINHAN_MCP_TEST_KEY_9999',
+                        
                         'X-Trace-Id': "MCP-REQ-" + Math.floor(Math.random() * 90000 + 10000),
                         'X-Agent-Id': document.getElementById('agentId').value,
                         'X-User-Prompt': encodeURIComponent(document.getElementById('userPrompt').value || '테스트')

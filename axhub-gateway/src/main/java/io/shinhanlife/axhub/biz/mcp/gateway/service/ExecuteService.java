@@ -82,7 +82,7 @@ public class ExecuteService {
         return restClient.post()
                 .uri(url)
                 .contentType(MediaType.APPLICATION_JSON)
-                .header("X-API-KEY", "SHINHAN_MCP_TEST_KEY_9999") // TODO: Use actual tenant's key
+                 // TODO: Use actual tenant's key
                 .header("X-Trace-Id", java.util.UUID.randomUUID().toString())
                 .body(payload)
                 .retrieve()

@@ -186,8 +186,8 @@ public class ToolScaffolder {
             public class %sService extends AbstractMcpToolService {
 
                 @McpFunction(
-                    name = "%s 툴",
-                    subToolName = "%s",
+                    displayName = "%s 툴",
+                    name = "%s",
                     description = "%s",
                     prompt = "%s",
                     mappingId = "%s",

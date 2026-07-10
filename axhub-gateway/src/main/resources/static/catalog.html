@@ -190,7 +190,7 @@
         async function fetchTools() {
             try {
                 const response = await fetch('/mcp/api/v1/tools/list', {
-                    headers: { 'X-API-KEY': 'SHINHAN_MCP_TEST_KEY_9999' }
+                    
                 });
                 const data = await response.json();
                 const tools = data.result?.tools || [];

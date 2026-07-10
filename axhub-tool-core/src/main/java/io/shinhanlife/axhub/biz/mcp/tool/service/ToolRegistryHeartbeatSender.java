@@ -80,8 +80,8 @@ public class ToolRegistryHeartbeatSender {
             for (Method method : targetClass.getDeclaredMethods()) {
                 McpFunction functionAnnotation = AnnotationUtils.findAnnotation(method, McpFunction.class);
                 if (functionAnnotation != null) {
-                    String baseName = functionAnnotation.name();
-                    String rawSubToolName = functionAnnotation.subToolName();
+                    String baseName = functionAnnotation.displayName();
+                    String rawSubToolName = functionAnnotation.name();
                     String subToolName = mcpProperties.getNamespace() != null && !mcpProperties.getNamespace().isEmpty()
                             ? mcpProperties.getNamespace() + "_" + rawSubToolName
                             : rawSubToolName;
@@ -144,7 +144,7 @@ public class ToolRegistryHeartbeatSender {
                 org.springframework.http.ResponseEntity<String> response = restClient.post()
                         .uri(gatewayUrl + "/mcp/api/v1/registry/heartbeat")
                         .header("Content-Type", "application/json")
-                        .header("X-API-KEY", "SHINHAN_MCP_TEST_KEY_9999")
+                        
                         .body(tool.getUid())
                         .retrieve()
                         .toEntity(String.class);
@@ -164,7 +164,7 @@ public class ToolRegistryHeartbeatSender {
             restClient.post()
                     .uri(gatewayUrl + "/mcp/api/v1/registry/register")
                     .header("Content-Type", "application/json")
-                    .header("X-API-KEY", "SHINHAN_MCP_TEST_KEY_9999")
+                    
                     .body(tool)
                     .retrieve()
                     .toBodilessEntity();

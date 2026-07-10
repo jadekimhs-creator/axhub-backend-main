@@ -6,14 +6,14 @@ import java.lang.annotation.*;
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
 public @interface McpFunction {
-    String name();             // 사람이 읽는 라벨 (예: "고객 조회 툴")
-    String subToolName();      // MCP 서브툴 명칭 (예: "customer_search")
+    String displayName();             // 사람이 읽는 라벨 (예: "고객 조회 툴")
+    String name();      // MCP 서브툴 명칭 (예: "customer_search")
     String description();
     String prompt() default "";
     String mappingId() default "";
     
     // 추가: 해당 함수가 요구하는 비즈니스 파라미터(JSON 형태의 properties)를 정의
-    String parameterSchema() default "{}";
+    String inputSchema() default "{}";
     
     // 추가: Redis 자동 등록 및 Heartbeat 대상 여부 제어
     boolean register() default true;
