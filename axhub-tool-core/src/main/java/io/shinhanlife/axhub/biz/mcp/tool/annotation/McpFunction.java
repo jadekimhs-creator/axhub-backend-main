@@ -19,4 +19,7 @@ public @interface McpFunction {
     
     // 추가: 툴 목록 노출 여부 제어 (false 시 라우팅은 되나 목록에서 숨김)
     boolean visible() default true;
+
+    // 추가: HITL 승인 체계 지원 (실행 전 사용자 승인 필요 여부)
+    boolean requiresApproval() default false;
 }

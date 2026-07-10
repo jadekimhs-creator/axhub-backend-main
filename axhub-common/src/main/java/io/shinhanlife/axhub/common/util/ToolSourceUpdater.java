@@ -12,7 +12,7 @@ import java.util.stream.Stream;
 
 public class ToolSourceUpdater {
 
-    public static void updateToolSource(String toolName, String domainGroup, String description, boolean register) throws Exception {
+    public static void updateToolSource(String toolName, String domainGroup, String description, boolean register, Boolean requiresApproval) throws Exception {
         // 1. Find all *Service.java files in axhub-tool-* directories
         String envSourceDir = System.getenv("AXHUB_SOURCE_DIR");
         Path rootDir = envSourceDir != null ? Paths.get(envSourceDir) : Paths.get(".");
@@ -84,6 +84,21 @@ public class ToolSourceUpdater {
             Matcher addRegMatcher = addRegPattern.matcher(content);
             if (addRegMatcher.find()) {
                 content = addRegMatcher.replaceFirst("$1, register = " + register);
+            }
+        }
+
+        // 5.5 Update requiresApproval flag
+        if (requiresApproval != null) {
+            Pattern appPattern = Pattern.compile("(@McpFunction\\s*\\([^)]*name\\s*=\\s*\"" + Pattern.quote(toolName) + "\"[^)]*requiresApproval\\s*=\\s*)(true|false)([^a-zA-Z0-9])", Pattern.DOTALL);
+            Matcher appMatcher = appPattern.matcher(content);
+            if (appMatcher.find()) {
+                content = appMatcher.replaceFirst("$1" + requiresApproval + "$3");
+            } else {
+                Pattern addAppPattern = Pattern.compile("(@McpFunction\\s*\\([^)]*name\\s*=\\s*\"" + Pattern.quote(toolName) + "\")", Pattern.DOTALL);
+                Matcher addAppMatcher = addAppPattern.matcher(content);
+                if (addAppMatcher.find()) {
+                    content = addAppMatcher.replaceFirst("$1, requiresApproval = " + requiresApproval);
+                }
             }
         }
 

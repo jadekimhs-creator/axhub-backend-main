@@ -190,7 +190,8 @@ public class ToolScaffolder {
                     description = "%s",
                     prompt = "%s",
                     mappingId = "%s",
-                    register = %s
+                    register = %s,
+                    requiresApproval = false
                 )
                 public Object execute(%sReq req) {
                     return executeLegacy("%s", "%s", req);

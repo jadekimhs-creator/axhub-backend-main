@@ -45,6 +45,9 @@ public class ToolMetadata {
     @Builder.Default
     private Boolean isRegistered = true;
 
+    @Builder.Default
+    private Boolean requiresApproval = false;
+
     public boolean isVisible() {
         return visible != null ? visible : true;
     }
@@ -55,6 +58,10 @@ public class ToolMetadata {
     
     public void setRegistered(Boolean isRegistered) {
         this.isRegistered = isRegistered;
+    }
+
+    public boolean isRequiresApproval() {
+        return requiresApproval != null ? requiresApproval : false;
     }
 
 }

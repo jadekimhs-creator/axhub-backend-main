@@ -51,8 +51,9 @@ public class ScaffoldingController {
             String domainGroup = req.get("domainGroup");
             String description = req.get("description");
             boolean register = Boolean.parseBoolean(req.getOrDefault("register", "true"));
+            Boolean requiresApproval = req.containsKey("requiresApproval") ? Boolean.parseBoolean(req.get("requiresApproval")) : null;
             
-            io.shinhanlife.axhub.common.util.ToolSourceUpdater.updateToolSource(toolName, domainGroup, description, register);
+            io.shinhanlife.axhub.common.util.ToolSourceUpdater.updateToolSource(toolName, domainGroup, description, register, requiresApproval);
             return "성공";
         } catch (Exception e) {
             return "오류 발생: " + e.getMessage();
