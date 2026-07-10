@@ -44,7 +44,7 @@ public class McpBridge {
                         String rawJson = response.body();
                         // For simplicity, we can just proxy the response if it matches closely, but it doesn't.
                         // Let's just do a naive conversion by replacing "subToolName" with "name" and "parametersSchema" with "inputSchema"
-                        String transformed = rawJson.replace("\"subToolName\"", "\"name\"").replace("\"parametersSchema\"", "\"inputSchema\"");
+                        String transformed = rawJson.replace("\"name\"", "\"displayName\"").replace("\"subToolName\"", "\"name\"").replace("\"parametersSchema\"", "\"inputSchema\"");
                         // Add type: "object" to inputSchema if missing - too complex with string replace, let's hope axhub-gateway already provides correct schema
                         
                         // The result format expects: {"tools": [ ... ]}
@@ -120,3 +120,6 @@ public class McpBridge {
         return line.substring(start, end);
     }
 }
+
+
+
