@@ -81,8 +81,11 @@ public class ToolScaffolder {
     }
 
     public static String scaffold(String baseName, String interfaceId, String description, String group, String routingType, String moduleName, String author, String createDate, boolean register) throws IOException {
-        Path serviceDir = Paths.get(moduleName, BASE_PACKAGE_PATH, "service");
-        Path dtoDir = Paths.get(moduleName, BASE_PACKAGE_PATH, "dto");
+        String envSourceDir = System.getenv("AXHUB_SOURCE_DIR");
+        Path rootDir = envSourceDir != null ? Paths.get(envSourceDir) : Paths.get(".");
+        
+        Path serviceDir = rootDir.resolve(Paths.get(moduleName, BASE_PACKAGE_PATH, "service"));
+        Path dtoDir = rootDir.resolve(Paths.get(moduleName, BASE_PACKAGE_PATH, "dto"));
 
         Files.createDirectories(serviceDir);
         Files.createDirectories(dtoDir);
@@ -204,7 +207,7 @@ public class ToolScaffolder {
         Files.writeString(serviceDir.resolve(baseName + "Service.java"), serviceContent);
 
         // Append to YAML
-        Path resourcesDir = Paths.get(moduleName, "src/main/resources");
+        Path resourcesDir = rootDir.resolve(Paths.get(moduleName, "src/main/resources"));
         Files.createDirectories(resourcesDir);
         Path yamlPath = resourcesDir.resolve("application-local.yml");
 

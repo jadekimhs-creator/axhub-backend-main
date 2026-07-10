@@ -16,6 +16,8 @@ services:
       context: ./axhub-gateway
     ports:
       - "8081:8081"
+    volumes:
+      - ./:/src
     depends_on:
       redis:
         condition: service_healthy
@@ -25,6 +27,7 @@ services:
       - SPRING_REDIS_PORT=6379
       - SPRING_DATA_REDIS_HOST=redis
       - SPRING_DATA_REDIS_PORT=6379
+      - AXHUB_SOURCE_DIR=/src
 
   tool-sms:
     build: 

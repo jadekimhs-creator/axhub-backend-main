@@ -25,12 +25,12 @@ import io.shinhanlife.axhub.biz.mcp.tool.dto.BondIssueReq;
  */
 public class BondIssueService extends AbstractMcpToolService {
 
-    @McpFunction(name = "check", description = "발행 가능 여부 조회", prompt = "디지털 증권 발행 한도가 충분한지 확인해줘.", mappingId = "BOND_001")
+    @McpFunction(name = "check", register = true, description = "발행 가능 여부 조회 테스트", prompt = "디지털 증권 발행 한도가 충분한지 확인해줘.", mappingId = "BOND_001")
     public Object check(BondCheckReq data) {
         return executeLegacy("EAI", "BOND_001", data);
     }
 
-    @McpFunction(name = "issue", description = "증권 발행", prompt = "디지털 증권 발행 프로세스를 실행해.", mappingId = "BOND_002")
+    @McpFunction(name = "issue", register = true, description = "증권 발행 테스트", prompt = "디지털 증권 발행 프로세스를 실행해.", mappingId = "BOND_002")
     public Object issue(BondIssueReq data) {
         return executeLegacy("EAI", "BOND_002", data);
     }

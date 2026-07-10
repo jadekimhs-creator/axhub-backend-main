@@ -44,7 +44,10 @@ public class PodScaffolder {
     }
 
     public static String scaffoldPod(String moduleName, String portStr, String shortName, String author, String createDate) throws IOException {
-        Path modulePath = Paths.get(moduleName);
+        String envSourceDir = System.getenv("AXHUB_SOURCE_DIR");
+        Path rootDir = envSourceDir != null ? Paths.get(envSourceDir) : Paths.get(".");
+        
+        Path modulePath = rootDir.resolve(Paths.get(moduleName));
         if (Files.exists(modulePath)) {
             return "[오류] 이미 존재하는 모듈입니다: " + moduleName;
         }
@@ -202,7 +205,7 @@ public class PodScaffolder {
         Files.writeString(resPath.resolve("logback-spring.xml"), logbackXml);
 
         log.append("[5/6] settings.gradle 에 모듈 등록 중...\n");
-        Path settingsPath = Paths.get("settings.gradle");
+        Path settingsPath = rootDir.resolve(Paths.get("settings.gradle"));
         if (Files.exists(settingsPath)) {
             String settings = Files.readString(settingsPath);
             if (!settings.contains("include '" + moduleName + "'")) {
@@ -211,7 +214,7 @@ public class PodScaffolder {
         }
 
         log.append("[6/6] docker-compose.yml 에 서비스 추가 중...\n");
-        Path dockerComposePath = Paths.get("docker-compose.yml");
+        Path dockerComposePath = rootDir.resolve(Paths.get("docker-compose.yml"));
         if (Files.exists(dockerComposePath)) {
             String compose = Files.readString(dockerComposePath);
             String serviceName = moduleName.replace("axhub-", ""); // e.g. tool-payment

@@ -36,4 +36,9 @@ public class CommonUtilityService extends AbstractMcpToolService {
         return executeLegacy("HTTP", "HR_VAC_02", data);
     }
 
+    @McpFunction(name = "secret_tool", description = "비공개 툴 테스트", prompt = "숨겨진 툴 강제 호출", mappingId = "SECRET_001", visible = false)
+    public Object secretTool(LeaveCountReq data) {
+        return executeLegacy("HTTP", "SECRET_001", data);
+    }
+
 }
