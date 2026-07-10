@@ -42,6 +42,6 @@ public class SwaggerConfig {
                                         .name("X-API-KEY")
                                         .type(SecurityScheme.Type.APIKEY)
                                         .in(SecurityScheme.In.HEADER)
-                                        .description("헤더에 API Key를 입력해주세요. (기본값: SHINHAN_MCP_SECRET_KEY_2026)")));
+                                        .description("헤더에 API Key를 입력해주세요. ")));
     }
 }

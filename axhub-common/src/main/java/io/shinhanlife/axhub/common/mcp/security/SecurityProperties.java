@@ -31,7 +31,7 @@ import java.util.Map;
 @Component
 @ConfigurationProperties(prefix = "mcp.security")
 public class SecurityProperties {
-    // API Key를 Key로, Tenant ID를 Value로 가지는 맵 (ex. SHINHAN_MCP_SECRET_KEY_2026 -> mcp-client-1)
+    // API Key를 Key로, Tenant ID를 Value로 가지는 맵 
     private Map<String, String> apiKeys = new HashMap<>();
 
     // Tenant ID를 Key로, 허용된 도메인 그룹 목록을 Value로 가지는 맵 (ex. mcp-client-1 -> [CUSTOMER, COMMON])
