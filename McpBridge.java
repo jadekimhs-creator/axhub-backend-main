@@ -96,13 +96,26 @@ public class McpBridge {
         int idx = line.indexOf("\"id\":");
         if (idx == -1) return "null";
         int start = idx + 5;
-        while (start < line.length() && (line.charAt(start) == ' ' || line.charAt(start) == '\"')) {
+        while (start < line.length() && line.charAt(start) == ' ') {
             start++;
         }
+        if (start >= line.length()) return "null";
+
         int end = start;
-        while (end < line.length() && Character.isDigit(line.charAt(end))) {
-            end++;
+        if (line.charAt(start) == '\"') {
+            end = start + 1;
+            while (end < line.length() && line.charAt(end) != '\"') {
+                end++;
+            }
+            if (end < line.length()) {
+                end++; // include closing quote
+            }
+        } else {
+            while (end < line.length() && Character.isDigit(line.charAt(end))) {
+                end++;
+            }
         }
+
         if (start == end) return "null";
         return line.substring(start, end);
     }

@@ -123,9 +123,16 @@ public class BusinessToolController {
                 }
             }
             log.error("[Tool] 실행할 함수(Method)를 찾을 수 없습니다: {}. 현재 스캔된 툴 메서드 목록: {}", functionName, availableFunctions);
+            Map<String, Object> errorDetails = new HashMap<>();
+            errorDetails.put("status", "404");
+            Map<String, Object> errorBody = new HashMap<>();
+            errorBody.put("code", "TOOL_NOT_FOUND");
+            errorBody.put("message", "실행할 함수를 찾을 수 없습니다: " + functionName);
+            errorBody.put("details", errorDetails);
+
             Map<String, Object> error = new HashMap<>();
             error.put("jsonrpc", "2.0");
-            error.put("error", Map.of("code", -32601, "message", "실행할 함수를 찾을 수 없습니다: " + functionName));
+            error.put("error", errorBody);
             error.put("id", payload != null ? payload.get("id") : null);
             return error;
         }
@@ -145,13 +152,20 @@ public class BusinessToolController {
                     Set<ValidationMessage> errors = schema.validate(objectMapper.valueToTree(arguments));
                     if (!errors.isEmpty()) {
                         log.error("[Tool] 파라미터 유효성 검증 실패: {}", errors);
-                        Map<String, Object> error = new HashMap<>();
-                        error.put("jsonrpc", "2.0");
                         List<String> errorMessages = new ArrayList<>();
                         for (ValidationMessage vm : errors) {
                             errorMessages.add(vm.getMessage());
                         }
-                        error.put("error", Map.of("code", -32602, "message", "파라미터 유효성 검증 실패: " + String.join(", ", errorMessages)));
+                        Map<String, Object> errorDetails = new HashMap<>();
+                        errorDetails.put("status", "422");
+                        Map<String, Object> errorBody = new HashMap<>();
+                        errorBody.put("code", "INVALID_PARAM");
+                        errorBody.put("message", "파라미터 유효성 검증 실패: " + String.join(", ", errorMessages));
+                        errorBody.put("details", errorDetails);
+
+                        Map<String, Object> error = new HashMap<>();
+                        error.put("jsonrpc", "2.0");
+                        error.put("error", errorBody);
                         error.put("id", payload != null ? payload.get("id") : null);
                         return error;
                     }
@@ -177,15 +191,23 @@ public class BusinessToolController {
             // 4. 메서드 실행
             Object methodResult = targetMethod.invoke(targetBean, invokeArgument);
             
-            // 5. 결과 조립 (JSON-RPC 응답)
-            Map<String, Object> resultPayload = new HashMap<>();
+            // 5. 결과 조립 (JSON-RPC 응답 - Agent Builder 규격 적용)
+            Map<String, Object> innerResult = new HashMap<>();
             if (methodResult instanceof Map) {
-                resultPayload = (Map<String, Object>) methodResult;
-            } else {
-                resultPayload.put("status", "SUCCESS");
-                resultPayload.put("legacy_response", methodResult);
+                innerResult.putAll((Map<String, Object>) methodResult);
             }
-            resultPayload.put("ai_insight", "다이렉트 메서드(" + targetMethod.getName() + ") 통신이 성공적으로 수행되었습니다.");
+            if (!innerResult.containsKey("contracts")) {
+                List<Object> contracts = new ArrayList<>();
+                if (methodResult != null) {
+                    contracts.add(methodResult);
+                }
+                innerResult.put("contracts", contracts);
+            }
+
+            Map<String, Object> resultPayload = new HashMap<>();
+            resultPayload.put("status", "ok");
+            resultPayload.put("result", innerResult);
+            resultPayload.put("error code", null);
 
             Map<String, Object> rpcResponse = new java.util.LinkedHashMap<>(); // 순서 보장을 위해 LinkedHashMap 사용
             rpcResponse.put("jsonrpc", "2.0");
@@ -201,9 +223,16 @@ public class BusinessToolController {
 
         } catch (Exception e) {
             log.error("[Tool] 리플렉션 실행 중 예외 발생: {}", e.getMessage());
+            Map<String, Object> errorDetails = new HashMap<>();
+            errorDetails.put("status", "500");
+            Map<String, Object> errorBody = new HashMap<>();
+            errorBody.put("code", "TOOL_ERROR");
+            errorBody.put("message", "메서드 실행 중 예외 발생: " + (e.getCause() != null ? e.getCause().getMessage() : e.getMessage()));
+            errorBody.put("details", errorDetails);
+
             Map<String, Object> error = new HashMap<>();
             error.put("jsonrpc", "2.0");
-            error.put("error", Map.of("code", -32000, "message", "메서드 실행 중 예외 발생: " + (e.getCause() != null ? e.getCause().getMessage() : e.getMessage())));
+            error.put("error", errorBody);
             error.put("id", payload != null ? payload.get("id") : null);
             return error;
         }

@@ -30,7 +30,7 @@ public class BondIssueService extends AbstractMcpToolService {
         return executeLegacy("EAI", "BOND_001", data);
     }
 
-    @McpFunction(name = "issue", register = true, description = "증권 발행 테스트", prompt = "디지털 증권 발행 프로세스를 실행해.", mappingId = "BOND_002")
+1    @McpFunction(name = "issue", register = true, description = "증권 발행 테스트1", prompt = "디지털 증권 발행 프로세스를 실행해.", mappingId = "BOND_002")
     public Object issue(BondIssueReq data) {
         return executeLegacy("EAI", "BOND_002", data);
     }
