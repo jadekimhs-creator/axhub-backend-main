@@ -73,19 +73,19 @@ public class ToolPlanner {
             log.info(" [Planner] Fallback 라우팅 매칭됨: {} -> {}", toolName, fallbackPodUrl);
 
             toolMetadata = ToolMetadata.builder()
-                .toolName(toolName)
+                .uid(toolName)
                 .integrationType("DIRECT")
                 .podUrl(fallbackPodUrl)
                 .build();
         }
 
         // 2-1. [신규] 도메인 그룹핑 기반 권한 검증
-        if (tenantId != null && toolMetadata.getDomainGroup() != null) {
+        if (tenantId != null && toolMetadata.getCategoryKey() != null) {
             List<String> allowedDomains = securityProperties.getTenantDomains().get(tenantId);
             if (allowedDomains == null || 
-                (!allowedDomains.contains("ALL") && !allowedDomains.contains(toolMetadata.getDomainGroup()))) {
-                log.warn(" [Planner] 권한 거부 - Tenant: {}, Request Domain: {}", tenantId, toolMetadata.getDomainGroup());
-                throw new SecurityException("해당 도메인(" + toolMetadata.getDomainGroup() + ")의 툴을 실행할 권한이 없습니다.");
+                (!allowedDomains.contains("ALL") && !allowedDomains.contains(toolMetadata.getCategoryKey()))) {
+                log.warn(" [Planner] 권한 거부 - Tenant: {}, Request Domain: {}", tenantId, toolMetadata.getCategoryKey());
+                throw new SecurityException("해당 도메인(" + toolMetadata.getCategoryKey() + ")의 툴을 실행할 권한이 없습니다.");
             }
         }
 

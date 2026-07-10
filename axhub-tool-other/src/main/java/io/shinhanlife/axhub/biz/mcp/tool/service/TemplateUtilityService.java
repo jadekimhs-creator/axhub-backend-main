@@ -11,7 +11,7 @@ import java.util.Map;
 @Service
 @McpTool(
     routingType = "HTTP",
-    group = "COMMON"
+    categoryKey = "common"
 )
 /**
  * @package io.shinhanlife.axhub.biz.mcp.tool.service
@@ -29,8 +29,7 @@ import java.util.Map;
  */
 public class TemplateUtilityService extends AbstractMcpToolService {
 
-    @McpFunction(
-        name = "get_template_file_url",
+    @McpFunction(name = "get_template_file_url 툴", subToolName = "get_template_file_url",
         description = "특정 템플릿의 양식 파일(엑셀, 워드 등)을 다운로드 받을 수 있는 시스템 URL을 반환합니다. AI는 이 URL을 사용자에게 마크다운 링크 형태로 제공해야 합니다.",
         prompt = "요청하신 템플릿 양식 파일 다운로드 URL은 다음과 같습니다. 클릭하여 다운로드하세요:",
         register = false

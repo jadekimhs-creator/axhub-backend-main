@@ -6,7 +6,8 @@ import java.lang.annotation.*;
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
 public @interface McpFunction {
-    String name();
+    String name();             // 사람이 읽는 라벨 (예: "고객 조회 툴")
+    String subToolName();      // MCP 서브툴 명칭 (예: "customer_search")
     String description();
     String prompt() default "";
     String mappingId() default "";

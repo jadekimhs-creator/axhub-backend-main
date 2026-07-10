@@ -27,12 +27,11 @@ import java.util.UUID;
 @Service
 @McpTool(
     routingType = "MCI",
-    group = "PAYMENT"
+    categoryKey = "payment"
 )
 public class PaymentApprovalService extends AbstractMcpToolService {
 
-    @McpFunction(
-        name = "paymentapproval",
+    @McpFunction(name = "paymentapproval 툴", subToolName = "paymentapproval",
         description = "결제 승인 처리",
         prompt = "결제 승인 처리 해줘.",
         mappingId = "PAY_001"

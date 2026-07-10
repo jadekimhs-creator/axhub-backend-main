@@ -13,6 +13,6 @@ public @interface McpTool {
     @AliasFor(annotation = Component.class)
     String value() default "";
 
-    String group() default "COMMON";
+    String categoryKey() default "common";
     String routingType() default "HTTP";
 }

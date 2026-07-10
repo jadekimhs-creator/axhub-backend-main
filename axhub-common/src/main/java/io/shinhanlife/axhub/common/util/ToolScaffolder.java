@@ -181,12 +181,13 @@ public class ToolScaffolder {
             @Service
             @McpTool(
                 routingType = "%s",
-                group = "%s"
+                categoryKey = "%s"
             )
             public class %sService extends AbstractMcpToolService {
 
                 @McpFunction(
-                    name = "%s",
+                    name = "%s 툴",
+                    subToolName = "%s",
                     description = "%s",
                     prompt = "%s",
                     mappingId = "%s",
@@ -200,8 +201,8 @@ public class ToolScaffolder {
             """.formatted(
                 BASE_PACKAGE, BASE_PACKAGE, BASE_PACKAGE, BASE_PACKAGE, BASE_PACKAGE,
                 BASE_PACKAGE, baseName, author, createDate, createDate, author,
-                routingType, group, baseName,
-                toolName, description, description + " 해줘.", interfaceId, register,
+                routingType, group.toLowerCase(), baseName,
+                baseName, toolName, description, description + " 해줘.", interfaceId, register,
                 baseName, routingType, interfaceId
             );
         

@@ -8,7 +8,7 @@ import io.shinhanlife.axhub.biz.mcp.tool.dto.LeaveCountReq;
 
 @McpTool(
     routingType = "HTTP",
-    group = "HR"
+    categoryKey = "hr"
 )
 /**
  * @package io.shinhanlife.axhub.biz.mcp.tool.service
@@ -26,17 +26,17 @@ import io.shinhanlife.axhub.biz.mcp.tool.dto.LeaveCountReq;
  */
 public class CommonUtilityService extends AbstractMcpToolService {
 
-    @McpFunction(name = "register_vacation", description = "휴가 등록", prompt = "내일 하루 연차 휴가를 등록해줘.", mappingId = "HR_VAC_01")
+    @McpFunction(name = "register_vacation 툴", subToolName = "register_vacation", description = "휴가 등록", prompt = "내일 하루 연차 휴가를 등록해줘.", mappingId = "HR_VAC_01")
     public Object registerVacation(VacationRegisterReq data) {
         return executeLegacy("HTTP", "HR_VAC_01", data);
     }
 
-    @McpFunction(name = "get_leave_count", description = "연차 갯수 조회", prompt = "현재 사용 가능한 남은 연차 일수를 알려줘.", mappingId = "HR_VAC_02")
+    @McpFunction(name = "get_leave_count 툴", subToolName = "get_leave_count", description = "연차 갯수 조회", prompt = "현재 사용 가능한 남은 연차 일수를 알려줘.", mappingId = "HR_VAC_02")
     public Object getLeaveCount(LeaveCountReq data) {
         return executeLegacy("HTTP", "HR_VAC_02", data);
     }
 
-    @McpFunction(name = "secret_tool", description = "비공개 툴 테스트", prompt = "숨겨진 툴 강제 호출", mappingId = "SECRET_001", visible = false)
+    @McpFunction(name = "secret_tool 툴", subToolName = "secret_tool", description = "비공개 툴 테스트", prompt = "숨겨진 툴 강제 호출", mappingId = "SECRET_001", visible = false)
     public Object secretTool(LeaveCountReq data) {
         return executeLegacy("HTTP", "SECRET_001", data);
     }

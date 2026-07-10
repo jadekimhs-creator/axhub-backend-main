@@ -11,11 +11,10 @@ import java.util.Map;
 
 @Slf4j
 @Service
-@McpTool(routingType = "MCI", group = "COMMON")
+@McpTool(routingType = "MCI", categoryKey = "common")
 public class BalanceService extends AbstractMcpToolService {
 
-    @McpFunction(
-        name = "balance",
+    @McpFunction(name = "balance 툴", subToolName = "balance",
         description = "고객의 계좌 잔액을 조회합니다.",
         prompt = "고객 계좌 잔액을 조회해줘.",
         mappingId = "ACC_001"

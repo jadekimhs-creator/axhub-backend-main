@@ -81,19 +81,23 @@ public class ToolRegistryHeartbeatSender {
                 McpFunction functionAnnotation = AnnotationUtils.findAnnotation(method, McpFunction.class);
                 if (functionAnnotation != null) {
                     String baseName = functionAnnotation.name();
-                    String finalName = mcpProperties.getNamespace() != null && !mcpProperties.getNamespace().isEmpty()
-                            ? mcpProperties.getNamespace() + "_" + baseName
-                            : baseName;
+                    String rawSubToolName = functionAnnotation.subToolName();
+                    String subToolName = mcpProperties.getNamespace() != null && !mcpProperties.getNamespace().isEmpty()
+                            ? mcpProperties.getNamespace() + "_" + rawSubToolName
+                            : rawSubToolName;
 
                     boolean isRegister = functionAnnotation.register();
                     if (!isRegister) {
-                        log.info(" [HeartbeatSender] '{}' 툴은 어노테이션 설정에 의해 외부 등록(Redis) 대상에서 제외되었습니다. (최종 이름: {})", baseName, finalName);
+                        log.info(" [HeartbeatSender] '{}' 툴은 어노테이션 설정에 의해 외부 등록(Redis) 대상에서 제외되었습니다. (최종 이름: {})", baseName, subToolName);
                     }
 
                     ToolMetadata meta = new ToolMetadata();
-                    meta.setToolName(finalName);
+                    meta.setUid(java.util.UUID.nameUUIDFromBytes(subToolName.getBytes()).toString());
+                    meta.setName(baseName);
+                    meta.setSubToolName(subToolName);
+                    meta.setSemver("1.0.0");
                     meta.setDescription(functionAnnotation.description());
-                    meta.setDomainGroup(toolAnnotation.group());
+                    meta.setCategoryKey(toolAnnotation.categoryKey());
                     meta.setIntegrationType(toolAnnotation.routingType());
                     meta.setMciServiceId(functionAnnotation.mappingId());
                     meta.setPodUrl(podUrl);
@@ -105,7 +109,7 @@ public class ToolRegistryHeartbeatSender {
                     
                     Map<String, String> prompts = new HashMap<>();
                     String promptText = functionAnnotation.prompt();
-                    prompts.put(finalName, promptText);
+                    prompts.put(subToolName, promptText);
                     meta.setActionPrompts(prompts);
                     
                     if (method.getParameterCount() > 0) {
@@ -117,7 +121,7 @@ public class ToolRegistryHeartbeatSender {
                             finalSchema.put("properties", schema);
                             meta.setParametersSchema(finalSchema);
                         } catch (Exception e) {
-                            log.error("Failed to generate schema for {}", finalName, e);
+                            log.error("Failed to generate schema for {}", subToolName, e);
                         }
                     }
 
@@ -125,7 +129,7 @@ public class ToolRegistryHeartbeatSender {
                         registeredTools.add(meta);
                     }
                     allScannedTools.add(meta);
-                    log.info(" [HeartbeatSender] 도구 메타데이터 생성: {} (isRegistered: {})", meta.getToolName(), isRegister);
+                    log.info(" [HeartbeatSender] 도구 메타데이터 생성: {} (isRegistered: {})", meta.getUid(), isRegister);
                 }
             }
         }
@@ -141,15 +145,15 @@ public class ToolRegistryHeartbeatSender {
                         .uri(gatewayUrl + "/mcp/api/v1/registry/heartbeat")
                         .header("Content-Type", "application/json")
                         .header("X-API-KEY", "SHINHAN_MCP_TEST_KEY_9999")
-                        .body(tool.getToolName())
+                        .body(tool.getUid())
                         .retrieve()
                         .toEntity(String.class);
 
                 if (response.getStatusCode().is2xxSuccessful()) {
-                    log.info(" [HeartbeatSender] 하트비트 전송 성공: {}", tool.getToolName());
+                    log.info(" [HeartbeatSender] 하트비트 전송 성공: {}", tool.getUid());
                 }
             } catch (Exception e) {
-                log.warn(" [HeartbeatSender] 하트비트 전송 실패 ({}): {}. 재등록을 시도합니다.", tool.getToolName(), e.getMessage());
+                log.warn(" [HeartbeatSender] 하트비트 전송 실패 ({}): {}. 재등록을 시도합니다.", tool.getUid(), e.getMessage());
                 registerTool(tool);
             }
         }
@@ -164,7 +168,7 @@ public class ToolRegistryHeartbeatSender {
                     .body(tool)
                     .retrieve()
                     .toBodilessEntity();
-            log.info(" [HeartbeatSender] 툴 재등록 성공: {}", tool.getToolName());
+            log.info(" [HeartbeatSender] 툴 재등록 성공: {}", tool.getUid());
         } catch (Exception ex) {
             log.error(" [HeartbeatSender] 툴 등록 실패: {}", ex.getMessage());
         }

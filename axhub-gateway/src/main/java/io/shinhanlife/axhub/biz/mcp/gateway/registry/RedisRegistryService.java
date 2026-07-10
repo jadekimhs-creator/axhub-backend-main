@@ -39,28 +39,28 @@ public class RedisRegistryService {
      * 툴 등록 및 갱신 (TTL 기반으로 60초 뒤 자동 만료)
      */
     public void saveTool(ToolMetadata meta) {
-        String key = KEY_PREFIX + meta.getToolName();
+        String key = KEY_PREFIX + meta.getUid();
         meta.setLastHeartbeat(System.currentTimeMillis());
         redisTemplate.opsForValue().set(key, meta, DEFAULT_TTL);
-        log.info(" [RedisRegistry] 툴 등록 완료: {}", meta.getToolName());
+        log.info(" [RedisRegistry] 툴 등록 완료: {}", meta.getUid());
     }
 
     /**
      * 하트비트 갱신 (TTL 초기화)
      */
-    public boolean refreshHeartbeat(String toolName) {
-        String key = KEY_PREFIX + toolName;
+    public boolean refreshHeartbeat(String uid) {
+        String key = KEY_PREFIX + uid;
         Boolean exists = redisTemplate.expire(key, DEFAULT_TTL);
         if (Boolean.TRUE.equals(exists)) {
-            log.debug(" [RedisRegistry] 하트비트 갱신: {}", toolName);
+            log.debug(" [RedisRegistry] 하트비트 갱신: {}", uid);
             return true;
         } else {
-            log.warn(" [RedisRegistry] 존재하지 않는 툴에 대한 하트비트 요청: {}", toolName);
+            log.warn(" [RedisRegistry] 존재하지 않는 툴에 대한 하트비트 요청: {}", uid);
             return false;
         }
     }
-    public List<String> getAvailablePods(String toolName) {
-        ToolMetadata tool = getTool(toolName);
+    public List<String> getAvailablePods(String uid) {
+        ToolMetadata tool = getTool(uid);
 
         if (tool != null && tool.getPodUrl() != null) {
             return List.of(tool.getPodUrl());
@@ -71,8 +71,8 @@ public class RedisRegistryService {
     /**
      * 실행 시 툴 정보 조회 (Tool Execution 시 참조)
      */
-    public ToolMetadata getTool(String toolName) {
-        return redisTemplate.opsForValue().get(KEY_PREFIX + toolName);
+    public ToolMetadata getTool(String uid) {
+        return redisTemplate.opsForValue().get(KEY_PREFIX + uid);
     }
 
     /**
@@ -90,8 +90,8 @@ public class RedisRegistryService {
     /**
      * 툴 명시적 제거 (Deregister)
      */
-    public void removeTool(String toolName) {
-        redisTemplate.delete(KEY_PREFIX + toolName);
-        log.info(" [RedisRegistry] 툴 삭제 완료: {}", toolName);
+    public void removeTool(String uid) {
+        redisTemplate.delete(KEY_PREFIX + uid);
+        log.info(" [RedisRegistry] 툴 삭제 완료: {}", uid);
     }
 }

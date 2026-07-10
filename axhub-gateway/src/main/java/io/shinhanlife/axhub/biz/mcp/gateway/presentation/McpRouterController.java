@@ -109,11 +109,11 @@ public class McpRouterController {
     public ResponseEntity<JsonRpcResponse> listTools() {
         List<ToolMetadata> activeTools = redisRegistryService.getAllTools()
                 .stream()
-                .filter(ToolMetadata::isVisible)
+                .filter(ToolMetadata::getVisible)
                 .collect(java.util.stream.Collectors.toList());
                 
         java.util.Set<String> knownTools = activeTools.stream()
-                .map(ToolMetadata::getToolName)
+                .map(ToolMetadata::getUid)
                 .collect(java.util.stream.Collectors.toSet());
 
         java.util.Set<String> fallbackUrls = new java.util.HashSet<>(gatewayFallbackProperties.getRoutes().values());
@@ -130,9 +130,9 @@ public class McpRouterController {
                         
                 if (localTools != null) {
                     for (ToolMetadata t : localTools) {
-                        if (!Boolean.TRUE.equals(t.getIsRegistered()) && Boolean.TRUE.equals(t.getVisible()) && !knownTools.contains(t.getToolName())) {
+                        if (!Boolean.TRUE.equals(t.getIsRegistered()) && Boolean.TRUE.equals(t.getVisible()) && !knownTools.contains(t.getUid())) {
                             activeTools.add(t);
-                            knownTools.add(t.getToolName());
+                            knownTools.add(t.getUid());
                         }
                     }
                 }
@@ -152,7 +152,7 @@ public class McpRouterController {
     public ResponseEntity<String> generateToolsMarkdown() {
         List<ToolMetadata> tools = redisRegistryService.getAllTools()
                 .stream()
-                .filter(ToolMetadata::isVisible)
+                .filter(ToolMetadata::getVisible)
                 .collect(java.util.stream.Collectors.toList());
         
         StringBuilder md = new StringBuilder();
@@ -165,7 +165,7 @@ public class McpRouterController {
         // Group by Domain Group
         Map<String, List<ToolMetadata>> groupedTools = new java.util.HashMap<>();
         for (ToolMetadata tool : tools) {
-            String group = tool.getDomainGroup() != null ? tool.getDomainGroup() : "기타 (Others)";
+            String group = tool.getCategoryKey() != null ? tool.getCategoryKey() : "기타 (Others)";
             groupedTools.computeIfAbsent(group, k -> new java.util.ArrayList<>()).add(tool);
         }
         
@@ -174,7 +174,7 @@ public class McpRouterController {
             
             int index = 1;
             for (ToolMetadata tool : entry.getValue()) {
-                md.append("### ").append(index++).append(". ").append(tool.getToolName()).append("\n");
+                md.append("### ").append(index++).append(". ").append(tool.getUid()).append("\n");
                 if (tool.getDescription() != null) {
                     md.append("- **설명**: ").append(tool.getDescription()).append("\n");
                 }
@@ -223,14 +223,14 @@ public class McpRouterController {
     }
 
     @PostMapping("/registry/deregister")
-    public ResponseEntity<String> deregisterTool(@RequestBody String toolName) {
-        redisRegistryService.removeTool(toolName);
+    public ResponseEntity<String> deregisterTool(@RequestBody String uid) {
+        redisRegistryService.removeTool(uid);
         return ResponseEntity.ok("Deregistered");
     }
 
     @PostMapping("/registry/heartbeat")
-    public ResponseEntity<String> heartbeat(@RequestBody String toolName) {
-        boolean success = redisRegistryService.refreshHeartbeat(toolName);
+    public ResponseEntity<String> heartbeat(@RequestBody String uid) {
+        boolean success = redisRegistryService.refreshHeartbeat(uid);
         if (success) {
             return ResponseEntity.ok("Heartbeat updated");
         } else {

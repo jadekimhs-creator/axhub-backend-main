@@ -36,7 +36,10 @@ import java.util.Map;
 public class ToolMetadata {
 
     // 1. Tool 기본 정보
-    private String toolName;          // 툴 고유 명칭 (예: CustomerSearchTool)
+    private String uid;               // UUID 형식의 고유 식별자
+    private String semver;            // 버전 (예: 1.0.0)
+    private String name;              // 사람이 읽는 라벨 (1-128자)
+    private String subToolName;       // MCP 서브툴 명칭 (64자 이하, 예: CustomerSearchTool)
     private String description;       // 툴의 목적 및 설명 (LLM 프롬프트에 활용 가능)
 
     // 2. 파라미터 스키마 (JSON Schema 형태의 Map)
@@ -45,8 +48,8 @@ public class ToolMetadata {
     // 2-0. 프론트엔드 UI용 함수별 프롬프트 매핑 (추가됨)
     private Map<String, String> actionPrompts;
 
-    // 2-1. 도메인 부서 그룹명 (권한 관리에 사용)
-    private String domainGroup;
+    // 2-1. 도메인 부서 그룹명 (category_key, 슬러그 형식)
+    private String categoryKey;
 
     // 2-2. 툴 처리 엔드포인트 URI 경로 (예: /api/tool/customer-info)
     private String endpoint;

@@ -11,7 +11,7 @@ import io.shinhanlife.axhub.biz.mcp.tool.dto.BillingProcessReq;
 
 @McpTool(
     routingType = "MCI",
-    group = "CLAIM"
+    categoryKey = "claim"
 )
 /**
  * @package io.shinhanlife.axhub.biz.mcp.tool.service
@@ -30,12 +30,12 @@ import io.shinhanlife.axhub.biz.mcp.tool.dto.BillingProcessReq;
 @lombok.extern.slf4j.Slf4j
 public class BillingProcessService extends AbstractMcpToolService {
 
-    @McpFunction(name = "status", description = "청구심사 상태 조회", prompt = "현재 접수된 청구건 상태를 알려줘.", mappingId = "BILL_001")
+    @McpFunction(name = "status 툴", subToolName = "status", description = "청구심사 상태 조회", prompt = "현재 접수된 청구건 상태를 알려줘.", mappingId = "BILL_001")
     public Object getStatus(BillingStatusReq data) {
         return executeBillingLogic("BILL_001", data);
     }
 
-    @McpFunction(name = "process", description = "청구 처리", prompt = "현재 접수된 청구건에 대한 심사 처리를 진행해.", mappingId = "BILL_002")
+    @McpFunction(name = "process 툴", subToolName = "process", description = "청구 처리", prompt = "현재 접수된 청구건에 대한 심사 처리를 진행해.", mappingId = "BILL_002")
     public Object processBilling(BillingProcessReq data) {
         return executeBillingLogic("BILL_002", data);
     }

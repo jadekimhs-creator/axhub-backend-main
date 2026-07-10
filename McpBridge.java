@@ -39,12 +39,12 @@ public class McpBridge {
                         HttpResponse<String> response = client.send(req, HttpResponse.BodyHandlers.ofString());
                         
                         // Parse tools from response string manually (basic string manipulation)
-                        // axhub-gateway returns: {"result":{"tools":[{"toolName":"other_get_sample_string","description":"...","parametersSchema":{...}}]}}
+                        // axhub-gateway returns: {"result":{"tools":[{"subToolName":"other_get_sample_string","description":"...","parametersSchema":{...}}]}}
                         // We need to format it to standard MCP format
                         String rawJson = response.body();
                         // For simplicity, we can just proxy the response if it matches closely, but it doesn't.
-                        // Let's just do a naive conversion by replacing "toolName" with "name" and "parametersSchema" with "inputSchema"
-                        String transformed = rawJson.replace("\"toolName\"", "\"name\"").replace("\"parametersSchema\"", "\"inputSchema\"");
+                        // Let's just do a naive conversion by replacing "subToolName" with "name" and "parametersSchema" with "inputSchema"
+                        String transformed = rawJson.replace("\"subToolName\"", "\"name\"").replace("\"parametersSchema\"", "\"inputSchema\"");
                         // Add type: "object" to inputSchema if missing - too complex with string replace, let's hope axhub-gateway already provides correct schema
                         
                         // The result format expects: {"tools": [ ... ]}
