@@ -37,7 +37,7 @@ public class WebConfig implements WebMvcConfigurer {
                 .excludePathPatterns(
                         "/test/**", "/health", "/error", "/mcp/api/v1/admin/**",
                         "/swagger-ui/**", "/v3/api-docs/**", "/swagger-resources/**", "/webjars/**", // Swagger UI 경로는 인증 제외
-                        "/mcp/api/v1/tools/docs/markdown", "/favicon.ico"
+                        "/mcp/api/v1/tools/docs/markdown", "/favicon.ico", "/mcp/api/v1/tools/list"
                 );
     }
 

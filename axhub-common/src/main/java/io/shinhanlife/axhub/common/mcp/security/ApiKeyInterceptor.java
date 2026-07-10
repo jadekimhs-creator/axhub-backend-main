@@ -42,14 +42,22 @@ public class ApiKeyInterceptor implements HandlerInterceptor {
         String apiKey = request.getHeader("X-API-KEY");
         Map<String, String> validApiKeys = securityProperties.getApiKeys();
 
-        // 2. 헤더로 넘어온 API Key가 우리가 발급한 키 목록(Map)에 존재하는지 확인합니다.
+        // 2. 만약 프로퍼티에 API Key가 하나도 설정되어 있지 않다면 (개발/로컬 환경 등) 인증 없이 통과시킵니다.
+        if (validApiKeys == null || validApiKeys.isEmpty()) {
+            MDC.put("tenantId", "anonymous");
+            request.setAttribute("tenantId", "anonymous");
+            log.debug(" [보안 패스] 등록된 API Key 없음 - 익명 사용자(anonymous)로 통과");
+            return true;
+        }
+
+        // 3. 헤더로 들어온 API Key가 우리가 발급해준 목록(Map)에 존재하는지 확인합니다.
         if (apiKey == null || !validApiKeys.containsKey(apiKey)) {
             log.warn(" [보안 차단] 유효하지 않은 API Key 접근 시도 - IP: {}", request.getRemoteAddr());
             response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Invalid API Key");
             return false; // 컨트롤러로 넘어가지 않음
         }
 
-        // 3. 유효한 키라면, 해당 키와 맵핑된 Tenant ID(식별자)를 가져옵니다. (ex. mcp-client-1)
+        // 4. 유효하다면 해당 키에 맵핑된 Tenant ID(식별자)를 가져옵니다. (ex. mcp-client-1)
         String tenantId = validApiKeys.get(apiKey);
 
         // 4. 추출한 Tenant ID를 현재 스레드의 로깅 컨텍스트(MDC)에 저장합니다.

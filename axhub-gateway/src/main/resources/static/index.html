@@ -333,9 +333,9 @@
                     
                     groupedTools[group].forEach(tool => {
                         const option = document.createElement('option');
-                        option.value = tool.toolName; // Now the function name
+                        option.value = tool.name; // Now the function name
                         const commType = tool.integrationType ? tool.integrationType : 'HTTP';
-                        option.textContent = tool.description ? `[${commType}] ${tool.description} (${tool.toolName})` : `[${commType}] ${tool.toolName}`;
+                        option.textContent = tool.description ? `[${commType}] ${tool.description} (${tool.name})` : `[${commType}] ${tool.name}`;
                         option.dataset.schema = JSON.stringify(tool.parametersSchema);
                         option.dataset.prompts = JSON.stringify(tool.actionPrompts || {});
                         optgroup.appendChild(option);
