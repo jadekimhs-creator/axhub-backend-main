@@ -67,7 +67,11 @@ public class BusinessToolController {
 
     // JSON RPC 기반 단일 라우팅 엔드포인트
     @PostMapping("/mcp/api/v1/tools/call")
-    public org.springframework.http.ResponseEntity<Map<String, Object>> executeDynamicTool(@RequestBody(required = false) Map<String, Object> payload) {
+    public org.springframework.http.ResponseEntity<Map<String, Object>> executeDynamicTool(
+            @org.springframework.web.bind.annotation.RequestHeader(value = "X-Request-Id", required = false) String headerRequestId,
+            @RequestBody(required = false) Map<String, Object> payload) {
+        
+        String finalRequestId = headerRequestId != null ? headerRequestId : (payload != null && payload.get("id") != null ? String.valueOf(payload.get("id")) : null);
         Map<String, Object> params = payload != null ? (Map<String, Object>) payload.get("params") : null;
         String functionName = params != null ? (String) params.get("name") : null;
         
@@ -129,12 +133,13 @@ public class BusinessToolController {
             errorBody.put("code", "TOOL_NOT_FOUND");
             errorBody.put("message", "실행할 함수를 찾을 수 없습니다: " + functionName);
             errorBody.put("details", errorDetails);
+            if (finalRequestId != null) errorBody.put("request_id", finalRequestId);
 
             Map<String, Object> error = new HashMap<>();
             error.put("jsonrpc", "2.0");
             error.put("error", errorBody);
             error.put("id", payload != null ? payload.get("id") : null);
-            return org.springframework.http.ResponseEntity.ok(error);
+            return org.springframework.http.ResponseEntity.status(404).body(error);
         }
         // (기존 차단 로직 제거됨)
 
@@ -160,14 +165,15 @@ public class BusinessToolController {
                         errorDetails.put("status", "422");
                         Map<String, Object> errorBody = new HashMap<>();
                         errorBody.put("code", "INVALID_PARAM");
-                        errorBody.put("message", "파라미터 유효성 검증 실패: " + String.join(", ", errorMessages));
+                        errorBody.put("message", "파라미터 유효성 검증 실패");
                         errorBody.put("details", errorDetails);
+                        if (finalRequestId != null) errorBody.put("request_id", finalRequestId);
 
                         Map<String, Object> error = new HashMap<>();
                         error.put("jsonrpc", "2.0");
                         error.put("error", errorBody);
                         error.put("id", payload != null ? payload.get("id") : null);
-                        return org.springframework.http.ResponseEntity.ok(error);
+                        return org.springframework.http.ResponseEntity.status(422).body(error);
                     }
                 } catch (Exception e) {
                     log.error("[Tool] 스키마 검증 중 오류 발생: {}", e.getMessage());
@@ -208,8 +214,9 @@ public class BusinessToolController {
             } catch (java.util.concurrent.TimeoutException te) {
                 long elapsed = System.currentTimeMillis() - startTime;
                 Map<String, Object> errorBody = new HashMap<>();
-                errorBody.put("code", "TOOLBOX_EXEC_TIMEOUT");
+                errorBody.put("code", "EXEC_TIMEOUT");
                 errorBody.put("message", "Tool execution timed out after " + timeoutMs + " ms");
+                if (finalRequestId != null) errorBody.put("request_id", finalRequestId);
                 Map<String, Object> error = new HashMap<>();
                 error.put("jsonrpc", "2.0");
                 error.put("error", errorBody);
@@ -218,7 +225,7 @@ public class BusinessToolController {
                 Map<String, Object> resultPayload = new HashMap<>();
                 resultPayload.put("status", "timeout");
                 resultPayload.put("result", null);
-                resultPayload.put("error_code", "TOOLBOX_EXEC_TIMEOUT");
+                resultPayload.put("error_code", "EXEC_TIMEOUT");
                 resultPayload.put("error_message", "Tool execution timed out");
                 resultPayload.put("elapsed_ms", elapsed);
                 resultPayload.put("truncated", false);
@@ -270,8 +277,9 @@ public class BusinessToolController {
                 
                 if (size > 1048576) {
                     Map<String, Object> errorBody = new HashMap<>();
-                    errorBody.put("code", "TOOLBOX_RESPONSE_TOO_LARGE");
+                    errorBody.put("code", "RESPONSE_TOO_LARGE");
                     errorBody.put("message", "Response size exceeds 1 MiB limit");
+                    if (finalRequestId != null) errorBody.put("request_id", finalRequestId);
                     Map<String, Object> error = new HashMap<>();
                     error.put("jsonrpc", "2.0");
                     error.put("error", errorBody);
@@ -279,7 +287,7 @@ public class BusinessToolController {
                     
                     resultPayload.put("status", "error");
                     resultPayload.put("result", null);
-                    resultPayload.put("error_code", "TOOLBOX_RESPONSE_TOO_LARGE");
+                    resultPayload.put("error_code", "RESPONSE_TOO_LARGE");
                     resultPayload.put("error_message", "Response size exceeds 1 MiB limit");
                     error.put("result", resultPayload);
                     return org.springframework.http.ResponseEntity.status(413).body(error);
@@ -299,14 +307,16 @@ public class BusinessToolController {
             errorDetails.put("status", "500");
             Map<String, Object> errorBody = new HashMap<>();
             errorBody.put("code", "TOOL_ERROR");
-            errorBody.put("message", "메서드 실행 중 예외 발생: " + (e.getCause() != null ? e.getCause().getMessage() : e.getMessage()));
+            errorBody.put("message", "Tool execution failed");
+            errorDetails.clear(); // Hide details for upstream errors
             errorBody.put("details", errorDetails);
+            if (finalRequestId != null) errorBody.put("request_id", finalRequestId);
 
             Map<String, Object> error = new HashMap<>();
             error.put("jsonrpc", "2.0");
             error.put("error", errorBody);
             error.put("id", payload != null ? payload.get("id") : null);
-            return org.springframework.http.ResponseEntity.ok(error);
+            return org.springframework.http.ResponseEntity.status(502).body(error);
         }
     }
 }
