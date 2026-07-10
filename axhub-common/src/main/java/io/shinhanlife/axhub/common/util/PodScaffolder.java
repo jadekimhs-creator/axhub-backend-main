@@ -179,7 +179,7 @@ public class PodScaffolder {
         String logbackXml = """
             <?xml version="1.0" encoding="UTF-8"?>
             <configuration>
-                <property name="LOG_PATTERN" value="%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] [%X{traceId}] %-5level %logger{36} - %msg%n" />
+                <property name="LOG_PATTERN" value="%%d{yyyy-MM-dd HH:mm:ss.SSS} [%%thread] [%%X{traceId}] %%-5level %%logger{36} - %%msg%%n" />
                 <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
                     <encoder>
                         <pattern>${LOG_PATTERN}</pattern>
