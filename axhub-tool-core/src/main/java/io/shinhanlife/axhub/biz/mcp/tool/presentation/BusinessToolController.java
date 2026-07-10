@@ -198,42 +198,7 @@ public class BusinessToolController {
             
             long startTime = System.currentTimeMillis();
             Object methodResult = null;
-            final Object finalTargetBean = targetBean;
-            final Object finalInvokeArgument = invokeArgument;
-            final java.lang.reflect.Method finalTargetMethod = targetMethod;
-            int timeoutMs = targetFunctionAnnotation != null ? targetFunctionAnnotation.timeoutMs() : 300000;
-            
-            try {
-                methodResult = java.util.concurrent.CompletableFuture.supplyAsync(() -> {
-                    try {
-                        return finalTargetMethod.invoke(finalTargetBean, finalInvokeArgument);
-                    } catch (Exception ex) {
-                        throw new java.util.concurrent.CompletionException(ex);
-                    }
-                }).get(timeoutMs, java.util.concurrent.TimeUnit.MILLISECONDS);
-            } catch (java.util.concurrent.TimeoutException te) {
-                long elapsed = System.currentTimeMillis() - startTime;
-                Map<String, Object> errorBody = new HashMap<>();
-                errorBody.put("code", "EXEC_TIMEOUT");
-                errorBody.put("message", "Tool execution timed out after " + timeoutMs + " ms");
-                if (finalRequestId != null) errorBody.put("request_id", finalRequestId);
-                Map<String, Object> error = new HashMap<>();
-                error.put("jsonrpc", "2.0");
-                error.put("error", errorBody);
-                error.put("id", payload != null ? payload.get("id") : null);
-                
-                Map<String, Object> resultPayload = new HashMap<>();
-                resultPayload.put("status", "timeout");
-                resultPayload.put("result", null);
-                resultPayload.put("error_code", "EXEC_TIMEOUT");
-                resultPayload.put("error_message", "Tool execution timed out");
-                resultPayload.put("elapsed_ms", elapsed);
-                resultPayload.put("truncated", false);
-                resultPayload.put("original_size", 0);
-                
-                error.put("result", resultPayload);
-                return org.springframework.http.ResponseEntity.status(504).body(error);
-            }
+            methodResult = targetMethod.invoke(targetBean, invokeArgument);
             
             long elapsed = System.currentTimeMillis() - startTime;
             
@@ -270,35 +235,7 @@ public class BusinessToolController {
                 log.info("[Tool -> MCP Gateway] 동적 툴 실행 결과 반환: {}", rpcResponse);
             }
             
-            try {
-                String resultJson = objectMapper.writeValueAsString(innerResult);
-                int size = resultJson.getBytes(java.nio.charset.StandardCharsets.UTF_8).length;
-                resultPayload.put("original_size", size);
-                
-                if (size > 1048576) {
-                    Map<String, Object> errorBody = new HashMap<>();
-                    errorBody.put("code", "RESPONSE_TOO_LARGE");
-                    errorBody.put("message", "Response size exceeds 1 MiB limit");
-                    if (finalRequestId != null) errorBody.put("request_id", finalRequestId);
-                    Map<String, Object> error = new HashMap<>();
-                    error.put("jsonrpc", "2.0");
-                    error.put("error", errorBody);
-                    error.put("id", payload != null ? payload.get("id") : null);
-                    
-                    resultPayload.put("status", "error");
-                    resultPayload.put("result", null);
-                    resultPayload.put("error_code", "RESPONSE_TOO_LARGE");
-                    resultPayload.put("error_message", "Response size exceeds 1 MiB limit");
-                    error.put("result", resultPayload);
-                    return org.springframework.http.ResponseEntity.status(413).body(error);
-                } else if (size > 30000) {
-                    String truncatedStr = resultJson.substring(0, 30000) + "... (truncated)";
-                    resultPayload.put("result", truncatedStr);
-                    resultPayload.put("truncated", true);
-                }
-            } catch (Exception e) {
-                log.warn("Failed to measure size", e);
-            }
+            
             return org.springframework.http.ResponseEntity.ok(rpcResponse);
 
         } catch (Exception e) {
