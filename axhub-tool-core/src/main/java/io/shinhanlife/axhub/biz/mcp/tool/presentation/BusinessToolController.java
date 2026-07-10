@@ -207,7 +207,11 @@ public class BusinessToolController {
             Map<String, Object> resultPayload = new HashMap<>();
             resultPayload.put("status", "ok");
             resultPayload.put("result", innerResult);
-            resultPayload.put("error code", null);
+            resultPayload.put("error_code", null);
+            resultPayload.put("error_message", null);
+            resultPayload.put("elapsed_ms", 0);
+            resultPayload.put("truncated", false);
+            resultPayload.put("original_size", 0);
 
             Map<String, Object> rpcResponse = new java.util.LinkedHashMap<>(); // 순서 보장을 위해 LinkedHashMap 사용
             rpcResponse.put("jsonrpc", "2.0");
