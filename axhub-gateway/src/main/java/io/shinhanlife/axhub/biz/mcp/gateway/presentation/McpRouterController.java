@@ -130,7 +130,7 @@ public class McpRouterController {
                         
                 if (localTools != null) {
                     for (ToolMetadata t : localTools) {
-                        if (!t.isRegistered() && t.isVisible() && !knownTools.contains(t.getToolName())) {
+                        if (!Boolean.TRUE.equals(t.getIsRegistered()) && Boolean.TRUE.equals(t.getVisible()) && !knownTools.contains(t.getToolName())) {
                             activeTools.add(t);
                             knownTools.add(t.getToolName());
                         }

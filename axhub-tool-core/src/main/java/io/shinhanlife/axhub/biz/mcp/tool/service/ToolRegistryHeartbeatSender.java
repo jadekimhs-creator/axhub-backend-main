@@ -100,7 +100,7 @@ public class ToolRegistryHeartbeatSender {
                     
                     boolean isVisible = functionAnnotation.visible();
                     meta.setVisible(isVisible);
-                    meta.setRegistered(isRegister);
+                    meta.setIsRegistered(isRegister);
                     meta.setRequiresApproval(functionAnnotation.requiresApproval());
                     
                     Map<String, String> prompts = new HashMap<>();

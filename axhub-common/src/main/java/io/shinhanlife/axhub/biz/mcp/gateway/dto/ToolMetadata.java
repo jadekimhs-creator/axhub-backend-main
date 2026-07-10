@@ -66,21 +66,7 @@ public class ToolMetadata {
     @Builder.Default
     private Boolean requiresApproval = false;
 
-    public boolean isVisible() {
-        return visible != null ? visible : true;
-    }
 
-    public boolean isRegistered() {
-        return isRegistered != null ? isRegistered : true;
-    }
-    
-    public void setRegistered(Boolean isRegistered) {
-        this.isRegistered = isRegistered;
-    }
-
-    public boolean isRequiresApproval() {
-        return requiresApproval != null ? requiresApproval : false;
-    }
 
     // 3. 연동 아키텍처 구분 (DIRECT / MCI_EAI)
     private String integrationType;   // 연동 타입: "DIRECT" 또는 "MCI_EAI"
