@@ -160,8 +160,7 @@ public class PodScaffolder {
             
             # API 보안 키 설정
             mcp.security.api-keys.SHINHAN_MCP_SECRET_KEY_2026=mcp-client-1
-            mcp.security.api-keys.SHINHAN_MCP_TEST_KEY_9999=mcp-client-2
-            mcp.security.tenant-domains.mcp-client-1=CUSTOMER,COMMON
+                        mcp.security.tenant-domains.mcp-client-1=CUSTOMER,COMMON
             mcp.security.tenant-domains.mcp-client-2=ALL
             
             # Gateway/Tool URLs

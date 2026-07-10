@@ -387,7 +387,7 @@
         <form id="editToolForm">
           <div class="mb-3">
             <label class="form-label">서브툴 이름 (수정불가)</label>
-            <input type="text" class="form-control" id="editSubToolName" name="subToolName" readonly>
+            <input type="text" class="form-control" id="editToolName" name="toolName" readonly>
           </div>
           <div class="mb-3">
             <label class="form-label">소속 도메인 그룹</label>
@@ -515,8 +515,8 @@
                 <tr class="tool-row">
                     <td class="text-nowrap"><span class="badge bg-secondary tool-group">${t.categoryKey || 'UNKNOWN'}</span></td>
                     <td class="fw-bold text-primary text-break tool-name">
-                        <a href="javascript:void(0)" onclick="openEditModal('${t.subToolName}', '${t.categoryKey}', '${escDesc}', ${isReg})" class="text-decoration-none">
-                            ${t.subToolName}
+                        <a href="javascript:void(0)" onclick="openEditModal('${t.name}', '${t.categoryKey}', '${escDesc}', ${isReg})" class="text-decoration-none">
+                            ${t.name}
                         </a>
                         ${badgeHtml}
                     </td>
@@ -555,8 +555,8 @@
     }
 
     let editModalInstance = null;
-    function openEditModal(subToolName, categoryKey, description, isReg) {
-        document.getElementById('editSubToolName').value = subToolName;
+    function openEditModal(toolName, categoryKey, description, isReg) {
+        document.getElementById('editToolName').value = toolName;
         document.getElementById('editCategoryKey').value = categoryKey !== 'null' ? categoryKey : '';
         document.getElementById('editDescription').value = description;
         document.getElementById('editRegister').value = isReg ? 'true' : 'false';
@@ -568,7 +568,7 @@
     }
 
     function submitToolUpdate() {
-        const subToolName = document.getElementById('editSubToolName').value;
+        const toolName = document.getElementById('editToolName').value;
         const categoryKey = document.getElementById('editCategoryKey').value;
         const description = document.getElementById('editDescription').value;
         const register = document.getElementById('editRegister').value;
@@ -582,7 +582,7 @@
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-                subToolName: subToolName,
+                toolName: toolName,
                 categoryKey: categoryKey,
                 description: description,
                 register: register

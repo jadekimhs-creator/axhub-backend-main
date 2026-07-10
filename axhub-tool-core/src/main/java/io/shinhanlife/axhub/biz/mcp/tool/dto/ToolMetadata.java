@@ -31,8 +31,8 @@ public class ToolMetadata {
     // 1. Tool 기본 정보
     private String uid;               // UUID 형식의 고유 식별자
     private String semver;            // 버전 (예: 1.0.0)
-    private String name;              // 사람이 읽는 라벨 (1-128자)
-    private String subToolName;       // MCP 서브툴 명칭 (64자 이하, 예: CustomerSearchTool)
+    private String displayName;              // 사람이 읽는 라벨 (1-128자)
+    private String name;       // MCP 서브툴 명칭 (64자 이하, 예: CustomerSearchTool)
     private String description;       // 툴의 목적 및 설명 (LLM 프롬프트에 활용 가능)
 
     // 2. 파라미터 스키마 (JSON Schema 형태의 Map)

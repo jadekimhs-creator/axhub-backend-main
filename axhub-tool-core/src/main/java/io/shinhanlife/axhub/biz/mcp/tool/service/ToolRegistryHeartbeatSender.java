@@ -93,8 +93,8 @@ public class ToolRegistryHeartbeatSender {
 
                     ToolMetadata meta = new ToolMetadata();
                     meta.setUid(java.util.UUID.nameUUIDFromBytes(subToolName.getBytes()).toString());
-                    meta.setName(baseName);
-                    meta.setSubToolName(subToolName);
+                    meta.setDisplayName(baseName);
+                    meta.setName(subToolName);
                     meta.setSemver("1.0.0");
                     meta.setDescription(functionAnnotation.description());
                     meta.setCategoryKey(toolAnnotation.categoryKey());
