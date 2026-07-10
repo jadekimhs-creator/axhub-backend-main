@@ -283,7 +283,7 @@
                         <div class="row mb-3">
                             <div class="col-md-6">
                                 <label class="form-label">소속 도메인 그룹</label>
-                                <input type="text" class="form-control" name="categoryKey" pattern="^[a-z0-9][a-z0-9_-]*$" list="groupList" placeholder="선택 또는 직접 입력 (대문자)" oninput="this.value = this.value.toUpperCase()" required>
+                                <input type="text" class="form-control" name="categoryKey" pattern="^[a-z0-9][a-z0-9_-]*$" list="groupList" placeholder="선택 또는 직접 입력 (소문자)" oninput="this.value = this.value.toLowerCase()" required>
                                 <datalist id="groupList">
                                     <option value="COMMON">COMMON (공통)</option>
                                     <option value="CUSTOMER">CUSTOMER (고객)</option>
@@ -391,7 +391,7 @@
           </div>
           <div class="mb-3">
             <label class="form-label">소속 도메인 그룹</label>
-            <input type="text" class="form-control" id="editCategoryKey" name="categoryKey" pattern="^[a-z0-9][a-z0-9_-]*$" oninput="this.value = this.value.toUpperCase()">
+            <input type="text" class="form-control" id="editCategoryKey" name="categoryKey" pattern="^[a-z0-9][a-z0-9_-]*$" oninput="this.value = this.value.toLowerCase()">
           </div>
           <div class="mb-3">
             <label class="form-label">설명</label>
