@@ -259,26 +259,103 @@
             color: var(--link-color);
         }
         
-        /* Modal styling overrides */
+        /* Modal styling overrides - DARK THEME */
         .modal-content {
             border-radius: var(--radius-md);
             border: 1px solid var(--border-color);
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.8);
+            background-color: #18181b;
+            color: var(--text-primary);
         }
         
         .modal-header {
             border-bottom: 1px solid var(--border-color);
             padding: 1.25rem 1.5rem;
+            background-color: #18181b;
         }
         
         .modal-title {
             font-size: 1.1rem;
             font-weight: 600;
+            color: var(--text-primary);
+        }
+        
+        .modal-body {
+            background-color: #18181b;
+            color: var(--text-primary);
+        }
+
+        .modal-body .form-label {
+            color: #d4d4d8 !important;
         }
         
         .modal-footer {
             border-top: 1px solid var(--border-color);
             padding: 1rem 1.5rem;
+            background-color: #18181b;
+        }
+
+        .modal-backdrop.show {
+            opacity: 0.7;
+        }
+
+        .btn-close {
+            filter: invert(1);
+        }
+
+        /* Badge overrides for dark theme */
+        .badge-mono {
+            font-family: 'Geist Mono', monospace;
+            font-size: 0.7rem;
+            font-weight: 500;
+            padding: 0.25em 0.5em;
+            border-radius: 4px;
+            background: #27272a;
+            color: #a1a1aa;
+            border: 1px solid #3f3f46;
+        }
+
+        /* Bootstrap secondary button override */
+        .btn-secondary-action:hover {
+            background: #27272a;
+            color: var(--text-primary);
+        }
+
+        /* Table hover for dark */
+        .table > tbody > tr:hover > td {
+            background-color: rgba(255,255,255,0.03);
+        }
+
+        /* Tool name in table - ensure visibility */
+        .table td {
+            color: #e4e4e7 !important;
+        }
+
+        .table td a.tool-link {
+            color: #e4e4e7 !important;
+        }
+
+        .table td a.tool-link:hover {
+            color: #60a5fa !important;
+        }
+
+        /* Category badge in table */
+        .badge {
+            font-size: 0.7rem;
+            font-weight: 500;
+        }
+
+        /* Alert/Notice dark theme */
+        .alert-warning {
+            background-color: rgba(245, 158, 11, 0.1);
+            border-color: rgba(245, 158, 11, 0.3);
+            color: #fbbf24;
+        }
+
+        /* Select option dark theme */
+        select option, select optgroup {
+            background-color: #18181b;
+            color: #f4f4f5;
         }
     </style>
 </head>
