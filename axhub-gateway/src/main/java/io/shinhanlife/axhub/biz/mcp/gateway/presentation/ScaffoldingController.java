@@ -4,6 +4,10 @@ import io.shinhanlife.axhub.common.util.PodScaffolder;
 import io.shinhanlife.axhub.common.util.ToolScaffolder;
 import org.springframework.web.bind.annotation.*;
 import java.util.Map;
+import java.util.List;
+import java.util.Arrays;
+import java.util.stream.Collectors;
+import java.io.File;
 
 @RestController
 @RequestMapping("/api/v1/scaffold")
@@ -57,6 +61,23 @@ public class ScaffoldingController {
             return "성공";
         } catch (Exception e) {
             return "오류 발생: " + e.getMessage();
+        }
+    }
+
+    @GetMapping("/modules")
+    public List<String> listModules() {
+        try {
+            String sourceDir = System.getenv("AXHUB_SOURCE_DIR");
+            if (sourceDir == null) sourceDir = System.getProperty("user.dir");
+            
+            File dir = new File(sourceDir);
+            File[] files = dir.listFiles(f -> f.isDirectory() && f.getName().startsWith("axhub-tool-") && !f.getName().equals("axhub-tool-core"));
+            
+            if (files == null) return List.of("axhub-tool-other");
+            
+            return Arrays.stream(files).map(File::getName).sorted().collect(Collectors.toList());
+        } catch (Exception e) {
+            return List.of("axhub-tool-other");
         }
     }
 }

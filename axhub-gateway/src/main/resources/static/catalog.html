@@ -1,206 +1,115 @@
 <!DOCTYPE html>
-<html lang="ko" class="dark">
+<html lang="ko">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Shinhan AI Tool Catalog</title>
+    <title>AI Tool Catalog</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Pretendard:wght@300;400;500;600;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
-    <script>
-        tailwind.config = {
-            darkMode: 'class',
-            theme: {
-                extend: {
-                    fontFamily: {
-                        sans: ['Pretendard', 'sans-serif'],
-                        outfit: ['Outfit', 'sans-serif'],
-                        mono: ['Fira Code', 'monospace']
-                    },
-                    colors: {
-                        brand: {
-                            50: '#eff6ff',
-                            100: '#dbeafe',
-                            400: '#60a5fa',
-                            500: '#3b82f6',
-                            600: '#2563eb',
-                            900: '#1e3a8a',
-                            950: '#172554',
-                        }
-                    },
-                    animation: {
-                        'float': 'float 8s ease-in-out infinite',
-                        'float-delayed': 'float 8s ease-in-out 4s infinite',
-                    },
-                    keyframes: {
-                        'float': {
-                            '0%, 100%': { transform: 'translateY(0px) scale(1)' },
-                            '50%': { transform: 'translateY(-20px) scale(1.05)' },
-                        }
-                    }
-                }
-            }
-        }
-    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet">
     <style>
-        body {
-            background-color: #020617; 
-            color: #f8fafc;
-            overflow-x: hidden;
-            min-height: 100vh;
-            padding: 2rem 0;
-        }
-        
-        .bg-grid {
-            position: fixed;
-            inset: 0;
-            background-size: 40px 40px;
-            background-image: 
-                linear-gradient(to right, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
-                linear-gradient(to bottom, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
-            pointer-events: none;
-            z-index: 0;
-            mask-image: radial-gradient(circle at center, black 30%, transparent 80%);
-            -webkit-mask-image: radial-gradient(circle at center, black 30%, transparent 80%);
-        }
+        * { font-family: 'Geist', sans-serif; }
+        body { background-color: #09090b; color: #f4f4f5; }
+        .geist-mono { font-family: 'Geist Mono', monospace; }
 
-        .glass-panel {
-            background: rgba(15, 23, 42, 0.6);
-            backdrop-filter: blur(24px);
-            -webkit-backdrop-filter: blur(24px);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+        .btn-primary {
+            background: linear-gradient(135deg, #3b82f6, #6366f1);
+            color: #ffffff;
+            font-weight: 600;
+            padding: 10px 24px;
+            border-radius: 8px;
+            font-size: 14px;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s;
+            box-shadow: 0 0 20px rgba(59, 130, 246, 0.3);
         }
+        .btn-primary:hover { box-shadow: 0 0 30px rgba(99, 102, 241, 0.5); transform: translateY(-1px); }
 
-        .card-premium {
-            background: rgba(30, 41, 59, 0.4);
-            border: 1px solid rgba(255, 255, 255, 0.05);
-            transition: all 0.3s ease;
+        .tool-card {
+            background: #18181b;
+            border: 1px solid #3f3f46;
+            border-radius: 12px;
+            padding: 20px 24px;
+            transition: border-color 0.2s;
         }
-        
-        .card-premium:hover {
-            background: rgba(30, 41, 59, 0.7);
-            border-color: rgba(96, 165, 250, 0.3);
-            transform: translateY(-4px);
-            box-shadow: 0 10px 30px -10px rgba(59, 130, 246, 0.2);
-        }
+        .tool-card:hover { border-color: #52525b; }
 
         .param-table {
             width: 100%;
+            font-size: 13px;
             border-collapse: collapse;
-            font-size: 0.8rem;
-            margin-top: 1rem;
         }
-        
         .param-table th {
             text-align: left;
-            padding: 8px;
-            background: rgba(15, 23, 42, 0.6);
-            color: #94a3b8;
-            border-bottom: 1px solid rgba(255,255,255,0.1);
+            padding: 8px 12px;
             font-weight: 600;
+            color: #a1a1aa;
+            border-bottom: 1px solid #3f3f46;
+            font-size: 12px;
         }
-        
         .param-table td {
-            padding: 8px;
-            border-bottom: 1px solid rgba(255,255,255,0.05);
-            color: #cbd5e1;
+            padding: 8px 12px;
+            border-bottom: 1px solid #27272a;
+            color: #d4d4d8;
         }
-        
         .param-table tr:last-child td { border-bottom: none; }
-
-        .btn-glow {
-            position: relative;
-            z-index: 1;
-        }
-        .btn-glow::before {
-            content: '';
-            position: absolute;
-            inset: -2px;
-            background: linear-gradient(90deg, #3b82f6, #8b5cf6, #ec4899, #3b82f6);
-            background-size: 200% auto;
-            z-index: -1;
-            border-radius: 12px;
-            filter: blur(10px);
-            opacity: 0;
-            transition: opacity 0.4s ease;
-            animation: gradient-shift 3s linear infinite;
-        }
-        .btn-glow:hover::before {
-            opacity: 0.8;
-        }
-        @keyframes gradient-shift {
-            0% { background-position: 0% center; }
-            100% { background-position: 200% center; }
-        }
-
-        ::-webkit-scrollbar { width: 6px; height: 6px; }
-        ::-webkit-scrollbar-track { background: rgba(15, 23, 42, 0.5); }
-        ::-webkit-scrollbar-thumb { background: rgba(71, 85, 105, 0.8); border-radius: 10px; }
-        ::-webkit-scrollbar-thumb:hover { background: rgba(100, 116, 139, 1); }
     </style>
 </head>
-<body class="antialiased selection:bg-brand-500/30 selection:text-brand-50">
+<body class="min-h-screen">
 
-    <div class="bg-grid"></div>
-
-    <div class="fixed top-0 left-[10%] w-[500px] h-[500px] bg-brand-600/20 rounded-full mix-blend-screen filter blur-[120px] animate-float pointer-events-none"></div>
-    <div class="fixed bottom-0 right-[10%] w-[600px] h-[600px] bg-purple-600/20 rounded-full mix-blend-screen filter blur-[150px] animate-float-delayed pointer-events-none"></div>
-
-    <div class="max-w-[1200px] mx-auto w-full px-5 z-10 relative flex flex-col">
-        
-        <div class="flex flex-col md:flex-row justify-between items-center mb-10 pt-6">
-            <div class="text-left space-y-2">
-                <div class="inline-flex items-center px-3 py-1 rounded-full border border-purple-500/30 bg-purple-500/10 text-purple-400 text-[10px] font-bold uppercase tracking-[0.2em] mb-2">
-                    <span class="w-1.5 h-1.5 rounded-full bg-purple-400 mr-2 animate-pulse"></span>
-                    Live Dashboard
-                </div>
-                <h1 class="text-4xl md:text-5xl font-outfit font-extrabold tracking-tight bg-clip-text text-transparent bg-gradient-to-br from-white via-slate-200 to-slate-500">
-                    AI Tool Catalog
-                </h1>
-                <p class="text-sm text-slate-400 font-medium tracking-wide flex items-center">
-                    현재 시스템에 연동된 모든 AI 플러그인의 실시간 명세서입니다.
-                    <span class="ml-3 text-xs bg-slate-800 px-2 py-0.5 rounded text-slate-300" id="totalCount">Loading...</span>
-                </p>
-            </div>
-            
-            <div class="mt-6 md:mt-0 flex space-x-3">
-                <a href="/playground.html" class="px-5 py-2.5 rounded-xl text-sm font-bold text-slate-300 bg-slate-800/80 border border-slate-700 hover:bg-slate-700 transition-colors flex items-center">
-                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                    Playground
+    <header style="border-bottom: 1px solid #27272a; background: rgba(9,9,11,0.85); backdrop-filter: blur(16px);" class="sticky top-0 z-50">
+        <div class="max-w-6xl mx-auto px-6 h-14 flex items-center justify-between">
+            <div class="flex items-center space-x-5">
+                <a href="/index.html" class="flex items-center group">
+                    <div class="w-2 h-2 rounded-full mr-2" style="background:#3b82f6; box-shadow: 0 0 8px rgba(59,130,246,0.8);"></div>
+                    <span class="font-semibold tracking-tight text-sm" style="color:#f4f4f5;">AXHUB Gateway</span>
                 </a>
-                <div class="btn-glow">
-                    <button id="copyMdBtn" class="relative inline-flex items-center px-5 py-2.5 text-sm font-bold rounded-xl text-white bg-gradient-to-r from-purple-600 to-brand-600 hover:from-purple-500 hover:to-brand-500 shadow-lg shadow-purple-500/25 transition-all transform hover:-translate-y-0.5">
-                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"></path></svg>
-                        <span id="copyBtnText">Copy Markdown</span>
-                    </button>
-                </div>
+                <div class="h-4 w-px" style="background:#27272a;"></div>
+                <nav class="flex space-x-5 text-[13px] font-medium">
+                    <a href="/admin/scaffold.html" style="color:#a1a1aa;" class="hover:text-white transition-colors">Scaffold</a>
+                    <a href="/catalog.html" style="color:#ffffff;" class="font-semibold">Catalog</a>
+                    <a href="/playground.html" style="color:#a1a1aa;" class="hover:text-white transition-colors">Playground</a>
+                </nav>
+            </div>
+            <div class="flex items-center">
+                <span class="text-[10px] uppercase tracking-widest px-2 py-1 rounded font-bold" style="background:rgba(59,130,246,0.1); color:#60a5fa; border:1px solid rgba(59,130,246,0.2);">v0.0.1</span>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-6xl mx-auto px-6 py-10">
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-end mb-8">
+            <div class="max-w-2xl">
+                <h1 class="text-3xl font-bold tracking-tight mb-2" style="color:#f4f4f5;">Registry Catalog</h1>
+                <p class="text-sm" style="color:#a1a1aa;">Currently integrated AI function tools across all modules. View parameters, descriptions, and integration types.</p>
+            </div>
+            <div class="mt-4 md:mt-0">
+                <button id="copyMdBtn" class="btn-primary flex items-center">
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"></path></svg>
+                    <span id="copyBtnText">Copy Markdown Docs</span>
+                </button>
             </div>
         </div>
 
         <div id="catalogContainer" class="space-y-12 pb-16">
-            <!-- Loading State -->
-            <div class="flex justify-center py-20">
-                <div class="w-8 h-8 border-4 border-brand-500/30 border-t-brand-500 rounded-full animate-spin"></div>
+            <div class="flex justify-center py-20 text-sm geist-mono" style="color:#71717a;">
+                <div class="w-4 h-4 border-2 border-t-blue-500 rounded-full animate-spin mr-3" style="border-color:#3f3f46; border-top-color:#3b82f6;"></div>
+                Loading registry...
             </div>
         </div>
-
-    </div>
+    </main>
 
     <script>
         async function fetchTools() {
             try {
-                const response = await fetch('/mcp/api/v1/tools/list', {
-                    
-                });
+                const response = await fetch('/mcp/api/v1/tools/list');
                 const data = await response.json();
                 const tools = data.result?.tools || [];
-                
-                document.getElementById('totalCount').textContent = `Total: ${tools.length}`;
                 renderCatalog(tools);
             } catch (err) {
                 document.getElementById('catalogContainer').innerHTML = `
-                    <div class="glass-panel p-8 text-center text-rose-400 rounded-2xl">
-                        데이터를 불러오는데 실패했습니다. 서버 상태를 확인해주세요.
+                    <div style="padding:16px; border:1px solid #7f1d1d; background:rgba(127,29,29,0.15); color:#fca5a5; font-size:14px; border-radius:8px;">
+                        Failed to fetch tools from registry. Error: ${err.message}
                     </div>
                 `;
             }
@@ -209,45 +118,28 @@
         function renderCatalog(tools) {
             const container = document.getElementById('catalogContainer');
             container.innerHTML = '';
-
             if (tools.length === 0) {
-                container.innerHTML = `<div class="glass-panel p-8 text-center text-slate-400 rounded-2xl">등록된 툴이 없습니다.</div>`;
+                container.innerHTML = '<div style="padding:32px; text-align:center; color:#71717a; border:1px dashed #3f3f46; border-radius:8px;">No tools registered.</div>';
                 return;
             }
-
-            // Group by domain
             const grouped = {};
             tools.forEach(tool => {
-                const group = tool.categoryKey || '기타 (Others)';
+                const group = tool.categoryKey || 'Others';
                 if (!grouped[group]) grouped[group] = [];
                 grouped[group].push(tool);
             });
-
-            // Render groups
             Object.keys(grouped).sort().forEach(group => {
                 const section = document.createElement('section');
-                section.className = 'glass-panel p-6 rounded-3xl';
-                
                 const header = document.createElement('div');
-                header.className = 'flex items-center mb-6 pb-4 border-b border-white/5';
+                header.style.cssText = 'margin-bottom:16px; padding-bottom:8px; border-bottom:1px solid #27272a; display:flex; align-items:baseline; justify-content:space-between;';
                 header.innerHTML = `
-                    <div class="w-10 h-10 rounded-xl bg-brand-500/20 text-brand-400 flex items-center justify-center mr-4">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 002-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
-                    </div>
-                    <div>
-                        <h2 class="text-xl font-bold text-white tracking-wide">${group}</h2>
-                        <p class="text-xs text-slate-400 mt-1">${grouped[group].length} Tools available</p>
-                    </div>
+                    <h2 style="font-size:20px; font-weight:600; color:#f4f4f5; text-transform:capitalize;">${group}</h2>
+                    <span class="geist-mono" style="font-size:12px; color:#71717a;">${grouped[group].length} items</span>
                 `;
                 section.appendChild(header);
-
                 const grid = document.createElement('div');
-                grid.className = 'grid grid-cols-1 lg:grid-cols-2 gap-5';
-                
-                grouped[group].forEach(tool => {
-                    grid.appendChild(createToolCard(tool));
-                });
-                
+                grid.style.cssText = 'display:grid; grid-template-columns:1fr; gap:12px;';
+                grouped[group].forEach(tool => grid.appendChild(createToolCard(tool)));
                 section.appendChild(grid);
                 container.appendChild(section);
             });
@@ -255,71 +147,64 @@
 
         function createToolCard(tool) {
             const card = document.createElement('div');
-            card.className = 'card-premium rounded-2xl p-5 flex flex-col h-full relative overflow-hidden';
-            
-            // Top right badge
-            const typeClass = tool.integrationType === 'DIRECT' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : 'bg-amber-500/10 text-amber-400 border-amber-500/20';
-            
+            card.className = 'tool-card';
+
+            const isDirect = tool.integrationType === 'DIRECT';
+            const badgeBg = isDirect ? 'rgba(59,130,246,0.15)' : 'rgba(249,115,22,0.15)';
+            const badgeColor = isDirect ? '#60a5fa' : '#fb923c';
+            const badgeBorder = isDirect ? 'rgba(59,130,246,0.3)' : 'rgba(249,115,22,0.3)';
+
             let paramHtml = '';
             if (tool.parametersSchema && tool.parametersSchema.properties) {
                 const props = tool.parametersSchema.properties;
                 const required = tool.parametersSchema.required || [];
-                paramHtml = `
-                    <div class="mt-4 pt-4 border-t border-white/5">
-                        <div class="text-xs font-bold text-slate-400 mb-2 flex items-center">
-                            <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
-                            PARAMETERS
-                        </div>
-                        <div class="overflow-x-auto rounded-lg border border-slate-700/50 bg-slate-900/50">
+                if (Object.keys(props).length > 0) {
+                    paramHtml = `
+                        <div style="margin-top:16px; padding-top:16px; border-top:1px solid #27272a;">
+                            <div style="font-size:10px; font-weight:700; color:#71717a; margin-bottom:8px; letter-spacing:0.1em; text-transform:uppercase;">Parameters</div>
                             <table class="param-table">
-                                <thead>
-                                    <tr>
-                                        <th>Name</th>
-                                        <th>Type</th>
-                                        <th>Req</th>
-                                        <th>Description</th>
-                                    </tr>
-                                </thead>
+                                <thead><tr><th style="width:25%;">Name</th><th style="width:15%;">Type</th><th>Description</th></tr></thead>
                                 <tbody>
                                     ${Object.entries(props).map(([k,v]) => `
                                         <tr>
-                                            <td class="font-mono text-[11px] text-cyan-400">${k}</td>
-                                            <td class="font-mono text-[11px] text-purple-400">${v.type || 'string'}</td>
-                                            <td class="text-center">${required.includes(k) ? '<span class="text-rose-400 font-bold">*</span>' : ''}</td>
-                                            <td class="text-xs text-slate-400">${v.description || ''}</td>
+                                            <td class="geist-mono" style="color:#93c5fd;">${k}${required.includes(k) ? '<span style="color:#f87171; margin-left:4px;">*</span>' : ''}</td>
+                                            <td class="geist-mono" style="color:#a1a1aa;">${v.type || 'string'}</td>
+                                            <td style="color:#d4d4d8;">${v.description || '-'}</td>
                                         </tr>
                                     `).join('')}
                                 </tbody>
                             </table>
                         </div>
-                    </div>
-                `;
+                    `;
+                }
             }
 
             let promptHtml = '';
             if (tool.actionPrompts && Object.keys(tool.actionPrompts).length > 0) {
                 promptHtml = `
-                    <div class="mt-4 pt-4 border-t border-white/5">
-                        <div class="text-xs font-bold text-slate-400 mb-2 flex items-center">
-                            <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"></path></svg>
-                            PROMPT EXAMPLES
-                        </div>
-                        <ul class="space-y-1.5">
-                            ${Object.values(tool.actionPrompts).map(p => `
-                                <li class="text-xs bg-slate-800/80 px-3 py-2 rounded-lg text-slate-300 border border-slate-700/50 italic border-l-2 border-l-brand-500">"${p}"</li>
-                            `).join('')}
+                    <div style="margin-top:16px; padding-top:16px; border-top:1px solid #27272a;">
+                        <div style="font-size:10px; font-weight:700; color:#71717a; margin-bottom:8px; letter-spacing:0.1em; text-transform:uppercase;">Action Prompts</div>
+                        <ul style="list-style:disc; padding-left:20px; font-size:14px; color:#a1a1aa; space-y:2;">
+                            ${Object.values(tool.actionPrompts).map(p => `<li style="margin-bottom:4px;">${p}</li>`).join('')}
                         </ul>
                     </div>
                 `;
             }
 
             card.innerHTML = `
-                <div class="absolute top-4 right-4 px-2 py-0.5 rounded text-[9px] font-bold font-mono border tracking-wider ${typeClass}">
-                    ${tool.integrationType || 'DIRECT'}
+                <div style="display:flex; align-items:flex-start; justify-content:space-between;">
+                    <div style="flex:1;">
+                        <div style="display:flex; align-items:center; margin-bottom:4px;">
+                            <h3 style="font-size:16px; font-weight:600; color:#f4f4f5;">${tool.displayName || tool.name}</h3>
+                            <span style="margin:0 8px; color:#3f3f46;">/</span>
+                            <span class="geist-mono" style="font-size:12px; color:#71717a;">${tool.name}</span>
+                        </div>
+                        <p style="font-size:14px; color:#a1a1aa;">${tool.description || 'No description provided.'}</p>
+                    </div>
+                    <div style="margin-left:16px; padding:4px 10px; border-radius:6px; font-size:11px; font-weight:600; background:${badgeBg}; color:${badgeColor}; border:1px solid ${badgeBorder};" class="geist-mono">
+                        ${tool.integrationType || 'DIRECT'}
+                    </div>
                 </div>
-                <h3 class="text-lg font-bold text-white mb-1 pr-16">${tool.displayName} <span class="text-xs text-slate-500 font-mono">(${tool.name})</span></h3>
-                <p class="text-sm text-slate-400 leading-relaxed min-h-[40px]">${tool.description || '설명이 없습니다.'}</p>
-                
                 ${paramHtml}
                 ${promptHtml}
             `;
@@ -330,26 +215,15 @@
             const btn = e.currentTarget;
             const textSpan = document.getElementById('copyBtnText');
             const originalText = textSpan.textContent;
-            
             try {
-                // 이전에 우리가 만들어둔 백엔드 마크다운 생성기 호출!
                 const res = await fetch('/mcp/api/v1/tools/docs/markdown');
+                if(!res.ok) throw new Error('Failed to fetch markdown');
                 const mdText = await res.text();
-                
                 await navigator.clipboard.writeText(mdText);
-                
-                // 성공 UI (초록색 반짝)
-                btn.classList.remove('from-purple-600', 'to-brand-600');
-                btn.classList.add('from-emerald-500', 'to-teal-500');
                 textSpan.textContent = 'Copied!';
-                
-                setTimeout(() => {
-                    btn.classList.remove('from-emerald-500', 'to-teal-500');
-                    btn.classList.add('from-purple-600', 'to-brand-600');
-                    textSpan.textContent = originalText;
-                }, 2000);
+                setTimeout(() => { textSpan.textContent = originalText; }, 2000);
             } catch (err) {
-                alert('마크다운 복사에 실패했습니다.');
+                alert('Failed to copy markdown.');
             }
         });
 

@@ -1,297 +1,186 @@
 <!DOCTYPE html>
-<html lang="ko" class="dark">
+<html lang="ko">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Shinhan AI Tool Playground</title>
+    <title>Tool Playground</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Pretendard:wght@300;400;500;600;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
-    <script>
-        tailwind.config = {
-            darkMode: 'class',
-            theme: {
-                extend: {
-                    fontFamily: {
-                        sans: ['Pretendard', 'sans-serif'],
-                        outfit: ['Outfit', 'sans-serif'],
-                        mono: ['Fira Code', 'monospace']
-                    },
-                    colors: {
-                        brand: {
-                            50: '#eff6ff',
-                            100: '#dbeafe',
-                            400: '#60a5fa',
-                            500: '#3b82f6',
-                            600: '#2563eb',
-                            900: '#1e3a8a',
-                            950: '#172554',
-                        }
-                    },
-                    animation: {
-                        'float': 'float 8s ease-in-out infinite',
-                        'float-delayed': 'float 8s ease-in-out 4s infinite',
-                        'spin-slow': 'spin 3s linear infinite',
-                        'pulse-glow': 'pulse-glow 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
-                    },
-                    keyframes: {
-                        'float': {
-                            '0%, 100%': { transform: 'translateY(0px) scale(1)' },
-                            '50%': { transform: 'translateY(-20px) scale(1.05)' },
-                        },
-                        'pulse-glow': {
-                            '0%, 100%': { opacity: 0.5, transform: 'scale(1)' },
-                            '50%': { opacity: 1, transform: 'scale(1.05)' },
-                        }
-                    }
-                }
-            }
-        }
-    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet">
     <style>
-        body {
-            background-color: #020617; /* slate-950 */
-            color: #f8fafc;
-            overflow-x: hidden;
-            min-height: 100vh;
-            display: flex;
-            align-items: flex-start;
-            justify-content: center;
-            padding: 2rem 0;
-        }
-        
-        .bg-grid {
-            position: fixed;
-            inset: 0;
-            background-size: 40px 40px;
-            background-image: 
-                linear-gradient(to right, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
-                linear-gradient(to bottom, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
-            pointer-events: none;
-            z-index: 0;
-            mask-image: radial-gradient(circle at center, black 30%, transparent 80%);
-            -webkit-mask-image: radial-gradient(circle at center, black 30%, transparent 80%);
-        }
+        * { font-family: 'Geist', sans-serif; }
+        body { background-color: #09090b; color: #f4f4f5; }
+        .geist-mono { font-family: 'Geist Mono', monospace; }
 
-        .glass-panel {
-            background: rgba(15, 23, 42, 0.6);
-            backdrop-filter: blur(24px);
-            -webkit-backdrop-filter: blur(24px);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+        .input-field {
+            width: 100%;
+            padding: 10px 14px;
+            font-size: 14px;
+            background-color: #18181b;
+            border: 1px solid #3f3f46;
+            border-radius: 8px;
+            color: #f4f4f5;
+            transition: border-color 0.2s, box-shadow 0.2s;
         }
-
-        .input-premium {
-            background: rgba(30, 41, 59, 0.5);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            color: #f8fafc;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
-        }
-        
-        .input-premium:focus {
-            background: rgba(30, 41, 59, 0.8);
-            border-color: #3b82f6;
-            box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.2), inset 0 2px 4px rgba(0,0,0,0.1);
+        .input-field:focus {
             outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.25);
         }
+        .input-field::placeholder { color: #71717a; }
 
-        select.input-premium option, select.input-premium optgroup {
-            background: #1e293b;
-            color: #f8fafc;
+        select.input-field {
+            appearance: none;
+            cursor: pointer;
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%2371717a' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+            background-position: right 12px center;
+            background-repeat: no-repeat;
+            background-size: 1.25em 1.25em;
+            padding-right: 2.5rem;
         }
-        
+        select.input-field option { background: #18181b; color: #f4f4f5; }
+        select.input-field optgroup { background: #27272a; color: #a1a1aa; font-weight: 600; }
+
+        .btn-execute {
+            background: linear-gradient(135deg, #3b82f6, #6366f1);
+            color: #ffffff;
+            font-weight: 600;
+            padding: 10px 24px;
+            border-radius: 8px;
+            font-size: 14px;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s;
+            box-shadow: 0 0 20px rgba(59, 130, 246, 0.3);
+        }
+        .btn-execute:hover { box-shadow: 0 0 30px rgba(99, 102, 241, 0.5); transform: translateY(-1px); }
+        .btn-execute:disabled { background: #27272a; color: #52525b; box-shadow: none; transform: none; cursor: not-allowed; }
+
+        .card { background: #18181b; border: 1px solid #3f3f46; border-radius: 12px; }
+
         .json-pre {
-            background: transparent;
-            color: #cbd5e1;
+            background: #09090b;
+            border: 1px solid #27272a;
+            border-radius: 8px;
+            padding: 16px;
+            overflow-x: auto;
             font-size: 13px;
             line-height: 1.6;
+            color: #d4d4d8;
         }
-
-        .btn-glow {
-            position: relative;
-            z-index: 1;
-        }
-        .btn-glow::before {
-            content: '';
-            position: absolute;
-            inset: -2px;
-            background: linear-gradient(90deg, #3b82f6, #8b5cf6, #ec4899, #3b82f6);
-            background-size: 200% auto;
-            z-index: -1;
-            border-radius: 12px;
-            filter: blur(10px);
-            opacity: 0;
-            transition: opacity 0.4s ease;
-            animation: gradient-shift 3s linear infinite;
-        }
-        .btn-glow:hover::before {
-            opacity: 0.8;
-        }
-        @keyframes gradient-shift {
-            0% { background-position: 0% center; }
-            100% { background-position: 200% center; }
-        }
+        .json-key { color: #93c5fd; }
+        .json-string { color: #86efac; }
+        .json-number { color: #fbbf24; }
+        .json-boolean { color: #f472b6; }
+        .json-null { color: #71717a; }
 
         #loadingOverlay {
+            display: none;
             position: absolute;
             inset: 0;
-            background: rgba(15, 23, 42, 0.85);
-            backdrop-filter: blur(12px);
-            border-radius: 1.5rem;
-            display: flex;
-            flex-direction: column;
+            background: rgba(9,9,11,0.85);
+            backdrop-filter: blur(4px);
+            border-radius: 12px;
+            z-index: 10;
             align-items: center;
             justify-content: center;
-            z-index: 50;
-            opacity: 0;
-            pointer-events: none;
-            transition: opacity 0.4s ease;
+            flex-direction: column;
         }
-        #loadingOverlay.active {
-            opacity: 1;
-            pointer-events: all;
-        }
+        #loadingOverlay.active { display: flex; }
 
-        .modern-spinner {
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            border: 3px solid rgba(59, 130, 246, 0.1);
+        .spinner {
+            width: 24px; height: 24px;
+            border: 2px solid #3f3f46;
             border-top-color: #3b82f6;
-            border-right-color: #8b5cf6;
-            animation: spin 1s linear infinite;
+            border-radius: 50%;
+            animation: spin 0.6s linear infinite;
         }
-
-        ::-webkit-scrollbar { width: 6px; height: 6px; }
-        ::-webkit-scrollbar-track { background: rgba(15, 23, 42, 0.5); }
-        ::-webkit-scrollbar-thumb { background: rgba(71, 85, 105, 0.8); border-radius: 10px; }
-        ::-webkit-scrollbar-thumb:hover { background: rgba(100, 116, 139, 1); }
+        @keyframes spin { to { transform: rotate(360deg); } }
     </style>
 </head>
-<body class="antialiased selection:bg-brand-500/30 selection:text-brand-50">
+<body class="min-h-screen">
 
-    <div class="bg-grid"></div>
-
-    <div class="fixed top-0 left-[20%] w-[500px] h-[500px] bg-brand-600/20 rounded-full mix-blend-screen filter blur-[120px] animate-float pointer-events-none"></div>
-    <div class="fixed bottom-0 right-[20%] w-[600px] h-[600px] bg-purple-600/20 rounded-full mix-blend-screen filter blur-[150px] animate-float-delayed pointer-events-none"></div>
-
-    <div class="max-w-[850px] w-full px-5 z-10 relative flex flex-col">
-        
-        <div class="text-center space-y-4 mb-8 shrink-0 pt-6 relative">
-            <div class="absolute right-0 top-2 flex items-center bg-slate-800/50 border border-slate-700/50 rounded-lg px-3 py-1.5 shadow-sm">
-                <svg class="w-3.5 h-3.5 mr-1.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
-                <input type="text" id="agentId" name="agentId" value="TESTER-DEV" class="bg-transparent border-none text-xs text-slate-300 font-mono focus:outline-none w-20 text-right" readonly>
+    <header style="border-bottom: 1px solid #27272a; background: rgba(9,9,11,0.85); backdrop-filter: blur(16px);" class="sticky top-0 z-50">
+        <div class="max-w-6xl mx-auto px-6 h-14 flex items-center justify-between">
+            <div class="flex items-center space-x-5">
+                <a href="/index.html" class="flex items-center group">
+                    <div class="w-2 h-2 rounded-full mr-2" style="background:#3b82f6; box-shadow: 0 0 8px rgba(59,130,246,0.8);"></div>
+                    <span class="font-semibold tracking-tight text-sm" style="color:#f4f4f5;">AXHUB Gateway</span>
+                </a>
+                <div class="h-4 w-px" style="background:#27272a;"></div>
+                <nav class="flex space-x-5 text-[13px] font-medium">
+                    <a href="/admin/scaffold.html" style="color:#a1a1aa;" class="hover:text-white transition-colors">Scaffold</a>
+                    <a href="/catalog.html" style="color:#a1a1aa;" class="hover:text-white transition-colors">Catalog</a>
+                    <a href="/playground.html" style="color:#ffffff;" class="font-semibold">Playground</a>
+                </nav>
             </div>
-            <div class="inline-flex items-center px-3 py-1 rounded-full border border-purple-500/30 bg-purple-500/10 text-purple-400 text-[10px] font-bold uppercase tracking-[0.2em] mb-2">
-                <span class="w-1.5 h-1.5 rounded-full bg-purple-400 mr-2 animate-pulse"></span>
-                Developer Sandbox
+            <div class="flex items-center space-x-3">
+                <label class="text-xs" style="color:#71717a;">Agent ID:</label>
+                <input type="text" id="agentId" value="TESTER-DEV" class="input-field" style="width:140px; padding:6px 10px; font-size:12px;">
+                <span class="text-[10px] uppercase tracking-widest px-2 py-1 rounded font-bold" style="background:rgba(59,130,246,0.1); color:#60a5fa; border:1px solid rgba(59,130,246,0.2);">v0.0.1</span>
             </div>
-            <h1 class="text-5xl font-outfit font-extrabold tracking-tight bg-clip-text text-transparent bg-gradient-to-br from-white via-slate-200 to-slate-500 drop-shadow-sm">
-                Tool Playground
-            </h1>
-            <p class="text-sm text-slate-400 font-medium tracking-wide">
-                동적 파라미터 입력 및 실데이터 기반 연동 테스트 UI
-            </p>
+        </div>
+    </header>
+
+    <main class="max-w-4xl mx-auto px-6 py-10">
+        <div class="mb-8">
+            <h1 class="text-2xl font-bold tracking-tight mb-2" style="color:#f4f4f5;">Test & Execute</h1>
+            <p class="text-sm" style="color:#a1a1aa;">Simulate tool executions and view raw RPC responses. Select a tool to auto-generate the input schema.</p>
         </div>
 
-        <div class="glass-panel rounded-[2rem] p-8 relative shrink-0">
-            
+        <div class="card p-6 relative mb-8">
             <div id="loadingOverlay">
-                <div class="relative w-16 h-16 mb-6">
-                    <div class="modern-spinner absolute inset-0"></div>
-                    <div class="absolute inset-0 flex items-center justify-center">
-                        <div class="w-2 h-2 bg-brand-400 rounded-full animate-ping"></div>
-                    </div>
-                </div>
-                <h3 class="text-lg font-outfit font-semibold text-white tracking-wider">처리중 입니다...</h3>
-                <p class="text-slate-400 text-sm mt-2 font-medium">실데이터 기반 통신 중입니다</p>
+                <div class="spinner mb-3"></div>
+                <div class="text-sm font-medium" style="color:#a1a1aa;">Executing RPC Call...</div>
             </div>
 
             <form id="mcpForm" class="space-y-6">
-                
-                <div class="grid grid-cols-1 gap-6">
-                    <div class="group">
-                        <label for="toolName" class="flex items-center text-xs font-bold text-slate-400 mb-2 uppercase tracking-widest transition-colors group-focus-within:text-brand-400">
-                            <svg class="w-3.5 h-3.5 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
-                            테스트할 대상 툴 (Function Tool)
-                        </label>
-                        <div class="relative">
-                            <select id="toolName" name="toolName" class="input-premium block w-full pl-4 pr-10 py-3 text-sm rounded-xl appearance-none cursor-pointer font-medium">
-                                <option value="">로딩 중...</option>
-                            </select>
-                            <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-slate-500">
-                                <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"></path></svg>
-                            </div>
-                        </div>
+                <div>
+                    <label for="toolName" class="block text-sm font-semibold mb-2" style="color:#e4e4e7;">Select Tool</label>
+                    <select id="toolName" name="toolName" class="input-field">
+                        <option value="">Loading tools...</option>
+                    </select>
+                </div>
+
+                <div id="dynamicFormContainer" class="hidden">
+                    <h3 class="text-sm font-semibold mb-3 pb-2" style="color:#e4e4e7; border-bottom: 1px solid #27272a;">Parameters</h3>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4" id="dynamicFields"></div>
+                </div>
+
+                <div id="manualInputContainer" class="hidden p-4 rounded-lg space-y-4" style="background:#0a0a0c; border:1px solid #27272a;">
+                    <h3 class="text-sm font-semibold" style="color:#e4e4e7;">Manual Override (Hidden Tool)</h3>
+                    <div>
+                        <label class="block text-xs font-medium mb-1" style="color:#a1a1aa;">Tool Name</label>
+                        <input type="text" id="manualToolName" class="input-field" value="get_template_file_url">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium mb-1" style="color:#a1a1aa;">JSON Parameters</label>
+                        <textarea id="manualToolArgs" rows="3" class="input-field geist-mono">{"templateId": "test_excel"}</textarea>
                     </div>
                 </div>
 
-                <!-- NEW: Dynamic Form Container -->
-                <div id="dynamicFormContainer" class="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4 p-5 bg-slate-900/40 rounded-xl border border-slate-700/50 hidden">
-                    <div class="col-span-full">
-                        <h3 class="text-sm font-bold text-slate-300 mb-2 border-b border-white/5 pb-2">파라미터 입력 (Parameters)</h3>
-                    </div>
-                    <!-- Fields will be dynamically injected here -->
+                <div>
+                    <label for="userPrompt" class="block text-sm font-semibold mb-2" style="color:#e4e4e7;">Mock User Prompt</label>
+                    <textarea id="userPrompt" name="userPrompt" rows="2" class="input-field" style="resize:none;" placeholder="Provide context for the execution log..."></textarea>
                 </div>
 
-                <!-- NEW: Manual Input Container for Hidden Tools -->
-                <div id="manualInputContainer" class="grid grid-cols-1 gap-4 mt-4 p-5 bg-slate-900/40 rounded-xl border border-rose-500/30 hidden">
-                    <div class="col-span-full">
-                        <h3 class="text-sm font-bold text-rose-400 mb-2 border-b border-rose-500/20 pb-2">히든 툴 직접 입력 (Manual Override)</h3>
+                <div class="flex items-center justify-between pt-4" style="border-top:1px solid #27272a;">
+                    <div class="flex items-center text-xs geist-mono">
+                        <span class="font-bold px-2 py-1 rounded mr-2" style="background:#27272a; color:#a1a1aa; border:1px solid #3f3f46;">POST</span>
+                        <span style="color:#71717a;">/mcp/api/v1/tools/call</span>
                     </div>
-                    <div class="group">
-                        <label class="block text-xs font-bold text-slate-400 mb-2">실행할 툴 이름 (Tool Name)</label>
-                        <input type="text" id="manualToolName" class="input-premium block w-full py-2 px-3 text-sm rounded-lg" value="get_template_file_url" placeholder="예: get_template_file_url">
-                    </div>
-                    <div class="group">
-                        <label class="block text-xs font-bold text-slate-400 mb-2">파라미터 (JSON 형식)</label>
-                        <textarea id="manualToolArgs" rows="3" class="input-premium block w-full py-2 px-3 text-sm rounded-lg font-mono" placeholder='{"templateId": "test"}'>{"templateId": "test_excel"}</textarea>
-                    </div>
-                </div>
-
-                <div class="group pt-2">
-                    <label for="userPrompt" class="flex items-center text-xs font-bold text-slate-400 mb-2 uppercase tracking-widest transition-colors group-focus-within:text-brand-400">
-                        <svg class="w-3.5 h-3.5 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"></path></svg>
-                        가상 유저 프롬프트 (Mock User Prompt)
-                    </label>
-                    <textarea id="userPrompt" name="userPrompt" rows="1" class="input-premium block w-full py-3 px-4 text-sm rounded-xl resize-none placeholder-slate-600 font-medium" placeholder="[테스트용] 사용자 발화 내용을 입력하세요."></textarea>
-                </div>
-
-                <div class="flex items-center justify-between pt-4 mt-2 border-t border-white/5">
-                    <div class="flex items-center">
-                        <div class="text-xs font-mono bg-slate-900/80 px-3 py-2 rounded-lg border border-slate-700/50 flex items-center shadow-inner">
-                            <span class="text-emerald-400 font-bold mr-2 text-[10px] tracking-wider">POST</span> 
-                            <span class="text-slate-300">/mcp/api/v1/tools/call</span>
-                        </div>
-                    </div>
-                    <div class="btn-glow">
-                        <button type="submit" class="relative inline-flex items-center px-8 py-3 text-sm font-bold rounded-xl text-white bg-gradient-to-r from-purple-600 to-brand-600 hover:from-purple-500 hover:to-brand-500 shadow-lg shadow-purple-500/25 transition-all transform hover:-translate-y-0.5 active:translate-y-0">
-                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
-                            Execute Test
-                        </button>
-                    </div>
+                    <button type="submit" class="btn-execute">Execute Tool</button>
                 </div>
             </form>
         </div>
 
-        <div id="resultContainer" class="hidden transition-all duration-500 ease-out opacity-0 translate-y-8 mt-6 pb-6">
-            <div class="bg-[#0d1117] rounded-2xl shadow-2xl border border-slate-700/50 flex flex-col overflow-hidden relative group">
-                <div class="bg-[#161b22] px-5 py-3 flex justify-between items-center border-b border-slate-800 shrink-0">
-                    <div class="flex space-x-2">
-                        <div class="w-3 h-3 rounded-full bg-[#ff5f56] border border-[#e0443e]"></div>
-                        <div class="w-3 h-3 rounded-full bg-[#ffbd2e] border border-[#dea123]"></div>
-                        <div class="w-3 h-3 rounded-full bg-[#27c93f] border border-[#1aab29]"></div>
-                    </div>
-                    <div class="text-[10px] font-mono font-medium text-slate-500 tracking-widest uppercase">Test Result</div>
-                    <span id="statusBadge" class="inline-flex items-center px-2.5 py-1 rounded-md text-[10px] font-bold font-mono hidden"></span>
-                </div>
-                <div class="p-6 relative">
-                    <pre id="jsonResponse" class="json-pre m-0 whitespace-pre-wrap font-mono relative z-10 font-medium"></pre>
-                </div>
-            </div>
+        <div id="resultContainer" class="hidden">
+            <h2 class="text-sm font-semibold tracking-tight mb-2 flex items-center justify-between" style="color:#e4e4e7;">
+                Execution Result
+                <span id="statusBadge" class="px-2 py-0.5 rounded text-[10px] font-medium tracking-wide geist-mono hidden"></span>
+            </h2>
+            <pre id="jsonResponse" class="json-pre geist-mono"></pre>
         </div>
-
-    </div>
+    </main>
 
     <script>
         let actionPrompts = {};
@@ -299,130 +188,95 @@
 
         const toolSelect = document.getElementById('toolName');
         const dynamicFormContainer = document.getElementById('dynamicFormContainer');
+        const dynamicFields = document.getElementById('dynamicFields');
 
         async function fetchTools() {
             try {
-                const response = await fetch('/mcp/api/v1/tools/list', {
-                    
-                });
+                const response = await fetch('/mcp/api/v1/tools/list');
                 const data = await response.json();
-                
-                toolSelect.innerHTML = '<option value="" disabled selected>테스트할 툴을 선택하세요...</option>';
+                toolSelect.innerHTML = '<option value="" disabled selected>Select a tool to test...</option>';
                 actionPrompts = {};
-
                 const tools = data.result?.tools || [];
-                
                 const groupedTools = {};
                 tools.forEach(tool => {
-                    const group = tool.categoryKey || '기타 그룹';
+                    const group = tool.categoryKey || 'Others';
                     if (!groupedTools[group]) groupedTools[group] = [];
                     groupedTools[group].push(tool);
                 });
-
                 Object.keys(groupedTools).sort().forEach(group => {
                     const optgroup = document.createElement('optgroup');
                     optgroup.label = group;
-                    
                     groupedTools[group].forEach(tool => {
                         const option = document.createElement('option');
                         option.value = tool.name;
-                        option.textContent = tool.description ? `[${tool.integrationType || 'HTTP'}] ${tool.description} (${tool.name})` : tool.name;
+                        option.textContent = tool.name;
                         option.dataset.schema = JSON.stringify(tool.parametersSchema);
                         option.dataset.prompts = JSON.stringify(tool.actionPrompts || {});
                         optgroup.appendChild(option);
-
-                        if (tool.actionPrompts) {
-                            Object.assign(actionPrompts, tool.actionPrompts);
-                        }
+                        if (tool.actionPrompts) Object.assign(actionPrompts, tool.actionPrompts);
                     });
                     toolSelect.appendChild(optgroup);
                 });
-
-                // Add Manual Input Option
                 const optgroupManual = document.createElement('optgroup');
-                optgroupManual.label = '고급 (Advanced)';
+                optgroupManual.label = 'Advanced';
                 const optionManual = document.createElement('option');
                 optionManual.value = 'MANUAL_INPUT';
-                optionManual.textContent = '🛠️ 비공개 툴 직접 입력 (Hidden Tool Test)';
+                optionManual.textContent = 'Custom/Hidden Tool';
                 optionManual.dataset.schema = "null";
                 optgroupManual.appendChild(optionManual);
                 toolSelect.appendChild(optgroupManual);
-
             } catch (err) {
-                toolSelect.innerHTML = '<option value="">데이터 로드 실패</option>';
+                toolSelect.innerHTML = '<option value="">Failed to load tools</option>';
             }
         }
 
         function renderDynamicForm() {
-            // Remove old fields except the header
-            const fields = dynamicFormContainer.querySelectorAll('.dynamic-field');
-            fields.forEach(f => f.remove());
-            
+            dynamicFields.innerHTML = '';
             const selectedOption = toolSelect.options[toolSelect.selectedIndex];
-            if (!selectedOption || !selectedOption.dataset.schema) {
-                dynamicFormContainer.classList.add('hidden');
-                return;
-            }
-
+            if (!selectedOption || !selectedOption.dataset.schema) { dynamicFormContainer.classList.add('hidden'); return; }
             const schemaStr = selectedOption.dataset.schema;
-            if (schemaStr === "null") {
-                dynamicFormContainer.classList.add('hidden');
-                currentSchema = null;
-                return;
-            }
-            
+            if (schemaStr === "null") { dynamicFormContainer.classList.add('hidden'); currentSchema = null; return; }
             try {
                 const schema = JSON.parse(schemaStr);
                 currentSchema = schema;
-                
-                if (!schema.properties || Object.keys(schema.properties).length === 0) {
-                    dynamicFormContainer.classList.add('hidden');
-                    return;
-                }
-
+                if (!schema.properties || Object.keys(schema.properties).length === 0) { dynamicFormContainer.classList.add('hidden'); return; }
                 dynamicFormContainer.classList.remove('hidden');
-
                 for (const [key, value] of Object.entries(schema.properties)) {
                     const fieldDiv = document.createElement('div');
-                    fieldDiv.className = 'group dynamic-field';
-                    
                     const label = document.createElement('label');
-                    label.className = 'flex items-center text-xs font-bold text-slate-400 mb-2 transition-colors group-focus-within:text-brand-400';
-                    label.textContent = `${key} ${value.description ? ' (' + value.description + ')' : ''}`;
+                    label.className = 'block text-xs font-medium mb-1.5';
+                    label.style.color = '#a1a1aa';
+                    label.textContent = `${key} ${value.description ? '— ' + value.description : ''}`;
                     fieldDiv.appendChild(label);
-                    
                     let input;
                     if (value.type === 'boolean') {
                         input = document.createElement('input');
                         input.type = 'checkbox';
                         input.id = 'param_' + key;
-                        input.className = 'w-4 h-4 text-brand-500 bg-slate-800 border-slate-600 rounded focus:ring-brand-500 focus:ring-2 mt-2 block';
                     } else {
                         input = document.createElement('input');
                         input.type = value.type === 'number' || value.type === 'integer' ? 'number' : 'text';
                         input.id = 'param_' + key;
-                        input.className = 'input-premium block w-full py-2 px-3 text-sm rounded-lg placeholder-slate-600 font-medium';
-                        input.placeholder = `${key} 입력...`;
+                        input.className = 'input-field';
+                        input.placeholder = `Enter ${key}`;
                     }
                     fieldDiv.appendChild(input);
-                    dynamicFormContainer.appendChild(fieldDiv);
+                    dynamicFields.appendChild(fieldDiv);
                 }
-            } catch(e) {
-                console.error("Schema parse error", e);
-                dynamicFormContainer.classList.add('hidden');
-            }
+            } catch(e) { dynamicFormContainer.classList.add('hidden'); }
         }
 
         function updatePrompt() {
             const toolName = toolSelect.value;
-            document.getElementById('userPrompt').value = actionPrompts[toolName] || "테스트 실행";
+            const defaultPrompt = actionPrompts[toolName];
+            document.getElementById('userPrompt').value = defaultPrompt ? defaultPrompt : "Test execution";
         }
 
         toolSelect.addEventListener('change', () => {
             if (toolSelect.value === 'MANUAL_INPUT') {
                 document.getElementById('manualInputContainer').classList.remove('hidden');
                 dynamicFormContainer.classList.add('hidden');
-                document.getElementById('userPrompt').value = "숨겨진 툴 강제 호출 테스트";
+                document.getElementById('userPrompt').value = "Manual force execution";
             } else {
                 document.getElementById('manualInputContainer').classList.add('hidden');
                 updatePrompt();
@@ -438,13 +292,9 @@
             for (const [key, value] of Object.entries(currentSchema.properties)) {
                 const input = document.getElementById('param_' + key);
                 if (input) {
-                    if (value.type === 'boolean') {
-                        args[key] = input.checked;
-                    } else if (value.type === 'number' || value.type === 'integer') {
-                        args[key] = input.value ? Number(input.value) : 0;
-                    } else {
-                        args[key] = input.value;
-                    }
+                    if (value.type === 'boolean') args[key] = input.checked;
+                    else if (value.type === 'number' || value.type === 'integer') args[key] = input.value ? Number(input.value) : 0;
+                    else args[key] = input.value;
                 }
             }
             return args;
@@ -452,108 +302,68 @@
 
         document.getElementById('mcpForm').addEventListener('submit', async function(e) {
             e.preventDefault();
-            if(!toolSelect.value) {
-                alert("테스트할 툴을 선택해주세요.");
-                return;
-            }
-            
+            if(!toolSelect.value) return;
             let finalToolName = toolSelect.value;
             let finalArguments = {};
-
             if (finalToolName === 'MANUAL_INPUT') {
                 finalToolName = document.getElementById('manualToolName').value.trim();
-                if (!finalToolName) {
-                    alert("실행할 히든 툴의 이름을 입력해주세요.");
-                    return;
-                }
-                try {
-                    const argsVal = document.getElementById('manualToolArgs').value.trim();
-                    finalArguments = argsVal ? JSON.parse(argsVal) : {};
-                } catch(err) {
-                    alert("JSON 파라미터 형식이 올바르지 않습니다.");
-                    return;
-                }
-            } else {
-                finalArguments = collectArguments();
-            }
+                if (!finalToolName) return alert("Enter tool name");
+                try { finalArguments = JSON.parse(document.getElementById('manualToolArgs').value.trim() || '{}'); }
+                catch(err) { return alert("Invalid JSON format"); }
+            } else { finalArguments = collectArguments(); }
 
             const loadingOverlay = document.getElementById('loadingOverlay');
             const resultContainer = document.getElementById('resultContainer');
             const jsonResponse = document.getElementById('jsonResponse');
             const statusBadge = document.getElementById('statusBadge');
-
-            resultContainer.classList.add('opacity-0', 'translate-y-8');
-            setTimeout(() => resultContainer.classList.add('hidden'), 300);
-
+            const btn = this.querySelector('button[type="submit"]');
+            resultContainer.classList.add('hidden');
             loadingOverlay.classList.add('active');
-            
-            const payload = {
-                jsonrpc: "2.0",
-                method: "tools/call",
-                params: {
-                    name: finalToolName,
-                    arguments: finalArguments
-                },
-                id: Math.floor(Math.random() * 10000)
-            };
+            btn.disabled = true;
 
+            const payload = { jsonrpc: "2.0", method: "tools/call", params: { name: finalToolName, arguments: finalArguments }, id: Date.now() };
             try {
                 const startTime = Date.now();
                 const response = await fetch('/mcp/api/v1/tools/call', {
                     method: 'POST',
-                    headers: { 
-                        'Content-Type': 'application/json', 
-                        
+                    headers: {
+                        'Content-Type': 'application/json',
                         'X-Trace-Id': "MCP-REQ-" + Math.floor(Math.random() * 90000 + 10000),
                         'X-Agent-Id': document.getElementById('agentId').value,
-                        'X-User-Prompt': encodeURIComponent(document.getElementById('userPrompt').value || '테스트')
+                        'X-User-Prompt': encodeURIComponent(document.getElementById('userPrompt').value || '')
                     },
                     body: JSON.stringify(payload)
                 });
-
                 const data = await response.json();
                 const latency = Date.now() - startTime;
-                
-                let formattedJson = JSON.stringify(data, null, 4)
+                let formattedJson = JSON.stringify(data, null, 2)
                     .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
                     .replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g, function (match) {
-                        let cls = 'text-slate-300';
-                        if (/^"/.test(match)) {
-                            if (/:$/.test(match)) cls = 'text-cyan-400 font-medium';
-                            else cls = 'text-emerald-400';
-                        } else if (/true|false/.test(match)) {
-                            cls = 'text-amber-400 font-medium';
-                        } else if (/null/.test(match)) {
-                            cls = 'text-slate-500 italic';
-                        } else {
-                            cls = 'text-pink-400';
-                        }
+                        let cls = '';
+                        if (/^"/.test(match)) { cls = /:$/.test(match) ? 'json-key' : 'json-string'; }
+                        else if (/true|false/.test(match)) { cls = 'json-boolean'; }
+                        else if (/null/.test(match)) { cls = 'json-null'; }
+                        else { cls = 'json-number'; }
                         return '<span class="' + cls + '">' + match + '</span>';
                     });
-
-                    jsonResponse.innerHTML = formattedJson;
-                
+                jsonResponse.innerHTML = formattedJson;
                 statusBadge.classList.remove('hidden');
                 if(response.ok) {
-                    statusBadge.innerHTML = `200 OK <span class="ml-2 opacity-60 font-medium">${latency}ms</span>`;
-                    statusBadge.className = 'inline-flex items-center px-2.5 py-1 rounded-md text-[10px] font-bold font-mono bg-emerald-500/10 text-emerald-400 border border-emerald-500/20';
+                    statusBadge.innerHTML = `200 OK &middot; ${latency}ms`;
+                    statusBadge.style.cssText = 'background:rgba(34,197,94,0.15); color:#4ade80; border:1px solid rgba(34,197,94,0.3); padding:2px 8px; border-radius:4px; font-size:10px;';
                 } else {
-                    statusBadge.innerHTML = `${response.status} ERR <span class="ml-2 opacity-60 font-medium">${latency}ms</span>`;
-                    statusBadge.className = 'inline-flex items-center px-2.5 py-1 rounded-md text-[10px] font-bold font-mono bg-rose-500/10 text-rose-400 border border-rose-500/20';
+                    statusBadge.innerHTML = `${response.status} ERR &middot; ${latency}ms`;
+                    statusBadge.style.cssText = 'background:rgba(239,68,68,0.15); color:#f87171; border:1px solid rgba(239,68,68,0.3); padding:2px 8px; border-radius:4px; font-size:10px;';
                 }
-
             } catch (error) {
                 jsonResponse.textContent = "Error: " + error.message;
                 statusBadge.innerHTML = `FAILED`;
-                statusBadge.className = 'inline-flex items-center px-2.5 py-1 rounded-md text-[10px] font-bold font-mono bg-rose-500/10 text-rose-400 border border-rose-500/20';
+                statusBadge.style.cssText = 'background:rgba(239,68,68,0.15); color:#f87171; border:1px solid rgba(239,68,68,0.3); padding:2px 8px; border-radius:4px; font-size:10px;';
                 statusBadge.classList.remove('hidden');
             } finally {
-                setTimeout(() => {
-                    loadingOverlay.classList.remove('active');
-                    resultContainer.classList.remove('hidden');
-                    void resultContainer.offsetWidth;
-                    resultContainer.classList.remove('opacity-0', 'translate-y-8');
-                }, 800);
+                loadingOverlay.classList.remove('active');
+                resultContainer.classList.remove('hidden');
+                btn.disabled = false;
             }
         });
     </script>

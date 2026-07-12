@@ -1,87 +1,82 @@
 <!DOCTYPE html>
-<html lang="ko">
+<html lang="ko" class="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>신한라이프 AXHUB Developer Portal</title>
-    <!-- Google Fonts: Inter -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <title>AX HUB Developer Portal</title>
+    <!-- Geist Fonts -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/geist-sans@5.0.1/400.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/geist-sans@5.0.1/500.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/geist-sans@5.0.1/600.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/geist-mono@5.0.1/400.css">
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
         :root {
-            --primary-gradient: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
-            --surface-color: rgba(255, 255, 255, 0.95);
-            --bg-color: #f3f4f6;
-            --text-primary: #1f2937;
-            --text-secondary: #6b7280;
-            --border-radius: 16px;
+            --bg-color: #09090b;
+            --surface-color: #18181b;
+            --border-color: #3f3f46; /* zinc-700 */
+            --text-primary: #f4f4f5; /* zinc-100 */
+            --text-secondary: #a1a1aa; /* zinc-400 */
+            --accent-color: #3b82f6;
+            --accent-hover: #2563eb;
+            --link-color: #60a5fa; /* blue-400 */
+            --radius-md: 6px;
+            --radius-sm: 4px;
         }
         
         body {
-            font-family: 'Inter', sans-serif;
+            font-family: 'Geist Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
             background-color: var(--bg-color);
-            background-image: 
-                radial-gradient(at 0% 0%, hsla(253,16%,7%,0.05) 0, transparent 50%), 
-                radial-gradient(at 50% 0%, hsla(225,39%,30%,0.05) 0, transparent 50%), 
-                radial-gradient(at 100% 0%, hsla(339,49%,30%,0.05) 0, transparent 50%);
-            background-attachment: fixed;
             color: var(--text-primary);
             min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 2rem 0;
+            padding: 4rem 0;
+            -webkit-font-smoothing: antialiased;
         }
 
         .container {
-            max-width: 1200px;
+            max-width: 1000px; /* Tighter layout */
             width: 95%;
             margin: 0 auto;
         }
 
+        /* Editorial / Tech Header */
         .page-header {
-            text-align: center;
-            margin-bottom: 2.5rem;
+            text-align: left;
+            margin-bottom: 2rem;
+            padding-bottom: 2rem;
+            border-bottom: 1px solid var(--border-color);
         }
 
         .page-header h1 {
-            font-weight: 700;
-            font-size: 2.5rem;
-            letter-spacing: -0.025em;
-            background: var(--primary-gradient);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            margin-bottom: 0.5rem;
+            font-weight: 600;
+            font-size: 2rem;
+            letter-spacing: -0.04em;
+            color: var(--text-primary);
+            margin-bottom: 0.25rem;
         }
 
         .page-header p {
             color: var(--text-secondary);
-            font-size: 1.1rem;
-            font-weight: 400;
+            font-size: 0.95rem;
+            margin: 0;
         }
 
-        .glass-card {
+        /* Clean Panel */
+        .panel {
             background: var(--surface-color);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            border-radius: var(--border-radius);
-            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.01);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
             overflow: hidden;
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
         }
 
-        .glass-card:hover {
-            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.08), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-        }
-
-        /* Custom Tabs */
+        /* Minimalist Tabs */
         .nav-tabs {
-            border-bottom: 1px solid rgba(0,0,0,0.08);
-            background: rgba(249, 250, 251, 0.5);
-            padding: 0.5rem 1rem 0;
+            border-bottom: 1px solid var(--border-color);
+            background: #0f0f11;
+            padding: 0 1.5rem;
+            gap: 1.5rem;
         }
 
         .nav-tabs .nav-item {
@@ -92,120 +87,198 @@
             border: none;
             color: var(--text-secondary);
             font-weight: 500;
-            padding: 1rem 1.5rem;
-            border-bottom: 3px solid transparent;
-            transition: all 0.2s ease;
-            font-size: 1.05rem;
+            font-size: 0.875rem;
+            padding: 1rem 0;
+            border-bottom: 2px solid transparent;
+            transition: color 0.15s ease;
+            background: transparent !important;
         }
 
         .nav-tabs .nav-link:hover {
-            color: #4f46e5;
-            background: transparent;
+            color: var(--text-primary);
             border-color: transparent;
         }
 
         .nav-tabs .nav-link.active {
-            color: #4f46e5;
-            background: transparent;
-            border-bottom: 3px solid #4f46e5;
+            color: var(--text-primary);
+            border-bottom: 2px solid var(--text-primary);
             font-weight: 600;
         }
 
         .tab-content {
-            padding: 2rem;
+            padding: 2rem 1.5rem;
+            background: var(--surface-color);
         }
 
-        /* Form Controls */
+        /* Dense Forms */
         .form-label {
             font-weight: 500;
-            color: #374151;
-            font-size: 0.95rem;
-            margin-bottom: 0.5rem;
+            color: var(--text-primary);
+            font-size: 0.875rem;
+            margin-bottom: 0.35rem;
         }
 
         .form-control, .form-select {
-            border-radius: 8px;
-            border: 1px solid #d1d5db;
-            padding: 0.75rem 1rem;
-            font-size: 0.95rem;
-            transition: all 0.2s;
-            background-color: #f9fafb;
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--border-color);
+            padding: 0.5rem 0.75rem;
+            font-size: 0.875rem;
+            background-color: var(--surface-color);
+            color: var(--text-primary);
+            box-shadow: none;
         }
 
         .form-control:focus, .form-select:focus {
-            border-color: #4f46e5;
-            box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.1);
-            background-color: #fff;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.25);
+            background-color: var(--surface-color);
+            color: var(--text-primary);
+        }
+
+        .form-control:focus, .form-select:focus {
+            border-color: var(--text-secondary);
+            box-shadow: 0 0 0 1px var(--text-secondary);
+            outline: none;
         }
         
         .form-control::placeholder {
-            color: #9ca3af;
+            color: #a1a1aa; /* zinc-400 */
         }
 
-        /* Buttons */
-        .btn-gradient {
-            background: var(--primary-gradient);
-            color: white;
+        .input-hint {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            margin-top: 0.35rem;
+        }
+
+        /* Utilitarian Button */
+        .btn-action {
+            background: var(--accent-color);
+            color: #ffffff;
             border: none;
-            border-radius: 8px;
-            padding: 0.8rem 1.5rem;
-            font-weight: 600;
-            font-size: 1.05rem;
-            letter-spacing: 0.025em;
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 6px -1px rgba(79, 70, 229, 0.2), 0 2px 4px -1px rgba(79, 70, 229, 0.1);
+            border-radius: var(--radius-sm);
+            padding: 0.5rem 1rem;
+            font-weight: 500;
+            font-size: 0.875rem;
+            transition: background-color 0.1s ease, transform 0.1s ease;
         }
 
-        .btn-gradient:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 15px -3px rgba(79, 70, 229, 0.3), 0 4px 6px -2px rgba(79, 70, 229, 0.15);
-            color: white;
+        .btn-action:hover {
+            background: var(--accent-hover);
+            color: #ffffff;
         }
         
-        .btn-gradient:active {
-            transform: translateY(0);
+        .btn-action:active {
+            transform: scale(0.98); /* Tactile feedback */
+        }
+        
+        .btn-secondary-action {
+            background: var(--surface-color);
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-sm);
+            padding: 0.3rem 0.75rem;
+            font-size: 0.75rem;
+            font-weight: 500;
         }
 
-        /* Result Box */
+        .btn-secondary-action:hover {
+            background: #f4f4f5;
+        }
+
+        /* Result Box - Terminal Style */
         #resultBox {
             display: none;
-            margin-top: 2rem;
-            border-radius: 12px;
-            padding: 1.5rem;
+            margin-top: 1.5rem;
+            border-radius: var(--radius-md);
+            padding: 1.25rem;
             white-space: pre-wrap;
-            font-family: 'Consolas', 'Monaco', monospace;
-            font-size: 0.9rem;
-            line-height: 1.5;
-            border: none;
-            box-shadow: inset 0 2px 4px 0 rgba(0, 0, 0, 0.06);
-            background-color: #f8fafc;
-            color: #334155;
-            animation: fadeIn 0.4s ease forwards;
+            font-family: 'Geist Mono', Consolas, monospace;
+            font-size: 0.8rem;
+            line-height: 1.6;
+            background-color: #09090b; /* zinc-950 */
+            color: #e4e4e7; /* zinc-200 */
+            border: 1px solid #27272a;
         }
         
         #resultBox.success {
-            border-left: 4px solid #10b981;
+            border-top: 3px solid #10b981;
         }
         
         #resultBox.error {
-            border-left: 4px solid #ef4444;
-            background-color: #fef2f2;
-            color: #991b1b;
+            border-top: 3px solid #ef4444;
         }
 
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
+        /* Dense Table */
+        .table {
+            font-size: 0.875rem;
+            margin-bottom: 0;
+        }
+        
+        .table th {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-secondary);
+            font-weight: 500;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.75rem;
+            background: transparent;
+        }
+        
+        .table td {
+            vertical-align: middle;
+            padding: 1rem 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+            color: var(--text-primary);
         }
 
-        /* Input Groups */
-        .input-icon-wrapper {
-            position: relative;
+        .table tr:last-child td {
+            border-bottom: none;
         }
-        .input-hint {
-            font-size: 0.8rem;
-            color: #6b7280;
-            margin-top: 0.25rem;
+
+        .badge-mono {
+            font-family: 'Geist Mono', monospace;
+            font-size: 0.7rem;
+            font-weight: 500;
+            padding: 0.25em 0.5em;
+            border-radius: 4px;
+            background: #f4f4f5;
+            color: var(--text-secondary);
+            border: 1px solid var(--border-color);
+        }
+
+        a.tool-link {
+            color: var(--text-primary);
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        a.tool-link:hover {
+            text-decoration: underline;
+            color: var(--link-color);
+        }
+        
+        /* Modal styling overrides */
+        .modal-content {
+            border-radius: var(--radius-md);
+            border: 1px solid var(--border-color);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        }
+        
+        .modal-header {
+            border-bottom: 1px solid var(--border-color);
+            padding: 1.25rem 1.5rem;
+        }
+        
+        .modal-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+        
+        .modal-footer {
+            border-top: 1px solid var(--border-color);
+            padding: 1rem 1.5rem;
         }
     </style>
 </head>
@@ -213,20 +286,20 @@
 
 <div class="container">
     <div class="page-header">
-        <h1>신한라이프 AXHUB Developer Portal</h1>
-        <p>No-Code 스캐폴딩 마법사로 모듈과 툴을 즉시 생성하세요</p>
+        <h1>Developer Portal</h1>
+        <p>AX HUB No-Code Scaffolding Wizard</p>
     </div>
 
-    <div class="glass-card">
+    <div class="panel">
         <ul class="nav nav-tabs" id="myTab" role="tablist">
             <li class="nav-item" role="presentation">
-                <button class="nav-link active" id="pod-tab" data-bs-toggle="tab" data-bs-target="#pod" type="button" role="tab">📦 Pod (모듈) 생성</button>
+                <button class="nav-link active" id="pod-tab" data-bs-toggle="tab" data-bs-target="#pod" type="button" role="tab">Pod Module</button>
             </li>
             <li class="nav-item" role="presentation">
-                <button class="nav-link" id="tool-tab" data-bs-toggle="tab" data-bs-target="#tool" type="button" role="tab">⚙️ Tool (기능) 생성</button>
+                <button class="nav-link" id="tool-tab" data-bs-toggle="tab" data-bs-target="#tool" type="button" role="tab">Tool Function</button>
             </li>
             <li class="nav-item" role="presentation">
-                <button class="nav-link" id="list-tab" data-bs-toggle="tab" data-bs-target="#list" type="button" role="tab" onclick="loadToolList()">📋 등록된 Tool 목록</button>
+                <button class="nav-link" id="list-tab" data-bs-toggle="tab" data-bs-target="#list" type="button" role="tab" onclick="loadToolList()">Registry</button>
             </li>
         </ul>
         
@@ -237,25 +310,27 @@
                 <div class="tab-pane fade show active" id="pod" role="tabpanel">
                     <form id="podForm">
                         <div class="mb-4">
-                            <label class="form-label">새로운 모듈 이름</label>
-                            <input type="text" class="form-control" name="moduleName" placeholder="예: hr (입력 시 axhub-tool-hr 로 자동 변환)" required>
+                            <label class="form-label">Module Name</label>
+                            <input type="text" class="form-control" name="moduleName" placeholder="e.g. hr (will be prefixed with axhub-tool-)" required>
                         </div>
                         <div class="mb-4">
-                            <label class="form-label">서비스 포트 번호</label>
-                            <input type="number" class="form-control" name="port" placeholder="예: 8086" required>
-                            <div class="input-hint">Gateway 라우팅 및 Local 실행 시 사용할 고유 포트 번호입니다.</div>
+                            <label class="form-label">Service Port</label>
+                            <input type="number" class="form-control" name="port" placeholder="e.g. 8086" required>
+                            <div class="input-hint">Unique port for Gateway routing and local development.</div>
                         </div>
                         <div class="row mb-4">
                             <div class="col-md-6">
-                                <label class="form-label">작성자 (선택)</label>
-                                <input type="text" class="form-control" name="author" placeholder="미입력 시 OS 사용자명">
+                                <label class="form-label">Author</label>
+                                <input type="text" class="form-control" name="author" placeholder="Defaults to OS user">
                             </div>
                             <div class="col-md-6 mt-3 mt-md-0">
-                                <label class="form-label">작성일 (선택)</label>
-                                <input type="text" class="form-control" name="date" placeholder="미입력 시 오늘 날짜">
+                                <label class="form-label">Date</label>
+                                <input type="text" class="form-control" name="date" placeholder="Defaults to today">
                             </div>
                         </div>
-                        <button type="submit" class="btn btn-gradient w-100">🚀 Pod 모듈 자동 생성</button>
+                        <div class="d-flex justify-content-end mt-4">
+                            <button type="submit" class="btn-action">Generate Pod</button>
+                        </div>
                     </form>
                 </div>
 
@@ -264,104 +339,108 @@
                     <form id="toolForm">
                         <div class="row mb-3">
                             <div class="col-md-6">
-                                <label class="form-label">기본 이름 (PascalCase)</label>
-                                <input type="text" class="form-control" name="baseName" placeholder="예: ExchangeRate" required>
-                                <div class="input-hint">클래스명 생성에 사용됩니다. (ExchangeRateService 등)</div>
+                                <label class="form-label">Base Name (PascalCase)</label>
+                                <input type="text" class="form-control" name="baseName" placeholder="e.g. ExchangeRate" required>
+                                <div class="input-hint">Used for class generation (ExchangeRateService).</div>
                             </div>
                             <div class="col-md-6 mt-3 mt-md-0">
-                                <label class="form-label">레거시 API 인터페이스 ID</label>
-                                <input type="text" class="form-control" name="interfaceId" placeholder="예: EXCH_001" required>
+                                <label class="form-label">Legacy Interface ID</label>
+                                <input type="text" class="form-control" name="interfaceId" placeholder="e.g. EXCH_001" required>
                             </div>
                         </div>
                         
                         <div class="mb-3">
-                            <label class="form-label">기능 설명 (LLM 프롬프트용)</label>
-                            <input type="text" class="form-control" name="description" placeholder="예: 고객의 현재 환율을 조회합니다." required>
-                            <div class="input-hint">AI 에이전트가 이 설명을 보고 툴 호출 여부를 결정하므로 상세히 적어주세요.</div>
+                            <label class="form-label">Description (LLM Prompt)</label>
+                            <input type="text" class="form-control" name="description" placeholder="e.g. Fetch current exchange rates for customers." required>
+                            <div class="input-hint">Critical for AI agent intent matching. Be descriptive.</div>
                         </div>
                         
                         <div class="row mb-3">
                             <div class="col-md-6">
-                                <label class="form-label">소속 도메인 그룹</label>
-                                <input type="text" class="form-control" name="categoryKey" pattern="^[a-z0-9][a-z0-9_-]*$" list="groupList" placeholder="선택 또는 직접 입력 (소문자)" oninput="this.value = this.value.toLowerCase()" required>
+                                <label class="form-label">Domain Category</label>
+                                <input type="text" class="form-control" name="categoryKey" pattern="^[a-z0-9][a-z0-9_-]*$" list="groupList" placeholder="e.g. common, hr, payment" oninput="this.value = this.value.toLowerCase()" required>
                                 <datalist id="groupList">
-                                    <option value="COMMON">COMMON (공통)</option>
-                                    <option value="CUSTOMER">CUSTOMER (고객)</option>
-                                    <option value="CONTRACT">CONTRACT (계약)</option>
-                                    <option value="CLAIM">CLAIM (보상)</option>
+                                    <option value="common">common</option>
+                                    <option value="customer">customer</option>
+                                    <option value="contract">contract</option>
+                                    <option value="claim">claim</option>
                                 </datalist>
                             </div>
                             <div class="col-md-6 mt-3 mt-md-0">
-                                <label class="form-label">통신 프로토콜</label>
+                                <label class="form-label">Protocol</label>
                                 <select class="form-select" name="routingType">
                                     <option value="HTTP">HTTP (REST)</option>
                                     <option value="TCP">TCP (Socket)</option>
-                                    <option value="MCI">MCI (대내외 연계)</option>
-                                    <option value="EAI">EAI (내부 연계)</option>
+                                    <option value="MCI">MCI (Legacy)</option>
+                                    <option value="EAI">EAI (Internal)</option>
                                 </select>
                             </div>
                         </div>
 
                         <div class="row mb-4">
                             <div class="col-md-6">
-                                <label class="form-label">타겟 모듈명</label>
-                                <input type="text" class="form-control" name="moduleName" value="axhub-tool-other" required>
-                                <div class="input-hint">코드가 생성될 대상 프로젝트(Pod) 폴더명입니다.</div>
+                                <label class="form-label">Target Module</label>
+                                <select class="form-select" name="moduleName" id="targetModuleSelect" required>
+                                    <option value="axhub-tool-other">axhub-tool-other</option>
+                                </select>
+                                <div class="input-hint">Destination Pod directory.</div>
                             </div>
                             <div class="col-md-6 mt-3 mt-md-0">
-                                <label class="form-label">레지스트리 등록 (register)</label>
+                                <label class="form-label">Gateway Registration</label>
                                 <select class="form-select" name="register">
-                                    <option value="true">True (공개)</option>
-                                    <option value="false">False (비공개)</option>
+                                    <option value="true">True (Public)</option>
+                                    <option value="false">False (Private)</option>
                                 </select>
-                                <div class="input-hint">Gateway에서 자동 라우팅될지 여부입니다.</div>
+                                <div class="input-hint">Controls dynamic routing exposure.</div>
                             </div>
                         </div>
                         
                         <div class="row mb-4">
                             <div class="col-md-6">
-                                <label class="form-label">작성자 (선택)</label>
-                                <input type="text" class="form-control" name="author" placeholder="미입력 시 OS 사용자명">
+                                <label class="form-label">Author</label>
+                                <input type="text" class="form-control" name="author" placeholder="Defaults to OS user">
                             </div>
                             <div class="col-md-6 mt-3 mt-md-0">
-                                <label class="form-label">작성일 (선택)</label>
-                                <input type="text" class="form-control" name="date" placeholder="미입력 시 오늘 날짜">
+                                <label class="form-label">Date</label>
+                                <input type="text" class="form-control" name="date" placeholder="Defaults to today">
                             </div>
                         </div>
                         
-                        <button type="submit" class="btn btn-gradient w-100">✨ Tool 기능 자동 생성</button>
+                        <div class="d-flex justify-content-end mt-4">
+                            <button type="submit" class="btn-action">Generate Tool</button>
+                        </div>
                     </form>
                 </div>
 
                 <!-- Tool List Form -->
                 <div class="tab-pane fade" id="list" role="tabpanel">
-                    <div class="d-flex justify-content-between align-items-center mb-3">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
                         <div>
-                            <h5 class="mb-1 text-secondary">현재 시스템에 라우팅 가능한 Tool 목록입니다.</h5>
-                            <small class="text-muted">Redis에 등록되지 않은(비공개) Tool도 포함되어 조회됩니다.</small>
+                            <h5 class="mb-1" style="font-size: 1rem; font-weight: 600;">Active Tools</h5>
+                            <div class="input-hint mt-0">Tools dynamically registered in the Gateway.</div>
                         </div>
                         <div class="d-flex gap-2">
-                            <select id="groupFilterSelect" class="form-select form-select-sm" style="width: auto; min-width: 140px;" onchange="filterTools()">
-                                <option value="ALL">ALL (전체 그룹)</option>
+                            <select id="groupFilterSelect" class="form-select" style="width: auto; min-width: 140px; padding: 0.25rem 0.5rem; font-size: 0.8rem; height: 30px;" onchange="filterTools()">
+                                <option value="ALL">All Categories</option>
                             </select>
-                            <input type="text" id="toolFilter" class="form-control form-control-sm" placeholder="🔍 이름 또는 그룹 검색..." onkeyup="filterTools()">
-                            <button class="btn btn-sm btn-outline-primary text-nowrap" onclick="loadToolList()">🔄 새로고침</button>
+                            <input type="text" id="toolFilter" class="form-control" style="padding: 0.25rem 0.5rem; font-size: 0.8rem; height: 30px;" placeholder="Search..." onkeyup="filterTools()">
+                            <button class="btn-secondary-action text-nowrap" style="height: 30px;" onclick="loadToolList()">Refresh</button>
                         </div>
                     </div>
                     <div class="table-responsive">
-                        <table class="table table-hover align-middle" id="toolTable">
-                            <thead class="table-light">
+                        <table class="table align-middle" id="toolTable">
+                            <thead>
                                 <tr>
-                                    <th style="width: 10%; min-width: 100px;">그룹</th>
-                                    <th style="width: 20%; min-width: 150px;">서브툴 이름</th>
-                                    <th style="width: 35%; min-width: 200px;">설명</th>
-                                    <th style="width: 15%; min-width: 180px;">Pod 모듈</th>
-                                    <th style="width: 20%; min-width: 150px;">인터페이스 (ID)</th>
+                                    <th style="width: 10%;">Category</th>
+                                    <th style="width: 20%;">Tool Name</th>
+                                    <th style="width: 40%;">Description</th>
+                                    <th style="width: 15%;">Pod</th>
+                                    <th style="width: 15%;">Interface</th>
                                 </tr>
                             </thead>
                             <tbody id="toolListBody">
                                 <tr>
-                                    <td colspan="5" class="text-center py-4 text-muted">데이터를 불러오는 중입니다...</td>
+                                    <td colspan="5" class="text-center py-5 text-muted">Loading data...</td>
                                 </tr>
                             </tbody>
                         </table>
@@ -380,38 +459,38 @@
   <div class="modal-dialog">
     <div class="modal-content">
       <div class="modal-header">
-        <h5 class="modal-title" id="editToolModalLabel">Tool 소스 코드 수정</h5>
+        <h5 class="modal-title" id="editToolModalLabel">Edit Tool Definition</h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body">
         <form id="editToolForm">
           <div class="mb-3">
-            <label class="form-label">서브툴 이름 (수정불가)</label>
-            <input type="text" class="form-control" id="editToolName" name="toolName" readonly>
+            <label class="form-label">Tool Name</label>
+            <input type="text" class="form-control" id="editToolName" name="toolName" readonly style="background-color: #f4f4f5; color: #a1a1aa;">
           </div>
           <div class="mb-3">
-            <label class="form-label">소속 도메인 그룹</label>
+            <label class="form-label">Category</label>
             <input type="text" class="form-control" id="editCategoryKey" name="categoryKey" pattern="^[a-z0-9][a-z0-9_-]*$" oninput="this.value = this.value.toLowerCase()">
           </div>
           <div class="mb-3">
-            <label class="form-label">설명</label>
+            <label class="form-label">Description</label>
             <textarea class="form-control" id="editDescription" name="description" rows="3"></textarea>
           </div>
           <div class="mb-3">
-            <label class="form-label">레지스트리 등록 (register)</label>
+            <label class="form-label">Registry Exposure</label>
             <select class="form-select" id="editRegister" name="register">
-                <option value="true">True (공개)</option>
-                <option value="false">False (비공개)</option>
+                <option value="true">True (Public)</option>
+                <option value="false">False (Private)</option>
             </select>
           </div>
-          <div class="alert alert-warning p-2" style="font-size: 0.85rem;">
-            ⚠️ <strong>주의</strong>: 수정을 적용하면 물리적인 자바 소스 코드가 변경됩니다. 반영을 위해서는 백엔드 컨테이너의 재빌드가 필요합니다!
+          <div style="font-size: 0.8rem; color: #d97706; background: #fffbeb; padding: 0.75rem; border: 1px solid #fde68a; border-radius: var(--radius-sm); margin-top: 1rem;">
+            <strong>Notice:</strong> Applying edits modifies the physical Java source code. A rebuild of the backend container is required for changes to take effect.
           </div>
         </form>
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">취소</button>
-        <button type="button" class="btn btn-primary" onclick="submitToolUpdate()">소스 수정 적용</button>
+        <button type="button" class="btn-secondary-action" data-bs-dismiss="modal" style="padding: 0.5rem 1rem; font-size: 0.875rem;">Cancel</button>
+        <button type="button" class="btn-action" onclick="submitToolUpdate()">Apply Changes</button>
       </div>
     </div>
   </div>
@@ -428,8 +507,9 @@
             const btn = this.querySelector('button[type="submit"]');
             const originalText = btn.innerHTML;
             
-            btn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> 생성 중...';
+            btn.innerHTML = 'Processing...';
             btn.disabled = true;
+            btn.style.opacity = '0.7';
 
             fetch(apiUrl, {
                 method: 'POST',
@@ -446,54 +526,64 @@
                     resultBox.textContent = result;
                 } else {
                     resultBox.className = 'success';
-                    resultBox.textContent = result + "\n\n💡 변경사항 반영을 위해 IDE에서 반드시 Gradle 리로드(Sync)를 수행해주세요!";
+                    resultBox.textContent = result + "\n\n> Note: Please sync Gradle in your IDE to reflect source code generation.";
                 }
             })
             .catch(error => {
                 const resultBox = document.getElementById('resultBox');
                 resultBox.style.display = 'block';
                 resultBox.className = 'error';
-                resultBox.textContent = "네트워크 오류 발생: " + error;
+                resultBox.textContent = "Network error: " + error;
             })
             .finally(() => {
                 btn.innerHTML = originalText;
                 btn.disabled = false;
+                btn.style.opacity = '1';
             });
         });
     }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        fetch('/api/v1/scaffold/modules')
+            .then(res => res.json())
+            .then(modules => {
+                const select = document.getElementById('targetModuleSelect');
+                if (modules && modules.length > 0) {
+                    select.innerHTML = modules.map(m => `<option value="${m}" ${m === 'axhub-tool-other' ? 'selected' : ''}>${m}</option>`).join('');
+                }
+            })
+            .catch(err => console.error('Failed to load modules:', err));
+    });
 
     handleFormSubmit('podForm', '/api/v1/scaffold/pod');
     handleFormSubmit('toolForm', '/api/v1/scaffold/tool');
 
     function loadToolList() {
         const tbody = document.getElementById('toolListBody');
-        tbody.innerHTML = '<tr><td colspan="5" class="text-center py-4 text-muted"><span class="spinner-border spinner-border-sm"></span> 데이터를 불러오는 중입니다...</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="5" class="text-center py-5 text-muted">Loading data...</td></tr>';
         
         fetch('/mcp/api/v1/tools/list', {
             method: 'GET',
-            
         })
         .then(res => res.json())
         .then(data => {
             let tools = data.result.tools || [];
             if (tools.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="5" class="text-center py-4 text-muted">등록된 Tool이 없습니다.</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="5" class="text-center py-5 text-muted">No tools registered.</td></tr>';
                 return;
             }
             
-            // 그룹명 기준으로 오름차순 정렬
             tools.sort((a, b) => {
                 const gA = a.categoryKey || '';
                 const gB = b.categoryKey || '';
                 return gA.localeCompare(gB);
             });
             
-            // 그룹 필터 옵션 채우기
             const groupSet = new Set();
-            tools.forEach(t => groupSet.add(t.categoryKey || 'UNKNOWN'));
+            tools.forEach(t => groupSet.add(t.categoryKey || 'unknown'));
             const groupSelect = document.getElementById('groupFilterSelect');
             const currentSelectedGroup = groupSelect.value;
-            groupSelect.innerHTML = '<option value="ALL">ALL (전체 그룹)</option>';
+            groupSelect.innerHTML = '<option value="ALL">All Categories</option>';
             Array.from(groupSet).sort().forEach(g => {
                 const opt = document.createElement('option');
                 opt.value = g;
@@ -505,30 +595,29 @@
             }
             
             tbody.innerHTML = tools.map(t => {
-                const isReg = t.registered !== false; // default true
-                const badgeHtml = isReg ? '' : ' <span class="badge bg-warning text-dark border border-warning" title="Redis 미등록 (직접 호출만 가능)">비공개 (미등록)</span>';
+                const isReg = t.registered !== false;
+                const badgeHtml = isReg ? '' : ' <span class="badge-mono" style="color:#d97706;border-color:#fde68a;background:#fffbeb;">Private</span>';
                 const escDesc = (t.description || '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
                 
                 return `
                 <tr class="tool-row">
-                    <td class="text-nowrap"><span class="badge bg-secondary tool-group">${t.categoryKey || 'UNKNOWN'}</span></td>
-                    <td class="fw-bold text-primary text-break tool-name">
-                        <a href="javascript:void(0)" onclick="openEditModal('${t.name}', '${t.categoryKey}', '${escDesc}', ${isReg})" class="text-decoration-none">
+                    <td><span class="badge-mono">${t.categoryKey || 'unknown'}</span></td>
+                    <td>
+                        <a href="javascript:void(0)" onclick="openEditModal('${t.name}', '${t.categoryKey}', '${escDesc}', ${isReg})" class="tool-link">
                             ${t.name}
                         </a>
                         ${badgeHtml}
                     </td>
-                    <td class="text-break">${t.description}</td>
-                    <td class="text-nowrap"><span class="badge bg-light text-dark border">${t.podUrl}</span></td>
-                    <td class="text-nowrap"><span class="badge bg-info text-dark">${t.integrationType}</span> <small class="text-muted ms-1">${t.mciServiceId || '-'}</small></td>
+                    <td class="text-secondary" style="font-size:0.8rem;">${t.description}</td>
+                    <td><span class="badge-mono">${t.podUrl}</span></td>
+                    <td><span class="badge-mono">${t.integrationType}</span> <span class="text-secondary ms-1" style="font-size:0.75rem;">${t.mciServiceId || '-'}</span></td>
                 </tr>
             `}).join('');
             
-            // Re-apply filter if text is already present
             filterTools();
         })
         .catch(err => {
-            tbody.innerHTML = `<tr><td colspan="5" class="text-center py-4 text-danger">목록을 불러오는 중 오류가 발생했습니다: ${err.message}</td></tr>`;
+            tbody.innerHTML = `<tr><td colspan="5" class="text-center py-5 text-danger">Error loading data: ${err.message}</td></tr>`;
         });
     }
 
@@ -538,8 +627,8 @@
         const rows = document.querySelectorAll('.tool-row');
         
         rows.forEach(row => {
-            const name = row.querySelector('.tool-name').textContent.toLowerCase();
-            const group = row.querySelector('.tool-group').textContent;
+            const name = row.cells[1].textContent.toLowerCase();
+            const group = row.cells[0].textContent;
             
             const matchText = name.includes(input) || group.toLowerCase().includes(input);
             const matchGroup = (selectedGroup === 'ALL' || group === selectedGroup);
@@ -571,10 +660,11 @@
         const description = document.getElementById('editDescription').value;
         const register = document.getElementById('editRegister').value;
         
-        const btn = document.querySelector('#editToolModal .btn-primary');
+        const btn = document.querySelector('#editToolModal .btn-action');
         const originalText = btn.innerHTML;
-        btn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> 처리중...';
+        btn.innerHTML = 'Processing...';
         btn.disabled = true;
+        btn.style.opacity = '0.7';
 
         fetch('/api/v1/scaffold/tool/update', {
             method: 'POST',
@@ -589,19 +679,20 @@
         .then(response => response.text())
         .then(result => {
             if (result.includes('[오류]') || result.includes('오류 발생:')) {
-                alert('수정 중 오류가 발생했습니다.\n' + result);
+                alert('Error updating source:\n' + result);
             } else {
-                alert('소스 코드가 성공적으로 수정되었습니다!\n반영을 위해 모듈(Pod)을 재빌드해주세요.');
+                alert('Source code updated successfully.\nPlease rebuild the Pod container to reflect changes.');
                 editModalInstance.hide();
-                loadToolList(); // Refresh list
+                loadToolList();
             }
         })
         .catch(err => {
-            alert('네트워크 오류 발생: ' + err);
+            alert('Network error: ' + err);
         })
         .finally(() => {
             btn.innerHTML = originalText;
             btn.disabled = false;
+            btn.style.opacity = '1';
         });
     }
 </script>
