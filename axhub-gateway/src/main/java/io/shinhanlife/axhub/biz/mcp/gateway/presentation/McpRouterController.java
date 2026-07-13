@@ -96,7 +96,8 @@ public class McpRouterController {
     }
 
     @GetMapping("/tools/list")
-    public ResponseEntity<JsonRpcResponse> listTools() {
+    public ResponseEntity<JsonRpcResponse> listTools(
+            @RequestParam(value = "categoryKey", required = false) String categoryKey) {
         List<ToolMetadata> activeTools = redisRegistryService.getAllTools()
                 .stream()
                 .filter(ToolMetadata::getVisible)
@@ -131,6 +132,12 @@ public class McpRouterController {
             }
         }
         
+        if (categoryKey != null && !categoryKey.trim().isEmpty()) {
+            activeTools = activeTools.stream()
+                    .filter(t -> categoryKey.equals(t.getCategoryKey()))
+                    .collect(Collectors.toList());
+        }
+
         JsonRpcResponse response = new JsonRpcResponse();
         response.setId(UUID.randomUUID().toString());
         response.setResult(Map.of("tools", activeTools));
