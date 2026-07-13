@@ -26,7 +26,7 @@ import lombok.ToString;
 @ToString
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
-public class SampleMciReqDto {
+public class SampleLegacyReqDto {
     
     /**
      * MCI 인터페이스 ID (예: MCI0001)

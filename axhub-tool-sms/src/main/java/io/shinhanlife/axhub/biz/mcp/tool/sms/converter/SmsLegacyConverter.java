@@ -7,11 +7,11 @@ import org.mapstruct.Mapping;
 import org.mapstruct.factory.Mappers;
 
 @Mapper(componentModel = "spring")
-public interface SmsMciConverter {
+public interface SmsLegacyConverter {
 
-    SmsMciConverter INSTANCE = Mappers.getMapper(SmsMciConverter.class);
+    SmsLegacyConverter INSTANCE = Mappers.getMapper(SmsLegacyConverter.class);
 
     @Mapping(source = "phoneNumber", target = "phone")
     @Mapping(source = "message", target = "content")
-    SmsLegacyReqDto toMciReq(SmsSendReq req);
+    SmsLegacyReqDto toLegacyReq(SmsSendReq req);
 }
