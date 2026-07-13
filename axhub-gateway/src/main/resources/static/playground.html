@@ -135,7 +135,10 @@
 
             <form id="mcpForm" class="space-y-6">
                 <div>
-                    <label for="toolName" class="block text-sm font-semibold mb-2" style="color:#e4e4e7;">Select Tool</label>
+                    <label for="toolName" class="block text-sm font-semibold mb-2 flex items-center" style="color:#e4e4e7;">
+                        Select Tool
+                        <span id="integrationBadge" class="ml-3 px-2 py-0.5 rounded text-[10px] font-medium tracking-wide geist-mono hidden" style="background:#27272a; color:#a1a1aa; border:1px solid #3f3f46;"></span>
+                    </label>
                     <select id="toolName" name="toolName" class="input-field">
                         <option value="">Loading tools...</option>
                     </select>
@@ -212,6 +215,7 @@
                         option.textContent = tool.name;
                         option.dataset.schema = JSON.stringify(tool.parametersSchema);
                         option.dataset.prompts = JSON.stringify(tool.actionPrompts || {});
+                        option.dataset.integrationType = tool.integrationType || 'HTTP';
                         optgroup.appendChild(option);
                         if (tool.actionPrompts) Object.assign(actionPrompts, tool.actionPrompts);
                     });
@@ -273,12 +277,37 @@
         }
 
         toolSelect.addEventListener('change', () => {
+            const integrationBadge = document.getElementById('integrationBadge');
             if (toolSelect.value === 'MANUAL_INPUT') {
                 document.getElementById('manualInputContainer').classList.remove('hidden');
                 dynamicFormContainer.classList.add('hidden');
                 document.getElementById('userPrompt').value = "Manual force execution";
+                integrationBadge.classList.add('hidden');
             } else {
                 document.getElementById('manualInputContainer').classList.add('hidden');
+                
+                // Show Integration Type Badge
+                const selectedOption = toolSelect.options[toolSelect.selectedIndex];
+                if (selectedOption && selectedOption.dataset.integrationType) {
+                    let itype = selectedOption.dataset.integrationType;
+                    integrationBadge.textContent = 'TYPE: ' + itype;
+                    integrationBadge.classList.remove('hidden');
+                    
+                    // Add distinct colors for MCI/EAI
+                    if (itype === 'MCI') {
+                        integrationBadge.style.color = '#60a5fa'; // Blue
+                        integrationBadge.style.borderColor = 'rgba(59,130,246,0.3)';
+                    } else if (itype === 'EAI') {
+                        integrationBadge.style.color = '#34d399'; // Green
+                        integrationBadge.style.borderColor = 'rgba(52,211,153,0.3)';
+                    } else {
+                        integrationBadge.style.color = '#a1a1aa'; // Default Gray
+                        integrationBadge.style.borderColor = '#3f3f46';
+                    }
+                } else {
+                    integrationBadge.classList.add('hidden');
+                }
+
                 updatePrompt();
                 renderDynamicForm();
             }
