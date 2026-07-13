@@ -9,8 +9,6 @@ import org.mapstruct.factory.Mappers;
 @Mapper(componentModel = "spring")
 public interface SmsLegacyConverter {
 
-    SmsLegacyConverter INSTANCE = Mappers.getMapper(SmsLegacyConverter.class);
-
     @Mapping(source = "phoneNumber", target = "phone")
     @Mapping(source = "message", target = "content")
     SmsLegacyReqDto toLegacyReq(SmsSendReq req);

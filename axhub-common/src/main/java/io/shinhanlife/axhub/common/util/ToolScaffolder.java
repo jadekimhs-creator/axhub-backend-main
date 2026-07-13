@@ -169,6 +169,8 @@ public class ToolScaffolder {
             import %s.annotation.McpTool;
             import %s.dto.%sReq;
             import %s.dto.%sRes;
+            import %s.%s.converter.%sLegacyConverter;
+            import lombok.RequiredArgsConstructor;
             import org.springframework.stereotype.Service;
 
             /**
@@ -186,11 +188,14 @@ public class ToolScaffolder {
              * </pre>
              */
             @Service
+            @RequiredArgsConstructor
             @McpTool(
                 routingType = "%s",
                 categoryKey = "%s"
             )
             public class %sService extends AbstractMcpToolService {
+
+                private final %sLegacyConverter converter;
 
                 @McpFunction(
                     displayName = "%s 툴",
@@ -202,19 +207,20 @@ public class ToolScaffolder {
                     requiresApproval = false
                 )
                 public Object execute(%sReq req) {
-                    return executeLegacy("%s", "%s", req);
+                    // %sLegacyReq legacyReq = converter.toLegacyReq(req);
+                    return executeLegacy("%s", "%s", req); // Or pass legacyReq
                 }
             }
             """.formatted(
                 BASE_PACKAGE,
-                BASE_PACKAGE,
-                BASE_PACKAGE,
                 BASE_PACKAGE, baseName,
+                BASE_PACKAGE, baseName,
+                BASE_PACKAGE, shortName, baseName,
                 BASE_PACKAGE, baseName,
                 BASE_PACKAGE, baseName, author, createDate, createDate, author,
-                routingType, group.toLowerCase(), baseName,
+                routingType, group.toLowerCase(), baseName, baseName,
                 baseName, toolName, description, description + " 해줘.", interfaceId, register,
-                baseName, routingType, interfaceId
+                baseName, baseName, routingType, interfaceId
             );
         
         Files.writeString(serviceDir.resolve(baseName + "Service.java"), serviceContent);
@@ -304,8 +310,6 @@ public class ToolScaffolder {
             @Mapper(componentModel = "spring")
             public interface %sLegacyConverter {
 
-                %sLegacyConverter INSTANCE = Mappers.getMapper(%sLegacyConverter.class);
-
                 // @Mapping(source = "sourceField", target = "targetField")
                 %sLegacyReq toLegacyReq(%sReq req);
                 
@@ -318,7 +322,7 @@ public class ToolScaffolder {
                 BASE_PACKAGE, shortName, baseName,
                 BASE_PACKAGE, shortName, baseName,
                 BASE_PACKAGE, shortName, baseName, author, createDate, createDate, author,
-                baseName, baseName, baseName, baseName, baseName, baseName, baseName
+                baseName, baseName, baseName, baseName, baseName, baseName
             );
         Files.writeString(converterDir.resolve(baseName + "LegacyConverter.java"), converterContent);
 
