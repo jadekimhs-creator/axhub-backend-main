@@ -81,6 +81,7 @@ public class ToolScaffolder {
     }
 
     public static String scaffold(String baseName, String interfaceId, String description, String group, String routingType, String moduleName, String author, String createDate, boolean register) throws IOException {
+        baseName = toPascalCase(baseName);
         String envSourceDir = System.getenv("AXHUB_SOURCE_DIR");
         Path rootDir = envSourceDir != null ? Paths.get(envSourceDir) : Paths.get(".");
         
@@ -223,5 +224,27 @@ public class ToolScaffolder {
         log.append("\n Tip: ").append(interfaceId).append(" 목업 데이터를 mock-responses.json에 추가하세요.\n");
         
         return log.toString();
+    }
+
+    private static String toPascalCase(String str) {
+        if (str == null || str.isEmpty()) {
+            return str;
+        }
+        StringBuilder result = new StringBuilder();
+        boolean capitalizeNext = true;
+        for (char c : str.toCharArray()) {
+            if (c == '_' || c == '-' || c == ' ') {
+                capitalizeNext = true;
+            } else if (capitalizeNext) {
+                result.append(Character.toUpperCase(c));
+                capitalizeNext = false;
+            } else {
+                result.append(c);
+            }
+        }
+        if (result.length() > 0) {
+            result.setCharAt(0, Character.toUpperCase(result.charAt(0)));
+        }
+        return result.toString();
     }
 }
