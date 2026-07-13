@@ -28,7 +28,7 @@ import java.util.Map;
 @ToString
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
-public class SampleMciResDto {
+public class SampleLegacyResDto {
     
     /**
      * 응답 코드 (예: "0000"이면 성공)

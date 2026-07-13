@@ -1,15 +1,15 @@
 package io.shinhanlife.axhub.biz.mcp.sample.service;
 
 import io.shinhanlife.axhub.biz.mcp.adapter.support.MciTemplate;
-import io.shinhanlife.axhub.biz.mcp.sample.dto.SampleMciReqDto;
-import io.shinhanlife.axhub.biz.mcp.sample.dto.SampleMciResDto;
+import io.shinhanlife.axhub.biz.mcp.sample.dto.SampleLegacyReqDto;
+import io.shinhanlife.axhub.biz.mcp.sample.dto.SampleLegacyResDto;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 /**
  * @package io.shinhanlife.axhub.biz.mcp.sample.service
- * @className SampleMciCallService
+ * @className SampleLegacyCallService
  * @description AX HUB 시스템 처리 클래스
  * @author 김형식
  * @create 2026.09.01
@@ -24,7 +24,7 @@ import org.springframework.stereotype.Service;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class SampleMciCallService {
+public class SampleLegacyCallService {
 
     private final MciTemplate mciTemplate;
 
@@ -34,8 +34,8 @@ public class SampleMciCallService {
      * @param request MCI 호출을 위한 요청 데이터
      * @return MCI 서버의 응답 데이터
      */
-    public SampleMciResDto callSampleMci(SampleMciReqDto request) {
+    public SampleLegacyResDto callSampleMci(SampleLegacyReqDto request) {
         // 기존 20줄 이상의 통신 로직이 단 1줄로 완벽하게 은닉화 되었습니다.
-        return mciTemplate.call(request.getInterfaceId(), request, SampleMciResDto.class);
+        return mciTemplate.call(request.getInterfaceId(), request, SampleLegacyResDto.class);
     }
 }
