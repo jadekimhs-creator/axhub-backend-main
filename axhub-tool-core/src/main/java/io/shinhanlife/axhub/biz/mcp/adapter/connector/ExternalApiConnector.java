@@ -55,7 +55,7 @@ public class ExternalApiConnector {
         Object payload = isFixedLength ? payloadBuilder.buildFixedLengthString(spec, data) : data;
         String contentType = isFixedLength ? "application/x-www-form-urlencoded;charset=EUC-KR" : "application/json";
 
-        log.info("🌐 외부 API 호출 [{}] 시작 (FixedLength: {})", apiName, isFixedLength);
+        log.info(" 외부 API 호출 [{}] 시작 (FixedLength: {})", apiName, isFixedLength);
 
         return restClient.post()
                 .uri(endpoint)

@@ -244,7 +244,7 @@ public class PodScaffolder {
         }
 
         log.append("\n=========================================\n");
-        log.append(" 🎉 Pod Scaffolding Complete! \n");
+        log.append("  Pod Scaffolding Complete! \n");
         log.append("=========================================\n");
         log.append("1. [새로운 모듈] ").append(moduleName).append(" 폴더가 생성되었습니다.\n");
         log.append("2. [ToolScaffolder]를 사용해 이 모듈 안에 툴을 추가하세요.\n");

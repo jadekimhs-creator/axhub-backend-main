@@ -42,25 +42,25 @@ public class MciTemplate {
      * @throws MciCommunicationException 통신 또는 파싱 실패 시 예외 발생
      */
     public <T, R> R call(String interfaceId, T requestDto, Class<R> responseType) {
-        log.info("📞 [MciTemplate] 시작 - Interface ID: {}", interfaceId);
+        log.info(" [MciTemplate] 시작 - Interface ID: {}", interfaceId);
 
         try {
             String payload = objectMapper.writeValueAsString(requestDto);
-            log.debug("📤 [MciTemplate] 전송 페이로드: {}", payload);
+            log.debug(" [MciTemplate] 전송 페이로드: {}", payload);
 
             String responseJson = httpEimsSender.send(interfaceId, payload);
-            log.debug("📥 [MciTemplate] 수신 응답 JSON: {}", responseJson);
+            log.debug(" [MciTemplate] 수신 응답 JSON: {}", responseJson);
 
             R response = objectMapper.readValue(responseJson, responseType);
-            log.info("✅ [MciTemplate] 완료 - Interface ID: {}", interfaceId);
+            log.info(" [MciTemplate] 완료 - Interface ID: {}", interfaceId);
 
             return response;
 
         } catch (JsonProcessingException e) {
-            log.error("❌ [MciTemplate] JSON 변환 중 오류 발생", e);
+            log.error(" [MciTemplate] JSON 변환 중 오류 발생", e);
             throw new MciCommunicationException("MCI 통신 중 JSON 파싱 오류", e);
         } catch (Exception e) {
-            log.error("❌ [MciTemplate] 통신 중 오류 발생", e);
+            log.error(" [MciTemplate] 통신 중 오류 발생", e);
             throw new MciCommunicationException("MCI 통신 실패", e);
         }
     }

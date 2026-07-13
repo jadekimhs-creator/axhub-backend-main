@@ -38,7 +38,7 @@ public class ToolPlanner {
      * 요청(payload)을 분석하여 실행해야 할 Tool의 계획을 생성합니다.
      */
     public Object createPlan(Map<String, Object> payload, String tenantId) {
-        log.info("📝 [Planner] 요청 분석 및 실행 계획 수립 시작");
+        log.info(" [Planner] 요청 분석 및 실행 계획 수립 시작");
 
         // 1. 요청에서 호출하려는 툴 이름 추출 (JSON-RPC params.name)
         Map<String, Object> params = (Map<String, Object>) payload.get("params");

@@ -35,7 +35,7 @@ public class EaiEimsSender implements EimsSender {
     //  실전 코드: 스프링이 제공하는 카프카 템플릿 주입
     private final KafkaTemplate<String, String> kafkaTemplate;
 
-    // 🎫 비동기 티켓 매니저
+    //  비동기 티켓 매니저
     private final TicketManager ticketManager;
 
     @Override
@@ -47,12 +47,12 @@ public class EaiEimsSender implements EimsSender {
             String xmlData = xmlMapper.writeValueAsString(jsonNode);
             String esbStandardXml = wrapWithEaiHeader(interfaceId, xmlData);
 
-            log.info("📦 [EAI 어댑터] Kafka 토픽(eai-topic)으로 전송 시도...");
+            log.info(" [EAI 어댑터] Kafka 토픽(eai-topic)으로 전송 시도...");
 
             try {
                 //  실전 코드 적용: Kafka로 메시지 발행
                 kafkaTemplate.send("eai-topic", esbStandardXml);
-                log.info("📦 [EAI 어댑터] Kafka 전송 완료!");
+                log.info(" [EAI 어댑터] Kafka 전송 완료!");
             } catch (Exception e) {
                 // 로컬 환경에는 카프카가 없으므로 에러가 날 수 있습니다. 테스트를 위해 로깅만 하고 넘깁니다.
                 log.warn(" 로컬 환경이거나 Ka<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>\n" +
@@ -82,7 +82,7 @@ public class EaiEimsSender implements EimsSender {
 
         } finally {
             stopWatch.stop();
-            log.info("📊 [SLA 모니터링 - EAI] 소요시간: {} ms", stopWatch.getTotalTimeMillis());
+            log.info(" [SLA 모니터링 - EAI] 소요시간: {} ms", stopWatch.getTotalTimeMillis());
         }
     }
 

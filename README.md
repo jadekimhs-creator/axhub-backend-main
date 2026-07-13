@@ -4,7 +4,7 @@ Spring Boot 기반 AXHUB 관리자 백엔드 API 서버 및 MCP(Model Context Pr
 
 ---
 
-## 🚀 아키텍처 개요 (Architecture Overview)
+##  아키텍처 개요 (Architecture Overview)
 
 AXHUB Backend는 3개의 주요 애플리케이션으로 분리 운영됩니다:
 
@@ -14,7 +14,7 @@ AXHUB Backend는 3개의 주요 애플리케이션으로 분리 운영됩니다:
 
 ---
 
-## 🛠 환경 (Environment)
+##  환경 (Environment)
 
 | 항목 | 버전 |
 |------|------|
@@ -29,7 +29,7 @@ AXHUB Backend는 3개의 주요 애플리케이션으로 분리 운영됩니다:
 
 ---
 
-## ▶️ 실행 방법 (How to Run)
+## ▶ 실행 방법 (How to Run)
 
 ### 1. Gateway & Tool 서버 실행 (MCP 연동용)
 - **Gateway 서버 기동:**
@@ -46,7 +46,7 @@ AXHUB Backend는 3개의 주요 애플리케이션으로 분리 운영됩니다:
       - `HR`: 휴가 등록, 연차 갯수 조회
       - `CONTRACT`: 계약 상태, 계약 상세 조회
       - `CUSTOMER`: 고객 등급, 고객 상세 정보 조회
-    - IntelliJ IDEA: `Run/Debug Configurations` ➔ `AxHubToolApplication` ➔ `Program arguments` 에 `--mcp.tool.target=NOTIFICATION` 입력
+    - IntelliJ IDEA: `Run/Debug Configurations`  `AxHubToolApplication`  `Program arguments` 에 `--mcp.tool.target=NOTIFICATION` 입력
 
 ### 2. Admin 관리자 서버 실행
 - **Admin 서버 기동:**
@@ -54,7 +54,7 @@ AXHUB Backend는 3개의 주요 애플리케이션으로 분리 운영됩니다:
 
 ---
 
-## 🤖 Gemini MCP 연동 (Integration)
+##  Gemini MCP 연동 (Integration)
 
 본 시스템은 REST API(JSON-RPC)를 사용하므로, **표준 MCP 통신(Stdio)**을 지원하기 위한 브릿지 스크립트를 내장하고 있습니다. 이를 통해 제미나이(Gemini Code Assist, Gemini CLI 등)와 코드 수정 없이 완벽히 연동됩니다.
 
@@ -73,7 +73,7 @@ AXHUB Backend는 3개의 주요 애플리케이션으로 분리 운영됩니다:
 
 ---
 
-## 🔒 비공개 Tool 관리 및 Fallback 연동 (Visibility & Routing)
+##  비공개 Tool 관리 및 Fallback 연동 (Visibility & Routing)
 
 저희 시스템은 MSA 보안 및 아키텍처 원칙에 따라 Tool의 **레지스트리 등록 여부(라우팅)**와 **API 노출 여부(가시성)**를 완벽히 분리하여 관리합니다.
 
@@ -93,7 +93,7 @@ AXHUB Backend는 3개의 주요 애플리케이션으로 분리 운영됩니다:
 
 ---
 
-## 🛡️ 안정성 및 트래픽 제어 (Resilience4j)
+##  안정성 및 트래픽 제어 (Resilience4j)
 
 MSA(Microservices Architecture) 환경의 안정성을 위해 완벽한 2-Track 방어막을 구축했습니다.
 1. **Gateway 계층 (동적 방어):** Tool이 등록할 때 제출한 메타데이터(SLA)를 기반으로 Gateway 내에서 동적 CircuitBreaker 및 RateLimiter를 가동합니다. 한계치 초과 시 트래픽을 Kafka 큐로 비동기 전환합니다.
@@ -101,11 +101,11 @@ MSA(Microservices Architecture) 환경의 안정성을 위해 완벽한 2-Track 
 
 ---
 
-## 🏗️ 모듈(Pod) 및 Tool 코드 자동 생성 (Scaffolders)
+##  모듈(Pod) 및 Tool 코드 자동 생성 (Scaffolders)
 
 새로운 도메인의 기능을 추가할 때 발생하는 반복적인 설정(보일러플레이트, 설정 파일 복사 등)을 1초 만에 자동화하기 위해 **AXHUB Developer Portal (Web UI)** 및 **CLI 스캐폴더 2종**을 제공합니다.
 
-### 🌟 1. AXHUB Developer Portal (Web UI) - 가장 추천하는 방식!
+###  1. AXHUB Developer Portal (Web UI) - 가장 추천하는 방식!
 이제 더 이상 터미널에서 명령어를 칠 필요가 없습니다. Gateway 모듈에 내장된 웹 화면에서 빈칸만 채우면 코드가 마법처럼 찍혀 나옵니다.
 
 1. **접속 방법**: Gateway 서버 기동 후 브라우저에서 `http://localhost:8081/admin/scaffold.html` 접속
@@ -115,7 +115,7 @@ MSA(Microservices Architecture) 환경의 안정성을 위해 완벽한 2-Track 
 ### 2. CLI 스캐폴더 (기존 터미널 방식)
 웹 화면을 사용할 수 없는 환경이거나 터미널이 익숙한 경우, 아래 명령어를 통해 CLI 마법사를 사용할 수 있습니다.
 
-### 1️⃣ 새로운 Pod(모듈) 전체를 생성할 때: `PodScaffolder`
+### 1⃣ 새로운 Pod(모듈) 전체를 생성할 때: `PodScaffolder`
 새로운 도메인(예: 결제, HR)을 위한 완전히 독립적인 Spring Boot 모듈을 생성합니다. 폴더 구조, 빌드 스크립트, 각종 프로퍼티 및 도커 설정까지 완벽하게 세팅됩니다.
 
 ```bash
@@ -127,7 +127,7 @@ java -cp axhub-common/src/main/java io.shinhanlife.axhub.common.util.PodScaffold
 java -cp axhub-common/src/main/java io.shinhanlife.axhub.common.util.PodScaffolder hr 8086
 ```
 
-### 2️⃣ 생성된 모듈에 새로운 툴(Function)을 추가할 때: `ToolScaffolder`
+### 2⃣ 생성된 모듈에 새로운 툴(Function)을 추가할 때: `ToolScaffolder`
 어노테이션(`@McpTool`, `@McpFunction`)이 완벽히 달린 Service와 입출력 DTO 코드를 지정된 모듈 패키지 룰에 맞춰 자동 생성합니다.
 
 ```bash
@@ -141,11 +141,11 @@ java -cp axhub-common/src/main/java io.shinhanlife.axhub.common.util.ToolScaffol
 
 ---
 
-## 📂 패키지 구조 (Package Structure)
+##  패키지 구조 (Package Structure)
 
 ```text
 axhub-backend-main (Root)
-├── axhub-gateway           # 💡 MCP 라우팅 허브 서버 (외부 LLM과 통신 및 Tool 분배)
+├── axhub-gateway           #  MCP 라우팅 허브 서버 (외부 LLM과 통신 및 Tool 분배)
 ├── axhub-common            # 공통 모듈 (Security, Session, Config 등)
 ├── axhub-tool-core         # Tool 공통 기능 (AbstractMcpToolService, Annotation, Scaffolder)
 ├── axhub-tool-email        # [Tool] 이메일 발송 특화 어댑터 모듈

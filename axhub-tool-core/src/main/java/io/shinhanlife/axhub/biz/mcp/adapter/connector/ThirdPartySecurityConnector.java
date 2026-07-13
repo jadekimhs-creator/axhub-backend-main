@@ -32,7 +32,7 @@ public class ThirdPartySecurityConnector {
      * 3rd Party 보안 모듈(DRM, BM 등)과 연동하기 위한 전용 메서드입니다.
      */
     public String executeSecurityModule(String interfaceId, Map<String, Object> data) throws Exception {
-        log.info("🔐 [3rd Party Security] 보안 모듈 연동 시작 - Interface: {}", interfaceId);
+        log.info(" [3rd Party Security] 보안 모듈 연동 시작 - Interface: {}", interfaceId);
 
         // 보안 모듈 통신을 위한 특수 페이로드 조립 (예시)
         // 실제로는 RestClient나 WebClient를 통해 보안 VM의 전용 엔드포인트로 호출합니다.
@@ -49,7 +49,7 @@ public class ThirdPartySecurityConnector {
                 "data", data != null ? data : Map.of()
             ));
         } else if (interfaceId.startsWith("BM_")) {
-            log.info("👆 [BM 처리] 바이오 인증 모듈과 통신 중...");
+            log.info(" [BM 처리] 바이오 인증 모듈과 통신 중...");
             resultJson = jsonMapper.writeValueAsString(Map.of(
                 "status", "SUCCESS",
                 "module", "Bio-Metric",

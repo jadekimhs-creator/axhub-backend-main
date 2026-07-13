@@ -37,7 +37,7 @@ public class LegacyDbConnector {
     @RateLimiter(name = "legacyDb", fallbackMethod = "fallbackForDb")
     @CircuitBreaker(name = "legacyDb", fallbackMethod = "fallbackForDb")
     public List<Map<String, Object>> executeDynamicQuery(String queryId, String sql, Map<String, Object> params) {
-        log.info("🗄 Legacy DB 조회 시작 [QueryID: {}]", queryId);
+        log.info(" Legacy DB 조회 시작 [QueryID: {}]", queryId);
 
         // 1. SQL 쿼리 실행 (오라클 등)
         List<Map<String, Object>> rawResults = jdbcTemplate.queryForList(sql, params);

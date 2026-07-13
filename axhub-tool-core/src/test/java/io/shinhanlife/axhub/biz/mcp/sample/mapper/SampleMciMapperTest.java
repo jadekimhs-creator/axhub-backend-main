@@ -27,9 +27,9 @@ public class SampleMciMapperTest {
         SampleMciReqDto mciDto = sampleMciMapper.toMciReq(aiDto);
 
         // then: 콘솔에 결과 출력 및 값 검증
-        System.out.println("====== 🚀 MapStruct 변환 테스트 결과 🚀 ======");
-        System.out.println("✅ [변환 전] AI DTO : " + aiDto);
-        System.out.println("✅ [변환 후] MCI DTO: " + mciDto);
+        System.out.println("======  MapStruct 변환 테스트 결과  ======");
+        System.out.println(" [변환 전] AI DTO : " + aiDto);
+        System.out.println(" [변환 후] MCI DTO: " + mciDto);
         System.out.println("===============================================");
 
         assertNotNull(mciDto, "변환된 객체는 null이 아니어야 합니다.");

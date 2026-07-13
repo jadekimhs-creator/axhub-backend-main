@@ -44,7 +44,7 @@ public class HttpEimsSender implements EimsSender {
 
     @Override
     public String send(String interfaceId, String payload) {
-        log.info("🌐 [HTTP 모드] EIMS API 호출 중... URL: {}", eimsUrl);
+        log.info(" [HTTP 모드] EIMS API 호출 중... URL: {}", eimsUrl);
         
         // EIMS가 요구하는 JSON 포맷으로 래핑해서 전송 (EIMS 규격에 따라 수정 가능)
         Map<String, String> requestBody = Map.of(
@@ -52,7 +52,7 @@ public class HttpEimsSender implements EimsSender {
             "data", payload
         );
 
-        // 📊 4번 항목 적용: MDC에 저장된 traceId를 추출하여 HTTP Header(X-Trace-Id)로 전파
+        //  4번 항목 적용: MDC에 저장된 traceId를 추출하여 HTTP Header(X-Trace-Id)로 전파
         String traceId = MDC.get("traceId");
         if (traceId == null) traceId = "SYSTEM-GENERATED-" + UUID.randomUUID().toString();
 

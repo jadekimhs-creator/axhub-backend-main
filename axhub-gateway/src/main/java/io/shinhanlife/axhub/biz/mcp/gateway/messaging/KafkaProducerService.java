@@ -49,7 +49,7 @@ public class KafkaProducerService {
             String jsonPayload = jsonMapper.writeValueAsString(payload);
             // 실제 Kafka 서버로 전송
             kafkaTemplate.send(topic, ticketId, jsonPayload);
-            log.info("🎫 [Kafka Queue] 요청 대기열 등록 완료 - Topic: {}, Ticket ID: {}", topic, ticketId);
+            log.info(" [Kafka Queue] 요청 대기열 등록 완료 - Topic: {}, Ticket ID: {}", topic, ticketId);
         } catch (Exception e) {
             // 로컬 테스트 시 실제 Kafka 브로커가 없어서 나는 예외를 방어합니다.
             // 실제 상용 환경에서는 Dead Letter Queue 등을 태우거나 예외 처리 정책에 따릅니다.

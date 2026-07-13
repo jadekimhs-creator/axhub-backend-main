@@ -36,10 +36,10 @@ public class GlowMciParserTest {
 
         // then
         System.out.println("==================================================");
-        System.out.println("✅ [원본 MCI 전문] : [" + rawMciString + "]");
-        System.out.println("✅ [파싱된 ID (10자리)] : [" + result.getCustomerId() + "]");
-        System.out.println("✅ [파싱된 Name (15자리)] : [" + result.getName() + "]");
-        System.out.println("✅ [파싱된 Age (3자리)] : [" + result.getAge() + "]");
+        System.out.println(" [원본 MCI 전문] : [" + rawMciString + "]");
+        System.out.println(" [파싱된 ID (10자리)] : [" + result.getCustomerId() + "]");
+        System.out.println(" [파싱된 Name (15자리)] : [" + result.getName() + "]");
+        System.out.println(" [파싱된 Age (3자리)] : [" + result.getAge() + "]");
         System.out.println("==================================================");
 
         assertNotNull(result);

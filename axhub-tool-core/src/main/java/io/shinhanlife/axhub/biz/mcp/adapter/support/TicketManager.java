@@ -47,7 +47,7 @@ public class TicketManager {
         
         ticketStore.put(ticketId, ticket);
         
-        log.info("🎫 [TicketManager] 비동기 작업 티켓 발급 완료: {}", ticketId);
+        log.info(" [TicketManager] 비동기 작업 티켓 발급 완료: {}", ticketId);
         
         // 10초 뒤에 자동으로 작업을 완료 상태로 변경하는 백그라운드 시뮬레이터 실행
         simulateEaiProcessing(ticketId, interfaceId);
@@ -74,7 +74,7 @@ public class TicketManager {
                 // 가짜 최종 결과 데이터 주입
                 ticket.setResultData("{\"resultCode\":\"0000\", \"interfaceId\":\"" + interfaceId + "\", \"processedRecords\":50000}");
                 ticketStore.put(ticketId, ticket);
-                log.info("🏁 [TicketManager] EAI 비동기 작업 시뮬레이션 완료! (Ticket: {})", ticketId);
+                log.info(" [TicketManager] EAI 비동기 작업 시뮬레이션 완료! (Ticket: {})", ticketId);
             }
         }, 10, TimeUnit.SECONDS); // 10초 지연
     }

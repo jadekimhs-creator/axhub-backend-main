@@ -41,7 +41,7 @@ public class BillingProcessService extends AbstractMcpToolService {
     }
 
     private Object executeBillingLogic(String mappingId, Object data) {
-        log.info("💰 [Billing] 청구 처리 전용 커스텀 전/후처리 로직 수행 시작");
+        log.info(" [Billing] 청구 처리 전용 커스텀 전/후처리 로직 수행 시작");
         
         Map<String, Object> payload;
         if (data == null) {
@@ -53,7 +53,7 @@ public class BillingProcessService extends AbstractMcpToolService {
         
         // 커스텀 전처리
         payload.put("custom_injected_data", "Billing System Check OK");
-        log.info("💰 [Billing] 커스텀 파라미터 주입 완료");
+        log.info(" [Billing] 커스텀 파라미터 주입 완료");
 
         // 부모 클래스의 레거시 공통 연동 메서드 호출 (PII 마스킹 포함)
         Map<String, Object> result = executeLegacy("MCI", mappingId, payload);

@@ -38,7 +38,7 @@ public class MciStringEimsSender implements EimsSender {
         StopWatch stopWatch = new StopWatch(); stopWatch.start();
 
         try {
-            log.info("🌐 [ESB 어댑터(String)] 전송 준비 완료 - RestClient 호출 시작 (Interface: {})", interfaceId);
+            log.info(" [ESB 어댑터(String)] 전송 준비 완료 - RestClient 호출 시작 (Interface: {})", interfaceId);
 
             String response = restClient.post()
                     .uri(mciUrl)
@@ -47,12 +47,12 @@ public class MciStringEimsSender implements EimsSender {
                     .retrieve()
                     .body(String.class);
 
-            log.info("🌐 [ESB 어댑터(String)] 응답 수신 완료: {}", response);
+            log.info(" [ESB 어댑터(String)] 응답 수신 완료: {}", response);
             return response != null ? response : "";
 
         } finally {
             stopWatch.stop();
-            log.info("📊 [SLA 모니터링 - MCI(String)] 소요시간: {} ms", stopWatch.getTotalTimeMillis());
+            log.info(" [SLA 모니터링 - MCI(String)] 소요시간: {} ms", stopWatch.getTotalTimeMillis());
         }
     }
 }

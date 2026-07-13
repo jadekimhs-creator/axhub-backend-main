@@ -37,7 +37,7 @@ public class JspFormEimsSender implements EimsSender {
 
     @Override
     public String send(String interfaceId, String payload) {
-        log.info("🌐 [JSP Form 모드] 레거시 폼 데이터 전송 중... URL: {}", jspUrl);
+        log.info(" [JSP Form 모드] 레거시 폼 데이터 전송 중... URL: {}", jspUrl);
 
         // 1. Form Data 조립 (HTML <form> 태그 전송과 동일한 효과)
         MultiValueMap<String, String> formData = new LinkedMultiValueMap<>();

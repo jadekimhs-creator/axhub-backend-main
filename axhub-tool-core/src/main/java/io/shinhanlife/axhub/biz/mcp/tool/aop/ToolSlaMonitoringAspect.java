@@ -60,9 +60,9 @@ public class ToolSlaMonitoringAspect {
             
             // SLA 기준을 초과하면 (예: 2초 이상) 경고 로깅 처리 가능
             if (timeMillis > 2000) {
-                log.warn("🚨 [SLA 경고] Tool: {} | 소요시간: {}ms | 상태: SLOW_RESPONSE", finalName, timeMillis);
+                log.warn(" [SLA 경고] Tool: {} | 소요시간: {}ms | 상태: SLOW_RESPONSE", finalName, timeMillis);
             } else {
-                log.info("📊 [SLA 추적] Tool: {} | 소요시간: {}ms | 상태: SUCCESS", finalName, timeMillis);
+                log.info(" [SLA 추적] Tool: {} | 소요시간: {}ms | 상태: SUCCESS", finalName, timeMillis);
             }
             
             return result;
@@ -74,7 +74,7 @@ public class ToolSlaMonitoringAspect {
             long timeMillis = stopWatch.getTotalTimeMillis();
             
             // 에러 발생 시 명확하게 실패 로그 기록
-            log.error("💥 [SLA 장애] Tool: {} | 소요시간: {}ms | 상태: FAILED | 사유: {}", finalName, timeMillis, e.getMessage());
+            log.error(" [SLA 장애] Tool: {} | 소요시간: {}ms | 상태: FAILED | 사유: {}", finalName, timeMillis, e.getMessage());
             
             // 원래 흐름대로 예외를 던져서 게이트웨이나 상위 로직이 에러를 처리하게 함
             throw e;

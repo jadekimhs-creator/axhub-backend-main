@@ -45,7 +45,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<JsonRpcResponse> handleAllException(Exception e) {
-        log.error("💥 [Gateway Fatal Error] 치명적 오류 발생", e);
+        log.error(" [Gateway Fatal Error] 치명적 오류 발생", e);
         return buildErrorResponse(-32000, "Server error: 시스템 관리자에게 문의하세요.");
     }
 

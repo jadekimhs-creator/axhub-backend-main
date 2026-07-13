@@ -49,7 +49,7 @@ public class MciEimsSender implements EimsSender {
             String xmlData = xmlMapper.writer().withRootName("Body").writeValueAsString(jsonNode);
             String esbStandardXml = wrapWithEsbHeader(interfaceId, xmlData);
 
-            log.info("🌐 [ESB 어댑터] 전송 준비 완료 - RestClient 호출 시작");
+            log.info(" [ESB 어댑터] 전송 준비 완료 - RestClient 호출 시작");
 
             String responseXml = restClient.post()
                     .uri(mciUrl)
@@ -58,14 +58,14 @@ public class MciEimsSender implements EimsSender {
                     .retrieve()
                     .body(String.class);
 
-            log.info("🌐 [ESB 어댑터] 응답 수신 완료: {}", responseXml);
+            log.info(" [ESB 어댑터] 응답 수신 완료: {}", responseXml);
 
             JsonNode responseNode = xmlMapper.readTree(responseXml);
             return jsonMapper.writeValueAsString(responseNode);
 
         } finally {
             stopWatch.stop();
-            log.info("📊 [SLA 모니터링 - MCI] 소요시간: {} ms", stopWatch.getTotalTimeMillis());
+            log.info(" [SLA 모니터링 - MCI] 소요시간: {} ms", stopWatch.getTotalTimeMillis());
         }
     }
 

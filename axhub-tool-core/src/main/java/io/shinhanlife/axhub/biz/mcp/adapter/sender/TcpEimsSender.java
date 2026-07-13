@@ -39,7 +39,7 @@ public class TcpEimsSender implements EimsSender {
 
     @Override
     public String send(String interfaceId, String payload) throws Exception {
-        log.info("🔌 [TCP 소켓 모드] EIMS 접속 중... {}:{}", host, port);
+        log.info(" [TCP 소켓 모드] EIMS 접속 중... {}:{}", host, port);
 
         // TCP 소켓 자원을 사용 후 안전하게 닫아주는 try-with-resources 구문
         try (Socket socket = new Socket()) {

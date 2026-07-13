@@ -37,7 +37,7 @@ public class JspJsonEimsSender implements EimsSender {
 
     @Override
     public String send(String interfaceId, String payload) {
-        log.info("🌐 [JSP JSON 모드] JSON 페이로드 전송 중... URL: {}", jspUrl);
+        log.info(" [JSP JSON 모드] JSON 페이로드 전송 중... URL: {}", jspUrl);
 
         // 1. JSON 객체로 조립 (스프링이 알아서 JSON String으로 변환해 줌)
         Map<String, String> jsonBody = Map.of(
