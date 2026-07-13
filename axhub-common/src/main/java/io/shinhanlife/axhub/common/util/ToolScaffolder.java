@@ -229,7 +229,7 @@ public class ToolScaffolder {
 
             /**
              * @package %s.%s.dto
-             * @className %sMciReqDto
+             * @className %sLegacyReq
              * @description AX HUB 시스템 처리 클래스
              * @author %s
              * @create %s
@@ -242,11 +242,11 @@ public class ToolScaffolder {
              * </pre>
              */
             @Data
-            public class %sMciReqDto {
+            public class %sLegacyReq {
                 // TODO: Add legacy request fields here
             }
             """.formatted(BASE_PACKAGE, shortName, BASE_PACKAGE, shortName, baseName, author, createDate, createDate, author, baseName);
-        Files.writeString(legacyDtoDir.resolve(baseName + "MciReqDto.java"), legacyReqContent);
+        Files.writeString(legacyDtoDir.resolve(baseName + "LegacyReq.java"), legacyReqContent);
 
         // Generate Legacy Res DTO
         String legacyResContent = """
@@ -256,7 +256,7 @@ public class ToolScaffolder {
 
             /**
              * @package %s.%s.dto
-             * @className %sMciResDto
+             * @className %sLegacyRes
              * @description AX HUB 시스템 처리 클래스
              * @author %s
              * @create %s
@@ -269,27 +269,27 @@ public class ToolScaffolder {
              * </pre>
              */
             @Data
-            public class %sMciResDto {
+            public class %sLegacyRes {
                 // TODO: Add legacy response fields here
             }
             """.formatted(BASE_PACKAGE, shortName, BASE_PACKAGE, shortName, baseName, author, createDate, createDate, author, baseName);
-        Files.writeString(legacyDtoDir.resolve(baseName + "MciResDto.java"), legacyResContent);
+        Files.writeString(legacyDtoDir.resolve(baseName + "LegacyRes.java"), legacyResContent);
 
-        // Generate MCI Converter
+        // Generate Legacy Converter
         String converterContent = """
             package %s.%s.converter;
 
             import %s.dto.%sReq;
             import %s.dto.%sRes;
-            import %s.%s.dto.%sMciReqDto;
-            import %s.%s.dto.%sMciResDto;
+            import %s.%s.dto.%sLegacyReq;
+            import %s.%s.dto.%sLegacyRes;
             import org.mapstruct.Mapper;
             import org.mapstruct.Mapping;
             import org.mapstruct.factory.Mappers;
 
             /**
              * @package %s.%s.converter
-             * @className %sMciConverter
+             * @className %sLegacyConverter
              * @description AX HUB 시스템 처리 클래스
              * @author %s
              * @create %s
@@ -302,14 +302,14 @@ public class ToolScaffolder {
              * </pre>
              */
             @Mapper(componentModel = "spring")
-            public interface %sMciConverter {
+            public interface %sLegacyConverter {
 
-                %sMciConverter INSTANCE = Mappers.getMapper(%sMciConverter.class);
+                %sLegacyConverter INSTANCE = Mappers.getMapper(%sLegacyConverter.class);
 
                 // @Mapping(source = "sourceField", target = "targetField")
-                %sMciReqDto toMciReq(%sReq req);
+                %sLegacyReq toLegacyReq(%sReq req);
                 
-                %sRes toRes(%sMciResDto mciRes);
+                %sRes toRes(%sLegacyRes legacyRes);
             }
             """.formatted(
                 BASE_PACKAGE, shortName,
@@ -320,7 +320,7 @@ public class ToolScaffolder {
                 BASE_PACKAGE, shortName, baseName, author, createDate, createDate, author,
                 baseName, baseName, baseName, baseName, baseName, baseName, baseName
             );
-        Files.writeString(converterDir.resolve(baseName + "MciConverter.java"), converterContent);
+        Files.writeString(converterDir.resolve(baseName + "LegacyConverter.java"), converterContent);
 
         log.append("\n=========================================\n");
         log.append(" Scaffolding Complete!\n");
@@ -328,9 +328,9 @@ public class ToolScaffolder {
         log.append("[Service] ").append(serviceDir.resolve(baseName + "Service.java")).append("\n");
         log.append("[Req DTO] ").append(dtoDir.resolve(baseName + "Req.java")).append("\n");
         log.append("[Res DTO] ").append(dtoDir.resolve(baseName + "Res.java")).append("\n");
-        log.append("[MCI Req DTO] ").append(legacyDtoDir.resolve(baseName + "MciReqDto.java")).append("\n");
-        log.append("[MCI Res DTO] ").append(legacyDtoDir.resolve(baseName + "MciResDto.java")).append("\n");
-        log.append("[MCI Converter] ").append(converterDir.resolve(baseName + "MciConverter.java")).append("\n");
+        log.append("[Legacy Req DTO] ").append(legacyDtoDir.resolve(baseName + "LegacyReq.java")).append("\n");
+        log.append("[Legacy Res DTO] ").append(legacyDtoDir.resolve(baseName + "LegacyRes.java")).append("\n");
+        log.append("[Legacy Converter] ").append(converterDir.resolve(baseName + "LegacyConverter.java")).append("\n");
         log.append("\n Tip: ").append(interfaceId).append(" 목업 데이터를 mock-responses.json에 추가하세요.\n");
         
         return log.toString();

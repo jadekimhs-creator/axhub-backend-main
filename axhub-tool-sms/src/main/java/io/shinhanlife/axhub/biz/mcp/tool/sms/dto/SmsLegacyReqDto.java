@@ -5,7 +5,7 @@ import lombok.Getter;
 
 @Getter
 @Builder
-public class SmsMciReqDto {
+public class SmsLegacyReqDto {
     /**
      * EAI 시스템이 요구하는 수신자 번호 파라미터명
      */
