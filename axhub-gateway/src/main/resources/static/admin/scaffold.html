@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AX HUB Developer Portal</title>
     <!-- Geist Fonts -->
+    <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/geist-sans@5.0.1/400.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/geist-sans@5.0.1/500.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/geist-sans@5.0.1/600.css">
@@ -30,7 +31,7 @@
             background-color: var(--bg-color);
             color: var(--text-primary);
             min-height: 100vh;
-            padding: 4rem 0;
+            padding: 0;
             -webkit-font-smoothing: antialiased;
         }
 
@@ -367,22 +368,22 @@
 </head>
 <body style="overflow-y: scroll;">
 
-<header style="border-bottom: 1px solid #27272a; background: rgba(9,9,11,0.85); backdrop-filter: blur(16px); position: sticky; top: 0; z-index: 1050; margin-bottom: 2rem; height: 3.5rem;">
-    <div class="container d-flex align-items-center justify-content-between h-100">
-        <div class="d-flex align-items-center" style="gap: 1.25rem;">
-            <a href="/index.html" class="d-flex align-items-center text-decoration-none">
-                <div style="width: 8px; height: 8px; border-radius: 50%; margin-right: 0.5rem; background:#3b82f6; box-shadow: 0 0 8px rgba(59,130,246,0.8);"></div>
-                <span style="font-weight: 600; letter-spacing: -0.025em; font-size: 0.875rem; color:#f4f4f5;">AXHUB Gateway</span>
+<header style="border-bottom: 1px solid #27272a; background: rgba(9,9,11,0.85); backdrop-filter: blur(16px);" class="sticky top-0 z-50">
+    <div class="max-w-6xl mx-auto px-6 h-14 flex items-center justify-between">
+        <div class="flex items-center space-x-5">
+            <a href="/index.html" class="flex items-center group">
+                <div class="w-2 h-2 rounded-full mr-2" style="background:#3b82f6; box-shadow: 0 0 8px rgba(59,130,246,0.8);"></div>
+                <span class="font-semibold tracking-tight text-sm" style="color:#f4f4f5;">AXHUB Gateway</span>
             </a>
-            <div style="height: 16px; width: 1px; background:#27272a;"></div>
-            <nav class="d-flex" style="gap: 1.25rem; font-size: 13px; font-weight: 500;">
-                <a href="/admin/scaffold.html" style="color:#ffffff; font-weight: 600; text-decoration: none;">Scaffold</a>
-                <a href="/catalog.html" style="color:#a1a1aa; text-decoration: none; transition: color 0.15s;" onmouseover="this.style.color='#ffffff'" onmouseout="this.style.color='#a1a1aa'">Catalog</a>
-                <a href="/playground.html" style="color:#a1a1aa; text-decoration: none; transition: color 0.15s;" onmouseover="this.style.color='#ffffff'" onmouseout="this.style.color='#a1a1aa'">Playground</a>
+            <div class="h-4 w-px" style="background:#27272a;"></div>
+            <nav class="flex space-x-5 text-[13px] font-medium">
+                <a href="/admin/scaffold.html" style="color:#ffffff;" class="font-semibold">Scaffold</a>
+                <a href="/catalog.html" style="color:#a1a1aa;" class="hover:text-white transition-colors">Catalog</a>
+                <a href="/playground.html" style="color:#a1a1aa;" class="hover:text-white transition-colors">Playground</a>
             </nav>
         </div>
-        <div class="d-flex align-items-center">
-            <span style="font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; padding: 0.25rem 0.5rem; border-radius: 0.25rem; font-weight: bold; background:rgba(59,130,246,0.1); color:#60a5fa; border:1px solid rgba(59,130,246,0.2);">v0.0.1</span>
+        <div class="flex items-center">
+            <span class="text-[10px] uppercase tracking-widest px-2 py-1 rounded font-bold" style="background:rgba(59,130,246,0.1); color:#60a5fa; border:1px solid rgba(59,130,246,0.2);">v0.0.1</span>
         </div>
     </div>
 </header>
