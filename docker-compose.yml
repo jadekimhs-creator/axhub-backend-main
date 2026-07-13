@@ -54,8 +54,8 @@ services:
       - GLOW_COMMUNICATION_MCI_PORT=8080
       - GLOW_COMMUNICATION_EXTMCI_HOST=http://mci-mock
       - GLOW_COMMUNICATION_EXTMCI_PORT=8080
-      - GLOW_COMMUNICATION_EAI_HOST=tcp://gateway
-      - GLOW_COMMUNICATION_EAI_PORT=8081
+      - GLOW_COMMUNICATION_EAI_HOST=http://mci-mock
+      - GLOW_COMMUNICATION_EAI_PORT=8080
   tool-email:
     build: 
       context: ./axhub-tool-email
@@ -74,8 +74,8 @@ services:
       - GLOW_COMMUNICATION_MCI_PORT=8080
       - GLOW_COMMUNICATION_EXTMCI_HOST=http://mci-mock
       - GLOW_COMMUNICATION_EXTMCI_PORT=8080
-      - GLOW_COMMUNICATION_EAI_HOST=tcp://gateway
-      - GLOW_COMMUNICATION_EAI_PORT=8081
+      - GLOW_COMMUNICATION_EAI_HOST=http://mci-mock
+      - GLOW_COMMUNICATION_EAI_PORT=8080
   tool-other:
     build: 
       context: ./axhub-tool-other
@@ -94,8 +94,8 @@ services:
       - GLOW_COMMUNICATION_MCI_PORT=8080
       - GLOW_COMMUNICATION_EXTMCI_HOST=http://mci-mock
       - GLOW_COMMUNICATION_EXTMCI_PORT=8080
-      - GLOW_COMMUNICATION_EAI_HOST=tcp://gateway
-      - GLOW_COMMUNICATION_EAI_PORT=8081
+      - GLOW_COMMUNICATION_EAI_HOST=http://mci-mock
+      - GLOW_COMMUNICATION_EAI_PORT=8080
   tool-payment:
     build:
       context: ./axhub-tool-payment
@@ -114,5 +114,5 @@ services:
       - GLOW_COMMUNICATION_MCI_PORT=8080
       - GLOW_COMMUNICATION_EXTMCI_HOST=http://mci-mock
       - GLOW_COMMUNICATION_EXTMCI_PORT=8080
-      - GLOW_COMMUNICATION_EAI_HOST=tcp://gateway
-      - GLOW_COMMUNICATION_EAI_PORT=8081
+      - GLOW_COMMUNICATION_EAI_HOST=http://mci-mock
+      - GLOW_COMMUNICATION_EAI_PORT=8080
