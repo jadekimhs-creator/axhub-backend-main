@@ -1,9 +1,8 @@
-package io.shinhanlife.axhub.biz.mcp.tool.email;
+package io.shinhanlife.axhub.biz.mcp.tool.service;
 
 import io.shinhanlife.axhub.biz.mcp.tool.annotation.McpFunction;
 import io.shinhanlife.axhub.biz.mcp.tool.annotation.McpTool;
 import io.shinhanlife.axhub.biz.mcp.tool.dto.EmailSendReq;
-import io.shinhanlife.axhub.biz.mcp.tool.service.AbstractMcpToolService;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.HashMap;

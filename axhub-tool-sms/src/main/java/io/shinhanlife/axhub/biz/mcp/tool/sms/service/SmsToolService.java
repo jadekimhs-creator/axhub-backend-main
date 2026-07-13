@@ -1,4 +1,4 @@
-package io.shinhanlife.axhub.biz.mcp.tool.sms;
+package io.shinhanlife.axhub.biz.mcp.tool.sms.service;
 
 import io.shinhanlife.axhub.biz.mcp.tool.annotation.McpFunction;
 import io.shinhanlife.axhub.biz.mcp.tool.annotation.McpTool;
