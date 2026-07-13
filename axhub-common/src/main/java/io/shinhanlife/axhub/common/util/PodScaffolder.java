@@ -135,9 +135,17 @@ public class PodScaffolder {
         Files.writeString(resPath.resolve("application-local.yml"), applicationYml);
 
         String applicationProperties = """
+            server.port=%s
+            spring.application.name=%s
+            
             spring.profiles.active=local
+            
+            # Suppress Kafka Connection Logs
+            logging.level.org.apache.kafka=ERROR
+            
+            # Auto Prefix Namespace
             mcp.namespace=%s
-            """.formatted(shortName);
+            """.formatted(portStr, moduleName, shortName);
         Files.writeString(resPath.resolve("application.properties"), applicationProperties);
 
         String applicationLocalProperties = """

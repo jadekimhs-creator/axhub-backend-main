@@ -4,9 +4,3 @@ spring:
   config:
     import: "classpath:config/application-glow-local.yml"
 
-server:
-  port: 8086
-
-axhub:
-  tool:
-    url: "http://tool-hr:8086"
