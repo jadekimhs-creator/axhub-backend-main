@@ -1,4 +1,4 @@
-package io.shinhanlife.axhub.biz.mcp.sample.mapper;
+package io.shinhanlife.axhub.biz.mcp.sample.converter;
 
 import io.shinhanlife.axhub.biz.mcp.sample.dto.SampleAiReqDto;
 import io.shinhanlife.axhub.biz.mcp.sample.dto.SampleMciReqDto;
@@ -8,10 +8,10 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
-public class SampleMciMapperTest {
+public class SampleMciConverterTest {
 
     // MapStruct가 자동 생성한 구현체를 가져와서 테스트합니다. (IDE 에러 방지를 위해 INSTANCE 참조)
-    private final SampleMciMapper sampleMciMapper = SampleMciMapper.INSTANCE;
+    private final SampleMciConverter sampleMciConverter = SampleMciConverter.INSTANCE;
 
     @Test
     @DisplayName("AI 파라미터 DTO가 MCI DTO로 정확히 매핑되는지 테스트")
@@ -24,7 +24,7 @@ public class SampleMciMapperTest {
                 .build();
 
         // when: MapStruct 자동 생성 매퍼를 통해 1줄로 변환
-        SampleMciReqDto mciDto = sampleMciMapper.toMciReq(aiDto);
+        SampleMciReqDto mciDto = sampleMciConverter.toMciReq(aiDto);
 
         // then: 콘솔에 결과 출력 및 값 검증
         System.out.println("======  MapStruct 변환 테스트 결과  ======");

@@ -90,12 +90,12 @@ public class ToolScaffolder {
 
         String shortName = moduleName.replace("axhub-tool-", "").replace("-", "");
         Path legacyDtoDir = rootDir.resolve(Paths.get(moduleName, BASE_PACKAGE_PATH, shortName, "dto"));
-        Path mapperDir = rootDir.resolve(Paths.get(moduleName, BASE_PACKAGE_PATH, shortName, "mapper"));
+        Path converterDir = rootDir.resolve(Paths.get(moduleName, BASE_PACKAGE_PATH, shortName, "converter"));
 
         Files.createDirectories(serviceDir);
         Files.createDirectories(dtoDir);
         Files.createDirectories(legacyDtoDir);
-        Files.createDirectories(mapperDir);
+        Files.createDirectories(converterDir);
 
         StringBuilder log = new StringBuilder();
 
@@ -275,9 +275,9 @@ public class ToolScaffolder {
             """.formatted(BASE_PACKAGE, shortName, BASE_PACKAGE, shortName, baseName, author, createDate, createDate, author, baseName);
         Files.writeString(legacyDtoDir.resolve(baseName + "MciResDto.java"), legacyResContent);
 
-        // Generate MCI Mapper
-        String mapperContent = """
-            package %s.%s.mapper;
+        // Generate MCI Converter
+        String converterContent = """
+            package %s.%s.converter;
 
             import %s.dto.%sReq;
             import %s.dto.%sRes;
@@ -288,8 +288,8 @@ public class ToolScaffolder {
             import org.mapstruct.factory.Mappers;
 
             /**
-             * @package %s.%s.mapper
-             * @className %sMciMapper
+             * @package %s.%s.converter
+             * @className %sMciConverter
              * @description AX HUB 시스템 처리 클래스
              * @author %s
              * @create %s
@@ -302,9 +302,9 @@ public class ToolScaffolder {
              * </pre>
              */
             @Mapper(componentModel = "spring")
-            public interface %sMciMapper {
+            public interface %sMciConverter {
 
-                %sMciMapper INSTANCE = Mappers.getMapper(%sMciMapper.class);
+                %sMciConverter INSTANCE = Mappers.getMapper(%sMciConverter.class);
 
                 // @Mapping(source = "sourceField", target = "targetField")
                 %sMciReqDto toMciReq(%sReq req);
@@ -320,7 +320,7 @@ public class ToolScaffolder {
                 BASE_PACKAGE, shortName, baseName, author, createDate, createDate, author,
                 baseName, baseName, baseName, baseName, baseName, baseName, baseName
             );
-        Files.writeString(mapperDir.resolve(baseName + "MciMapper.java"), mapperContent);
+        Files.writeString(converterDir.resolve(baseName + "MciConverter.java"), converterContent);
 
         log.append("\n=========================================\n");
         log.append(" Scaffolding Complete!\n");
@@ -330,7 +330,7 @@ public class ToolScaffolder {
         log.append("[Res DTO] ").append(dtoDir.resolve(baseName + "Res.java")).append("\n");
         log.append("[MCI Req DTO] ").append(legacyDtoDir.resolve(baseName + "MciReqDto.java")).append("\n");
         log.append("[MCI Res DTO] ").append(legacyDtoDir.resolve(baseName + "MciResDto.java")).append("\n");
-        log.append("[MCI Mapper] ").append(mapperDir.resolve(baseName + "MciMapper.java")).append("\n");
+        log.append("[MCI Converter] ").append(converterDir.resolve(baseName + "MciConverter.java")).append("\n");
         log.append("\n Tip: ").append(interfaceId).append(" 목업 데이터를 mock-responses.json에 추가하세요.\n");
         
         return log.toString();
