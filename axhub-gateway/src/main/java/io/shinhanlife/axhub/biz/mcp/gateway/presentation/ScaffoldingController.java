@@ -20,8 +20,10 @@ public class ScaffoldingController {
             if (!moduleName.startsWith("axhub-tool-")) moduleName = "axhub-tool-" + moduleName;
             String port = req.getOrDefault("port", "8085");
             String shortName = moduleName.replace("axhub-tool-", "").replace("-", "");
-            String author = req.getOrDefault("author", "System");
-            String date = req.getOrDefault("date", java.time.LocalDate.now().format(java.time.format.DateTimeFormatter.ofPattern("yyyy.MM.dd")));
+            String author = req.get("author");
+            if (author == null || author.trim().isEmpty()) author = System.getProperty("user.name");
+            String date = req.get("date");
+            if (date == null || date.trim().isEmpty()) date = java.time.LocalDate.now().format(java.time.format.DateTimeFormatter.ofPattern("yyyy.MM.dd"));
             
             return PodScaffolder.scaffoldPod(moduleName, port, shortName, author, date);
         } catch (Exception e) {
@@ -38,8 +40,10 @@ public class ScaffoldingController {
             String group = req.getOrDefault("group", "COMMON");
             String routingType = req.getOrDefault("routingType", "HTTP");
             String moduleName = req.getOrDefault("moduleName", "axhub-tool-other");
-            String author = req.getOrDefault("author", "System");
-            String date = req.getOrDefault("date", java.time.LocalDate.now().format(java.time.format.DateTimeFormatter.ofPattern("yyyy.MM.dd")));
+            String author = req.get("author");
+            if (author == null || author.trim().isEmpty()) author = System.getProperty("user.name");
+            String date = req.get("date");
+            if (date == null || date.trim().isEmpty()) date = java.time.LocalDate.now().format(java.time.format.DateTimeFormatter.ofPattern("yyyy.MM.dd"));
             boolean register = Boolean.parseBoolean(req.getOrDefault("register", "true"));
             
             return ToolScaffolder.scaffold(baseName, interfaceId, description, group, routingType, moduleName, author, date, register);
