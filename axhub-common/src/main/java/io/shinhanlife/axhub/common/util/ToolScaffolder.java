@@ -88,8 +88,14 @@ public class ToolScaffolder {
         Path serviceDir = rootDir.resolve(Paths.get(moduleName, BASE_PACKAGE_PATH, "service"));
         Path dtoDir = rootDir.resolve(Paths.get(moduleName, BASE_PACKAGE_PATH, "dto"));
 
+        String shortName = moduleName.replace("axhub-tool-", "").replace("-", "");
+        Path legacyDtoDir = rootDir.resolve(Paths.get(moduleName, BASE_PACKAGE_PATH, shortName, "dto"));
+        Path mapperDir = rootDir.resolve(Paths.get(moduleName, BASE_PACKAGE_PATH, shortName, "mapper"));
+
         Files.createDirectories(serviceDir);
         Files.createDirectories(dtoDir);
+        Files.createDirectories(legacyDtoDir);
+        Files.createDirectories(mapperDir);
 
         StringBuilder log = new StringBuilder();
 
@@ -215,12 +221,116 @@ public class ToolScaffolder {
 
 
 
+        // Generate Legacy Req DTO
+        String legacyReqContent = """
+            package %s.%s.dto;
+
+            import lombok.Data;
+
+            /**
+             * @package %s.%s.dto
+             * @className %sMciReqDto
+             * @description AX HUB 시스템 처리 클래스
+             * @author %s
+             * @create %s
+             * <pre>
+             * ---------- 개정이력 ----------
+             * 수정일      수정자    수정내용
+             * ---------- -------- ---------------------------
+             * %s  %s    최초생성
+             * 
+             * </pre>
+             */
+            @Data
+            public class %sMciReqDto {
+                // TODO: Add legacy request fields here
+            }
+            """.formatted(BASE_PACKAGE, shortName, BASE_PACKAGE, shortName, baseName, author, createDate, createDate, author, baseName);
+        Files.writeString(legacyDtoDir.resolve(baseName + "MciReqDto.java"), legacyReqContent);
+
+        // Generate Legacy Res DTO
+        String legacyResContent = """
+            package %s.%s.dto;
+
+            import lombok.Data;
+
+            /**
+             * @package %s.%s.dto
+             * @className %sMciResDto
+             * @description AX HUB 시스템 처리 클래스
+             * @author %s
+             * @create %s
+             * <pre>
+             * ---------- 개정이력 ----------
+             * 수정일      수정자    수정내용
+             * ---------- -------- ---------------------------
+             * %s  %s    최초생성
+             * 
+             * </pre>
+             */
+            @Data
+            public class %sMciResDto {
+                // TODO: Add legacy response fields here
+            }
+            """.formatted(BASE_PACKAGE, shortName, BASE_PACKAGE, shortName, baseName, author, createDate, createDate, author, baseName);
+        Files.writeString(legacyDtoDir.resolve(baseName + "MciResDto.java"), legacyResContent);
+
+        // Generate MCI Mapper
+        String mapperContent = """
+            package %s.%s.mapper;
+
+            import %s.dto.%sReq;
+            import %s.dto.%sRes;
+            import %s.%s.dto.%sMciReqDto;
+            import %s.%s.dto.%sMciResDto;
+            import org.mapstruct.Mapper;
+            import org.mapstruct.Mapping;
+            import org.mapstruct.factory.Mappers;
+
+            /**
+             * @package %s.%s.mapper
+             * @className %sMciMapper
+             * @description AX HUB 시스템 처리 클래스
+             * @author %s
+             * @create %s
+             * <pre>
+             * ---------- 개정이력 ----------
+             * 수정일      수정자    수정내용
+             * ---------- -------- ---------------------------
+             * %s  %s    최초생성
+             * 
+             * </pre>
+             */
+            @Mapper(componentModel = "spring")
+            public interface %sMciMapper {
+
+                %sMciMapper INSTANCE = Mappers.getMapper(%sMciMapper.class);
+
+                // @Mapping(source = "sourceField", target = "targetField")
+                %sMciReqDto toMciReq(%sReq req);
+                
+                %sRes toRes(%sMciResDto mciRes);
+            }
+            """.formatted(
+                BASE_PACKAGE, shortName,
+                BASE_PACKAGE, baseName,
+                BASE_PACKAGE, baseName,
+                BASE_PACKAGE, shortName, baseName,
+                BASE_PACKAGE, shortName, baseName,
+                BASE_PACKAGE, shortName, baseName, author, createDate, createDate, author,
+                baseName, baseName, baseName, baseName, baseName, baseName, baseName
+            );
+        Files.writeString(mapperDir.resolve(baseName + "MciMapper.java"), mapperContent);
+
         log.append("\n=========================================\n");
         log.append(" Scaffolding Complete!\n");
         log.append("=========================================\n");
         log.append("[Service] ").append(serviceDir.resolve(baseName + "Service.java")).append("\n");
         log.append("[Req DTO] ").append(dtoDir.resolve(baseName + "Req.java")).append("\n");
         log.append("[Res DTO] ").append(dtoDir.resolve(baseName + "Res.java")).append("\n");
+        log.append("[MCI Req DTO] ").append(legacyDtoDir.resolve(baseName + "MciReqDto.java")).append("\n");
+        log.append("[MCI Res DTO] ").append(legacyDtoDir.resolve(baseName + "MciResDto.java")).append("\n");
+        log.append("[MCI Mapper] ").append(mapperDir.resolve(baseName + "MciMapper.java")).append("\n");
         log.append("\n Tip: ").append(interfaceId).append(" 목업 데이터를 mock-responses.json에 추가하세요.\n");
         
         return log.toString();
