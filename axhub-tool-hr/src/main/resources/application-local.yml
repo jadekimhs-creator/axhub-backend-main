@@ -1,6 +1,0 @@
-spring:
-  application:
-    name: axhub-tool-hr
-  config:
-    import: "classpath:config/application-glow-local.yml"
-
