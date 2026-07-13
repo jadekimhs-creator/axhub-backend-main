@@ -232,12 +232,12 @@ public class PodScaffolder {
                           - SPRING_DATA_REDIS_PORT=6379
                           - AXHUB_GATEWAY_URL=http://gateway:8081
                           - AXHUB_TOOL_URL=http://%s:%s
-                          - GLOW_COMMUNICATION_MCI_HOST=http://gateway
-                          - GLOW_COMMUNICATION_MCI_PORT=8081
-                          - GLOW_COMMUNICATION_EXTMCI_HOST=http://gateway
-                          - GLOW_COMMUNICATION_EXTMCI_PORT=8081
-                          - GLOW_COMMUNICATION_EAI_HOST=tcp://gateway
-                          - GLOW_COMMUNICATION_EAI_PORT=8081
+                          - GLOW_COMMUNICATION_MCI_HOST=http://mci-mock
+                          - GLOW_COMMUNICATION_MCI_PORT=8080
+                          - GLOW_COMMUNICATION_EXTMCI_HOST=http://mci-mock
+                          - GLOW_COMMUNICATION_EXTMCI_PORT=8080
+                          - GLOW_COMMUNICATION_EAI_HOST=http://mci-mock
+                          - GLOW_COMMUNICATION_EAI_PORT=8080
                     """.formatted(serviceName, moduleName, portStr, portStr, serviceName, portStr);
                 Files.writeString(dockerComposePath, System.lineSeparator() + newService, StandardOpenOption.APPEND);
             }
