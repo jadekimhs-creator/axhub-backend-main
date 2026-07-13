@@ -71,6 +71,15 @@ AXHUB Backend는 3개의 주요 애플리케이션으로 분리 운영됩니다:
   ```
   *(참고: Antigravity IDE 환경에서는 이미 `.agents/mcp.json`에 설정되어 자동 연동됩니다.)*
 
+- **특정 카테고리 툴만 연동하기 (categoryKey 필터링)**:
+  에이전트가 특정 도메인(예: `common`, `claim` 등)의 툴만 제한적으로 학습하게 하려면, 브릿지 코드(`McpBridge.java`) 내 URI를 다음과 같이 한 줄만 수정하시면 됩니다.
+  ```java
+  // McpBridge.java (tools/list 요청 처리 부분)
+  // 기존: .uri(URI.create("http://localhost:8081/mcp/api/v1/tools/list"))
+  // 수정: .uri(URI.create("http://localhost:8081/mcp/api/v1/tools/list?categoryKey=common"))
+  ```
+  수정 후 에이전트를 재시작하면, 해당 카테고리에 속한 툴 목록만 동적으로 내려받아 학습합니다.
+
 ---
 
 ##  비공개 Tool 관리 및 Fallback 연동 (Visibility & Routing)
