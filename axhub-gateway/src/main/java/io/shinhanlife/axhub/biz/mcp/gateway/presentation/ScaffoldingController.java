@@ -37,7 +37,7 @@ public class ScaffoldingController {
             String baseName = req.get("baseName");
             String interfaceId = req.get("interfaceId");
             String description = req.get("description");
-            String group = req.getOrDefault("group", "COMMON");
+            String group = req.getOrDefault("categoryKey", req.getOrDefault("group", "COMMON"));
             String routingType = req.getOrDefault("routingType", "HTTP");
             String moduleName = req.getOrDefault("moduleName", "axhub-tool-other");
             String author = req.get("author");
@@ -56,7 +56,7 @@ public class ScaffoldingController {
     public String updateTool(@RequestBody Map<String, String> req) {
         try {
             String toolName = req.get("toolName");
-            String domainGroup = req.get("domainGroup");
+            String domainGroup = req.getOrDefault("categoryKey", req.get("domainGroup"));
             String description = req.get("description");
             boolean register = Boolean.parseBoolean(req.getOrDefault("register", "true"));
             Boolean requiresApproval = req.containsKey("requiresApproval") ? Boolean.parseBoolean(req.get("requiresApproval")) : null;
