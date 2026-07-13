@@ -120,18 +120,9 @@ public class PodScaffolder {
         Files.createDirectories(resPath);
         String applicationYml = """
             spring:
-              application:
-                name: %s
               config:
                 import: "classpath:config/application-glow-local.yml"
-            
-            server:
-              port: %s
-              
-            axhub:
-              tool:
-                url: "http://%s:%s"
-            """.formatted(moduleName, portStr, moduleName.replace("axhub-backend-main-", "").replace("axhub-", ""), portStr);
+            """;
         Files.writeString(resPath.resolve("application-local.yml"), applicationYml);
 
         String applicationProperties = """
