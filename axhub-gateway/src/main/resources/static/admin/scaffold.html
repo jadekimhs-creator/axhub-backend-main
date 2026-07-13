@@ -361,19 +361,22 @@
 </head>
 <body>
 
-<header style="border-bottom: 1px solid #27272a; background: rgba(9,9,11,0.85); backdrop-filter: blur(16px); position: sticky; top: 0; z-index: 1050; margin-bottom: 2rem;">
-    <div style="max-width: 1000px; width: 95%; margin: 0 auto; height: 56px; display: flex; align-items: center; justify-content: space-between;">
-        <div style="display: flex; align-items: center; gap: 1.25rem;">
-            <a href="/index.html" style="display: flex; align-items: center; text-decoration: none;">
+<header style="border-bottom: 1px solid #27272a; background: rgba(9,9,11,0.85); backdrop-filter: blur(16px); position: sticky; top: 0; z-index: 1050; margin-bottom: 2rem; height: 56px;">
+    <div class="container d-flex align-items-center justify-content-between h-100">
+        <div class="d-flex align-items-center" style="gap: 1.25rem;">
+            <a href="/index.html" class="d-flex align-items-center text-decoration-none">
                 <div style="width: 8px; height: 8px; border-radius: 50%; margin-right: 0.5rem; background:#3b82f6; box-shadow: 0 0 8px rgba(59,130,246,0.8);"></div>
                 <span style="font-weight: 600; letter-spacing: -0.025em; font-size: 0.875rem; color:#f4f4f5;">AXHUB Gateway</span>
             </a>
             <div style="height: 16px; width: 1px; background:#27272a;"></div>
-            <nav style="display: flex; gap: 1.25rem; font-size: 13px; font-weight: 500;">
+            <nav class="d-flex" style="gap: 1.25rem; font-size: 13px; font-weight: 500;">
                 <a href="/admin/scaffold.html" style="color:#ffffff; font-weight: 600; text-decoration: none;">Scaffold</a>
                 <a href="/catalog.html" style="color:#a1a1aa; text-decoration: none; transition: color 0.15s;" onmouseover="this.style.color='#ffffff'" onmouseout="this.style.color='#a1a1aa'">Catalog</a>
                 <a href="/playground.html" style="color:#a1a1aa; text-decoration: none; transition: color 0.15s;" onmouseover="this.style.color='#ffffff'" onmouseout="this.style.color='#a1a1aa'">Playground</a>
             </nav>
+        </div>
+        <div class="d-flex align-items-center">
+            <span style="font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; padding: 0.25rem 0.5rem; border-radius: 0.25rem; font-weight: bold; background:rgba(59,130,246,0.1); color:#60a5fa; border:1px solid rgba(59,130,246,0.2);">v0.0.1</span>
         </div>
     </div>
 </header>
