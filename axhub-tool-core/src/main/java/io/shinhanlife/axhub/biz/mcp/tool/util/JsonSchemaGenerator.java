@@ -3,22 +3,9 @@ package io.shinhanlife.axhub.biz.mcp.tool.util;
 import io.shinhanlife.axhub.biz.mcp.tool.annotation.McpParameter;
 import java.lang.reflect.Field;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
-/**
- * @package io.shinhanlife.axhub.biz.mcp.tool.util
- * @className JsonSchemaGenerator
- * @description AX HUB 시스템 처리 클래스
- * @author 김형식
- * @create 2026.09.01
- * <pre>
- * ---------- 개정이력 ----------
- * 수정일      수정자    수정내용
- * ---------- -------- ---------------------------
- * 2026.09.01  김형식    최초생성
- * 
- * </pre>
- */
 public class JsonSchemaGenerator {
 
     /**
@@ -54,7 +41,7 @@ public class JsonSchemaGenerator {
         if (clazz == Double.class || clazz == double.class) return "number";
         if (clazz == Float.class || clazz == float.class) return "number";
         if (clazz == Boolean.class || clazz == boolean.class) return "boolean";
-        if (java.util.List.class.isAssignableFrom(clazz)) return "array";
+        if (List.class.isAssignableFrom(clazz)) return "array";
         return "object";
     }
 }

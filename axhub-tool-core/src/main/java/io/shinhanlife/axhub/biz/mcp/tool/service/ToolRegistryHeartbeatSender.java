@@ -1,47 +1,33 @@
 package io.shinhanlife.axhub.biz.mcp.tool.service;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.shinhanlife.axhub.biz.mcp.tool.annotation.McpFunction;
 import io.shinhanlife.axhub.biz.mcp.tool.annotation.McpTool;
+import io.shinhanlife.axhub.biz.mcp.tool.config.McpProperties;
 import io.shinhanlife.axhub.biz.mcp.tool.dto.ToolMetadata;
 import io.shinhanlife.axhub.biz.mcp.tool.util.JsonSchemaGenerator;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import lombok.Getter;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.ApplicationContext;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.scheduling.annotation.EnableScheduling;
-import org.springframework.scheduling.annotation.Scheduled;
-import org.springframework.stereotype.Component;
-import org.springframework.web.client.RestClient;
-
-import io.shinhanlife.axhub.biz.mcp.tool.config.McpProperties;
-
 import jakarta.annotation.PostConstruct;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import org.springframework.util.ClassUtils;
+import java.util.UUID;
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.aop.support.AopUtils;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.AnnotationUtils;
+import org.springframework.http.ResponseEntity;
+import org.springframework.scheduling.annotation.EnableScheduling;
+import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.stereotype.Component;
+import org.springframework.util.ClassUtils;
+import org.springframework.web.client.RestClient;
 
-/**
- * @package io.shinhanlife.axhub.biz.mcp.tool.service
- * @className ToolRegistryHeartbeatSender
- * @description AX HUB 시스템 처리 클래스
- * @author 김형식
- * @create 2026.09.01
- * <pre>
- * ---------- 개정이력 ----------
- * 수정일      수정자    수정내용
- * ---------- -------- ---------------------------
- * 2026.09.01  김형식    최초생성
- * 
- * </pre>
- */
 @Slf4j
 @Component
 @Configuration
@@ -92,7 +78,7 @@ public class ToolRegistryHeartbeatSender {
                     }
 
                     ToolMetadata meta = new ToolMetadata();
-                    meta.setUid(java.util.UUID.nameUUIDFromBytes(subToolName.getBytes()).toString());
+                    meta.setUid(UUID.nameUUIDFromBytes(subToolName.getBytes()).toString());
                     meta.setDisplayName(baseName);
                     meta.setName(subToolName);
                     meta.setSemver("1.0.0");
@@ -141,7 +127,7 @@ public class ToolRegistryHeartbeatSender {
 
         for (ToolMetadata tool : registeredTools) {
             try {
-                org.springframework.http.ResponseEntity<String> response = restClient.post()
+                ResponseEntity<String> response = restClient.post()
                         .uri(gatewayUrl + "/mcp/api/v1/registry/heartbeat")
                         .header("Content-Type", "application/json")
                         

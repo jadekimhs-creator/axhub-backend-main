@@ -2,12 +2,15 @@ package io.shinhanlife.axhub.biz.mcp.gateway.presentation;
 
 import io.shinhanlife.axhub.common.util.PodScaffolder;
 import io.shinhanlife.axhub.common.util.ToolScaffolder;
-import org.springframework.web.bind.annotation.*;
-import java.util.Map;
-import java.util.List;
-import java.util.Arrays;
-import java.util.stream.Collectors;
+import io.shinhanlife.axhub.common.util.ToolSourceUpdater;
 import java.io.File;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/v1/scaffold")
@@ -23,7 +26,7 @@ public class ScaffoldingController {
             String author = req.get("author");
             if (author == null || author.trim().isEmpty()) author = System.getProperty("user.name");
             String date = req.get("date");
-            if (date == null || date.trim().isEmpty()) date = java.time.LocalDate.now().format(java.time.format.DateTimeFormatter.ofPattern("yyyy.MM.dd"));
+            if (date == null || date.trim().isEmpty()) date = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy.MM.dd"));
             
             return PodScaffolder.scaffoldPod(moduleName, port, shortName, author, date);
         } catch (Exception e) {
@@ -43,7 +46,7 @@ public class ScaffoldingController {
             String author = req.get("author");
             if (author == null || author.trim().isEmpty()) author = System.getProperty("user.name");
             String date = req.get("date");
-            if (date == null || date.trim().isEmpty()) date = java.time.LocalDate.now().format(java.time.format.DateTimeFormatter.ofPattern("yyyy.MM.dd"));
+            if (date == null || date.trim().isEmpty()) date = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy.MM.dd"));
             boolean register = Boolean.parseBoolean(req.getOrDefault("register", "true"));
             
             return ToolScaffolder.scaffold(baseName, interfaceId, description, group, routingType, moduleName, author, date, register);
@@ -61,7 +64,7 @@ public class ScaffoldingController {
             boolean register = Boolean.parseBoolean(req.getOrDefault("register", "true"));
             Boolean requiresApproval = req.containsKey("requiresApproval") ? Boolean.parseBoolean(req.get("requiresApproval")) : null;
             
-            io.shinhanlife.axhub.common.util.ToolSourceUpdater.updateToolSource(toolName, domainGroup, description, register, requiresApproval);
+            ToolSourceUpdater.updateToolSource(toolName, domainGroup, description, register, requiresApproval);
             return "성공";
         } catch (Exception e) {
             return "오류 발생: " + e.getMessage();

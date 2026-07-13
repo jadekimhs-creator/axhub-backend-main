@@ -1,53 +1,38 @@
 package io.shinhanlife.axhub.biz.mcp.tool.presentation;
 
-import lombok.RequiredArgsConstructor;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
-import java.util.List;
-import java.util.ArrayList;
-
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.networknt.schema.JsonSchema;
 import com.networknt.schema.JsonSchemaFactory;
 import com.networknt.schema.SpecVersion;
 import com.networknt.schema.ValidationMessage;
-
-import org.springframework.context.ApplicationContext;
-import io.shinhanlife.axhub.biz.mcp.tool.annotation.McpTool;
 import io.shinhanlife.axhub.biz.mcp.tool.annotation.McpFunction;
+import io.shinhanlife.axhub.biz.mcp.tool.annotation.McpTool;
 import io.shinhanlife.axhub.biz.mcp.tool.config.McpProperties;
 import io.shinhanlife.axhub.biz.mcp.tool.dto.ToolMetadata;
 import io.shinhanlife.axhub.biz.mcp.tool.service.ToolRegistryHeartbeatSender;
-import java.lang.reflect.Method;
 import io.shinhanlife.axhub.biz.mcp.tool.util.JsonSchemaGenerator;
-import org.springframework.util.ClassUtils;
-import org.springframework.aop.support.AopUtils;
-import org.springframework.core.annotation.AnnotationUtils;
-
+import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.aop.support.AopUtils;
+import org.springframework.context.ApplicationContext;
+import org.springframework.core.annotation.AnnotationUtils;
+import org.springframework.http.ResponseEntity;
+import org.springframework.util.ClassUtils;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
-/**
- * @package io.shinhanlife.axhub.biz.mcp.tool.presentation
- * @className BusinessToolController
- * @description AX HUB 시스템 처리 클래스
- * @author 김형식
- * @create 2026.09.01
- * <pre>
- * ---------- 개정이력 ----------
- * 수정일      수정자    수정내용
- * ---------- -------- ---------------------------
- * 2026.09.01  김형식    최초생성
- * 
- * </pre>
- */
 @Slf4j
 @RestController
 @RequestMapping("/")
@@ -67,8 +52,8 @@ public class BusinessToolController {
 
     // JSON RPC 기반 단일 라우팅 엔드포인트
     @PostMapping("/mcp/api/v1/tools/call")
-    public org.springframework.http.ResponseEntity<Map<String, Object>> executeDynamicTool(
-            @org.springframework.web.bind.annotation.RequestHeader(value = "X-Request-Id", required = false) String headerRequestId,
+    public ResponseEntity<Map<String, Object>> executeDynamicTool(
+            @RequestHeader(value = "X-Request-Id", required = false) String headerRequestId,
             @RequestBody(required = false) Map<String, Object> payload) {
         
         String finalRequestId = headerRequestId != null ? headerRequestId : (payload != null && payload.get("id") != null ? String.valueOf(payload.get("id")) : null);
@@ -139,7 +124,7 @@ public class BusinessToolController {
             error.put("jsonrpc", "2.0");
             error.put("error", errorBody);
             error.put("id", payload != null ? payload.get("id") : null);
-            return org.springframework.http.ResponseEntity.status(404).body(error);
+            return ResponseEntity.status(404).body(error);
         }
         // (기존 차단 로직 제거됨)
 
@@ -173,7 +158,7 @@ public class BusinessToolController {
                         error.put("jsonrpc", "2.0");
                         error.put("error", errorBody);
                         error.put("id", payload != null ? payload.get("id") : null);
-                        return org.springframework.http.ResponseEntity.status(422).body(error);
+                        return ResponseEntity.status(422).body(error);
                     }
                 } catch (Exception e) {
                     log.error("[Tool] 스키마 검증 중 오류 발생: {}", e.getMessage());
@@ -243,7 +228,7 @@ public class BusinessToolController {
             }
             resultPayload.put("original_size", originalSize);
 
-            Map<String, Object> rpcResponse = new java.util.LinkedHashMap<>(); // 순서 보장을 위해 LinkedHashMap 사용
+            Map<String, Object> rpcResponse = new LinkedHashMap<>(); // 순서 보장을 위해 LinkedHashMap 사용
             rpcResponse.put("jsonrpc", "2.0");
             rpcResponse.put("result", resultPayload);
             rpcResponse.put("id", payload != null ? payload.get("id") : null);
@@ -255,7 +240,7 @@ public class BusinessToolController {
             }
             
             
-            return org.springframework.http.ResponseEntity.ok(rpcResponse);
+            return ResponseEntity.ok(rpcResponse);
 
         } catch (Exception e) {
             log.error("[Tool] 리플렉션 실행 중 예외 발생: {}", e.getMessage());
@@ -272,7 +257,7 @@ public class BusinessToolController {
             error.put("jsonrpc", "2.0");
             error.put("error", errorBody);
             error.put("id", payload != null ? payload.get("id") : null);
-            return org.springframework.http.ResponseEntity.status(502).body(error);
+            return ResponseEntity.status(502).body(error);
         }
     }
 }

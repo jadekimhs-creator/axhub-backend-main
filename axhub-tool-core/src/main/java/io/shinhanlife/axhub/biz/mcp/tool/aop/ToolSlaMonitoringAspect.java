@@ -2,6 +2,7 @@ package io.shinhanlife.axhub.biz.mcp.tool.aop;
 
 import io.shinhanlife.axhub.biz.mcp.tool.annotation.McpFunction;
 import io.shinhanlife.axhub.biz.mcp.tool.config.McpProperties;
+import java.lang.reflect.Method;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.ProceedingJoinPoint;
@@ -11,22 +12,6 @@ import org.aspectj.lang.reflect.MethodSignature;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StopWatch;
 
-import java.lang.reflect.Method;
-
-/**
- * @package io.shinhanlife.axhub.biz.mcp.tool.aop
- * @className ToolSlaMonitoringAspect
- * @description AX HUB 시스템 처리 클래스
- * @author 김형식
- * @create 2026.09.01
- * <pre>
- * ---------- 개정이력 ----------
- * 수정일      수정자    수정내용
- * ---------- -------- ---------------------------
- * 2026.09.01  김형식    최초생성
- * 
- * </pre>
- */
 @Slf4j
 @Aspect
 @Component
@@ -36,7 +21,7 @@ public class ToolSlaMonitoringAspect {
     private final McpProperties mcpProperties;
 
     // @McpFunction 어노테이션이 붙은 모든 비즈니스 툴 메서드 실행을 가로챕니다.
-    @Around("@annotation(io.shinhanlife.axhub.biz.mcp.tool.annotation.McpFunction)")
+    @Around("@annotation(McpFunction)")
     public Object monitorToolSla(ProceedingJoinPoint joinPoint) throws Throwable {
         MethodSignature signature = (MethodSignature) joinPoint.getSignature();
         Method method = signature.getMethod();

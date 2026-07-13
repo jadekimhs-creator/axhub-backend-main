@@ -4,39 +4,29 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.shinhanlife.axhub.biz.mcp.adapter.dto.JsonRpcRequest;
 import io.shinhanlife.axhub.biz.mcp.adapter.dto.JsonRpcResponse;
 import io.shinhanlife.axhub.biz.mcp.adapter.dto.Params;
-import io.shinhanlife.axhub.biz.mcp.gateway.dto.ToolMetadata;
-import io.shinhanlife.axhub.biz.mcp.gateway.service.ExecuteService;
 import io.shinhanlife.axhub.biz.mcp.gateway.config.GatewayFallbackProperties;
+import io.shinhanlife.axhub.biz.mcp.gateway.dto.ToolMetadata;
 import io.shinhanlife.axhub.biz.mcp.gateway.registry.RedisRegistryService;
+import io.shinhanlife.axhub.biz.mcp.gateway.service.ExecuteService;
 import io.shinhanlife.axhub.common.mcp.security.SecurityProperties;
-
-import org.springframework.core.ParameterizedTypeReference;
-import org.springframework.web.client.RestClient;
-
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
-
-import java.util.Map;
-import java.util.UUID;
-import java.util.List;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
+import java.util.stream.Collectors;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.client.RestClient;
 
-/**
- * @package io.shinhanlife.axhub.biz.mcp.gateway.presentation
- * @className McpRouterController
- * @description AX HUB 시스템 처리 클래스
- * @author 김형식
- * @create 2026.09.01
- * <pre>
- * ---------- 개정이력 ----------
- * 수정일      수정자    수정내용
- * ---------- -------- ---------------------------
- * 2026.09.01  김형식    최초생성
- * 
- * </pre>
- */
 @Slf4j
 @RestController
 @RequestMapping("/mcp/api/v1")
@@ -72,8 +62,8 @@ public class McpRouterController {
             @RequestBody Map<String, Object> payload, 
             @RequestAttribute(value = "tenantId", required = false) String tenantId) {
             
-        java.util.Map<String, Object> meta = new java.util.HashMap<>();
-        meta.put("traceId", traceId != null ? traceId : java.util.UUID.randomUUID().toString());
+        Map<String, Object> meta = new HashMap<>();
+        meta.put("traceId", traceId != null ? traceId : UUID.randomUUID().toString());
         meta.put("agentId", agentId != null ? agentId : "UNKNOWN");
         meta.put("userPrompt", userPrompt != null ? userPrompt : "");
         payload.put("meta", meta);
@@ -110,13 +100,13 @@ public class McpRouterController {
         List<ToolMetadata> activeTools = redisRegistryService.getAllTools()
                 .stream()
                 .filter(ToolMetadata::getVisible)
-                .collect(java.util.stream.Collectors.toList());
+                .collect(Collectors.toList());
                 
-        java.util.Set<String> knownTools = activeTools.stream()
+        Set<String> knownTools = activeTools.stream()
                 .map(ToolMetadata::getUid)
-                .collect(java.util.stream.Collectors.toSet());
+                .collect(Collectors.toSet());
 
-        java.util.Set<String> fallbackUrls = new java.util.HashSet<>(gatewayFallbackProperties.getRoutes().values());
+        Set<String> fallbackUrls = new HashSet<>(gatewayFallbackProperties.getRoutes().values());
         if (gatewayFallbackProperties.getDefaultUrl() != null) {
             fallbackUrls.add(gatewayFallbackProperties.getDefaultUrl());
         }
@@ -153,20 +143,20 @@ public class McpRouterController {
         List<ToolMetadata> tools = redisRegistryService.getAllTools()
                 .stream()
                 .filter(ToolMetadata::getVisible)
-                .collect(java.util.stream.Collectors.toList());
+                .collect(Collectors.toList());
         
         StringBuilder md = new StringBuilder();
         md.append("# \uD83E\uDD16 Shinhan AI Tool Catalog\n\n");
         md.append("**총 등록된 툴:** ").append(tools.size()).append("개\n");
-        java.time.format.DateTimeFormatter formatter = java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-        md.append("**마지막 업데이트:** ").append(java.time.LocalDateTime.now().format(formatter)).append("\n\n");
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+        md.append("**마지막 업데이트:** ").append(LocalDateTime.now().format(formatter)).append("\n\n");
         md.append("---\n\n");
         
         // Group by Domain Group
-        Map<String, List<ToolMetadata>> groupedTools = new java.util.HashMap<>();
+        Map<String, List<ToolMetadata>> groupedTools = new HashMap<>();
         for (ToolMetadata tool : tools) {
             String group = tool.getCategoryKey() != null ? tool.getCategoryKey() : "기타 (Others)";
-            groupedTools.computeIfAbsent(group, k -> new java.util.ArrayList<>()).add(tool);
+            groupedTools.computeIfAbsent(group, k -> new ArrayList<>()).add(tool);
         }
         
         for (Map.Entry<String, List<ToolMetadata>> entry : groupedTools.entrySet()) {

@@ -16,7 +16,7 @@ import lombok.Data;
  * 2026.07.13  root    최초생성
  *
  * </pre>
- */
+ */1
 @Data
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class SearchDetailHrReq {

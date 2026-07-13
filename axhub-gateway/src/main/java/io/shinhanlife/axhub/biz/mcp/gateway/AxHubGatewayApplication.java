@@ -2,24 +2,11 @@ package io.shinhanlife.axhub.biz.mcp.gateway;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.context.properties.ConfigurationPropertiesScan;
 import org.springframework.cache.annotation.EnableCaching;
 
-/**
- * @package io.shinhanlife.axhub.biz.mcp.gateway
- * @className AxHubGatewayApplication
- * @description AX HUB 시스템 처리 클래스
- * @author 김형식
- * @create 2026.09.01
- * <pre>
- * ---------- 개정이력 ----------
- * 수정일      수정자    수정내용
- * ---------- -------- ---------------------------
- * 2026.09.01  김형식    최초생성
- * 
- * </pre>
- */
 @SpringBootApplication(scanBasePackages = {"io.shinhanlife.axhub.biz.mcp.gateway", "io.shinhanlife.axhub.common.mcp", "io.shinhanlife.axhub.common.config"})
-@org.springframework.boot.context.properties.ConfigurationPropertiesScan(basePackages = {"io.shinhanlife.axhub.biz.mcp.gateway", "io.shinhanlife.axhub.common.mcp", "io.shinhanlife.axhub.common.config"})
+@ConfigurationPropertiesScan(basePackages = {"io.shinhanlife.axhub.biz.mcp.gateway", "io.shinhanlife.axhub.common.mcp", "io.shinhanlife.axhub.common.config"})
 @EnableCaching
 public class AxHubGatewayApplication {
     public static void main(String[] args) {
