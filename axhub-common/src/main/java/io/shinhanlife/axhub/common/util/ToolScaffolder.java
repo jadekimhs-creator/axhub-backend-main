@@ -199,7 +199,11 @@ public class ToolScaffolder {
                 }
             }
             """.formatted(
-                BASE_PACKAGE, BASE_PACKAGE, BASE_PACKAGE, BASE_PACKAGE, BASE_PACKAGE,
+                BASE_PACKAGE,
+                BASE_PACKAGE,
+                BASE_PACKAGE,
+                BASE_PACKAGE, baseName,
+                BASE_PACKAGE, baseName,
                 BASE_PACKAGE, baseName, author, createDate, createDate, author,
                 routingType, group.toLowerCase(), baseName,
                 baseName, toolName, description, description + " 해줘.", interfaceId, register,
