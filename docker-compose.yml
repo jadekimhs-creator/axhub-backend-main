@@ -29,6 +29,13 @@ services:
       - SPRING_DATA_REDIS_PORT=6379
       - AXHUB_SOURCE_DIR=/src
 
+  mci-mock:
+    image: wiremock/wiremock:latest
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./mci-mock:/home/wiremock
+
   tool-sms:
     build: 
       context: ./axhub-tool-sms
@@ -43,10 +50,10 @@ services:
       - SPRING_DATA_REDIS_PORT=6379
       - AXHUB_GATEWAY_URL=http://gateway:8081
       - AXHUB_TOOL_URL=http://tool-sms:8082
-      - GLOW_COMMUNICATION_MCI_HOST=http://gateway
-      - GLOW_COMMUNICATION_MCI_PORT=8081
-      - GLOW_COMMUNICATION_EXTMCI_HOST=http://gateway
-      - GLOW_COMMUNICATION_EXTMCI_PORT=8081
+      - GLOW_COMMUNICATION_MCI_HOST=http://mci-mock
+      - GLOW_COMMUNICATION_MCI_PORT=8080
+      - GLOW_COMMUNICATION_EXTMCI_HOST=http://mci-mock
+      - GLOW_COMMUNICATION_EXTMCI_PORT=8080
       - GLOW_COMMUNICATION_EAI_HOST=tcp://gateway
       - GLOW_COMMUNICATION_EAI_PORT=8081
   tool-email:
@@ -63,10 +70,10 @@ services:
       - SPRING_DATA_REDIS_PORT=6379
       - AXHUB_GATEWAY_URL=http://gateway:8081
       - AXHUB_TOOL_URL=http://tool-email:8083
-      - GLOW_COMMUNICATION_MCI_HOST=http://gateway
-      - GLOW_COMMUNICATION_MCI_PORT=8081
-      - GLOW_COMMUNICATION_EXTMCI_HOST=http://gateway
-      - GLOW_COMMUNICATION_EXTMCI_PORT=8081
+      - GLOW_COMMUNICATION_MCI_HOST=http://mci-mock
+      - GLOW_COMMUNICATION_MCI_PORT=8080
+      - GLOW_COMMUNICATION_EXTMCI_HOST=http://mci-mock
+      - GLOW_COMMUNICATION_EXTMCI_PORT=8080
       - GLOW_COMMUNICATION_EAI_HOST=tcp://gateway
       - GLOW_COMMUNICATION_EAI_PORT=8081
   tool-other:
@@ -83,10 +90,10 @@ services:
       - SPRING_DATA_REDIS_PORT=6379
       - AXHUB_GATEWAY_URL=http://gateway:8081
       - AXHUB_TOOL_URL=http://tool-other:8084
-      - GLOW_COMMUNICATION_MCI_HOST=http://gateway
-      - GLOW_COMMUNICATION_MCI_PORT=8081
-      - GLOW_COMMUNICATION_EXTMCI_HOST=http://gateway
-      - GLOW_COMMUNICATION_EXTMCI_PORT=8081
+      - GLOW_COMMUNICATION_MCI_HOST=http://mci-mock
+      - GLOW_COMMUNICATION_MCI_PORT=8080
+      - GLOW_COMMUNICATION_EXTMCI_HOST=http://mci-mock
+      - GLOW_COMMUNICATION_EXTMCI_PORT=8080
       - GLOW_COMMUNICATION_EAI_HOST=tcp://gateway
       - GLOW_COMMUNICATION_EAI_PORT=8081
   tool-payment:
@@ -103,9 +110,9 @@ services:
       - SPRING_DATA_REDIS_PORT=6379
       - AXHUB_GATEWAY_URL=http://gateway:8081
       - AXHUB_TOOL_URL=http://tool-payment:8085
-      - GLOW_COMMUNICATION_MCI_HOST=http://gateway
-      - GLOW_COMMUNICATION_MCI_PORT=8081
-      - GLOW_COMMUNICATION_EXTMCI_HOST=http://gateway
-      - GLOW_COMMUNICATION_EXTMCI_PORT=8081
+      - GLOW_COMMUNICATION_MCI_HOST=http://mci-mock
+      - GLOW_COMMUNICATION_MCI_PORT=8080
+      - GLOW_COMMUNICATION_EXTMCI_HOST=http://mci-mock
+      - GLOW_COMMUNICATION_EXTMCI_PORT=8080
       - GLOW_COMMUNICATION_EAI_HOST=tcp://gateway
       - GLOW_COMMUNICATION_EAI_PORT=8081
