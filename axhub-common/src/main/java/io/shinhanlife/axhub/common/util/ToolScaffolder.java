@@ -118,7 +118,7 @@ public class ToolScaffolder {
             public class %sReq {
                 // TODO: Add request fields here
             }
-            """.formatted(BASE_PACKAGE, baseName, author, createDate, createDate, author, baseName);
+            """.formatted(BASE_PACKAGE, BASE_PACKAGE, baseName, author, createDate, createDate, author, baseName);
         Files.writeString(dtoDir.resolve(baseName + "Req.java"), reqContent);
 
         // Generate Res DTO
@@ -149,7 +149,7 @@ public class ToolScaffolder {
                 private String message;
                 // TODO: Add response fields here
             }
-            """.formatted(BASE_PACKAGE, baseName, author, createDate, createDate, author, baseName);
+            """.formatted(BASE_PACKAGE, BASE_PACKAGE, baseName, author, createDate, createDate, author, baseName);
         Files.writeString(dtoDir.resolve(baseName + "Res.java"), resContent);
 
         String toolName = baseName.toLowerCase();
