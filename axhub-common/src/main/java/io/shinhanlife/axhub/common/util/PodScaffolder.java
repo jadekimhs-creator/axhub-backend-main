@@ -158,10 +158,6 @@ public class PodScaffolder {
             eims.mci.url=http://localhost:${server.port}/api/mock/esb/api
             eims.mcistring.url=http://localhost:${server.port}/api/mock/esb/string
             
-            # API 보안 키 설정
-                                    mcp.security.tenant-domains.mcp-client-1=CUSTOMER,COMMON
-            mcp.security.tenant-domains.mcp-client-2=ALL
-            
             # Gateway/Tool URLs
             axhub.gateway.url=http://localhost:8081
             axhub.tool.url=http://localhost:${server.port}
