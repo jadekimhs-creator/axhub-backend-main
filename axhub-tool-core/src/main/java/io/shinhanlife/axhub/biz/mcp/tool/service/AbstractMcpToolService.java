@@ -8,6 +8,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.List;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -41,7 +42,7 @@ public abstract class AbstractMcpToolService {
     /**
      * 레거시 시스템을 호출하고 공통 처리(PII 마스킹 등)를 수행합니다. (스펙 지정 가능)
      */
-    protected Map<String, Object> executeLegacy(String routingType, String interfaceId, Object inputData, java.util.List<Map<String, Object>> spec) {
+    protected Map<String, Object> executeLegacy(String routingType, String interfaceId, Object inputData, List<Map<String, Object>> spec) {
         Map<String, Object> inputMap;
         if (inputData == null) {
             inputMap = new HashMap<>();

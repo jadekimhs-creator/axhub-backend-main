@@ -7,6 +7,7 @@ import io.shinhanlife.axhub.biz.mcp.tool.dto.SampleStringReq;
 import io.shinhanlife.glow.util.GlowMciParser;
 import org.springframework.stereotype.Service;
 import java.util.Map;
+import java.util.List;
 
 /**
  * @package io.shinhanlife.axhub.biz.mcp.tool.service
@@ -37,7 +38,7 @@ public class SampleStringToolService extends AbstractMcpToolService {
     public Object execute(SampleStringReq req) {
         // 1. EIMS(Legacy)를 통해 원본 고정 길이 문자열을 받아옵니다.
         // 스펙에 mciFormat = STRING 힌트를 주어 전문 통신으로 자동 분기되게 합니다.
-        java.util.List<Map<String, Object>> spec = java.util.List.of(
+        List<Map<String, Object>> spec = List.of(
             Map.of("mciFormat", "STRING")
         );
         Map<String, Object> result = executeLegacy("MCI", "TRGM_001", req, spec);

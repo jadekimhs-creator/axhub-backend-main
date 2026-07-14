@@ -26,6 +26,7 @@ import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestClient;
+import org.springframework.http.client.SimpleClientHttpRequestFactory;
 
 @Slf4j
 @RestController
@@ -52,7 +53,7 @@ public class McpRouterController {
         this.gatewayFallbackProperties = gatewayFallbackProperties;
         
         // [수정됨] 1초 타임아웃을 강제하여 죽은 서버 대기로 인한 지연 방지
-        org.springframework.http.client.SimpleClientHttpRequestFactory factory = new org.springframework.http.client.SimpleClientHttpRequestFactory();
+        SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
         factory.setConnectTimeout(1000); // 연결 시도 타임아웃 1초
         factory.setReadTimeout(1000);    // 응답 대기 타임아웃 1초
         

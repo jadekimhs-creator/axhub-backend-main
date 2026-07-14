@@ -5,6 +5,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
+import org.springframework.http.client.SimpleClientHttpRequestFactory;
 
 import java.util.Map;
 import java.util.UUID;
@@ -39,7 +40,13 @@ public class HttpEimsSender implements EimsSender {
         this.glowProps = glowProps;
         // yml의 대내 MCI host, port, uri를 조합하여 EIMS 호출 주소 생성
         this.eimsUrl = glowProps.getMci().getHost() + ":" + glowProps.getMci().getPort() + glowProps.getMci().getUri();
-        this.restClient = RestClient.builder().build();
+        
+        // HTTP/2 통신 시 Stream Cancelled(RST_STREAM) 에러 방지를 위해 HTTP/1.1 전용 Factory 사용
+        SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
+        factory.setConnectTimeout(3000);
+        factory.setReadTimeout(5000);
+        
+        this.restClient = RestClient.builder().requestFactory(factory).build();
     }
 
     @Override
