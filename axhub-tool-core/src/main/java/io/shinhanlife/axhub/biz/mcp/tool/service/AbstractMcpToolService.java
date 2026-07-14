@@ -34,10 +34,14 @@ public abstract class AbstractMcpToolService {
     @Autowired
     protected ObjectMapper objectMapper;
 
-    /**
-     * 레거시 시스템을 호출하고 공통 처리(PII 마스킹 등)를 수행합니다.
-     */
     protected Map<String, Object> executeLegacy(String routingType, String interfaceId, Object inputData) {
+        return executeLegacy(routingType, interfaceId, inputData, null);
+    }
+
+    /**
+     * 레거시 시스템을 호출하고 공통 처리(PII 마스킹 등)를 수행합니다. (스펙 지정 가능)
+     */
+    protected Map<String, Object> executeLegacy(String routingType, String interfaceId, Object inputData, java.util.List<Map<String, Object>> spec) {
         Map<String, Object> inputMap;
         if (inputData == null) {
             inputMap = new HashMap<>();
@@ -58,7 +62,7 @@ public abstract class AbstractMcpToolService {
             log.info("=======================================================\n");
 
             // 1. Adapter 공통 모듈 직접 호출
-            String executionResult = legacyEimsConnector.executeByTool(routingType, interfaceId, inputMap, null);
+            String executionResult = legacyEimsConnector.executeByTool(routingType, interfaceId, inputMap, spec);
 
             log.info("\n=======================================================");
             log.info(" [Legacy -> Tool] 레거시 시스템 통신 완료");

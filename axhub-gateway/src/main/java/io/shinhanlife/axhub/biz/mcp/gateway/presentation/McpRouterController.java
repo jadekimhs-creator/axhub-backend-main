@@ -50,7 +50,13 @@ public class McpRouterController {
         this.securityProperties = securityProperties;
         this.objectMapper = objectMapper;
         this.gatewayFallbackProperties = gatewayFallbackProperties;
-        this.restClient = RestClient.create();
+        
+        // [수정됨] 1초 타임아웃을 강제하여 죽은 서버 대기로 인한 지연 방지
+        org.springframework.http.client.SimpleClientHttpRequestFactory factory = new org.springframework.http.client.SimpleClientHttpRequestFactory();
+        factory.setConnectTimeout(1000); // 연결 시도 타임아웃 1초
+        factory.setReadTimeout(1000);    // 응답 대기 타임아웃 1초
+        
+        this.restClient = RestClient.builder().requestFactory(factory).build();
     }
 
     @Operation(summary = "MCP 파이프라인 호출", description = "MCP 표준 파이프라인(ExecuteService)을 통해 레거시 툴을 호출합니다.")

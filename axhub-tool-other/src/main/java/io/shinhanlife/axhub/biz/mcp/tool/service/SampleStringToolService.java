@@ -24,7 +24,7 @@ import java.util.Map;
  */
 @Service
 @McpTool(
-    routingType = "MCI_STRING",
+    routingType = "MCI",
     categoryKey = "common"
 )
 public class SampleStringToolService extends AbstractMcpToolService {
@@ -36,7 +36,11 @@ public class SampleStringToolService extends AbstractMcpToolService {
     )
     public Object execute(SampleStringReq req) {
         // 1. EIMS(Legacy)를 통해 원본 고정 길이 문자열을 받아옵니다.
-        Map<String, Object> result = executeLegacy("MCI_STRING", "TRGM_001", req);
+        // 스펙에 mciFormat = STRING 힌트를 주어 전문 통신으로 자동 분기되게 합니다.
+        java.util.List<Map<String, Object>> spec = java.util.List.of(
+            Map.of("mciFormat", "STRING")
+        );
+        Map<String, Object> result = executeLegacy("MCI", "TRGM_001", req, spec);
         
         if (!"SUCCESS".equals(result.get("status"))) {
             return result;
