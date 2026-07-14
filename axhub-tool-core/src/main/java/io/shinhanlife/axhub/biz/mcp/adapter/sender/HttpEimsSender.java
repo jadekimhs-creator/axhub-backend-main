@@ -40,7 +40,14 @@ public class HttpEimsSender implements EimsSender {
         this.glowProps = glowProps;
         // yml의 대내 MCI host, port, uri를 조합하여 EIMS 호출 주소 생성
         this.eimsUrl = glowProps.getMci().getHost() + ":" + glowProps.getMci().getPort() + glowProps.getMci().getUri();
-        
+
+        /*
+        *********************************************** 중요 **************************************************
+        this.restClient = RestClient.create();
+        보통 금융권(신한라이프 등 은행/보험사)의 내부 레거시 시스템이나 MCI(Message Channel Integration) 솔루션은 HTTP/2를 기본으로 지원하지 않는 경우가 훨씬 많습니다.
+        *********************************************** 중요 **************************************************
+         */
+
         // HTTP/2 통신 시 Stream Cancelled(RST_STREAM) 에러 방지를 위해 HTTP/1.1 전용 Factory 사용
         SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
         factory.setConnectTimeout(3000);

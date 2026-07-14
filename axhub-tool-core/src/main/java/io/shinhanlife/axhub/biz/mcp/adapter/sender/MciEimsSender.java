@@ -6,6 +6,7 @@ import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
+import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StopWatch;
 import org.springframework.web.client.RestClient;
@@ -38,6 +39,16 @@ public class MciEimsSender implements EimsSender {
         this.xmlMapper = xmlMapper;
         this.mciUrl = mciUrl;
         this.restClient = RestClient.create(); // 클라이언트 초기화
+
+        /*
+        *********************************************** 중요 **************************************************
+        SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
+        factory.setConnectTimeout(3000);
+        factory.setReadTimeout(5000);
+        this.restClient = RestClient.builder().requestFactory(factory).build();
+        보통 금융권(신한라이프 등 은행/보험사)의 내부 레거시 시스템이나 MCI(Message Channel Integration) 솔루션은 HTTP/2를 기본으로 지원하지 않는 경우가 훨씬 많습니다.
+        *********************************************** 중요 **************************************************
+         */
     }
 
     @Override
