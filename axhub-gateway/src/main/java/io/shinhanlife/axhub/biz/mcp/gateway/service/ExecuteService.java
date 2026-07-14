@@ -24,8 +24,11 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import io.shinhanlife.axhub.biz.mcp.gateway.tool.large.LargeToolResponseService;
+import io.shinhanlife.axhub.biz.mcp.gateway.tool.large.PaginationRequestValidator;
 
 @Slf4j
 @Service
@@ -42,6 +45,8 @@ public class ExecuteService {
     private final ToolAuthorizationService authorizationService;
     private final RedisToolTraceService redisTrace;
     private final McpGatewayProperties properties;
+    private final LargeToolResponseService largeResponses;
+    private final PaginationRequestValidator paginationValidator;
     private final RestClient restClient = RestClient.create();
     private final ExecutorService executor;
 
@@ -55,7 +60,9 @@ public class ExecuteService {
                           CircuitBreakerService circuitBreakerService,
                           ToolAuthorizationService authorizationService,
                           RedisToolTraceService redisTrace,
-                          McpGatewayProperties properties) {
+                          McpGatewayProperties properties,
+                          LargeToolResponseService largeResponses,
+                          PaginationRequestValidator paginationValidator) {
         this.planner = planner;
         this.killSwitchService = killSwitchService;
         this.objectMapper = objectMapper;
@@ -67,6 +74,8 @@ public class ExecuteService {
         this.authorizationService = authorizationService;
         this.redisTrace = redisTrace;
         this.properties = properties;
+        this.largeResponses = largeResponses;
+        this.paginationValidator = paginationValidator;
         
         this.executor = new ThreadPoolExecutor(
                 properties.toolExecutorCorePoolSize(),
@@ -145,7 +154,7 @@ public class ExecuteService {
             try {
                 redisTrace.attemptStarted(context, metadata, arguments, attempt, retryPolicy.maxAttempts());
                 circuitBreaker.beforeCall();
-                Object result = executeOnce(metadata, payload);
+                Object result = executeOnce(context, metadata, arguments, payload);
                 circuitBreaker.recordSuccess();
                 return result;
             } catch (ToolExecutionException error) {
@@ -165,7 +174,7 @@ public class ExecuteService {
                 : lastError;
     }
 
-    private Object executeOnce(ToolMetadata metadata, Map<String, Object> payload) {
+    private Object executeOnce(McpRequestContext context, ToolMetadata metadata, ObjectNode arguments, Map<String, Object> payload) {
         CompletableFuture<Object> future;
 
         try {
@@ -177,23 +186,48 @@ public class ExecuteService {
                     }
                     String executeApiUrl = targetUrl + "/mcp/api/v1/tools/call";
                     
-                    try {
-                        log.info(" [ExecuteService] 요청 페이로드(마스킹 적용): {}", objectMapper.writeValueAsString(dataMasker.mask(objectMapper.valueToTree(payload))));
-                    } catch (Exception ignore) {}
-                    
-                    try {
-                        return executeWithUrl(payload, executeApiUrl);
-                    } catch (Exception e) {
-                        if (executeApiUrl.contains("http://tool-")) {
-                            String fallbackUrl = executeApiUrl.replaceAll("http://tool-[a-zA-Z0-9-]+", "http://localhost");
-                            log.warn(" [ExecuteService] 호스트를 찾을 수 없어 localhost로 재시도합니다: {}", fallbackUrl);
-                            try {
-                                return executeWithUrl(payload, fallbackUrl);
-                            } catch (Exception ex) {
-                                throw new ToolExecutionException(FailureType.SERVER_ERROR, "Tool Pod 호출 실패 (localhost 재시도 포함): " + ex.getMessage());
+                    ObjectNode pageArguments = paginationValidator.normalize(arguments);
+                    LargeToolResponseService.Collector collector = largeResponses.newCollector(metadata.getName(), context.requestId());
+
+                    while (true) {
+                        Map<String, Object> pagePayload = new java.util.HashMap<>(payload);
+                        if (pagePayload.containsKey("params")) {
+                            Map<String, Object> params = new java.util.HashMap<>((Map<String, Object>) pagePayload.get("params"));
+                            params.put("arguments", objectMapper.convertValue(pageArguments, Map.class));
+                            pagePayload.put("params", params);
+                        } else {
+                            pagePayload.put("arguments", objectMapper.convertValue(pageArguments, Map.class));
+                        }
+                        
+                        try {
+                            log.info(" [ExecuteService] 요청 페이로드(마스킹 적용): {}", objectMapper.writeValueAsString(dataMasker.mask(objectMapper.valueToTree(pagePayload))));
+                        } catch (Exception ignore) {}
+                        
+                        JsonNode data = null;
+                        try {
+                            Object httpResult = executeWithUrl(pagePayload, executeApiUrl);
+                            data = extractData(objectMapper.valueToTree(httpResult));
+                        } catch (Exception e) {
+                            if (executeApiUrl.contains("http://tool-")) {
+                                String fallbackUrl = executeApiUrl.replaceAll("http://tool-[a-zA-Z0-9-]+", "http://localhost");
+                                log.warn(" [ExecuteService] 호스트를 찾을 수 없어 localhost로 재시도합니다: {}", fallbackUrl);
+                                try {
+                                    Object httpResult = executeWithUrl(pagePayload, fallbackUrl);
+                                    data = extractData(objectMapper.valueToTree(httpResult));
+                                } catch (Exception ex) {
+                                    throw new ToolExecutionException(FailureType.SERVER_ERROR, "Tool Pod 호출 실패 (localhost 재시도 포함): " + ex.getMessage());
+                                }
+                            } else {
+                                throw new ToolExecutionException(FailureType.SERVER_ERROR, "Tool Pod 호출 실패: " + e.getMessage());
                             }
                         }
-                        throw new ToolExecutionException(FailureType.SERVER_ERROR, "Tool Pod 호출 실패: " + e.getMessage());
+
+                        collector.accept(data);
+                        if (!collector.shouldFetchNextPage()) {
+                            return collector.finish();
+                        }
+                        pageArguments.put("cursor", collector.nextCursor());
+                        pageArguments.put("pageSize", collector.pageSize());
                     }
                 } catch (ToolExecutionException error) {
                     throw error;
@@ -238,6 +272,13 @@ public class ExecuteService {
                 .body(payload)
                 .retrieve()
                 .body(Object.class);
+    }
+    
+    private JsonNode extractData(JsonNode root) {
+        if (!root.path("success").asBoolean(true)) {
+            throw new ToolExecutionException(FailureType.BUSINESS_ERROR, "Tool 서버 업무 오류: " + root.path("error").asText());
+        }
+        return root.has("data") ? root.get("data") : root;
     }
     
     private RetryPolicy retryPolicy(ToolMetadata metadata, ObjectNode arguments) {
