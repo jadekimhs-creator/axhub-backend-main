@@ -29,6 +29,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.shinhanlife.axhub.biz.mcp.gateway.tool.large.LargeToolResponseService;
 import io.shinhanlife.axhub.biz.mcp.gateway.tool.large.PaginationRequestValidator;
+import io.shinhanlife.axhub.biz.mcp.gateway.tool.result.ToolExecutionResultFormatter;
+import io.shinhanlife.axhub.biz.mcp.gateway.tool.result.ToolExecutionResult;
+import io.shinhanlife.axhub.biz.mcp.gateway.guardrail.ToolResponseGuardrailService;
+import io.shinhanlife.axhub.biz.mcp.gateway.transport.ToolInvoker;
 
 @Slf4j
 @Service
@@ -47,7 +51,9 @@ public class ExecuteService {
     private final McpGatewayProperties properties;
     private final LargeToolResponseService largeResponses;
     private final PaginationRequestValidator paginationValidator;
-    private final RestClient restClient = RestClient.create();
+    private final ToolExecutionResultFormatter resultFormatter;
+    private final ToolResponseGuardrailService responseGuardrail;
+    private final ToolInvoker toolInvoker;
     private final ExecutorService executor;
 
     public ExecuteService(ToolPlanner planner,
@@ -62,7 +68,10 @@ public class ExecuteService {
                           RedisToolTraceService redisTrace,
                           McpGatewayProperties properties,
                           LargeToolResponseService largeResponses,
-                          PaginationRequestValidator paginationValidator) {
+                          PaginationRequestValidator paginationValidator,
+                          ToolExecutionResultFormatter resultFormatter,
+                          ToolResponseGuardrailService responseGuardrail,
+                          ToolInvoker toolInvoker) {
         this.planner = planner;
         this.killSwitchService = killSwitchService;
         this.objectMapper = objectMapper;
@@ -76,6 +85,9 @@ public class ExecuteService {
         this.properties = properties;
         this.largeResponses = largeResponses;
         this.paginationValidator = paginationValidator;
+        this.resultFormatter = resultFormatter;
+        this.responseGuardrail = responseGuardrail;
+        this.toolInvoker = toolInvoker;
         
         this.executor = new ThreadPoolExecutor(
                 properties.toolExecutorCorePoolSize(),
@@ -123,7 +135,12 @@ public class ExecuteService {
             Object result = executeWithResilience(context, metadata, argumentsNode, payload);
             
             if (result instanceof com.fasterxml.jackson.databind.JsonNode) {
-                result = objectMapper.convertValue(result, Object.class);
+                // Apply Output Guardrail
+                String wrappedResponse = responseGuardrail.validateAndWrap(metadata, context.requestId(), (com.fasterxml.jackson.databind.JsonNode) result);
+                
+                // Format the result
+                ToolExecutionResult formattedResult = resultFormatter.fromRawResponse(metadata.getName(), wrappedResponse);
+                result = formattedResult;
             }
             
             long elapsedMillis = elapsedMillis(startedAt);
@@ -210,15 +227,13 @@ public class ExecuteService {
                         
                         JsonNode data = null;
                         try {
-                            Object httpResult = executeWithUrl(pagePayload, executeApiUrl);
-                            data = extractData(objectMapper.valueToTree(httpResult));
+                            data = toolInvoker.invoke(pagePayload, executeApiUrl);
                         } catch (Exception e) {
                             if (executeApiUrl.contains("http://tool-")) {
                                 String fallbackUrl = executeApiUrl.replaceAll("http://tool-[a-zA-Z0-9-]+", "http://localhost");
                                 log.warn(" [ExecuteService] 호스트를 찾을 수 없어 localhost로 재시도합니다: {}", fallbackUrl);
                                 try {
-                                    Object httpResult = executeWithUrl(pagePayload, fallbackUrl);
-                                    data = extractData(objectMapper.valueToTree(httpResult));
+                                    data = toolInvoker.invoke(pagePayload, fallbackUrl);
                                 } catch (Exception ex) {
                                     throw new ToolExecutionException(FailureType.SERVER_ERROR, "Tool Pod 호출 실패 (localhost 재시도 포함): " + ex.getMessage());
                                 }
@@ -266,24 +281,6 @@ public class ExecuteService {
             Thread.currentThread().interrupt();
             throw new ToolExecutionException(FailureType.INTERNAL_ERROR, "Tool 실행이 중단되었습니다: " + metadata.getName(), error);
         }
-    }
-
-    private Object executeWithUrl(Map<String, Object> payload, String url) {
-        return restClient.post()
-                .uri(url)
-                .contentType(MediaType.APPLICATION_JSON)
-                 // TODO: Use actual tenant's key
-                .header("X-Trace-Id", UUID.randomUUID().toString())
-                .body(payload)
-                .retrieve()
-                .body(Object.class);
-    }
-    
-    private JsonNode extractData(JsonNode root) {
-        if (!root.path("success").asBoolean(true)) {
-            throw new ToolExecutionException(FailureType.BUSINESS_ERROR, "Tool 서버 업무 오류: " + root.path("error").asText());
-        }
-        return root.has("data") ? root.get("data") : root;
     }
     
     private RetryPolicy retryPolicy(ToolMetadata metadata, ObjectNode arguments) {
