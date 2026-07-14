@@ -85,6 +85,22 @@ public class ToolMetadata {
     private Integer slidingWindowSize;    // 서킷 브레이커 에러율 계산 표본 요청 수
     private Integer rateLimitForPeriod;   // 속도 제어: 1초당 허용 최대 요청 수
 
+    // 7. Gateway 코어 제어용 설정 필드 추가 (재시도, 타임아웃, 오퍼레이션 타입)
+    @Builder.Default
+    private OperationType operationType = OperationType.READ;
+    
+    @Builder.Default
+    private Boolean retryEnabled = true;
+
+    @Builder.Default
+    private Integer circuitBreakerFailureThreshold = 0;
+
+    @Builder.Default
+    private Long circuitBreakerOpenMillis = 0L;
+
+    @Builder.Default
+    private Long timeoutMillis = 0L;
+
     // --- Guardrail 호환성을 위한 메서드 추가 ---
     public java.util.Set<String> allowedArguments() {
         if (parametersSchema == null || !parametersSchema.containsKey("properties")) return java.util.Set.of();
