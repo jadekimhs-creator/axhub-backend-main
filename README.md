@@ -54,31 +54,27 @@ AXHUB Backend는 3개의 주요 애플리케이션으로 분리 운영됩니다:
 
 ---
 
-##  Gemini MCP 연동 (Integration)
+## 🤖 AI Agent 연동 아키텍처 (MCP & Agent Builder)
 
-본 시스템은 REST API(JSON-RPC)를 사용하므로, **표준 MCP 통신(Stdio)**을 지원하기 위한 브릿지 스크립트를 내장하고 있습니다. 이를 통해 제미나이(Gemini Code Assist, Gemini CLI 등)와 코드 수정 없이 완벽히 연동됩니다.
+본 시스템은 **투트랙(Two-Track) AI 연동 아키텍처**를 제공하여 로컬 개발 환경과 프로덕션 환경 모두를 완벽하게 지원합니다.
 
-- **표준 브릿지 파일**: `McpBridge.java` (루트 디렉토리)
-- **제미나이 설정 방법**:
-  제미나이 도구의 `settings.json` (또는 `mcp.json`)에 다음과 같이 프로세스를 등록합니다.
+### 1. 로컬 코딩 AI (Antigravity, Cursor, Claude Desktop 등) 연동
+표준 MCP 통신(Stdio)을 요구하는 로컬 AI 에이전트를 위해 자바 기반의 브릿지 스크립트(`McpBridge.java`)를 내장하고 있습니다. 브릿지가 Stdio 요청을 HTTP로 변환하여 로컬 환경의 Gateway(포트: 8281)로 전달합니다.
+
+- **설정 방법**: IDE의 `mcp_config.json` 설정 파일에 아래와 같이 등록합니다.
   ```json
   "mcpServers": {
     "axhub-gateway": {
       "command": "java",
-      "args": ["/프로젝트절대경로/axhub-backend-main/McpBridge.java"]
+      "args": ["C:/절대경로/axhub-backend-main/McpBridge.java"]
     }
   }
   ```
-  *(참고: Antigravity IDE 환경에서는 이미 `.agents/mcp.json`에 설정되어 자동 연동됩니다.)*
+- **특정 카테고리 툴 필터링**: `McpBridge.java` 내부의 URI 파라미터(`?categoryKey=common`)를 수정하여 원하는 도메인의 툴만 선택적으로 AI에게 학습시킬 수 있습니다.
 
-- **특정 카테고리 툴만 연동하기 (categoryKey 필터링)**:
-  에이전트가 특정 도메인(예: `common`, `claim` 등)의 툴만 제한적으로 학습하게 하려면, 브릿지 코드(`McpBridge.java`) 내 URI를 다음과 같이 한 줄만 수정하시면 됩니다.
-  ```java
-  // McpBridge.java (tools/list 요청 처리 부분)
-  // 기존: .uri(URI.create("http://localhost:8081/mcp/api/v1/tools/list"))
-  // 수정: .uri(URI.create("http://localhost:8081/mcp/api/v1/tools/list?categoryKey=common"))
-  ```
-  수정 후 에이전트를 재시작하면, 해당 카테고리에 속한 툴 목록만 동적으로 내려받아 학습합니다.
+### 2. 프로덕션 클라우드 AI (Google Cloud Agent Builder 등) 연동
+실제 라이브 서비스에서 동작하는 클라우드 Agent Builder는 REST API 기반의 OpenAPI Spec을 요구합니다. 
+`axhub-gateway`는 이미 **Agent Builder 규격의 REST API(`/mcp/api/v1/tools/call`)를 네이티브로 제공**하므로, 별도의 브릿지나 어댑터 없이 Endpoint URL과 Swagger(OpenAPI) 문서만 클라우드 콘솔에 등록하면 즉시 라이브 챗봇/에이전트로 서비스할 수 있습니다.
 
 ---
 
@@ -102,11 +98,17 @@ AXHUB Backend는 3개의 주요 애플리케이션으로 분리 운영됩니다:
 
 ---
 
-##  안정성 및 트래픽 제어 (Resilience4j)
+## 🛡️ 시스템 안정성 및 네트워크 제어 (Resilience & Network)
 
-MSA(Microservices Architecture) 환경의 안정성을 위해 완벽한 2-Track 방어막을 구축했습니다.
-1. **Gateway 계층 (동적 방어):** Tool이 등록할 때 제출한 메타데이터(SLA)를 기반으로 Gateway 내에서 동적 CircuitBreaker 및 RateLimiter를 가동합니다. 한계치 초과 시 트래픽을 Kafka 큐로 비동기 전환합니다.
-2. **Tool 계층 (정적 방어):** 레거시 시스템(EIMS/MCI)과 통신하는 커넥터 내부에 `@CircuitBreaker`, `@RateLimiter` 어노테이션이 적용되어 장애 전파를 차단합니다.
+MSA 및 외부 시스템(MCI) 연동 환경의 안정성을 위해 완벽한 3-Tier 방어 체계를 구축했습니다.
+
+1. **Gateway 라우팅 방어 (Timeout & Fallback):**
+   - MCP 라우터(`McpRouterController`) 단에 1초 타임아웃을 강제 적용하여 특정 Tool Pod의 응답 지연이 전체 시스템 장애로 이어지는 것을 방지하고 신속하게 정적 Fallback 라우팅으로 전환합니다.
+2. **MCI 네트워크 안정화 (HTTP/1.1 Downgrade):**
+   - 기존 HTTP/2 사용 시 레거시 시스템 연동 중 간헐적으로 발생하던 `RST_STREAM` 오류를 원천 차단하기 위해, MCI 전용 `HttpEimsSender`에는 고도로 최적화된 **HTTP/1.1 전용 커넥션 풀(Factory)**이 고정 적용되어 네트워크 단절을 방지합니다.
+3. **Resilience4j 기반 트래픽 제어:**
+   - **Gateway 계층 (동적 방어):** Tool 등록 시 제출된 SLA 메타데이터를 기반으로 동적 CircuitBreaker 및 RateLimiter를 가동하며, 한계치 초과 시 Kafka 큐로 비동기 전환합니다.
+   - **Tool 계층 (정적 방어):** 레거시 커넥터 내부에 `@CircuitBreaker`, `@RateLimiter` 어노테이션 기반의 장애 전파 차단 로직이 2차적으로 가동됩니다.
 
 ---
 
