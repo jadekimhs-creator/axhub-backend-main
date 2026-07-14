@@ -3,7 +3,7 @@
     "axhub-gateway": {
       "command": "java",
       "args": [
-        "C:/Users/jade/.gemini/antigravity/scratch/axhub-backend-main/McpBridge.java"
+        "C:/eGovFrameDev-4.3.1-64bit/workspace-egov/axhub-backend-main/McpBridge.java"
       ]
     }
   }

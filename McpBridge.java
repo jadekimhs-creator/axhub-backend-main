@@ -32,7 +32,7 @@ public class McpBridge {
                     String id = extractId(line);
                     try {
                         HttpRequest req = HttpRequest.newBuilder()
-                                .uri(URI.create("http://localhost:8081/mcp/api/v1/tools/list"))
+                                .uri(URI.create("http://localhost:8281/mcp/api/v1/tools/list"))
                                 
                                 .GET()
                                 .build();
@@ -65,7 +65,7 @@ public class McpBridge {
                     String id = extractId(line);
                     try {
                         HttpRequest req = HttpRequest.newBuilder()
-                                .uri(URI.create("http://localhost:8081/mcp/api/v1/tools/call"))
+                                .uri(URI.create("http://localhost:8281/mcp/api/v1/tools/call"))
                                 .header("Content-Type", "application/json")
                                 .header("X-Agent-Id", "Antigravity")
                                 
