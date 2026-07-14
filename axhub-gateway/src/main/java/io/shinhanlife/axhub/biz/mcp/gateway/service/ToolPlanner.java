@@ -74,6 +74,7 @@ public class ToolPlanner {
 
             toolMetadata = ToolMetadata.builder()
                 .uid(toolName)
+                .name(toolName)
                 .integrationType("DIRECT")
                 .podUrl(fallbackPodUrl)
                 .build();

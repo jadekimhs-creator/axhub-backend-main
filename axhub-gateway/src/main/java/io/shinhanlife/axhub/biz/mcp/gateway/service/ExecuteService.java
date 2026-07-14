@@ -121,6 +121,11 @@ public class ExecuteService {
             }
 
             Object result = executeWithResilience(context, metadata, argumentsNode, payload);
+            
+            if (result instanceof com.fasterxml.jackson.databind.JsonNode) {
+                result = objectMapper.convertValue(result, Object.class);
+            }
+            
             long elapsedMillis = elapsedMillis(startedAt);
             
             String responseText = "";

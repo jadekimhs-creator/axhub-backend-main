@@ -20,6 +20,11 @@ public class GuardrailService {
      * ToolMetadata에 정의된 required/allowed arguments 기준으로 요청 인자를 검증합니다.
      */
     public void validate(ToolMetadata metadata, ObjectNode arguments) {
+        if (metadata.getParametersSchema() == null) {
+            // 스키마 정보가 없으면(Fallback 툴 등) 검증을 생략합니다.
+            return;
+        }
+
         Iterator<String> fieldNames = arguments.fieldNames();
         while (fieldNames.hasNext()) {
             String fieldName = fieldNames.next();
