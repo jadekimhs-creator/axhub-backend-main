@@ -138,9 +138,8 @@ public class ExecuteService {
                 // Apply Output Guardrail
                 String wrappedResponse = responseGuardrail.validateAndWrap(metadata, context.requestId(), (com.fasterxml.jackson.databind.JsonNode) result);
                 
-                // Format the result
-                ToolExecutionResult formattedResult = resultFormatter.fromRawResponse(metadata.getName(), wrappedResponse);
-                result = formattedResult;
+                // Format the result (Restore legacy raw format as Map/List for backward compatibility)
+                result = objectMapper.readValue(wrappedResponse, Object.class);
             }
             
             long elapsedMillis = elapsedMillis(startedAt);

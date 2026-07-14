@@ -25,13 +25,19 @@ public class ToolResponseGuardrailService {
     public String validateAndWrap(ToolMetadata metadata, String requestId, JsonNode data) {
         validateData(metadata.getName(), data);
 
-        ObjectNode response = json.createObjectNode();
-        response.put("success", true);
-        response.put("toolName", metadata.getName());
-        response.put("requestId", requestId);
-        response.put("source", "registered-tool-server");
-        response.set("data", data);
-        response.set("answerPolicy", answerPolicy());
+        ObjectNode response;
+        if (data.isObject() && data.has("success") && data.has("data")) {
+            response = ((ObjectNode) data).deepCopy();
+            response.set("answerPolicy", answerPolicy());
+        } else {
+            response = json.createObjectNode();
+            response.put("success", true);
+            response.put("toolName", metadata.getName());
+            response.put("requestId", requestId);
+            response.put("source", "registered-tool-server");
+            response.set("data", data);
+            response.set("answerPolicy", answerPolicy());
+        }
 
         try {
             return json.writerWithDefaultPrettyPrinter().writeValueAsString(response);

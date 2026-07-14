@@ -73,13 +73,18 @@ public class McpRouterController {
         try {
             Object result = executeService.execute(payload, tenantId);
             
+            io.shinhanlife.axhub.biz.mcp.adapter.dto.JsonRpcResponse response = new io.shinhanlife.axhub.biz.mcp.adapter.dto.JsonRpcResponse();
+            response.setJsonrpc("2.0");
+            response.setId(payload.containsKey("id") ? String.valueOf(payload.get("id")) : UUID.randomUUID().toString());
+            response.setResult(result);
+            
             try {
-                log.info("[MCP Gateway -> Admin UI] 동적 툴 실행 결과 반환: {}", objectMapper.writeValueAsString(result));
+                log.info("[MCP Gateway -> Admin UI] 동적 툴 실행 결과 반환: {}", objectMapper.writeValueAsString(response));
             } catch (Exception ex) {
-                log.info("[MCP Gateway -> Admin UI] 동적 툴 실행 결과 반환: {}", result);
+                log.info("[MCP Gateway -> Admin UI] 동적 툴 실행 결과 반환: {}", response);
             }
             
-            return ResponseEntity.ok(result);
+            return ResponseEntity.ok(response);
         } catch (SecurityException se) {
             log.warn(" [보안 차단] 권한 오류: {}", se.getMessage());
             return ResponseEntity.status(403).body(Map.of("error", se.getMessage()));

@@ -6,11 +6,10 @@ Spring Boot 기반 AXHUB 관리자 백엔드 API 서버 및 MCP(Model Context Pr
 
 ##  아키텍처 개요 (Architecture Overview)
 
-AXHUB Backend는 3개의 주요 애플리케이션으로 분리 운영됩니다:
+AXHUB Backend는 크게 2개의 주요 애플리케이션 계층으로 분리 운영됩니다:
 
-1. **AXHUB Admin (`AxHubAdminApplication`)**: 관리자 웹 화면을 위한 REST API 서버
-2. **MCP Gateway (`AxHubGatewayApplication`)**: 외부 LLM(Claude, GPT 등) 서버의 MCP 통신을 받아, 내부 Tool 서버들로 분배(라우팅)하는 허브 서버 (포트: 8081)
-3. **MCP Tool (`AxHubToolApplication`)**: 실제 레거시 시스템(MCI, EAI 등)과 통신하여 비즈니스 로직(결제, 휴가신청 등)을 수행하는 어댑터 서버 (포트: 8082~8084 분산 구성 가능)
+1. **MCP Gateway (`AxHubGatewayApplication`)**: 내장된 웹 UI(AI 챗봇, 스캐폴더) 제공 및 외부 LLM(Claude, GPT 등) 서버의 MCP 통신을 받아 내부 Tool 서버들로 분배(라우팅)하는 허브 서버 (포트: 8081)
+2. **MCP Tool (`AxHubToolApplication`)**: 실제 레거시 시스템(MCI, EAI 등)과 통신하여 비즈니스 로직(결제, 휴가신청 등)을 수행하는 어댑터 서버 (포트: 8082~8085 등 분산 구성 가능)
 
 ---
 
@@ -31,35 +30,50 @@ AXHUB Backend는 3개의 주요 애플리케이션으로 분리 운영됩니다:
 
 ## ▶ 실행 방법 (How to Run)
 
-### 1. Gateway & Tool 서버 실행 (MCP 연동용)
-- **Gateway 서버 기동:**
-  - `./gradlew bootRun -PmainClass=io.shinhanlife.AxHubGatewayApplication` (기본 포트: 8081)
-- **Tool 서버 기동 (필요에 따라 N대 스케일 아웃 가능):**
-  - `./gradlew bootRun -PmainClass=io.shinhanlife.AxHubToolApplication --args="--server.port=8082"`
-  - Tool 서버가 기동되면 자동으로 Gateway(8081)에 자신을 등록(Auto-Registration)합니다.
-  - **(선택) 특정 Tool 그룹만 실행하기:** 
-    - 업무 특성에 따라 세분화된 그룹에 속한 Tool만 띄우고 싶다면, 실행 인수에 `--mcp.tool.target=그룹명`을 추가합니다.
-    - **지원되는 그룹명:**
-      - `NOTIFICATION`: 이메일, SMS 발송
-      - `CLAIM`: 청구 처리, 심사 상태 조회
-      - `POLICY`: 증권 발행, 발행 가능 여부 조회
-      - `HR`: 휴가 등록, 연차 갯수 조회
-      - `CONTRACT`: 계약 상태, 계약 상세 조회
-      - `CUSTOMER`: 고객 등급, 고객 상세 정보 조회
-    - IntelliJ IDEA: `Run/Debug Configurations`  `AxHubToolApplication`  `Program arguments` 에 `--mcp.tool.target=NOTIFICATION` 입력
+### 1. Docker Compose를 이용한 전체 실행 (권장)
+마이크로서비스 아키텍처 특성상 여러 개의 Tool Pod이 필요하므로, Docker Compose를 이용한 전체 실행을 권장합니다.
 
-### 2. Admin 관리자 서버 실행
-- **Admin 서버 기동:**
-  - `./gradlew bootRun -PmainClass=io.shinhanlife.AxHubAdminApplication` (포트: 8080)
+```bash
+# 전체 시스템(Gateway + Redis + 모든 Tool Pod) 빌드 및 백그라운드 실행
+./gradlew build -x test
+docker compose up -d --build
+```
+- **Gateway (Chat UI & 라우터)**: `http://localhost:8281`
+- Gateway가 뜨면 내장된 챗봇 웹 UI(`http://localhost:8281/chat.html`)에 접속하여 바로 테스트할 수 있습니다.
+
+### 2. 로컬 개발 시 개별 실행 (IntelliJ / Gradle)
+개발 중 특정 모듈만 띄워 디버깅해야 할 경우 아래와 같이 실행합니다.
+
+- **Gateway 서버 기동:**
+  - `./gradlew :axhub-gateway:bootRun`
+- **Tool 서버 기동 (예: other 툴):**
+  - `./gradlew :axhub-tool-other:bootRun`
+  - Tool 서버가 기동되면 자동으로 Gateway에 자신을 등록(Auto-Registration)합니다.
+
+
 
 ---
 
-## 🤖 AI Agent 연동 아키텍처 (MCP & Agent Builder)
+## 🤖 AI Agent 연동 아키텍처 (Spring AI & MCP)
 
 본 시스템은 **투트랙(Two-Track) AI 연동 아키텍처**를 제공하여 로컬 개발 환경과 프로덕션 환경 모두를 완벽하게 지원합니다.
 
-### 1. 로컬 코딩 AI (Antigravity, Cursor, Claude Desktop 등) 연동
-표준 MCP 통신(Stdio)을 요구하는 로컬 AI 에이전트를 위해 자바 기반의 브릿지 스크립트(`McpBridge.java`)를 내장하고 있습니다. 브릿지가 Stdio 요청을 HTTP로 변환하여 로컬 환경의 Gateway(포트: 8281)로 전달합니다.
+### 1. 내장형 웹 챗봇 (Spring AI 기반) - NEW! 🎉
+가장 빠르고 직관적으로 AI 에이전트를 테스트할 수 있는 내장형 챗봇 화면을 제공합니다. Gateway 서버 자체에 **Spring AI (spring-ai-starter-mcp-server-webmvc)** 가 연동되어 있어 별도의 파이썬 스크립트나 외부 앱 없이도 즉각적인 테스트가 가능합니다.
+
+- **접속 방법**: Gateway(Docker) 기동 후 브라우저에서 `http://localhost:8281/chat.html` 접속
+- **동작 방식**: 
+  1. 사용자가 질문을 입력하면 내부 `ChatClient` (Gemini API 등)로 전송
+  2. Spring AI가 내부 레지스트리의 Tool 목록을 분석하여 필요한 Tool 탐색
+  3. LLM이 Tool 호출 판단 시, Gateway의 `ExecuteService`를 거쳐 Tool Pod의 기능을 직접 실행
+  4. 결과를 LLM이 다시 해석하여 사용자에게 자연어로 응답
+
+### 2. 프로덕션 클라우드 AI (Google Cloud Agent Builder 등) 연동
+실제 라이브 서비스에서 동작하는 클라우드 Agent Builder는 REST API 기반의 OpenAPI Spec을 요구합니다. 
+`axhub-gateway`는 이미 **Agent Builder 규격의 REST API(`/mcp/api/v1/tools/call`)를 네이티브로 제공**하므로, 별도의 브릿지나 어댑터 없이 Endpoint URL과 Swagger(OpenAPI) 문서만 클라우드 콘솔에 등록하면 즉시 라이브 챗봇/에이전트로 서비스할 수 있습니다.
+
+### 3. (Legacy) 로컬 코딩 AI (Cursor, Claude Desktop 등) 연동
+표준 MCP 통신(Stdio)을 요구하는 로컬 AI 에이전트를 위해 자바 기반의 브릿지 스크립트(`McpBridge.java`)를 내장하고 있습니다. 브릿지가 Stdio 요청을 HTTP로 변환하여 로컬 환경의 Gateway로 전달합니다.
 
 - **설정 방법**: IDE의 `mcp_config.json` 설정 파일에 아래와 같이 등록합니다.
   ```json
@@ -70,11 +84,6 @@ AXHUB Backend는 3개의 주요 애플리케이션으로 분리 운영됩니다:
     }
   }
   ```
-- **특정 카테고리 툴 필터링**: `McpBridge.java` 내부의 URI 파라미터(`?categoryKey=common`)를 수정하여 원하는 도메인의 툴만 선택적으로 AI에게 학습시킬 수 있습니다.
-
-### 2. 프로덕션 클라우드 AI (Google Cloud Agent Builder 등) 연동
-실제 라이브 서비스에서 동작하는 클라우드 Agent Builder는 REST API 기반의 OpenAPI Spec을 요구합니다. 
-`axhub-gateway`는 이미 **Agent Builder 규격의 REST API(`/mcp/api/v1/tools/call`)를 네이티브로 제공**하므로, 별도의 브릿지나 어댑터 없이 Endpoint URL과 Swagger(OpenAPI) 문서만 클라우드 콘솔에 등록하면 즉시 라이브 챗봇/에이전트로 서비스할 수 있습니다.
 
 ---
 

@@ -65,9 +65,18 @@ public class ChatController {
                     error -> {
                         log.error("[Real AI Chat] 스트리밍 중 에러 발생", error);
                         try {
-                            emitter.send("\n[에러 발생: " + error.getMessage() + "]");
+                            String errorMsg = error.getMessage();
+                            if (errorMsg != null && (errorMsg.contains("timeout") || errorMsg.contains("OpenAIIoException"))) {
+                                emitter.send("\n\n⚠️ **요청 시간이 초과되었습니다.** (현재 여러 개의 도구를 분석하느라 모델의 응답이 지연되었습니다. 해당하는 도구가 없거나 너무 복잡한 요청일 수 있습니다.)");
+                            } else if (errorMsg != null && errorMsg.contains("503")) {
+                                emitter.send("\n\n⚠️ **AI 모델 서버 혼잡 (503)**: 현재 AI 모델을 제공하는 서버에 일시적으로 접속자가 많아 지연이 발생하고 있습니다. 잠시 후 다시 시도해 주세요.");
+                            } else if (errorMsg != null && errorMsg.contains("429")) {
+                                emitter.send("\n\n⚠️ **API 사용량 초과 (429)**: 현재 사용 중인 Gemini API(무료 티어)의 일일 또는 분당 요청 한도를 초과했습니다. 잠시 후 다시 시도하시거나 API 플랜을 확인해 주세요.");
+                            } else {
+                                emitter.send("\n[에러 발생: " + errorMsg + "]");
+                            }
                         } catch (Exception ignore) {}
-                        emitter.completeWithError(error);
+                        emitter.complete(); // 클라이언트 측에서 네트워크 에러로 처리하지 않도록 정상 종료
                     },
                     () -> {
                         log.info("[Real AI Chat] 스트리밍 완료");

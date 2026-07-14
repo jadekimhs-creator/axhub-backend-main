@@ -212,7 +212,7 @@ public class BusinessToolController {
             resultPayload.put("error_message", null);
             resultPayload.put("elapsed_ms", elapsed);
             resultPayload.put("truncated", false);
-                        int originalSize = 0;
+            int originalSize = 0;
             try {
                 if (methodResult instanceof Map && ((Map<?, ?>) methodResult).containsKey("legacy_response")) {
                     Object legacyResp = ((Map<?, ?>) methodResult).get("legacy_response");
