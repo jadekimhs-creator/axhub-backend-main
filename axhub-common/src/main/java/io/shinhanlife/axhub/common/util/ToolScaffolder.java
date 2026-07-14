@@ -159,7 +159,7 @@ public class ToolScaffolder {
             """.formatted(BASE_PACKAGE, BASE_PACKAGE, baseName, author, createDate, createDate, author, baseName);
         Files.writeString(dtoDir.resolve(baseName + "Res.java"), resContent);
 
-        String toolName = baseName.toLowerCase();
+        String toolName = baseName.isEmpty() ? baseName : Character.toLowerCase(baseName.charAt(0)) + baseName.substring(1);
 
         // Generate Service
         String serviceContent = """
@@ -170,8 +170,8 @@ public class ToolScaffolder {
             import %s.dto.%sReq;
             import %s.dto.%sRes;
             import %s.%s.converter.%sLegacyConverter;
-            import lombok.RequiredArgsConstructor;
             import org.springframework.stereotype.Service;
+            import org.mapstruct.factory.Mappers;
 
             /**
              * @package %s.service
@@ -188,14 +188,13 @@ public class ToolScaffolder {
              * </pre>
              */
             @Service
-            @RequiredArgsConstructor
             @McpTool(
                 routingType = "%s",
                 categoryKey = "%s"
             )
             public class %sService extends AbstractMcpToolService {
 
-                private final %sLegacyConverter converter;
+                private final %sLegacyConverter converter = Mappers.getMapper(%sLegacyConverter.class);
 
                 @McpFunction(
                     displayName = "%s 툴",
@@ -213,14 +212,23 @@ public class ToolScaffolder {
             }
             """.formatted(
                 BASE_PACKAGE,
+                BASE_PACKAGE,
+                BASE_PACKAGE,
                 BASE_PACKAGE, baseName,
                 BASE_PACKAGE, baseName,
                 BASE_PACKAGE, shortName, baseName,
-                BASE_PACKAGE, baseName,
-                BASE_PACKAGE, baseName, author, createDate, createDate, author,
-                routingType, group.toLowerCase(), baseName, baseName,
+                BASE_PACKAGE,
+                baseName,
+                author,
+                createDate,
+                createDate, author,
+                routingType, group.toLowerCase(),
+                baseName,
+                baseName, baseName,
                 baseName, toolName, description, description + " 해줘.", interfaceId, register,
-                baseName, baseName, routingType, interfaceId
+                baseName,
+                baseName,
+                routingType, interfaceId
             );
         
         Files.writeString(serviceDir.resolve(baseName + "Service.java"), serviceContent);
