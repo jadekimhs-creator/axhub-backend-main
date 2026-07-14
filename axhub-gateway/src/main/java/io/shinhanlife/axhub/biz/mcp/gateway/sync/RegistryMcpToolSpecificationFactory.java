@@ -20,7 +20,6 @@ import java.util.UUID;
  */
 @Component
 public class RegistryMcpToolSpecificationFactory {
-    
     private final ExecuteService executeService;
     private final ObjectMapper objectMapper;
 
@@ -41,11 +40,11 @@ public class RegistryMcpToolSpecificationFactory {
 
         return McpStatelessServerFeatures.SyncToolSpecification.builder()
                 .tool(tool)
-                .callHandler((context, request) -> execute(entry.getName(), request))
+                .callHandler((context, request) -> execute(entry, request))
                 .build();
     }
 
-    private McpSchema.CallToolResult execute(String toolName, McpSchema.CallToolRequest request) {
+    private McpSchema.CallToolResult execute(ToolMetadata entry, McpSchema.CallToolRequest request) {
         try {
             // Build legacy JSON-RPC payload format expected by ExecuteService
             Map<String, Object> payload = new HashMap<>();
@@ -54,7 +53,7 @@ public class RegistryMcpToolSpecificationFactory {
             payload.put("id", UUID.randomUUID().toString());
             
             Map<String, Object> params = new HashMap<>();
-            params.put("name", toolName);
+            params.put("name", entry.getName());
             params.put("arguments", request.arguments());
             payload.put("params", params);
 

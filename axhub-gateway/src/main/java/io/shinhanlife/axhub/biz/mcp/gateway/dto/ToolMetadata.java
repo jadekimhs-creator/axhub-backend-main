@@ -84,4 +84,15 @@ public class ToolMetadata {
     private Integer failureRateThreshold; // 서킷 브레이커 동작 기준 실패율 (%)
     private Integer slidingWindowSize;    // 서킷 브레이커 에러율 계산 표본 요청 수
     private Integer rateLimitForPeriod;   // 속도 제어: 1초당 허용 최대 요청 수
+
+    // --- Guardrail 호환성을 위한 메서드 추가 ---
+    public java.util.Set<String> allowedArguments() {
+        if (parametersSchema == null || !parametersSchema.containsKey("properties")) return java.util.Set.of();
+        return ((Map<String, Object>) parametersSchema.get("properties")).keySet();
+    }
+
+    public java.util.Set<String> requiredArguments() {
+        if (parametersSchema == null || !parametersSchema.containsKey("required")) return java.util.Set.of();
+        return new java.util.HashSet<>((java.util.List<String>) parametersSchema.get("required"));
+    }
 }
