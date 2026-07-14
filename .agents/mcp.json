@@ -1,10 +1,7 @@
 {
   "mcpServers": {
     "axhub-gateway": {
-      "command": "java",
-      "args": [
-        "C:/eGovFrameDev-4.3.1-64bit/workspace-egov/axhub-backend-main/McpBridge.java"
-      ]
+      "url": "http://localhost:8281/mcp/sse"
     }
   }
 }

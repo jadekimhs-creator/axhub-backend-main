@@ -2,7 +2,7 @@ package io.shinhanlife.axhub.biz.mcp.gateway.sync;
 
 import io.shinhanlife.axhub.biz.mcp.gateway.dto.ToolMetadata;
 import io.shinhanlife.axhub.biz.mcp.gateway.registry.RedisRegistryService;
-import io.modelcontextprotocol.server.McpStatelessSyncServer;
+import io.modelcontextprotocol.server.McpSyncServer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.ObjectProvider;
@@ -24,13 +24,13 @@ import java.util.stream.Collectors;
 public class RegistryMcpToolSynchronizer {
     private static final Logger log = LoggerFactory.getLogger(RegistryMcpToolSynchronizer.class);
 
-    private final ObjectProvider<McpStatelessSyncServer> mcpServerProvider;
+    private final ObjectProvider<McpSyncServer> mcpServerProvider;
     private final RedisRegistryService redisRegistryService;
     private final RegistryMcpToolSpecificationFactory specificationFactory;
     private final Set<String> managedToolNames = new LinkedHashSet<>();
     private final ReentrantLock lock = new ReentrantLock();
 
-    public RegistryMcpToolSynchronizer(ObjectProvider<McpStatelessSyncServer> mcpServerProvider,
+    public RegistryMcpToolSynchronizer(ObjectProvider<McpSyncServer> mcpServerProvider,
                                        RedisRegistryService redisRegistryService,
                                        RegistryMcpToolSpecificationFactory specificationFactory) {
         this.mcpServerProvider = mcpServerProvider;
@@ -49,7 +49,7 @@ public class RegistryMcpToolSynchronizer {
     }
 
     public void synchronize() {
-        McpStatelessSyncServer server = mcpServerProvider.getIfAvailable();
+        McpSyncServer server = mcpServerProvider.getIfAvailable();
         if (server == null) {
             return;
         }

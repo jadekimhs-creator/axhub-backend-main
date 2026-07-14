@@ -2,7 +2,7 @@ package io.shinhanlife.axhub.biz.mcp.gateway.sync;
 
 import io.shinhanlife.axhub.biz.mcp.gateway.dto.ToolMetadata;
 import io.shinhanlife.axhub.biz.mcp.gateway.service.ExecuteService;
-import io.modelcontextprotocol.server.McpStatelessServerFeatures;
+import io.modelcontextprotocol.server.McpServerFeatures;
 import io.modelcontextprotocol.spec.McpSchema;
 import org.springframework.stereotype.Component;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -31,14 +31,14 @@ public class RegistryMcpToolSpecificationFactory {
     /**
      * Registry Entry 하나를 MCP SDK의 stateless sync Tool specification으로 변환합니다.
      */
-    public McpStatelessServerFeatures.SyncToolSpecification create(ToolMetadata entry) {
+    public McpServerFeatures.SyncToolSpecification create(ToolMetadata entry) {
         McpSchema.Tool tool = McpSchema.Tool.builder()
                 .name(entry.getName())
                 .description(description(entry))
                 .inputSchema(inputSchema(entry))
                 .build();
 
-        return McpStatelessServerFeatures.SyncToolSpecification.builder()
+        return McpServerFeatures.SyncToolSpecification.builder()
                 .tool(tool)
                 .callHandler((context, request) -> execute(entry, request))
                 .build();
