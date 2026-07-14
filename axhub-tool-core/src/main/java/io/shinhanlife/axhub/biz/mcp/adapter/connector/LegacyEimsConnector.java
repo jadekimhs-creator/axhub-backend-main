@@ -79,13 +79,15 @@ public class LegacyEimsConnector {
                 log.info("[라우팅] JSP JSON 통신으로 전달");
                 yield jspJsonEimsSender.send(interfaceId, payload);
             }
-            case "MCI_STRING" -> {
-                log.info("[라우팅] 실시간 AI 요청 -> MCI 연계 어댑터(String)를 통해 EIMS 전달");
-                yield mciStringEimsSender.send(interfaceId, payload);
-            }
+
             case "MCI" -> {
-                log.info("[라우팅] 실시간 AI 요청 -> MCI 연계 어댑터를 통해 EIMS 전달");
-                yield mciEimsSender.send(interfaceId, payload);
+                if (isStringMci(spec)) {
+                    log.info("[라우팅] 스펙 자동 판별 (String 포맷 감지) -> MCI 연계 어댑터(String)를 통해 EIMS 전달");
+                    yield mciStringEimsSender.send(interfaceId, payload);
+                } else {
+                    log.info("[라우팅] 실시간 AI 요청 -> MCI 연계 어댑터를 통해 EIMS 전달");
+                    yield mciEimsSender.send(interfaceId, payload);
+                }
             }
             case "EAI" -> {
                 log.info("[라우팅] 비동기/대용량 요청 -> EAI 연계 어댑터를 통해 EIMS 전달");
@@ -135,5 +137,15 @@ public class LegacyEimsConnector {
             log.error(" JSON 변환 에러: {}", e.getMessage());
             return "{}";
         }
+    }
+
+    private boolean isStringMci(List<Map<String, Object>> spec) {
+        if (spec == null || spec.isEmpty()) return false;
+        // 스펙 내에 maxLength 등 고정길이 전문 관련 속성이 하나라도 존재하거나 명시적으로 STRING 힌트가 있으면 String 전문으로 간주
+        return spec.stream().anyMatch(field -> 
+            field.containsKey("maxLength") || 
+            field.containsKey("byteSize") ||
+            "STRING".equalsIgnoreCase(String.valueOf(field.get("mciFormat")))
+        );
     }
 }
