@@ -20,6 +20,7 @@ import java.time.Instant;
 import java.util.HexFormat;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.ArrayList;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -186,7 +187,7 @@ public class RedisToolTraceService {
         trace.put("elapsedMillis", elapsedMillis);
         trace.put("idempotencyKeyHash", hashText(arguments.path("idempotencyKey").asText("")));
         
-        java.util.List<String> argNames = new java.util.ArrayList<>();
+        List<String> argNames = new ArrayList<>();
         arguments.fieldNames().forEachRemaining(argNames::add);
         trace.put("argumentNames", argNames);
         

@@ -9,7 +9,9 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.util.Map;
-
+1import java.util.Set;
+import java.util.List;
+import java.util.HashSet;
 /**
  * Tool(Agent)의 명세 및 라우팅 정보를 담고 있는 메타데이터 클래스
  * Redis 레지스트리에 저장되며, Planner와 Router 간의 통신 객체(Plan)로 사용됩니다.
@@ -102,13 +104,13 @@ public class ToolMetadata {
     private Long timeoutMillis = 0L;
 
     // --- Guardrail 호환성을 위한 메서드 추가 ---
-    public java.util.Set<String> allowedArguments() {
-        if (parametersSchema == null || !parametersSchema.containsKey("properties")) return java.util.Set.of();
+    public Set<String> allowedArguments() {
+        if (parametersSchema == null || !parametersSchema.containsKey("properties")) return Set.of();
         return ((Map<String, Object>) parametersSchema.get("properties")).keySet();
     }
 
-    public java.util.Set<String> requiredArguments() {
-        if (parametersSchema == null || !parametersSchema.containsKey("required")) return java.util.Set.of();
-        return new java.util.HashSet<>((java.util.List<String>) parametersSchema.get("required"));
+    public Set<String> requiredArguments() {
+        if (parametersSchema == null || !parametersSchema.containsKey("required")) return Set.of();
+        return new HashSet<>((List<String>) parametersSchema.get("required"));
     }
 }
