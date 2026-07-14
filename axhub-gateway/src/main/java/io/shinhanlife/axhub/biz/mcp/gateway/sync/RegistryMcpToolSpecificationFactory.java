@@ -4,6 +4,7 @@ import io.shinhanlife.axhub.biz.mcp.gateway.dto.ToolMetadata;
 import io.shinhanlife.axhub.biz.mcp.gateway.service.ExecuteService;
 import io.modelcontextprotocol.server.McpServerFeatures;
 import io.modelcontextprotocol.spec.McpSchema;
+import io.shinhanlife.axhub.biz.mcp.gateway.tool.result.ToolExecutionResult;
 import org.springframework.stereotype.Component;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -71,30 +72,40 @@ public class RegistryMcpToolSpecificationFactory {
     }
 
     private McpSchema.CallToolResult toCallToolResult(Object rawResult) {
+        if (rawResult instanceof ToolExecutionResult result) {
+            McpSchema.CallToolResult.Builder builder = McpSchema.CallToolResult.builder()
+                    .isError(result.isError())
+                    .meta(result.metadata());
+
+            if (result.content() == null || result.content().isEmpty()) {
+                builder.addTextContent("");
+            } else {
+                for (ToolExecutionResult.ContentItem item : result.content()) {
+                    if ("text".equals(item.type())) {
+                        builder.addTextContent(item.text());
+                    }
+                }
+            }
+
+            if (result.structuredContent() != null) {
+                builder.structuredContent(result.structuredContent());
+            }
+            return builder.build();
+        }
+
+        // Fallback for old map format or unexpected types
         try {
             Map<String, Object> resultMap = objectMapper.convertValue(rawResult, new TypeReference<Map<String, Object>>() {});
-            Object innerResult = resultMap.get("result");
+            if (resultMap.containsKey("resultType") || resultMap.containsKey("structuredContent")) {
+                ToolExecutionResult result = objectMapper.convertValue(rawResult, ToolExecutionResult.class);
+                return toCallToolResult(result);
+            }
+            
+            Object innerResult = resultMap.containsKey("result") ? resultMap.get("result") : resultMap;
             
             McpSchema.CallToolResult.Builder builder = McpSchema.CallToolResult.builder();
             builder.isError(resultMap.containsKey("error"));
-            
-            if (innerResult instanceof Map) {
-                Map<String, Object> innerMap = (Map<String, Object>) innerResult;
-                // If it follows structured content
-                if (innerMap.containsKey("content")) {
-                    List<Map<String, Object>> contentList = (List<Map<String, Object>>) innerMap.get("content");
-                    for (Map<String, Object> item : contentList) {
-                        if ("text".equals(item.get("type"))) {
-                            builder.addTextContent((String) item.get("text"));
-                        }
-                    }
-                } else {
-                    // Fallback to text string representation
-                    builder.addTextContent(objectMapper.writeValueAsString(innerResult));
-                }
-            } else {
-                builder.addTextContent(String.valueOf(innerResult));
-            }
+            builder.addTextContent(objectMapper.writeValueAsString(innerResult));
             return builder.build();
         } catch (Exception e) {
             return McpSchema.CallToolResult.builder()
