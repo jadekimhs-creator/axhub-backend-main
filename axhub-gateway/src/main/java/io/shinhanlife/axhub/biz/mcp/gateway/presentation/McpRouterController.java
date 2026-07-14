@@ -60,8 +60,84 @@ public class McpRouterController {
         this.restClient = RestClient.builder().requestFactory(factory).build();
     }
 
+    @PostMapping("/tools/call")
+    public ResponseEntity<?> callTool(@RequestBody Map<String, Object> payload,
+                                      @RequestHeader(value = "X-Tenant-Id", required = false, defaultValue = "system") String tenantId) {
+        
+        try {
+            log.info("[Admin UI -> MCP Gateway] 동적 툴 실행 요청 수신: {}", objectMapper.writeValueAsString(payload));
+        } catch (Exception ex) {
+            log.info("[Admin UI -> MCP Gateway] 동적 툴 실행 요청 수신: {}", payload);
+        }
 
+        try {
+            Object result = executeService.execute(payload, tenantId);
+            
+            try {
+                log.info("[MCP Gateway -> Admin UI] 동적 툴 실행 결과 반환: {}", objectMapper.writeValueAsString(result));
+            } catch (Exception ex) {
+                log.info("[MCP Gateway -> Admin UI] 동적 툴 실행 결과 반환: {}", result);
+            }
+            
+            return ResponseEntity.ok(result);
+        } catch (SecurityException se) {
+            log.warn(" [보안 차단] 권한 오류: {}", se.getMessage());
+            return ResponseEntity.status(403).body(Map.of("error", se.getMessage()));
+        } catch (Exception e) {
+            log.error(" 파이프라인 실행 중 오류: {}", e.getMessage());
+            return ResponseEntity.internalServerError().body(Map.of("error", e.getMessage()));
+        }
+    }
 
+    @GetMapping("/tools/list")
+    public ResponseEntity<JsonRpcResponse> listTools(
+            @RequestParam(value = "categoryKey", required = false) String categoryKey) {
+        List<ToolMetadata> activeTools = redisRegistryService.getAllTools()
+                .stream()
+                .filter(ToolMetadata::getVisible)
+                .collect(Collectors.toList());
+                
+        Set<String> knownTools = activeTools.stream()
+                .map(ToolMetadata::getUid)
+                .collect(Collectors.toSet());
+
+        Set<String> fallbackUrls = new HashSet<>(gatewayFallbackProperties.getRoutes().values());
+        if (gatewayFallbackProperties.getDefaultUrl() != null) {
+            fallbackUrls.add(gatewayFallbackProperties.getDefaultUrl());
+        }
+
+        for (String url : fallbackUrls) {
+            try {
+                List<ToolMetadata> localTools = restClient.get()
+                        .uri(url + "/mcp/api/v1/tools/local")
+                        .retrieve()
+                        .body(new ParameterizedTypeReference<List<ToolMetadata>>() {});
+                        
+                if (localTools != null) {
+                    for (ToolMetadata t : localTools) {
+                        if (!Boolean.TRUE.equals(t.getIsRegistered()) && Boolean.TRUE.equals(t.getVisible()) && !knownTools.contains(t.getUid())) {
+                            activeTools.add(t);
+                            knownTools.add(t.getUid());
+                        }
+                    }
+                }
+            } catch (Exception e) {
+                log.warn("Failed to fetch local tools from fallback URL: {}", url);
+            }
+        }
+        
+        if (categoryKey != null && !categoryKey.trim().isEmpty()) {
+            activeTools = activeTools.stream()
+                    .filter(t -> categoryKey.equals(t.getCategoryKey()))
+                    .collect(Collectors.toList());
+        }
+
+        JsonRpcResponse response = new JsonRpcResponse();
+        response.setId(UUID.randomUUID().toString());
+        response.setResult(Map.of("tools", activeTools));
+        
+        return ResponseEntity.ok(response);
+    }
     @GetMapping(value = "/tools/docs/markdown", produces = "text/markdown;charset=UTF-8")
     public ResponseEntity<String> generateToolsMarkdown() {
         List<ToolMetadata> tools = redisRegistryService.getAllTools()
