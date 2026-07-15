@@ -137,6 +137,9 @@ public class PodScaffolder {
             
             # Auto Prefix Namespace
             mcp.namespace=%s
+            
+            # API 보안 키 설정
+            mcp.security.tenant-domains.TESTER-DEV=ALL
             """.formatted(portStr, moduleName, shortName);
         Files.writeString(resPath.resolve("application.properties"), applicationProperties);
 
@@ -169,6 +172,23 @@ public class PodScaffolder {
             logging.level.org.apache.kafka=ERROR
             """;
         Files.writeString(resPath.resolve("application-local.properties"), applicationLocalProperties);
+
+        String applicationDevProperties = """
+            # Render 클라우드 환경 전용 설정
+            axhub.gateway.url=https://axhub-gateway.onrender.com
+            axhub.tool.url=https://%s.onrender.com
+            
+            # EIMS 동적 라우팅 접속 정보 (Mock)
+            eims.http.url=http://localhost:${server.port}/api/gateway
+            eims.tcp.host=127.0.0.1
+            eims.tcp.port=8090
+            eims.tcp.timeout=5000
+            eims.jsp.form.url=http://localhost:${server.port}/mock/jsp-form
+            eims.jsp.json.url=http://localhost:${server.port}/mock/jsp-json
+            eims.mci.url=http://localhost:${server.port}/api/mock/esb/api
+            eims.mcistring.url=http://localhost:${server.port}/api/mock/esb/string
+            """.formatted(moduleName);
+        Files.writeString(resPath.resolve("application-dev.properties"), applicationDevProperties);
 
         String logbackXml = """
             <?xml version="1.0" encoding="UTF-8"?>
