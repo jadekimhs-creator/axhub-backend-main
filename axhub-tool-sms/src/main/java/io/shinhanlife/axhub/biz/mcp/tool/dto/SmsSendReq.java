@@ -34,4 +34,6 @@ public class SmsSendReq {
 
     @McpParameter(description = "전송할 메시지 내용", required = true)
     private String message;
+
+
 }
