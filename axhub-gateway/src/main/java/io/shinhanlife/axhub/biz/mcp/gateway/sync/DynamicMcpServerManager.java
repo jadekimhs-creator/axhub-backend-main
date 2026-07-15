@@ -45,15 +45,21 @@ public class DynamicMcpServerManager {
 
     public DynamicMcpServerManager(RegistryMcpToolSpecificationFactory specificationFactory) {
         this.specificationFactory = specificationFactory;
+        
+        // Pre-initialize basic categories so their endpoints are always open
+        // even if there are 0 tools registered in Redis initially.
+        getOrCreateServer("common");
+        getOrCreateServer("hr");
+        getOrCreateServer("payment");
+        getOrCreateServer("sms");
+        getOrCreateServer("email");
+        getOrCreateServer("other");
     }
 
-    public void synchronizeCategory(String categoryKey, List<ToolMetadata> tools) {
-        if (categoryKey == null || categoryKey.trim().isEmpty()) {
-            categoryKey = "common";
-        }
-        String safeCategory = categoryKey.toLowerCase();
+    private McpSyncServer getOrCreateServer(String categoryKey) {
+        String safeCategory = (categoryKey == null || categoryKey.trim().isEmpty()) ? "common" : categoryKey.toLowerCase();
         
-        McpSyncServer server = categoryServers.computeIfAbsent(safeCategory, key -> {
+        return categoryServers.computeIfAbsent(safeCategory, key -> {
             log.info("Creating dynamic MCP Server for category: {}", key);
             String ssePath = "common".equals(key) ? "/mcp/sse" : "/mcp/sse/" + key;
             String msgPath = "common".equals(key) ? "/mcp/message" : "/mcp/message/" + key;
@@ -71,6 +77,11 @@ public class DynamicMcpServerManager {
             managedToolNamesPerCategory.put(key, ConcurrentHashMap.newKeySet());
             return newServer;
         });
+    }
+
+    public void synchronizeCategory(String categoryKey, List<ToolMetadata> tools) {
+        String safeCategory = (categoryKey == null || categoryKey.trim().isEmpty()) ? "common" : categoryKey.toLowerCase();
+        McpSyncServer server = getOrCreateServer(safeCategory);
 
         Set<String> managedToolNames = managedToolNamesPerCategory.get(safeCategory);
         Set<String> activeNames = tools.stream()
