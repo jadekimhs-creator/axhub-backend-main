@@ -166,9 +166,17 @@ public class ExecuteService {
 
     private Object executeWithResilience(McpRequestContext context, ToolMetadata metadata, ObjectNode arguments, Map<String, Object> payload) {
         RetryPolicy retryPolicy = retryPolicy(metadata, arguments);
+        
+        int failureThreshold = (metadata.getCircuitBreakerFailureThreshold() != null && metadata.getCircuitBreakerFailureThreshold() > 0)
+                ? metadata.getCircuitBreakerFailureThreshold()
+                : properties.circuitBreakerFailureThreshold();
+                
+        long openMillis = (metadata.getCircuitBreakerOpenMillis() != null && metadata.getCircuitBreakerOpenMillis() > 0)
+                ? metadata.getCircuitBreakerOpenMillis()
+                : properties.circuitBreakerOpenMillis();
+                
         CircuitBreaker circuitBreaker = circuitBreakerService.breaker("tool:" + metadata.getName(),
-                metadata.getCircuitBreakerFailureThreshold(),
-                metadata.getCircuitBreakerOpenMillis());
+                failureThreshold, openMillis);
                 
         ToolExecutionException lastError = null;
         for (int attempt = 1; attempt <= retryPolicy.maxAttempts(); attempt++) {
