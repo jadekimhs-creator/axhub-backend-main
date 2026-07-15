@@ -62,7 +62,10 @@ public class McpRouterController {
 
     @PostMapping("/tools/call")
     public ResponseEntity<?> callTool(@RequestBody Map<String, Object> payload,
+                                      @RequestHeader(value = "X-Agent-Id", required = false) String agentId,
                                       @RequestHeader(value = "X-Tenant-Id", required = false, defaultValue = "system") String tenantId) {
+        
+        String effectiveTenantId = (agentId != null && !agentId.trim().isEmpty()) ? agentId : tenantId;
         
         try {
             log.info("[Admin UI -> MCP Gateway] 동적 툴 실행 요청 수신: {}", objectMapper.writeValueAsString(payload));
@@ -71,7 +74,7 @@ public class McpRouterController {
         }
 
         try {
-            Object result = executeService.execute(payload, tenantId);
+            Object result = executeService.execute(payload, effectiveTenantId);
             
             io.shinhanlife.axhub.biz.mcp.adapter.dto.JsonRpcResponse response = new io.shinhanlife.axhub.biz.mcp.adapter.dto.JsonRpcResponse();
             response.setJsonrpc("2.0");
