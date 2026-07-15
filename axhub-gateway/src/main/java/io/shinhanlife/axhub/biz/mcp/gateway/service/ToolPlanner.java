@@ -82,7 +82,14 @@ public class ToolPlanner {
 
         // 2-1. [신규] 도메인 그룹핑 기반 권한 검증
         if (tenantId != null && toolMetadata.getCategoryKey() != null) {
-            List<String> allowedDomains = securityProperties.getTenantDomains().get(tenantId);
+            String normalizedTenantId = tenantId.toLowerCase();
+            List<String> allowedDomains = securityProperties.getTenantDomains().get(normalizedTenantId);
+            
+            // 만약 대소문자 변환 후에도 없으면 원래 값으로 한 번 더 시도 (하위 호환성)
+            if (allowedDomains == null) {
+                allowedDomains = securityProperties.getTenantDomains().get(tenantId);
+            }
+
             if (allowedDomains == null || 
                 (!allowedDomains.contains("ALL") && !allowedDomains.contains(toolMetadata.getCategoryKey()))) {
                 log.warn(" [Planner] 권한 거부 - Tenant: {}, Request Domain: {}", tenantId, toolMetadata.getCategoryKey());
