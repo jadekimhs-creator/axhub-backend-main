@@ -50,7 +50,7 @@ public class ToolPlanner {
 
         // 2. RedisRegistry에서 해당 툴의 메타데이터 조회
         // (실제로는 이 메타데이터가 실행 계획의 핵심이 됩니다)
-        var toolMetadata = redisRegistryService.getTool(toolName);
+        var toolMetadata = redisRegistryService.getToolByName(toolName);
 
         if (toolMetadata == null) {
             log.warn(" [Planner] 등록되지 않은 툴 요청: {}. Fallback 라우팅 규칙을 확인합니다.", toolName);

@@ -76,6 +76,19 @@ public class RedisRegistryService {
     }
 
     /**
+     * 툴 이름으로 정보 조회
+     */
+    public ToolMetadata getToolByName(String name) {
+        List<ToolMetadata> allTools = getAllTools();
+        for (ToolMetadata tool : allTools) {
+            if (name.equals(tool.getName())) {
+                return tool;
+            }
+        }
+        return null;
+    }
+
+    /**
      * 등록된 모든 활성 툴 목록 조회
      */
     public List<ToolMetadata> getAllTools() {
