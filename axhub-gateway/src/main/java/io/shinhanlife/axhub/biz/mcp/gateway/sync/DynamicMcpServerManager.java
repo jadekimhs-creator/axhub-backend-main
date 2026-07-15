@@ -61,8 +61,8 @@ public class DynamicMcpServerManager {
         
         return categoryServers.computeIfAbsent(safeCategory, key -> {
             log.info("Creating dynamic MCP Server for category: {}", key);
-            String ssePath = "common".equals(key) ? "/mcp/sse" : "/mcp/sse/" + key;
-            String msgPath = "common".equals(key) ? "/mcp/message" : "/mcp/message/" + key;
+            String ssePath = "/mcp/sse/" + key;
+            String msgPath = "/mcp/message/" + key;
             
             WebMvcSseServerTransportProvider transport = WebMvcSseServerTransportProvider.builder()
                 .sseEndpoint(ssePath)
@@ -116,12 +116,16 @@ public class DynamicMcpServerManager {
 
     public RouterFunction<ServerResponse> getDynamicRouter() {
         return request -> {
-            for (WebMvcSseServerTransportProvider transport : categoryTransports.values()) {
+            log.info("[DynamicMcpRouter] Incoming request path: {}, method: {}", request.path(), request.method());
+            for (Map.Entry<String, WebMvcSseServerTransportProvider> entry : categoryTransports.entrySet()) {
+                WebMvcSseServerTransportProvider transport = entry.getValue();
                 Optional<HandlerFunction<ServerResponse>> handler = transport.getRouterFunction().route(request);
                 if (handler.isPresent()) {
+                    log.info("[DynamicMcpRouter] Matched handler for key: {}", entry.getKey());
                     return handler;
                 }
             }
+            log.info("[DynamicMcpRouter] No handler matched for path: {}", request.path());
             return Optional.empty();
         };
     }
