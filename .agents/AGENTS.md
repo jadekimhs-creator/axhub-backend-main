@@ -10,7 +10,7 @@
 ##  명심해야 할 규칙 추가란
 * 이모지는 무조건 넣지 않는다
 * import 할것 무조건 한다
-* Git push는 사용자가 명시적으로 지시할 때만 수행한다.
+* Git commit과 push는 사용자의 명시적인 허락(지시) 없이는 절대 수행하지 않는다.
 * 자바 만들때는 무조건 아래 내용을 넣는다 
 /**
  * @package io.shinhanlife.axhub.biz.mcp.tool.sms

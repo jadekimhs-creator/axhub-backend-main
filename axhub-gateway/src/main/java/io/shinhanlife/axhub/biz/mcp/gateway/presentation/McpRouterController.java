@@ -92,7 +92,7 @@ public class McpRouterController {
             log.warn(" [보안 차단] 권한 오류: {}", se.getMessage());
             return ResponseEntity.status(403).body(Map.of("error", se.getMessage()));
         } catch (Exception e) {
-            log.error(" 파이프라인 실행 중 오류: {}", e.getMessage());
+            log.error(" 파이프라인 실행 중 오류:", e);
             return ResponseEntity.internalServerError().body(Map.of("error", e.getMessage()));
         }
     }
