@@ -4,6 +4,7 @@
 # Shell 스크립트는 LF 고정 (Linux CI/CD 실행 환경)
 *.sh text eol=lf
 mvnw text eol=lf
+gradlew text eol=lf
 
 # 바이너리 파일 (줄바꿈 변환 제외)
 *.jar binary
