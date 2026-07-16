@@ -1,4 +1,4 @@
-package io.shinhanlife.axhub.common.integration.mci;
+﻿package io.shinhanlife.axhub.biz.mcp.adapter.sender;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.shinhanlife.axhub.common.integration.mci.dto.MciRequestWrapper;
@@ -9,7 +9,7 @@ import org.junit.jupiter.api.Test;
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
- * @package io.shinhanlife.axhub.common.integration.mci
+ * @package io.shinhanlife.axhub.biz.mcp.adapter.sender
  * @className ShinhanMciSenderTest
  * @description AX HUB 시스템 처리 클래스
  * @author 김형식

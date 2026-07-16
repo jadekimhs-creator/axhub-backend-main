@@ -1,4 +1,4 @@
-package io.shinhanlife.axhub.common.integration.mci.sender;
+﻿package io.shinhanlife.axhub.biz.mcp.adapter.sender;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.shinhanlife.axhub.common.integration.mci.config.ShinhanIntegrationProperties;
@@ -16,7 +16,7 @@ import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
- * @package io.shinhanlife.axhub.common.integration.mci.sender
+ * @package io.shinhanlife.axhub.biz.mcp.adapter.sender
  * @className ShinhanMciSender
  * @description AX HUB 시스템 처리 클래스
  * @author 김형식
