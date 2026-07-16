@@ -81,7 +81,7 @@ public class PodScaffolder {
         Files.writeString(modulePath.resolve("Dockerfile"), dockerfile);
 
         log.append("[4/6] Application 클래스 및 설정 파일 생성 중...\n");
-        Path srcPath = modulePath.resolve("src/main/java/io/shinhanlife/axhub/biz/mcp/tool/" + shortName);
+        Path srcPath = modulePath.resolve("src/main/java/io/shinhanlife/dap/biz/mcp/tool/" + shortName);
         Files.createDirectories(srcPath);
 
         String appClass = """
@@ -231,7 +231,7 @@ public class PodScaffolder {
         Path dockerComposePath = rootDir.resolve(Paths.get("docker-compose.yml"));
         if (Files.exists(dockerComposePath)) {
             String compose = Files.readString(dockerComposePath);
-            String serviceName = moduleName.replace("axhub-", ""); // e.g. tool-payment
+            String serviceName = moduleName.replace("dap-", ""); // e.g. tool-payment
             if (!compose.contains("  " + serviceName + ":")) {
                 String newService = """
                       %s:
