@@ -61,6 +61,7 @@ public class ShinhanMciSender {
             // 필수 헤더 자동 세팅 로직
             header.setEnvrTypeCd(properties.getEnvrTypeCd());
             header.setReqRspnScCd("S"); // S: 요청
+            header.setAppliDutjCd("DAP"); // 어플리케이션업무코드
 
             if (header.getGlbId() == null || header.getGlbId().isEmpty()) {
                 header.setGlbId(generateGlbId());
@@ -101,7 +102,7 @@ public class ShinhanMciSender {
         // 전문생성상세일시(17) + 전문생성시스템명(9) + 어플리케이션업무코드(3) + 전문세션번호(8)
         String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMddHHmmssSSS")); // 17 byte
         String systemName = String.format("%-9s", "AXHUB"); // 9 byte, left-aligned padded with spaces
-        String appCode = "AXH"; // 3 byte
+        String appCode = "DAP"; // 3 byte
         String sessionNo = UUID.randomUUID().toString().substring(0, 8).toUpperCase(); // 8 byte
         return timestamp + systemName + appCode + sessionNo;
     }
