@@ -4,6 +4,7 @@ import io.modelcontextprotocol.spec.McpSchema.ServerCapabilities;
 import io.modelcontextprotocol.server.McpServer;
 import io.modelcontextprotocol.server.McpSyncServer;
 import io.shinhanlife.dap.biz.mcp.gateway.dto.ToolMetadata;
+import io.shinhanlife.dap.biz.mcp.gateway.sync.CustomWebMvcSseServerTransportProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
