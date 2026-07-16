@@ -8,8 +8,8 @@ import org.springframework.cache.annotation.EnableCaching;
 @SpringBootApplication(scanBasePackages = {"io.shinhanlife.dap.biz.mcp.gateway", "io.shinhanlife.dap.common.mcp", "io.shinhanlife.dap.common.config"})
 @ConfigurationPropertiesScan(basePackages = {"io.shinhanlife.dap.biz.mcp.gateway", "io.shinhanlife.dap.common.mcp", "io.shinhanlife.dap.common.config"})
 @EnableCaching
-public class AxHubGatewayApplication {
+public class DapGatewayApplication {
     public static void main(String[] args) {
-        SpringApplication.run(AxHubGatewayApplication.class, args);
+        SpringApplication.run(DapGatewayApplication.class, args);
     }
 }

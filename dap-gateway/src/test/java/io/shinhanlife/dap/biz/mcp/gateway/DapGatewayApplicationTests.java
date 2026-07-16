@@ -9,7 +9,7 @@ import io.shinhanlife.dap.biz.mcp.gateway.redis.RedisToolTraceService;
 
 @SpringBootTest
 @ActiveProfiles("test")
-class AxHubGatewayApplicationTests {
+class DapGatewayApplicationTests {
 
     // Mock components that might require external dependencies (like Redis/DB) to pass the context load
     @MockitoBean
