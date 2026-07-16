@@ -28,7 +28,10 @@ public class ChatController {
     private final ChatClient.Builder chatClientBuilder;
 
     @PostMapping(produces = MediaType.TEXT_EVENT_STREAM_VALUE)
-    public SseEmitter chatStream(@RequestBody Map<String, String> request) {
+    public SseEmitter chatStream(@RequestBody Map<String, String> request,
+                                 @RequestHeader(value = "X-Agent-Id", required = false) String agentId,
+                                 @RequestHeader(value = "X-Tenant-Id", required = false, defaultValue = "system") String tenantId) {
+        String effectiveTenantId = (agentId != null && !agentId.trim().isEmpty()) ? agentId : tenantId;
         String message = request.getOrDefault("message", "").trim();
         log.info("[Real AI Chat] 사용자의 메시지 수신: {}", message);
 
@@ -38,7 +41,7 @@ public class ChatController {
             List<ToolCallback> callbacks = new ArrayList<>();
             for (ToolMetadata meta : registryService.getAllTools()) {
                 if (Boolean.TRUE.equals(meta.getVisible())) {
-                    callbacks.add(new DynamicMcpToolCallback(meta, executeService, objectMapper));
+                    callbacks.add(new DynamicMcpToolCallback(meta, executeService, objectMapper, effectiveTenantId));
                 }
             }
 
@@ -100,11 +103,13 @@ public class ChatController {
         private final ExecuteService executeService;
         private final ObjectMapper objectMapper;
         private final ToolDefinition toolDefinition;
+        private final String tenantId;
 
-        public DynamicMcpToolCallback(ToolMetadata metadata, ExecuteService executeService, ObjectMapper objectMapper) {
+        public DynamicMcpToolCallback(ToolMetadata metadata, ExecuteService executeService, ObjectMapper objectMapper, String tenantId) {
             this.metadata = metadata;
             this.executeService = executeService;
             this.objectMapper = objectMapper;
+            this.tenantId = tenantId;
             
             String schema = "{\"type\":\"object\",\"properties\":{}}";
             try {
@@ -148,7 +153,7 @@ public class ChatController {
                 
                 payload.put("params", params);
 
-                Object result = executeService.execute(payload, "default");
+                Object result = executeService.execute(payload, this.tenantId);
                 String jsonResult = objectMapper.writeValueAsString(result);
                 log.info("[Function Calling] '{}' 툴 실행 완료. 결과: {}", metadata.getName(), jsonResult);
                 return jsonResult;
