@@ -19,19 +19,19 @@ public class DynamicMcpController {
     }
 
     @PostMapping("/mcp")
-    public SseEmitter handleSse1(@PathVariable("category") String category) {
+    public SseEmitter handleSse1() {
         System.out.println("11111111111");
         return null;
     }
 
     @PostMapping("/mcp/initialize")
-    public SseEmitter handleSse2(@PathVariable("category") String category) {
+    public SseEmitter handleSse2() {
         System.out.println("2222222222");
         return null;
     }
 
     @PostMapping("/mcp/sse/initialize")
-    public SseEmitter handleSse3(@PathVariable("category") String category) {
+    public SseEmitter handleSse3() {
         System.out.println("33333333333333");
         return null;
     }
