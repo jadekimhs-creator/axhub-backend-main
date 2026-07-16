@@ -50,7 +50,7 @@ public class DynamicMcpServerManager {
             CustomWebMvcSseServerTransportProvider transport = new CustomWebMvcSseServerTransportProvider(ssePath, msgPath, objectMapper);
 
             McpSyncServer newServer = McpServer.sync(transport)
-                .serverInfo("AXHUB-Gateway-" + key, "1.0.0")
+                .serverInfo("DAP-Gateway-" + key, "1.0.0")
                 .capabilities(io.modelcontextprotocol.spec.McpSchema.ServerCapabilities.builder().tools(true).build())
                 .build();
                 
