@@ -19,10 +19,10 @@ public class ScaffoldingController {
     @PostMapping("/pod")
     public String scaffoldPod(@RequestBody Map<String, String> req) {
         try {
-            String moduleName = req.getOrDefault("moduleName", "axhub-tool-other");
-            if (!moduleName.startsWith("axhub-tool-")) moduleName = "axhub-tool-" + moduleName;
+            String moduleName = req.getOrDefault("moduleName", "dap-tool-other");
+            if (!moduleName.startsWith("dap-tool-")) moduleName = "dap-tool-" + moduleName;
             String port = req.getOrDefault("port", "8085");
-            String shortName = moduleName.replace("axhub-tool-", "").replace("-", "");
+            String shortName = moduleName.replace("dap-tool-", "").replace("-", "");
             String author = req.get("author");
             if (author == null || author.trim().isEmpty()) author = System.getProperty("user.name");
             String date = req.get("date");
@@ -42,7 +42,7 @@ public class ScaffoldingController {
             String description = req.get("description");
             String group = req.getOrDefault("categoryKey", req.getOrDefault("group", "COMMON"));
             String routingType = req.getOrDefault("routingType", "HTTP");
-            String moduleName = req.getOrDefault("moduleName", "axhub-tool-other");
+            String moduleName = req.getOrDefault("moduleName", "dap-tool-other");
             String author = req.get("author");
             if (author == null || author.trim().isEmpty()) author = System.getProperty("user.name");
             String date = req.get("date");
@@ -78,13 +78,13 @@ public class ScaffoldingController {
             if (sourceDir == null) sourceDir = System.getProperty("user.dir");
             
             File dir = new File(sourceDir);
-            File[] files = dir.listFiles(f -> f.isDirectory() && f.getName().startsWith("axhub-tool-") && !f.getName().equals("axhub-tool-core"));
+            File[] files = dir.listFiles(f -> f.isDirectory() && f.getName().startsWith("dap-tool-") && !f.getName().equals("dap-tool-core"));
             
-            if (files == null) return List.of("axhub-tool-other");
+            if (files == null) return List.of("dap-tool-other");
             
             return Arrays.stream(files).map(File::getName).sorted().collect(Collectors.toList());
         } catch (Exception e) {
-            return List.of("axhub-tool-other");
+            return List.of("dap-tool-other");
         }
     }
 }

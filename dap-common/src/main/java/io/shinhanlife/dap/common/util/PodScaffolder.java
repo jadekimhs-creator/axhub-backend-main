@@ -18,10 +18,10 @@ public class PodScaffolder {
         System.out.println("   MCP Tool Pod Scaffolder (Java CLI)   ");
         System.out.println("=========================================\n");
 
-        String rawModuleName = getOrAsk(args, 0, scanner, "1. 생성할 모듈(Pod) 이름 (예: payment 또는 axhub-tool-payment): ");
-        String moduleName = rawModuleName.startsWith("axhub-tool-") ? rawModuleName : "axhub-tool-" + rawModuleName;
+        String rawModuleName = getOrAsk(args, 0, scanner, "1. 생성할 모듈(Pod) 이름 (예: payment 또는 dap-tool-payment): ");
+        String moduleName = rawModuleName.startsWith("dap-tool-") ? rawModuleName : "dap-tool-" + rawModuleName;
         String portStr = getOrAsk(args, 1, scanner, "2. 사용할 포트 번호 (예: 8085): ");
-        String shortName = moduleName.replace("axhub-tool-", "").replace("-", "");
+        String shortName = moduleName.replace("dap-tool-", "").replace("-", "");
 
         String defaultAuthor = System.getProperty("user.name");
         String defaultDate = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy.MM.dd"));
@@ -62,7 +62,7 @@ public class PodScaffolder {
                 id 'org.springframework.boot'
             }
             dependencies {
-                implementation project(':axhub-tool-core')
+                implementation project(':dap-tool-core')
             }
             dependencies {
                 compileOnly 'org.projectlombok:lombok:1.18.32'
@@ -94,7 +94,7 @@ public class PodScaffolder {
             
             /**
              * @package io.shinhanlife.dap.biz.mcp.tool.%s
-             * @className %sToolApplication
+             * @className DapTool%sApplication
              * @description AX HUB 시스템 처리 클래스
              * @author %s
              * @create %s
@@ -109,13 +109,13 @@ public class PodScaffolder {
             @SpringBootApplication(scanBasePackages = {"io.shinhanlife.dap.biz.mcp.tool", "io.shinhanlife.dap.biz.mcp.adapter", "io.shinhanlife.dap.common.mcp", "io.shinhanlife.dap.common.config"})
             @ConfigurationPropertiesScan(basePackages = {"io.shinhanlife.dap.biz.mcp.tool", "io.shinhanlife.dap.biz.mcp.adapter", "io.shinhanlife.dap.common.mcp", "io.shinhanlife.dap.common.config"})
             @EnableCaching
-            public class %sToolApplication {
+            public class DapTool%sApplication {
                 public static void main(String[] args) {
-                    SpringApplication.run(%sToolApplication.class, args);
+                    SpringApplication.run(DapTool%sApplication.class, args);
                 }
             }
             """.formatted(shortName, shortName, capitalize(shortName), author, createDate, createDate, author, capitalize(shortName), capitalize(shortName));
-        Files.writeString(srcPath.resolve(capitalize(shortName) + "ToolApplication.java"), appClass);
+        Files.writeString(srcPath.resolve("DapTool" + capitalize(shortName) + "Application.java"), appClass);
 
         Path resPath = modulePath.resolve("src/main/resources");
         Files.createDirectories(resPath);
@@ -236,7 +236,8 @@ public class PodScaffolder {
                 String newService = """
                       %s:
                         build: 
-                          context: ./%s
+                          context: .
+                          dockerfile: %s/Dockerfile
                         ports:
                           - "%s:%s"
                         depends_on:

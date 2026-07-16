@@ -17,8 +17,8 @@ import java.util.Scanner;
  *  - 콘솔 창에 뜨는 질문에 차례대로 값을 입력하기만 하면 파일이 생성됩니다.
  * 
  * 방법 2. 커맨드라인(터미널)에서 실행 (명령어 기반)
- *  - 컴파일: javac -encoding UTF-8 axhub-tool-core/src/main/java/io/shinhanlife/axhub/biz/mcp/tool/util/ToolScaffolder.java
- *  - 실행: java -cp axhub-tool-core/src/main/java io.shinhanlife.dap.biz.mcp.tool.util.ToolScaffolder [이름] [ID] "[설명]" "[그룹]" "[통신방식]" "[모듈명]"
+ *  - 컴파일: javac -encoding UTF-8 dap-tool-core/src/main/java/io/shinhanlife/dap/biz/mcp/tool/util/ToolScaffolder.java
+ *  - 실행: java -cp dap-tool-core/src/main/java io.shinhanlife.dap.biz.mcp.tool.util.ToolScaffolder [이름] [ID] "[설명]" "[그룹]" "[통신방식]" "[모듈명]"
  */
 /**
  * @package io.shinhanlife.dap.biz.mcp.tool.util
@@ -37,7 +37,7 @@ import java.util.Scanner;
 public class ToolScaffolder {
 
     private static final String BASE_PACKAGE = "io.shinhanlife.dap.biz.mcp.tool";
-    private static final String BASE_PACKAGE_PATH = "src/main/java/io/shinhanlife/axhub/biz/mcp/tool";
+    private static final String BASE_PACKAGE_PATH = "src/main/java/io/shinhanlife/dap/biz/mcp/tool";
 
     public static void main(String[] args) throws IOException {
         Scanner scanner = new Scanner(System.in);
@@ -55,9 +55,9 @@ public class ToolScaffolder {
         if (routingType.trim().isEmpty()) {
             routingType = "HTTP";
         }
-        String moduleName = getOrAsk(args, 5, scanner, "6. 코드를 생성할 모듈 (기본: axhub-tool-other): ");
+        String moduleName = getOrAsk(args, 5, scanner, "6. 코드를 생성할 모듈 (기본: dap-tool-other): ");
         if (moduleName.trim().isEmpty()) {
-            moduleName = "axhub-tool-other";
+            moduleName = "dap-tool-other";
         }
         
         String defaultAuthor = System.getProperty("user.name");
@@ -88,7 +88,7 @@ public class ToolScaffolder {
         Path serviceDir = rootDir.resolve(Paths.get(moduleName, BASE_PACKAGE_PATH, "service"));
         Path dtoDir = rootDir.resolve(Paths.get(moduleName, BASE_PACKAGE_PATH, "dto"));
 
-        String shortName = moduleName.replace("axhub-tool-", "").replace("-", "");
+        String shortName = moduleName.replace("dap-tool-", "").replace("-", "");
         Path legacyDtoDir = rootDir.resolve(Paths.get(moduleName, BASE_PACKAGE_PATH, shortName, "dto"));
         Path converterDir = rootDir.resolve(Paths.get(moduleName, BASE_PACKAGE_PATH, shortName, "converter"));
 
