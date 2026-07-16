@@ -16,10 +16,12 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
+import lombok.extern.slf4j.Slf4j;
 import static org.springframework.web.servlet.function.RequestPredicates.GET;
 import static org.springframework.web.servlet.function.RequestPredicates.POST;
 import static org.springframework.web.servlet.function.RequestPredicates.accept;
 
+@Slf4j
 public class CustomWebMvcSseServerTransportProvider implements McpServerTransportProvider {
 
     private McpServerSession.Factory sessionFactory;
