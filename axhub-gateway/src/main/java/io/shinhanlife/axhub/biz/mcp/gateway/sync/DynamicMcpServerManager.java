@@ -5,49 +5,32 @@ import io.modelcontextprotocol.server.McpSyncServer;
 import io.shinhanlife.axhub.biz.mcp.gateway.dto.ToolMetadata;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.ai.mcp.server.webmvc.transport.WebMvcSseServerTransportProvider;
 import org.springframework.stereotype.Component;
-import org.springframework.web.servlet.function.HandlerFunction;
-import org.springframework.web.servlet.function.RouterFunction;
-import org.springframework.web.servlet.function.ServerResponse;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
-/**
- * @package io.shinhanlife.axhub.biz.mcp.gateway.sync
- * @className DynamicMcpServerManager
- * @description AX HUB 시스템 처리 클래스
- * @author 김형식
- * @create 2026.09.01
- * <pre>
- * ---------- 개정이력 ----------
- * 수정일      수정자    수정내용
- * ---------- -------- ---------------------------
- * 2026.09.01  김형식    최초생성
- * 
- * </pre>
- */
 @Component
 public class DynamicMcpServerManager {
     private static final Logger log = LoggerFactory.getLogger(DynamicMcpServerManager.class);
 
     private final Map<String, McpSyncServer> categoryServers = new ConcurrentHashMap<>();
-    private final Map<String, WebMvcSseServerTransportProvider> categoryTransports = new ConcurrentHashMap<>();
+    private final Map<String, CustomWebMvcSseServerTransportProvider> categoryTransports = new ConcurrentHashMap<>();
     private final Map<String, Set<String>> managedToolNamesPerCategory = new ConcurrentHashMap<>();
 
     private final RegistryMcpToolSpecificationFactory specificationFactory;
+    private final ObjectMapper objectMapper;
 
-    public DynamicMcpServerManager(RegistryMcpToolSpecificationFactory specificationFactory) {
+    public DynamicMcpServerManager(RegistryMcpToolSpecificationFactory specificationFactory, ObjectMapper objectMapper) {
         this.specificationFactory = specificationFactory;
-        
+        this.objectMapper = objectMapper;
+
         // Pre-initialize basic categories so their endpoints are always open
-        // even if there are 0 tools registered in Redis initially.
         getOrCreateServer("common");
         getOrCreateServer("hr");
         getOrCreateServer("payment");
@@ -58,19 +41,17 @@ public class DynamicMcpServerManager {
 
     private McpSyncServer getOrCreateServer(String categoryKey) {
         String safeCategory = (categoryKey == null || categoryKey.trim().isEmpty()) ? "common" : categoryKey.toLowerCase();
-        
+
         return categoryServers.computeIfAbsent(safeCategory, key -> {
             log.info("Creating dynamic MCP Server for category: {}", key);
             String ssePath = "/mcp/sse/" + key;
             String msgPath = "/mcp/message/" + key;
-            
-            WebMvcSseServerTransportProvider transport = WebMvcSseServerTransportProvider.builder()
-                .sseEndpoint(ssePath)
-                .messageEndpoint(msgPath)
-                .build();
-                
+
+            CustomWebMvcSseServerTransportProvider transport = new CustomWebMvcSseServerTransportProvider(ssePath, msgPath, objectMapper);
+
             McpSyncServer newServer = McpServer.sync(transport)
                 .serverInfo("AXHUB-Gateway-" + key, "1.0.0")
+                .capabilities(io.modelcontextprotocol.spec.McpSchema.ServerCapabilities.builder().tools(true).build())
                 .build();
                 
             categoryTransports.put(key, transport);
@@ -114,19 +95,8 @@ public class DynamicMcpServerManager {
         return Collections.unmodifiableSet(categoryServers.keySet());
     }
 
-    public RouterFunction<ServerResponse> getDynamicRouter() {
-        return request -> {
-            log.info("[DynamicMcpRouter] Incoming request path: {}, method: {}", request.path(), request.method());
-            for (Map.Entry<String, WebMvcSseServerTransportProvider> entry : categoryTransports.entrySet()) {
-                WebMvcSseServerTransportProvider transport = entry.getValue();
-                Optional<HandlerFunction<ServerResponse>> handler = transport.getRouterFunction().route(request);
-                if (handler.isPresent()) {
-                    log.info("[DynamicMcpRouter] Matched handler for key: {}", entry.getKey());
-                    return handler;
-                }
-            }
-            log.info("[DynamicMcpRouter] No handler matched for path: {}", request.path());
-            return Optional.empty();
-        };
+    public CustomWebMvcSseServerTransportProvider getTransport(String categoryKey) {
+        String safeCategory = (categoryKey == null || categoryKey.trim().isEmpty()) ? "common" : categoryKey.toLowerCase();
+        return categoryTransports.get(safeCategory);
     }
 }
