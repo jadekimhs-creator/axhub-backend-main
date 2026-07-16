@@ -1,4 +1,4 @@
-﻿package io.shinhanlife.axhub.biz.mcp.adapter.sender;
+package io.shinhanlife.axhub.biz.mcp.adapter.sender;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.shinhanlife.axhub.common.integration.mci.config.ShinhanIntegrationProperties;
@@ -29,8 +29,11 @@ import java.util.concurrent.atomic.AtomicInteger;
  * 
  * </pre>
  */
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
+
 @Slf4j
 @Service
+@EnableConfigurationProperties(ShinhanIntegrationProperties.class)
 public class ShinhanMciSender {
 
     private final ObjectMapper jsonMapper;
