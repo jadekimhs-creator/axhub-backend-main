@@ -5,6 +5,7 @@ import io.shinhanlife.axhub.common.integration.mci.dto.MciRequestWrapper;
 import io.shinhanlife.axhub.common.integration.mci.dto.ShinhanCommonHeaderDto;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -39,7 +40,7 @@ public class MciTestController {
     }
 
     @PostMapping("/send")
-    public String testSendMci(jakarta.servlet.http.HttpServletRequest request, @RequestBody SampleBizData bizData) {
+    public String testSendMci(HttpServletRequest request, @RequestBody SampleBizData bizData) {
         try {
             MciRequestWrapper<SampleBizData> wrapper = new MciRequestWrapper<>();
             
