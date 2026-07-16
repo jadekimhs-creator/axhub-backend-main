@@ -28,3 +28,24 @@ EXPOSE 8081
 
 # Ïª®ÌÖåÏù¥ÎÑà Ïã§Ìñâ Ïãú JAR Ïã§Ìñâ
 ENTRYPOINT ["java", "-jar", "app.jar"]
+
+# --- Ω≈«—∂Û¿Ã«¡ EAI/MCI ø¨∞Ë IP ¡§∫∏ (∞≥πﬂ »Ø∞Ê) ---
+shinhan.integration.envrTypeCd=D
+shinhan.integration.eai.url=http://10.176.32.181
+shinhan.integration.internalMci.url=http://10.176.32.173
+shinhan.integration.bancaMci.url=http://10.176.32.117
+shinhan.integration.externalMci.url=http://10.176.32.176
+
+# --- Ω≈«—∂Û¿Ã«¡ EAI/MCI ø¨∞Ë IP ¡§∫∏ (≈◊Ω∫∆Æ »Ø∞Ê) ---
+shinhan.integration.envrTypeCd=T
+shinhan.integration.eai.url=http://10.174.32.181
+shinhan.integration.internalMci.url=http://10.174.32.173
+shinhan.integration.bancaMci.url=http://10.174.32.117
+shinhan.integration.externalMci.url=http://10.176.32.177
+
+# --- Ω≈«—∂Û¿Ã«¡ EAI/MCI ø¨∞Ë IP ¡§∫∏ (øÓøµ »Ø∞Ê) ---
+shinhan.integration.envrTypeCd=R
+shinhan.integration.eai.url=http://10.172.32.181
+shinhan.integration.internalMci.url=http://10.172.32.173
+shinhan.integration.bancaMci.url=http://10.172.32.117
+shinhan.integration.externalMci.url=http://10.172.32.177

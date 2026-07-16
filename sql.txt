@@ -281,3 +281,23 @@ COMMENT ON COLUMN ZT_MENU_AUTH.SYST_CHG_PRAF_NO IS 'ì‹œìŠ¤í…œë³€ê²½ì¸ì‚¬ë²ˆí˜¸'
 COMMENT ON COLUMN ZT_MENU_AUTH.SYST_CHG_OGNZ_NO IS 'ì‹œìŠ¤í…œë³€ê²½ì¡°ì§ë²ˆí˜¸';
 COMMENT ON COLUMN ZT_MENU_AUTH.SYST_CHG_SYST_CD IS 'ì‹œìŠ¤í…œë³€ê²½ì‹œìŠ¤í…œì½”ë“œ';
 COMMENT ON COLUMN ZT_MENU_AUTH.SYST_CHG_PRGR_ID IS 'ì‹œìŠ¤í…œë³€ê²½í”„ë¡œê·¸ë¨ID';
+# --- ½ÅÇÑ¶óÀÌÇÁ EAI/MCI ¿¬°è IP Á¤º¸ (°³¹ß È¯°æ) ---
+shinhan.integration.envrTypeCd=D
+shinhan.integration.eai.url=http://10.176.32.181
+shinhan.integration.internalMci.url=http://10.176.32.173
+shinhan.integration.bancaMci.url=http://10.176.32.117
+shinhan.integration.externalMci.url=http://10.176.32.176
+
+# --- ½ÅÇÑ¶óÀÌÇÁ EAI/MCI ¿¬°è IP Á¤º¸ (Å×½ºÆ® È¯°æ) ---
+shinhan.integration.envrTypeCd=T
+shinhan.integration.eai.url=http://10.174.32.181
+shinhan.integration.internalMci.url=http://10.174.32.173
+shinhan.integration.bancaMci.url=http://10.174.32.117
+shinhan.integration.externalMci.url=http://10.176.32.177
+
+# --- ½ÅÇÑ¶óÀÌÇÁ EAI/MCI ¿¬°è IP Á¤º¸ (¿î¿µ È¯°æ) ---
+shinhan.integration.envrTypeCd=R
+shinhan.integration.eai.url=http://10.172.32.181
+shinhan.integration.internalMci.url=http://10.172.32.173
+shinhan.integration.bancaMci.url=http://10.172.32.117
+shinhan.integration.externalMci.url=http://10.172.32.177

@@ -1,28 +1,4 @@
-# ê¸°ë³¸ê°’: ëª¨ë“  í…ìŠ¤íŠ¸ íŒŒì¼ CRLF (Windows ê°œë°œ í™˜ê²½)
-* text=auto eol=crlf
-
-# Shell ìŠ¤í¬ë¦½íŠ¸ëŠ” LF ê³ ì • (Linux CI/CD ì‹¤í–‰ í™˜ê²½)
-*.sh text eol=lf
-mvnw text eol=lf
-gradlew text eol=lf
-
-# ë°”ì´ë„ˆë¦¬ íŒŒì¼ (ì¤„ë°”ê¿ˆ ë³€í™˜ ì œì™¸)
-*.jar binary
-*.war binary
-*.ear binary
-*.class binary
-*.png binary
-*.jpg binary
-*.jpeg binary
-*.gif binary
-*.ico binary
-*.svg binary
-*.ttf binary
-*.woff binary
-*.woff2binary
-*.pdf binary
-*.zip binary
-*.tar.gz binary
+{"jsonrpc":"2.0","method":"tools/list","id":1}
 
 # --- ½ÅÇÑ¶óÀÌÇÁ EAI/MCI ¿¬°è IP Á¤º¸ (°³¹ß È¯°æ) ---
 shinhan.integration.envrTypeCd=D

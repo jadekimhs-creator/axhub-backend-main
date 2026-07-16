@@ -175,3 +175,24 @@ axhub-backend-main (Root)
 ```
 
 *(ì°¸ê³ : ê¸°ì¡´ ë‹¨ì¼ ëª¨ë“ˆ í”„ë¡œì íŠ¸ì—ì„œ ë§ˆì´í¬ë¡œì„œë¹„ìŠ¤ í™•ì¥ì„ ìœ„í•´ ëª¨ë“ˆë³„ë¡œ ë¶„ë¦¬ë˜ì—ˆìœ¼ë©°, ê° Tool ì„œë²„ëŠ” ë…ë¦½ì ìœ¼ë¡œ í™•ì¥ ë° ë°°í¬í•  ìˆ˜ ìˆìŠµë‹ˆë‹¤.)*
+
+# --- ½ÅÇÑ¶óÀÌÇÁ EAI/MCI ¿¬°è IP Á¤º¸ (°³¹ß È¯°æ) ---
+shinhan.integration.envrTypeCd=D
+shinhan.integration.eai.url=http://10.176.32.181
+shinhan.integration.internalMci.url=http://10.176.32.173
+shinhan.integration.bancaMci.url=http://10.176.32.117
+shinhan.integration.externalMci.url=http://10.176.32.176
+
+# --- ½ÅÇÑ¶óÀÌÇÁ EAI/MCI ¿¬°è IP Á¤º¸ (Å×½ºÆ® È¯°æ) ---
+shinhan.integration.envrTypeCd=T
+shinhan.integration.eai.url=http://10.174.32.181
+shinhan.integration.internalMci.url=http://10.174.32.173
+shinhan.integration.bancaMci.url=http://10.174.32.117
+shinhan.integration.externalMci.url=http://10.176.32.177
+
+# --- ½ÅÇÑ¶óÀÌÇÁ EAI/MCI ¿¬°è IP Á¤º¸ (¿î¿µ È¯°æ) ---
+shinhan.integration.envrTypeCd=R
+shinhan.integration.eai.url=http://10.172.32.181
+shinhan.integration.internalMci.url=http://10.172.32.173
+shinhan.integration.bancaMci.url=http://10.172.32.117
+shinhan.integration.externalMci.url=http://10.172.32.177

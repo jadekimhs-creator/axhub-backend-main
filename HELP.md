@@ -30,3 +30,24 @@ While most of the inheritance is fine, it also inherits unwanted elements like `
 To prevent this, the project POM contains empty overrides for these elements.
 If you manually switch to a different parent and actually want the inheritance, you need to remove those overrides.
 
+
+# --- 신한라이프 EAI/MCI 연계 IP 정보 (개발 환경) ---
+shinhan.integration.envrTypeCd=D
+shinhan.integration.eai.url=http://10.176.32.181
+shinhan.integration.internalMci.url=http://10.176.32.173
+shinhan.integration.bancaMci.url=http://10.176.32.117
+shinhan.integration.externalMci.url=http://10.176.32.176
+
+# --- 신한라이프 EAI/MCI 연계 IP 정보 (테스트 환경) ---
+shinhan.integration.envrTypeCd=T
+shinhan.integration.eai.url=http://10.174.32.181
+shinhan.integration.internalMci.url=http://10.174.32.173
+shinhan.integration.bancaMci.url=http://10.174.32.117
+shinhan.integration.externalMci.url=http://10.176.32.177
+
+# --- 신한라이프 EAI/MCI 연계 IP 정보 (운영 환경) ---
+shinhan.integration.envrTypeCd=R
+shinhan.integration.eai.url=http://10.172.32.181
+shinhan.integration.internalMci.url=http://10.172.32.173
+shinhan.integration.bancaMci.url=http://10.172.32.117
+shinhan.integration.externalMci.url=http://10.172.32.177

@@ -86,6 +86,7 @@ public class CustomWebMvcSseServerTransportProvider implements McpServerTranspor
     }
 
     public org.springframework.http.ResponseEntity<String> handleMessage(String sessionId, String body) {
+        log.info("Received POST message for sessionId: " + sessionId + ", body: " + body);
         if (sessionId == null || !sessions.containsKey(sessionId)) {
             return org.springframework.http.ResponseEntity.badRequest().body("Missing or invalid sessionId");
         }
@@ -104,10 +105,13 @@ public class CustomWebMvcSseServerTransportProvider implements McpServerTranspor
             } else {
                 message = objectMapper.convertValue(map, io.modelcontextprotocol.spec.McpSchema.JSONRPCNotification.class);
             }
+            log.info("Converted message type: " + message.getClass().getName());
             
             session.handle(message).subscribe();
+            log.info("Message sent to session handler");
             return org.springframework.http.ResponseEntity.ok().build();
         } catch (Exception e) {
+            log.error("Failed to handle message", e);
             return org.springframework.http.ResponseEntity.status(500).body(e.getMessage());
         }
     }
@@ -124,11 +128,15 @@ public class CustomWebMvcSseServerTransportProvider implements McpServerTranspor
         @Override
         public Mono<Void> sendMessage(McpSchema.JSONRPCMessage message) {
             return Mono.fromRunnable(() -> {
+                log.info("Sending message to SSE stream: " + message.getClass().getName());
                 try {
                     String json = objectMapper.writeValueAsString(message);
+                    log.info("Serialized message: " + json);
                     emitter.send(org.springframework.web.servlet.mvc.method.annotation.SseEmitter.event().name("message").data(json));
+                    log.info("Message successfully sent to SSE emitter");
                 } catch (Exception e) {
-                    throw new RuntimeException(e);
+                    log.error("Error sending message to SSE emitter", e);
+                    emitter.completeWithError(e);
                 }
             });
         }
