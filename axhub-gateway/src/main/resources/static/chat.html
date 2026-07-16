@@ -189,7 +189,10 @@
                 // 3. 백엔드 통신 (SSE Stream)
                 const response = await fetch('/api/chat', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'X-Agent-Id': 'TESTER-DEV' // 권한 통과를 위한 테스트 Agent ID
+                    },
                     body: JSON.stringify({ message: text })
                 });
 
