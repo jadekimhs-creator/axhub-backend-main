@@ -5,6 +5,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
@@ -56,5 +57,31 @@ public class DynamicMcpController {
             return ResponseEntity.badRequest().body("Unknown category: " + category);
         }
         return transport.handleMessage(sessionId, body);
+    }
+
+    @PostMapping("/mcp/custom/{category}")
+    public ResponseEntity<?> handleCustomMcp(
+            @PathVariable("category") String category,
+            @RequestHeader(value = "Mcp-Session-Id", required = false) String sessionId,
+            @RequestBody(required = false) String body) {
+            
+        CustomWebMvcSseServerTransportProvider transport = manager.getTransport(category);
+        if (transport == null) {
+            return ResponseEntity.badRequest().body("Unknown category: " + category);
+        }
+
+        if (sessionId == null || sessionId.isEmpty()) {
+            // 새 세션 생성 (initialize 요청)
+            String newSessionId = java.util.UUID.randomUUID().toString();
+            SseEmitter emitter = transport.handleCustomSse(newSessionId, body);
+            
+            return ResponseEntity.ok()
+                    .header("Mcp-Session-Id", newSessionId)
+                    .body(emitter);
+        } else {
+            // 기존 세션 메시지 전송 (tools/call 등)
+            transport.handleMessage(sessionId, body);
+            return ResponseEntity.accepted().build();
+        }
     }
 }

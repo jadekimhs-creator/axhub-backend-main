@@ -87,6 +87,38 @@ public class CustomWebMvcSseServerTransportProvider implements McpServerTranspor
         return emitter;
     }
 
+    public org.springframework.web.servlet.mvc.method.annotation.SseEmitter handleCustomSse(String sessionId, String body) {
+        if (sessionFactory == null) {
+            throw new IllegalStateException("SessionFactory not configured");
+        }
+        
+        org.springframework.web.servlet.mvc.method.annotation.SseEmitter emitter = new org.springframework.web.servlet.mvc.method.annotation.SseEmitter(-1L);
+        
+        CustomMcpSessionTransport sessionTransport = new CustomMcpSessionTransport(emitter, sessionId);
+        McpServerSession session = sessionFactory.create(sessionTransport);
+        sessions.put(sessionId, session);
+        
+        emitter.onCompletion(() -> sessions.remove(sessionId));
+        emitter.onTimeout(() -> sessions.remove(sessionId));
+        
+        new Thread(() -> {
+            try {
+                // 커스텀 클라이언트는 endpoint 이벤트를 무시할 수 있지만, 표준 호환성을 위해 전송
+                Thread.sleep(100);
+                emitter.send(org.springframework.web.servlet.mvc.method.annotation.SseEmitter.event().name("endpoint").data(messageEndpoint + "?sessionId=" + sessionId));
+                
+                // Body로 들어온 initialize 등 즉시 처리
+                if (body != null && !body.trim().isEmpty()) {
+                    handleMessage(sessionId, body);
+                }
+            } catch (Exception e) {
+                emitter.completeWithError(e);
+            }
+        }).start();
+        
+        return emitter;
+    }
+
     public org.springframework.http.ResponseEntity<String> handleMessage(String sessionId, String body) {
         log.info("Received POST message for sessionId: " + sessionId + ", body: " + body);
         if (sessionId == null || !sessions.containsKey(sessionId)) {
