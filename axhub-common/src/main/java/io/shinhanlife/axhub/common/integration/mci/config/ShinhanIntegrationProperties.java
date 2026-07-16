@@ -32,8 +32,6 @@ public class ShinhanIntegrationProperties {
 
     private ServerInfo eai = new ServerInfo();
     private ServerInfo internalMci = new ServerInfo();
-    private ServerInfo externalMci = new ServerInfo();
-    private ServerInfo bancaMci = new ServerInfo();
 
     @Getter
     @Setter

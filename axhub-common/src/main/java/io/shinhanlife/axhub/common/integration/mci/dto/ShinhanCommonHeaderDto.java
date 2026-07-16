@@ -25,6 +25,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class ShinhanCommonHeaderDto {
 
+    private String envrTypeCd;          // 환경유형코드 (D, T, R)
     private String glbId;               // 전사공통키 (37 Byte)
     private String pgrsSriaNo;          // 진행일련번호
     private String trgmVrsnInfoValu;    // 전문버전정보값
@@ -36,10 +37,4 @@ public class ShinhanCommonHeaderDto {
     private String inqrTraTypeCd;       // 조회거래유형코드
     private String reqTgrmTnsmDtptDt;   // 요청전문전송일시
     private String itrIfId;             // 인터페이스ID
-
-    // 대외 연계 정보 (선택)
-    private String frbuCd;              // 대외기관코드
-    private String cmouDutjCd;          // 대외업무코드
-    private String cmouCssfCd;          // 대외종별코드
-    private String cmouTraCd;           // 대외거래코드
 }
