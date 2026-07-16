@@ -32,9 +32,7 @@ public class ShinhanCommonHeaderDto {
     private String gpcpCd;              // 글로벌법인코드
     private String appliDutjCd;         // 어플리케이션업무코드
     private String rcvSvcId;            // 수신서비스ID
-    private String envrTypeCd;          // 환경유형코드 (D/T/R)
     private String reqRspnScCd;         // 요청응답구분코드 (S:요청, R:응답)
-    private String tnsmTypeCd;          // 전송유형코드
     private String inqrTraTypeCd;       // 조회거래유형코드
     private String reqTgrmTnsmDtptDt;   // 요청전문전송일시
     private String itrIfId;             // 인터페이스ID
