@@ -1,12 +1,12 @@
-# ê¸°ë³¸ê°’: ëª¨ë“  í…ìŠ¤íŠ¸ íŒŒì¼ CRLF (Windows ê°œë°œ í™˜ê²½)
+# æ¹²ê³•ë‚¯åª›? ï§â‘¤ë±º ?ë¿ë’ª???ëš¯ì”ª CRLF (Windows åª›ì’•ì»» ?ì„ê¼)
 * text=auto eol=crlf
 
-# Shell ìŠ¤í¬ë¦½íŠ¸ëŠ” LF ê³ ì • (Linux CI/CD ì‹¤í–‰ í™˜ê²½)
+# Shell ?ã…½ê²•ç”±ì€ë“ƒ??LF æ€¨ì¢ì ™ (Linux CI/CD ?ã…½ë»¾ ?ì„ê¼)
 *.sh text eol=lf
 mvnw text eol=lf
 gradlew text eol=lf
 
-# ë°”ì´ë„ˆë¦¬ íŒŒì¼ (ì¤„ë°”ê¿ˆ ë³€í™˜ ì œì™¸)
+# è«›ë¶¿ì” ?ëˆâ” ?ëš¯ì”ª (ä»¥ê¾¨ì»®è½…?è¹‚Â€???ì’–ì‡…)
 *.jar binary
 *.war binary
 *.ear binary
@@ -23,24 +23,3 @@ gradlew text eol=lf
 *.pdf binary
 *.zip binary
 *.tar.gz binary
-
-# --- ½ÅÇÑ¶óÀÌÇÁ EAI/MCI ¿¬°è IP Á¤º¸ (°³¹ß È¯°æ) ---
-shinhan.integration.envrTypeCd=D
-shinhan.integration.eai.url=http://10.176.32.181
-shinhan.integration.internalMci.url=http://10.176.32.173
-shinhan.integration.bancaMci.url=http://10.176.32.117
-shinhan.integration.externalMci.url=http://10.176.32.176
-
-# --- ½ÅÇÑ¶óÀÌÇÁ EAI/MCI ¿¬°è IP Á¤º¸ (Å×½ºÆ® È¯°æ) ---
-shinhan.integration.envrTypeCd=T
-shinhan.integration.eai.url=http://10.174.32.181
-shinhan.integration.internalMci.url=http://10.174.32.173
-shinhan.integration.bancaMci.url=http://10.174.32.117
-shinhan.integration.externalMci.url=http://10.176.32.177
-
-# --- ½ÅÇÑ¶óÀÌÇÁ EAI/MCI ¿¬°è IP Á¤º¸ (¿î¿µ È¯°æ) ---
-shinhan.integration.envrTypeCd=R
-shinhan.integration.eai.url=http://10.172.32.181
-shinhan.integration.internalMci.url=http://10.172.32.173
-shinhan.integration.bancaMci.url=http://10.172.32.117
-shinhan.integration.externalMci.url=http://10.172.32.177

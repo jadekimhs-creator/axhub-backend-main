@@ -1,51 +1,30 @@
-# 1. 빌드 환경 (JDK 21)
+# 1. 鍮뚮뱶 ?섍꼍 (JDK 21)
 FROM eclipse-temurin:21-jdk-alpine AS builder
 WORKDIR /app
 
-# Gradle 래퍼와 소스 복사
+# Gradle ?섑띁? ?뚯뒪 蹂듭궗
 COPY gradlew .
 COPY gradle gradle
 COPY build.gradle settings.gradle ./
 COPY src src
 
-# 권한 부여 및 빌드 (테스트 제외)
+# 沅뚰븳 遺??諛?鍮뚮뱶 (?뚯뒪???쒖쇅)
 RUN chmod +x gradlew
 RUN ./gradlew clean build -x test
 
-# 2. 실행 환경 (JRE 21)
+# 2. ?ㅽ뻾 ?섍꼍 (JRE 21)
 FROM eclipse-temurin:21-jre-alpine
 WORKDIR /app
 
-# 타임존 설정 (한국 시간)
+# ??꾩〈 ?ㅼ젙 (?쒓뎅 ?쒓컙)
 RUN apk add --no-cache tzdata
 ENV TZ=Asia/Seoul
 
-# 빌드된 JAR 파일 복사
+# 鍮뚮뱶??JAR ?뚯씪 蹂듭궗
 COPY --from=builder /app/build/libs/*.jar app.jar
 
-# 기본 포트 노출
+# 湲곕낯 ?ы듃 ?몄텧
 EXPOSE 8081
 
-# 컨테이너 실행 시 JAR 실행
+# 而⑦뀒?대꼫 ?ㅽ뻾 ??JAR ?ㅽ뻾
 ENTRYPOINT ["java", "-jar", "app.jar"]
-
-# --- ���Ѷ����� EAI/MCI ���� IP ���� (���� ȯ��) ---
-shinhan.integration.envrTypeCd=D
-shinhan.integration.eai.url=http://10.176.32.181
-shinhan.integration.internalMci.url=http://10.176.32.173
-shinhan.integration.bancaMci.url=http://10.176.32.117
-shinhan.integration.externalMci.url=http://10.176.32.176
-
-# --- ���Ѷ����� EAI/MCI ���� IP ���� (�׽�Ʈ ȯ��) ---
-shinhan.integration.envrTypeCd=T
-shinhan.integration.eai.url=http://10.174.32.181
-shinhan.integration.internalMci.url=http://10.174.32.173
-shinhan.integration.bancaMci.url=http://10.174.32.117
-shinhan.integration.externalMci.url=http://10.176.32.177
-
-# --- ���Ѷ����� EAI/MCI ���� IP ���� (� ȯ��) ---
-shinhan.integration.envrTypeCd=R
-shinhan.integration.eai.url=http://10.172.32.181
-shinhan.integration.internalMci.url=http://10.172.32.173
-shinhan.integration.bancaMci.url=http://10.172.32.117
-shinhan.integration.externalMci.url=http://10.172.32.177

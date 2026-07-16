@@ -1,7 +1,7 @@
 #!/bin/sh
 
 #
-# Copyright Â© 2015-2021 the original authors.
+# Copyright ì§¤ 2015-2021 the original authors.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -34,10 +34,10 @@
 #       Busybox and similar reduced shells will NOT work, because this script
 #       requires all of these POSIX shell features:
 #         * functions;
-#         * expansions Â«$varÂ», Â«${var}Â», Â«${var:-default}Â», Â«${var+SET}Â»,
-#           Â«${var#prefix}Â», Â«${var%suffix}Â», and Â«$( cmd )Â»;
-#         * compound commands having a testable exit status, especially Â«caseÂ»;
-#         * various built-in commands including Â«commandÂ», Â«setÂ», and Â«ulimitÂ».
+#         * expansions ì§¬$varì¨©, ì§¬${var}ì¨©, ì§¬${var:-default}ì¨©, ì§¬${var+SET}ì¨©,
+#           ì§¬${var#prefix}ì¨©, ì§¬${var%suffix}ì¨©, and ì§¬$( cmd )ì¨©;
+#         * compound commands having a testable exit status, especially ì§¬caseì¨©;
+#         * various built-in commands including ì§¬commandì¨©, ì§¬setì¨©, and ì§¬ulimitì¨©.
 #
 #   Important for patching:
 #
@@ -249,24 +249,3 @@ eval "set -- $(
     )" '"$@"'
 
 exec "$JAVACMD" "$@"
-
-# --- ½ÅÇÑ¶óÀÌÇÁ EAI/MCI ¿¬°è IP Á¤º¸ (°³¹ß È¯°æ) ---
-shinhan.integration.envrTypeCd=D
-shinhan.integration.eai.url=http://10.176.32.181
-shinhan.integration.internalMci.url=http://10.176.32.173
-shinhan.integration.bancaMci.url=http://10.176.32.117
-shinhan.integration.externalMci.url=http://10.176.32.176
-
-# --- ½ÅÇÑ¶óÀÌÇÁ EAI/MCI ¿¬°è IP Á¤º¸ (Å×½ºÆ® È¯°æ) ---
-shinhan.integration.envrTypeCd=T
-shinhan.integration.eai.url=http://10.174.32.181
-shinhan.integration.internalMci.url=http://10.174.32.173
-shinhan.integration.bancaMci.url=http://10.174.32.117
-shinhan.integration.externalMci.url=http://10.176.32.177
-
-# --- ½ÅÇÑ¶óÀÌÇÁ EAI/MCI ¿¬°è IP Á¤º¸ (¿î¿µ È¯°æ) ---
-shinhan.integration.envrTypeCd=R
-shinhan.integration.eai.url=http://10.172.32.181
-shinhan.integration.internalMci.url=http://10.172.32.173
-shinhan.integration.bancaMci.url=http://10.172.32.117
-shinhan.integration.externalMci.url=http://10.172.32.177

@@ -12,14 +12,14 @@ public class AddJavadoc {
         "/**\n" +
         " * @package %s\n" +
         " * @className %s\n" +
-        " * @description AX HUB ì‹œìŠ¤í…œ ì²˜ë¦¬ í´ë˜ìŠ¤\n" +
-        " * @author ê¹€í˜•ì‹\n" +
+        " * @description AX HUB ?ì’–ë’ª??ï§£ì„â” ?ëŒ€ì˜’??n" +
+        " * @author æºÂ€?ëº¤ë–‡\n" +
         " * @create 2026.09.01\n" +
         " * <pre>\n" +
-        " * ---------- ê°œì •ì´ë ¥ ----------\n" +
-        " * ìˆ˜ì •ì¼      ìˆ˜ì •ì    ìˆ˜ì •ë‚´ìš©\n" +
+        " * ---------- åª›ì’–ì ™?ëŒ€ì ° ----------\n" +
+        " * ?ì„ì ™??     ?ì„ì ™??   ?ì„ì ™?ëŒìŠœ\n" +
         " * ---------- -------- ---------------------------\n" +
-        " * 2026.09.01  ê¹€í˜•ì‹    ìµœì´ˆìƒì„±\n" +
+        " * 2026.09.01  æºÂ€?ëº¤ë–‡    ï§¤ì’–í¹?ì•¹ê½¦\n" +
         " * \n" +
         " * </pre>\n" +
         " */";
@@ -50,7 +50,7 @@ public class AddJavadoc {
         List<String> lines = Files.readAllLines(file);
         String content = String.join("\n", lines);
         
-        if (content.contains("---------- ê°œì •ì´ë ¥ ----------") || content.contains("@className")) {
+        if (content.contains("---------- åª›ì’–ì ™?ëŒ€ì ° ----------") || content.contains("@className")) {
             System.out.println("Skipping (already has javadoc): " + file);
             return;
         }
@@ -101,24 +101,3 @@ public class AddJavadoc {
         System.out.println("Updated: " + file);
     }
 }
-
-# --- ½ÅÇÑ¶óÀÌÇÁ EAI/MCI ¿¬°è IP Á¤º¸ (°³¹ß È¯°æ) ---
-shinhan.integration.envrTypeCd=D
-shinhan.integration.eai.url=http://10.176.32.181
-shinhan.integration.internalMci.url=http://10.176.32.173
-shinhan.integration.bancaMci.url=http://10.176.32.117
-shinhan.integration.externalMci.url=http://10.176.32.176
-
-# --- ½ÅÇÑ¶óÀÌÇÁ EAI/MCI ¿¬°è IP Á¤º¸ (Å×½ºÆ® È¯°æ) ---
-shinhan.integration.envrTypeCd=T
-shinhan.integration.eai.url=http://10.174.32.181
-shinhan.integration.internalMci.url=http://10.174.32.173
-shinhan.integration.bancaMci.url=http://10.174.32.117
-shinhan.integration.externalMci.url=http://10.176.32.177
-
-# --- ½ÅÇÑ¶óÀÌÇÁ EAI/MCI ¿¬°è IP Á¤º¸ (¿î¿µ È¯°æ) ---
-shinhan.integration.envrTypeCd=R
-shinhan.integration.eai.url=http://10.172.32.181
-shinhan.integration.internalMci.url=http://10.172.32.173
-shinhan.integration.bancaMci.url=http://10.172.32.117
-shinhan.integration.externalMci.url=http://10.172.32.177

@@ -1,7 +1,7 @@
 --------------------------------------------------------------------------------
--- 적용시스템명 : 운영계(ORACLE)
--- 테이블 : ZT_통합코드
--- 테이블ID : ZT_UNFC_CD
+-- ?곸슜?쒖뒪?쒕챸 : ?댁쁺怨?ORACLE)
+-- ?뚯씠釉?: ZT_?듯빀肄붾뱶
+-- ?뚯씠釉봊D : ZT_UNFC_CD
 --------------------------------------------------------------------------------
 CREATE TABLE S_NNZ.ZT_UNFC_CD
 (
@@ -30,32 +30,32 @@ TABLESPACE TS_ZT_D01;
 
 
 
-COMMENT ON TABLE S_NNZ.ZT_UNFC_CD IS 'ZT_통합코드';
+COMMENT ON TABLE S_NNZ.ZT_UNFC_CD IS 'ZT_?듯빀肄붾뱶';
 
-COMMENT ON COLUMN S_NNZ.ZT_UNFC_CD.UNFC_CD_ID IS '통합코드ID';
-COMMENT ON COLUMN S_NNZ.ZT_UNFC_CD.UNFC_CD_NM IS '통합코드명';
-COMMENT ON COLUMN S_NNZ.ZT_UNFC_CD.UNFC_CD_HAN_NM IS '통합코드한글명';
-COMMENT ON COLUMN S_NNZ.ZT_UNFC_CD.UNFC_CD_ENG_NM IS '통합코드영문명';
-COMMENT ON COLUMN S_NNZ.ZT_UNFC_CD.UNFC_CD_DS IS '통합코드설명';
-COMMENT ON COLUMN S_NNZ.ZT_UNFC_CD.META_SYST_CD IS '메타시스템코드';
-COMMENT ON COLUMN S_NNZ.ZT_UNFC_CD.META_DUTJ_TYPE_CD IS '메타업무유형코드';
-COMMENT ON COLUMN S_NNZ.ZT_UNFC_CD.PUSE_YN IS '사용여부';
-COMMENT ON COLUMN S_NNZ.ZT_UNFC_CD.SPPO_UNFC_CD_ID IS '상위통합코드ID';
-COMMENT ON COLUMN S_NNZ.ZT_UNFC_CD.DATA_LOAD_DT IS '데이터적재일시';
-COMMENT ON COLUMN S_NNZ.ZT_UNFC_CD.SYST_RGI_DT IS '시스템등록일시';
-COMMENT ON COLUMN S_NNZ.ZT_UNFC_CD.SYST_RGI_PRAF_NO IS '시스템등록인사번호';
-COMMENT ON COLUMN S_NNZ.ZT_UNFC_CD.SYST_RGI_OGNZ_NO IS '시스템등록조직번호';
-COMMENT ON COLUMN S_NNZ.ZT_UNFC_CD.SYST_RGI_SYST_CD IS '시스템등록시스템코드';
-COMMENT ON COLUMN S_NNZ.ZT_UNFC_CD.SYST_RGI_PRGR_ID IS '시스템등록프로그램ID';
-COMMENT ON COLUMN S_NNZ.ZT_UNFC_CD.SYST_CHG_DT IS '시스템변경일시';
-COMMENT ON COLUMN S_NNZ.ZT_UNFC_CD.SYST_CHG_PRAF_NO IS '시스템변경인사번호';
-COMMENT ON COLUMN S_NNZ.ZT_UNFC_CD.SYST_CHG_OGNZ_NO IS '시스템변경조직번호';
-COMMENT ON COLUMN S_NNZ.ZT_UNFC_CD.SYST_CHG_SYST_CD IS '시스템변경시스템코드';
-COMMENT ON COLUMN S_NNZ.ZT_UNFC_CD.SYST_CHG_PRGR_ID IS '시스템변경프로그램ID';
+COMMENT ON COLUMN S_NNZ.ZT_UNFC_CD.UNFC_CD_ID IS '?듯빀肄붾뱶ID';
+COMMENT ON COLUMN S_NNZ.ZT_UNFC_CD.UNFC_CD_NM IS '?듯빀肄붾뱶紐?;
+COMMENT ON COLUMN S_NNZ.ZT_UNFC_CD.UNFC_CD_HAN_NM IS '?듯빀肄붾뱶?쒓?紐?;
+COMMENT ON COLUMN S_NNZ.ZT_UNFC_CD.UNFC_CD_ENG_NM IS '?듯빀肄붾뱶?곷Ц紐?;
+COMMENT ON COLUMN S_NNZ.ZT_UNFC_CD.UNFC_CD_DS IS '?듯빀肄붾뱶?ㅻ챸';
+COMMENT ON COLUMN S_NNZ.ZT_UNFC_CD.META_SYST_CD IS '硫뷀??쒖뒪?쒖퐫??;
+COMMENT ON COLUMN S_NNZ.ZT_UNFC_CD.META_DUTJ_TYPE_CD IS '硫뷀??낅Т?좏삎肄붾뱶';
+COMMENT ON COLUMN S_NNZ.ZT_UNFC_CD.PUSE_YN IS '?ъ슜?щ?';
+COMMENT ON COLUMN S_NNZ.ZT_UNFC_CD.SPPO_UNFC_CD_ID IS '?곸쐞?듯빀肄붾뱶ID';
+COMMENT ON COLUMN S_NNZ.ZT_UNFC_CD.DATA_LOAD_DT IS '?곗씠?곗쟻?ъ씪??;
+COMMENT ON COLUMN S_NNZ.ZT_UNFC_CD.SYST_RGI_DT IS '?쒖뒪?쒕벑濡앹씪??;
+COMMENT ON COLUMN S_NNZ.ZT_UNFC_CD.SYST_RGI_PRAF_NO IS '?쒖뒪?쒕벑濡앹씤?щ쾲??;
+COMMENT ON COLUMN S_NNZ.ZT_UNFC_CD.SYST_RGI_OGNZ_NO IS '?쒖뒪?쒕벑濡앹“吏곷쾲??;
+COMMENT ON COLUMN S_NNZ.ZT_UNFC_CD.SYST_RGI_SYST_CD IS '?쒖뒪?쒕벑濡앹떆?ㅽ뀥肄붾뱶';
+COMMENT ON COLUMN S_NNZ.ZT_UNFC_CD.SYST_RGI_PRGR_ID IS '?쒖뒪?쒕벑濡앺봽濡쒓렇?쭵D';
+COMMENT ON COLUMN S_NNZ.ZT_UNFC_CD.SYST_CHG_DT IS '?쒖뒪?쒕?寃쎌씪??;
+COMMENT ON COLUMN S_NNZ.ZT_UNFC_CD.SYST_CHG_PRAF_NO IS '?쒖뒪?쒕?寃쎌씤?щ쾲??;
+COMMENT ON COLUMN S_NNZ.ZT_UNFC_CD.SYST_CHG_OGNZ_NO IS '?쒖뒪?쒕?寃쎌“吏곷쾲??;
+COMMENT ON COLUMN S_NNZ.ZT_UNFC_CD.SYST_CHG_SYST_CD IS '?쒖뒪?쒕?寃쎌떆?ㅽ뀥肄붾뱶';
+COMMENT ON COLUMN S_NNZ.ZT_UNFC_CD.SYST_CHG_PRGR_ID IS '?쒖뒪?쒕?寃쏀봽濡쒓렇?쭵D';
 
 
 
--- 개별권한 Role
+-- 媛쒕퀎沅뚰븳 Role
 GRANT SELECT ON S_NNZ.ZT_UNFC_CD TO RL_A_EAI_NNZ_SEL;
 
 GRANT INSERT,UPDATE,DELETE ON S_NNZ.ZT_UNFC_CD TO RL_A_EAI_NNZ_IUD;
@@ -90,9 +90,9 @@ ALTER TABLE S_NNZ.ZT_UNFC_CD ADD (
 USING INDEX S_NNZ.PK_ZT_UNFC_CD);
 
 --------------------------------------------------------------------------------
--- 적용시스템명 : 개발계(ORACLE)
--- 테이블 : ZT_통합코드상세
--- 테이블ID : ZT_UNFC_CD_DTPT
+-- ?곸슜?쒖뒪?쒕챸 : 媛쒕컻怨?ORACLE)
+-- ?뚯씠釉?: ZT_?듯빀肄붾뱶?곸꽭
+-- ?뚯씠釉봊D : ZT_UNFC_CD_DTPT
 --------------------------------------------------------------------------------
 CREATE TABLE S_TFG.ZT_UNFC_CD_DTPT
 (
@@ -128,35 +128,35 @@ TABLESPACE TS_TFG_D01;
 
 
 
-COMMENT ON TABLE S_TFG.ZT_UNFC_CD_DTPT IS 'ZT_통합코드상세';
+COMMENT ON TABLE S_TFG.ZT_UNFC_CD_DTPT IS 'ZT_?듯빀肄붾뱶?곸꽭';
 
-COMMENT ON COLUMN S_TFG.ZT_UNFC_CD_DTPT.UNFC_CD_ID IS '통합코드ID';
-COMMENT ON COLUMN S_TFG.ZT_UNFC_CD_DTPT.CD_VLDT_VALU IS '코드유효값';
-COMMENT ON COLUMN S_TFG.ZT_UNFC_CD_DTPT.CD_VLDT_VALU_INQR_SEQ IS '코드유효값조회순서';
-COMMENT ON COLUMN S_TFG.ZT_UNFC_CD_DTPT.CD_VLDT_VALU_NM IS '코드유효값명';
-COMMENT ON COLUMN S_TFG.ZT_UNFC_CD_DTPT.CD_VLDT_VALU_HNGL_ABR_NM IS '코드유효값한글약어명';
-COMMENT ON COLUMN S_TFG.ZT_UNFC_CD_DTPT.CD_VLDT_VALU_ENGC_ABR_NM IS '코드유효값영문약어명';
-COMMENT ON COLUMN S_TFG.ZT_UNFC_CD_DTPT.CD_VLDT_VALU_HAN_NM IS '코드유효값한글명';
-COMMENT ON COLUMN S_TFG.ZT_UNFC_CD_DTPT.CD_VLDT_VALU_ENG_NM IS '코드유효값영문명';
-COMMENT ON COLUMN S_TFG.ZT_UNFC_CD_DTPT.CD_VLDT_VALU_DS IS '코드유효값설명';
-COMMENT ON COLUMN S_TFG.ZT_UNFC_CD_DTPT.CD_ASRT_TYPE_BIT_CD IS '코드분류유형비트코드';
-COMMENT ON COLUMN S_TFG.ZT_UNFC_CD_DTPT.SPPO_CD_VLDT_VALU IS '상위코드유효값';
-COMMENT ON COLUMN S_TFG.ZT_UNFC_CD_DTPT.SPPO_UNFC_CD_ID IS '상위통합코드ID';
-COMMENT ON COLUMN S_TFG.ZT_UNFC_CD_DTPT.VLDT_STRT_YMD IS '유효시작일자';
-COMMENT ON COLUMN S_TFG.ZT_UNFC_CD_DTPT.VLDT_END_YMD IS '유효종료일자';
-COMMENT ON COLUMN S_TFG.ZT_UNFC_CD_DTPT.USER_DEF_VALU_1 IS '사용자정의값1';
-COMMENT ON COLUMN S_TFG.ZT_UNFC_CD_DTPT.USER_DEF_VALU_2 IS '사용자정의값2';
-COMMENT ON COLUMN S_TFG.ZT_UNFC_CD_DTPT.SYST_RGI_DT IS '시스템등록일시';
-COMMENT ON COLUMN S_TFG.ZT_UNFC_CD_DTPT.SYST_RGI_PRAF_NO IS '시스템등록인사번호';
-COMMENT ON COLUMN S_TFG.ZT_UNFC_CD_DTPT.SYST_RGI_OGNZ_NO IS '시스템등록조직번호';
-COMMENT ON COLUMN S_TFG.ZT_UNFC_CD_DTPT.SYST_RGI_SYST_CD IS '시스템등록시스템코드';
-COMMENT ON COLUMN S_TFG.ZT_UNFC_CD_DTPT.SYST_RGI_PRGR_ID IS '시스템등록프로그램ID';
-COMMENT ON COLUMN S_TFG.ZT_UNFC_CD_DTPT.SYST_CHG_DT IS '시스템변경일시';
-COMMENT ON COLUMN S_TFG.ZT_UNFC_CD_DTPT.SYST_CHG_PRAF_NO IS '시스템변경인사번호';
-COMMENT ON COLUMN S_TFG.ZT_UNFC_CD_DTPT.SYST_CHG_OGNZ_NO IS '시스템변경조직번호';
-COMMENT ON COLUMN S_TFG.ZT_UNFC_CD_DTPT.SYST_CHG_SYST_CD IS '시스템변경시스템코드';
-COMMENT ON COLUMN S_TFG.ZT_UNFC_CD_DTPT.SYST_CHG_PRGR_ID IS '시스템변경프로그램ID';
-COMMENT ON COLUMN S_TFG.ZT_UNFC_CD_DTPT.DATA_LOAD_DT IS '데이터적재일시';
+COMMENT ON COLUMN S_TFG.ZT_UNFC_CD_DTPT.UNFC_CD_ID IS '?듯빀肄붾뱶ID';
+COMMENT ON COLUMN S_TFG.ZT_UNFC_CD_DTPT.CD_VLDT_VALU IS '肄붾뱶?좏슚媛?;
+COMMENT ON COLUMN S_TFG.ZT_UNFC_CD_DTPT.CD_VLDT_VALU_INQR_SEQ IS '肄붾뱶?좏슚媛믪“?뚯닚??;
+COMMENT ON COLUMN S_TFG.ZT_UNFC_CD_DTPT.CD_VLDT_VALU_NM IS '肄붾뱶?좏슚媛믩챸';
+COMMENT ON COLUMN S_TFG.ZT_UNFC_CD_DTPT.CD_VLDT_VALU_HNGL_ABR_NM IS '肄붾뱶?좏슚媛믫븳湲?쎌뼱紐?;
+COMMENT ON COLUMN S_TFG.ZT_UNFC_CD_DTPT.CD_VLDT_VALU_ENGC_ABR_NM IS '肄붾뱶?좏슚媛믪쁺臾몄빟?대챸';
+COMMENT ON COLUMN S_TFG.ZT_UNFC_CD_DTPT.CD_VLDT_VALU_HAN_NM IS '肄붾뱶?좏슚媛믫븳湲紐?;
+COMMENT ON COLUMN S_TFG.ZT_UNFC_CD_DTPT.CD_VLDT_VALU_ENG_NM IS '肄붾뱶?좏슚媛믪쁺臾몃챸';
+COMMENT ON COLUMN S_TFG.ZT_UNFC_CD_DTPT.CD_VLDT_VALU_DS IS '肄붾뱶?좏슚媛믪꽕紐?;
+COMMENT ON COLUMN S_TFG.ZT_UNFC_CD_DTPT.CD_ASRT_TYPE_BIT_CD IS '肄붾뱶遺꾨쪟?좏삎鍮꾪듃肄붾뱶';
+COMMENT ON COLUMN S_TFG.ZT_UNFC_CD_DTPT.SPPO_CD_VLDT_VALU IS '?곸쐞肄붾뱶?좏슚媛?;
+COMMENT ON COLUMN S_TFG.ZT_UNFC_CD_DTPT.SPPO_UNFC_CD_ID IS '?곸쐞?듯빀肄붾뱶ID';
+COMMENT ON COLUMN S_TFG.ZT_UNFC_CD_DTPT.VLDT_STRT_YMD IS '?좏슚?쒖옉?쇱옄';
+COMMENT ON COLUMN S_TFG.ZT_UNFC_CD_DTPT.VLDT_END_YMD IS '?좏슚醫낅즺?쇱옄';
+COMMENT ON COLUMN S_TFG.ZT_UNFC_CD_DTPT.USER_DEF_VALU_1 IS '?ъ슜?먯젙?섍컪1';
+COMMENT ON COLUMN S_TFG.ZT_UNFC_CD_DTPT.USER_DEF_VALU_2 IS '?ъ슜?먯젙?섍컪2';
+COMMENT ON COLUMN S_TFG.ZT_UNFC_CD_DTPT.SYST_RGI_DT IS '?쒖뒪?쒕벑濡앹씪??;
+COMMENT ON COLUMN S_TFG.ZT_UNFC_CD_DTPT.SYST_RGI_PRAF_NO IS '?쒖뒪?쒕벑濡앹씤?щ쾲??;
+COMMENT ON COLUMN S_TFG.ZT_UNFC_CD_DTPT.SYST_RGI_OGNZ_NO IS '?쒖뒪?쒕벑濡앹“吏곷쾲??;
+COMMENT ON COLUMN S_TFG.ZT_UNFC_CD_DTPT.SYST_RGI_SYST_CD IS '?쒖뒪?쒕벑濡앹떆?ㅽ뀥肄붾뱶';
+COMMENT ON COLUMN S_TFG.ZT_UNFC_CD_DTPT.SYST_RGI_PRGR_ID IS '?쒖뒪?쒕벑濡앺봽濡쒓렇?쭵D';
+COMMENT ON COLUMN S_TFG.ZT_UNFC_CD_DTPT.SYST_CHG_DT IS '?쒖뒪?쒕?寃쎌씪??;
+COMMENT ON COLUMN S_TFG.ZT_UNFC_CD_DTPT.SYST_CHG_PRAF_NO IS '?쒖뒪?쒕?寃쎌씤?щ쾲??;
+COMMENT ON COLUMN S_TFG.ZT_UNFC_CD_DTPT.SYST_CHG_OGNZ_NO IS '?쒖뒪?쒕?寃쎌“吏곷쾲??;
+COMMENT ON COLUMN S_TFG.ZT_UNFC_CD_DTPT.SYST_CHG_SYST_CD IS '?쒖뒪?쒕?寃쎌떆?ㅽ뀥肄붾뱶';
+COMMENT ON COLUMN S_TFG.ZT_UNFC_CD_DTPT.SYST_CHG_PRGR_ID IS '?쒖뒪?쒕?寃쏀봽濡쒓렇?쭵D';
+COMMENT ON COLUMN S_TFG.ZT_UNFC_CD_DTPT.DATA_LOAD_DT IS '?곗씠?곗쟻?ъ씪??;
 
 
 
@@ -177,127 +177,107 @@ ALTER TABLE S_TFG.ZT_UNFC_CD_DTPT ADD (
 USING INDEX S_TFG.PK_ZT_UNFC_CD_DTPT);
 
 -------------------------------------------------------------------------------------------
--- ZT_MENU 테이블 생성 (메뉴 기본 정보 저장)
+-- ZT_MENU ?뚯씠釉??앹꽦 (硫붾돱 湲곕낯 ?뺣낫 ???
 CREATE TABLE ZT_MENU (
-    MENU_ID          INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,  -- 자동 증가 ID (PK)
-    PARENT_MENU_ID   INTEGER,                                           -- 부모 메뉴 ID (FK, NULL 가능 for 루트 메뉴)
-    NAME             VARCHAR(100),                                      -- 컴포넌트 이름 (옵셔널)
-    PATH             VARCHAR(255) NOT NULL,                             -- 라우트 경로 (필수)
-    TITLE            VARCHAR(100) NOT NULL,                             -- 메뉴 이름 (meta.title, 필수)
-    ICON             VARCHAR(50),                                       -- 메뉴 아이콘 (옵셔널)
-    SHOW_BADGE       VARCHAR(1) DEFAULT 'N' CHECK (SHOW_BADGE IN ('Y', 'N')), -- 배지 표시 여부 (Y/N, 옵셔널)
-    SHOW_TEXT_BADGE  VARCHAR(50),                                       -- 텍스트 배지 표시 (옵셔널)
-    IS_HIDE          VARCHAR(1) DEFAULT 'N' CHECK (IS_HIDE IN ('Y', 'N')),    -- 메뉴 숨김 여부 (Y/N, 옵셔널)
-    IS_HIDE_TAB      VARCHAR(1) DEFAULT 'N' CHECK (IS_HIDE_TAB IN ('Y', 'N')),-- 탭 숨김 여부 (Y/N, 옵셔널)
-    LINK             VARCHAR(255),                                      -- 링크 (옵셔널)
-    IS_IFRAME        VARCHAR(1) DEFAULT 'N' CHECK (IS_IFRAME IN ('Y', 'N')),  -- iframe 여부 (Y/N, 옵셔널)
-    KEEP_ALIVE       VARCHAR(1) DEFAULT 'N' CHECK (KEEP_ALIVE IN ('Y', 'N')), -- 캐시 여부 (Y/N, 옵셔널)
-    ORDER_SEQ        INTEGER DEFAULT 0 NOT NULL,                        -- 메뉴 표시 순서 (정렬용, 필수)
-    IS_ACTIVE        VARCHAR(1) DEFAULT 'Y' CHECK (IS_ACTIVE IN ('Y', 'N')),  -- 활성 여부 (Y/N, 기본 Y)
-    SYST_RGI_DT      DATE,                                              -- 시스템등록일시
-    SYST_RGI_PRAF_NO VARCHAR(50),                                       -- 시스템등록인사번호
-    SYST_RGI_OGNZ_NO VARCHAR(50),                                       -- 시스템등록조직번호
-    SYST_RGI_SYST_CD VARCHAR(50),                                       -- 시스템등록시스템코드
-    SYST_RGI_PRGR_ID VARCHAR(50),                                       -- 시스템등록프로그램ID
-    SYST_CHG_DT      DATE,                                              -- 시스템변경일시
-    SYST_CHG_PRAF_NO VARCHAR(50),                                       -- 시스템변경인사번호
-    SYST_CHG_OGNZ_NO VARCHAR(50),                                       -- 시스템변경조직번호
-    SYST_CHG_SYST_CD VARCHAR(50),                                       -- 시스템변경시스템코드
-    SYST_CHG_PRGR_ID VARCHAR(50)                                        -- 시스템변경프로그램ID
+    MENU_ID          INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,  -- ?먮룞 利앷? ID (PK)
+    PARENT_MENU_ID   INTEGER,                                           -- 遺紐?硫붾돱 ID (FK, NULL 媛??for 猷⑦듃 硫붾돱)
+    NAME             VARCHAR(100),                                      -- 而댄룷?뚰듃 ?대쫫 (?듭뀛??
+    PATH             VARCHAR(255) NOT NULL,                             -- ?쇱슦??寃쎈줈 (?꾩닔)
+    TITLE            VARCHAR(100) NOT NULL,                             -- 硫붾돱 ?대쫫 (meta.title, ?꾩닔)
+    ICON             VARCHAR(50),                                       -- 硫붾돱 ?꾩씠肄?(?듭뀛??
+    SHOW_BADGE       VARCHAR(1) DEFAULT 'N' CHECK (SHOW_BADGE IN ('Y', 'N')), -- 諛곗? ?쒖떆 ?щ? (Y/N, ?듭뀛??
+    SHOW_TEXT_BADGE  VARCHAR(50),                                       -- ?띿뒪??諛곗? ?쒖떆 (?듭뀛??
+    IS_HIDE          VARCHAR(1) DEFAULT 'N' CHECK (IS_HIDE IN ('Y', 'N')),    -- 硫붾돱 ?④? ?щ? (Y/N, ?듭뀛??
+    IS_HIDE_TAB      VARCHAR(1) DEFAULT 'N' CHECK (IS_HIDE_TAB IN ('Y', 'N')),-- ???④? ?щ? (Y/N, ?듭뀛??
+    LINK             VARCHAR(255),                                      -- 留곹겕 (?듭뀛??
+    IS_IFRAME        VARCHAR(1) DEFAULT 'N' CHECK (IS_IFRAME IN ('Y', 'N')),  -- iframe ?щ? (Y/N, ?듭뀛??
+    KEEP_ALIVE       VARCHAR(1) DEFAULT 'N' CHECK (KEEP_ALIVE IN ('Y', 'N')), -- 罹먯떆 ?щ? (Y/N, ?듭뀛??
+    ORDER_SEQ        INTEGER DEFAULT 0 NOT NULL,                        -- 硫붾돱 ?쒖떆 ?쒖꽌 (?뺣젹?? ?꾩닔)
+    IS_ACTIVE        VARCHAR(1) DEFAULT 'Y' CHECK (IS_ACTIVE IN ('Y', 'N')),  -- ?쒖꽦 ?щ? (Y/N, 湲곕낯 Y)
+    SYST_RGI_DT      DATE,                                              -- ?쒖뒪?쒕벑濡앹씪??
+    SYST_RGI_PRAF_NO VARCHAR(50),                                       -- ?쒖뒪?쒕벑濡앹씤?щ쾲??
+    SYST_RGI_OGNZ_NO VARCHAR(50),                                       -- ?쒖뒪?쒕벑濡앹“吏곷쾲??
+    SYST_RGI_SYST_CD VARCHAR(50),                                       -- ?쒖뒪?쒕벑濡앹떆?ㅽ뀥肄붾뱶
+    SYST_RGI_PRGR_ID VARCHAR(50),                                       -- ?쒖뒪?쒕벑濡앺봽濡쒓렇?쭵D
+    SYST_CHG_DT      DATE,                                              -- ?쒖뒪?쒕?寃쎌씪??
+    SYST_CHG_PRAF_NO VARCHAR(50),                                       -- ?쒖뒪?쒕?寃쎌씤?щ쾲??
+    SYST_CHG_OGNZ_NO VARCHAR(50),                                       -- ?쒖뒪?쒕?寃쎌“吏곷쾲??
+    SYST_CHG_SYST_CD VARCHAR(50),                                       -- ?쒖뒪?쒕?寃쎌떆?ㅽ뀥肄붾뱶
+    SYST_CHG_PRGR_ID VARCHAR(50)                                        -- ?쒖뒪?쒕?寃쏀봽濡쒓렇?쭵D
 );
 
--- 제약 조건 추가
-ALTER TABLE ZT_MENU ADD CONSTRAINT FK_ZT_MENU_PARENT FOREIGN KEY (PARENT_MENU_ID) REFERENCES ZT_MENU (MENU_ID) ON DELETE CASCADE;  -- 부모 삭제 시 자식도 삭제 (계층 삭제 지원)
+-- ?쒖빟 議곌굔 異붽?
+ALTER TABLE ZT_MENU ADD CONSTRAINT FK_ZT_MENU_PARENT FOREIGN KEY (PARENT_MENU_ID) REFERENCES ZT_MENU (MENU_ID) ON DELETE CASCADE;  -- 遺紐???젣 ???먯떇????젣 (怨꾩링 ??젣 吏??
 
--- 인덱스 생성 (조회 최적화)
+-- ?몃뜳???앹꽦 (議고쉶 理쒖쟻??
 CREATE INDEX IDX_ZT_MENU_PARENT ON ZT_MENU (PARENT_MENU_ID);
 CREATE INDEX IDX_ZT_MENU_PATH ON ZT_MENU (PATH);
 
--- 컬럼 코멘트 추가
-COMMENT ON COLUMN ZT_MENU.MENU_ID IS '메뉴 ID (PK)';
-COMMENT ON COLUMN ZT_MENU.PARENT_MENU_ID IS '부모 메뉴 ID (FK)';
-COMMENT ON COLUMN ZT_MENU.NAME IS '컴포넌트 이름';
-COMMENT ON COLUMN ZT_MENU.PATH IS '라우트 경로';
-COMMENT ON COLUMN ZT_MENU.TITLE IS '메뉴 이름';
-COMMENT ON COLUMN ZT_MENU.ICON IS '메뉴 아이콘';
-COMMENT ON COLUMN ZT_MENU.SHOW_BADGE IS '배지 표시 여부 (Y/N)';
-COMMENT ON COLUMN ZT_MENU.SHOW_TEXT_BADGE IS '텍스트 배지 표시';
-COMMENT ON COLUMN ZT_MENU.IS_HIDE IS '메뉴 숨김 여부 (Y/N)';
-COMMENT ON COLUMN ZT_MENU.IS_HIDE_TAB IS '탭 숨김 여부 (Y/N)';
-COMMENT ON COLUMN ZT_MENU.LINK IS '링크';
-COMMENT ON COLUMN ZT_MENU.IS_IFRAME IS 'iframe 여부 (Y/N)';
-COMMENT ON COLUMN ZT_MENU.KEEP_ALIVE IS '캐시 여부 (Y/N)';
-COMMENT ON COLUMN ZT_MENU.ORDER_SEQ IS '메뉴 표시 순서';
-COMMENT ON COLUMN ZT_MENU.IS_ACTIVE IS '활성 여부 (Y/N)';
-COMMENT ON COLUMN ZT_MENU.SYST_RGI_DT IS '시스템등록일시';
-COMMENT ON COLUMN ZT_MENU.SYST_RGI_PRAF_NO IS '시스템등록인사번호';
-COMMENT ON COLUMN ZT_MENU.SYST_RGI_OGNZ_NO IS '시스템등록조직번호';
-COMMENT ON COLUMN ZT_MENU.SYST_RGI_SYST_CD IS '시스템등록시스템코드';
-COMMENT ON COLUMN ZT_MENU.SYST_RGI_PRGR_ID IS '시스템등록프로그램ID';
-COMMENT ON COLUMN ZT_MENU.SYST_CHG_DT IS '시스템변경일시';
-COMMENT ON COLUMN ZT_MENU.SYST_CHG_PRAF_NO IS '시스템변경인사번호';
-COMMENT ON COLUMN ZT_MENU.SYST_CHG_OGNZ_NO IS '시스템변경조직번호';
-COMMENT ON COLUMN ZT_MENU.SYST_CHG_SYST_CD IS '시스템변경시스템코드';
-COMMENT ON COLUMN ZT_MENU.SYST_CHG_PRGR_ID IS '시스템변경프로그램ID';
+-- 而щ읆 肄붾찘??異붽?
+COMMENT ON COLUMN ZT_MENU.MENU_ID IS '硫붾돱 ID (PK)';
+COMMENT ON COLUMN ZT_MENU.PARENT_MENU_ID IS '遺紐?硫붾돱 ID (FK)';
+COMMENT ON COLUMN ZT_MENU.NAME IS '而댄룷?뚰듃 ?대쫫';
+COMMENT ON COLUMN ZT_MENU.PATH IS '?쇱슦??寃쎈줈';
+COMMENT ON COLUMN ZT_MENU.TITLE IS '硫붾돱 ?대쫫';
+COMMENT ON COLUMN ZT_MENU.ICON IS '硫붾돱 ?꾩씠肄?;
+COMMENT ON COLUMN ZT_MENU.SHOW_BADGE IS '諛곗? ?쒖떆 ?щ? (Y/N)';
+COMMENT ON COLUMN ZT_MENU.SHOW_TEXT_BADGE IS '?띿뒪??諛곗? ?쒖떆';
+COMMENT ON COLUMN ZT_MENU.IS_HIDE IS '硫붾돱 ?④? ?щ? (Y/N)';
+COMMENT ON COLUMN ZT_MENU.IS_HIDE_TAB IS '???④? ?щ? (Y/N)';
+COMMENT ON COLUMN ZT_MENU.LINK IS '留곹겕';
+COMMENT ON COLUMN ZT_MENU.IS_IFRAME IS 'iframe ?щ? (Y/N)';
+COMMENT ON COLUMN ZT_MENU.KEEP_ALIVE IS '罹먯떆 ?щ? (Y/N)';
+COMMENT ON COLUMN ZT_MENU.ORDER_SEQ IS '硫붾돱 ?쒖떆 ?쒖꽌';
+COMMENT ON COLUMN ZT_MENU.IS_ACTIVE IS '?쒖꽦 ?щ? (Y/N)';
+COMMENT ON COLUMN ZT_MENU.SYST_RGI_DT IS '?쒖뒪?쒕벑濡앹씪??;
+COMMENT ON COLUMN ZT_MENU.SYST_RGI_PRAF_NO IS '?쒖뒪?쒕벑濡앹씤?щ쾲??;
+COMMENT ON COLUMN ZT_MENU.SYST_RGI_OGNZ_NO IS '?쒖뒪?쒕벑濡앹“吏곷쾲??;
+COMMENT ON COLUMN ZT_MENU.SYST_RGI_SYST_CD IS '?쒖뒪?쒕벑濡앹떆?ㅽ뀥肄붾뱶';
+COMMENT ON COLUMN ZT_MENU.SYST_RGI_PRGR_ID IS '?쒖뒪?쒕벑濡앺봽濡쒓렇?쭵D';
+COMMENT ON COLUMN ZT_MENU.SYST_CHG_DT IS '?쒖뒪?쒕?寃쎌씪??;
+COMMENT ON COLUMN ZT_MENU.SYST_CHG_PRAF_NO IS '?쒖뒪?쒕?寃쎌씤?щ쾲??;
+COMMENT ON COLUMN ZT_MENU.SYST_CHG_OGNZ_NO IS '?쒖뒪?쒕?寃쎌“吏곷쾲??;
+COMMENT ON COLUMN ZT_MENU.SYST_CHG_SYST_CD IS '?쒖뒪?쒕?寃쎌떆?ㅽ뀥肄붾뱶';
+COMMENT ON COLUMN ZT_MENU.SYST_CHG_PRGR_ID IS '?쒖뒪?쒕?寃쏀봽濡쒓렇?쭵D';
 
--- ZT_MENU_AUTH 테이블 생성 (메뉴 권한 목록 저장)
+-- ZT_MENU_AUTH ?뚯씠釉??앹꽦 (硫붾돱 沅뚰븳 紐⑸줉 ???
 CREATE TABLE ZT_MENU_AUTH (
-    AUTH_ID          INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,  -- 자동 증가 ID (PK)
-    MENU_ID          INTEGER NOT NULL,                                  -- 메뉴 ID (FK)
-    TITLE            VARCHAR(100) NOT NULL,                             -- 권한 제목 (e.g., ''추가'', ''편집'')
-    AUTH_MARK        VARCHAR(100) NOT NULL,                             -- 권한 마크 (e.g., ''add'', ''edit'')
-    ORDER_SEQ        INTEGER DEFAULT 0 NOT NULL,                        -- 권한 표시 순서 (정렬용)
-    SYST_RGI_DT      DATE,                                              -- 시스템등록일시
-    SYST_RGI_PRAF_NO VARCHAR(50),                                       -- 시스템등록인사번호
-    SYST_RGI_OGNZ_NO VARCHAR(50),                                       -- 시스템등록조직번호
-    SYST_RGI_SYST_CD VARCHAR(50),                                       -- 시스템등록시스템코드
-    SYST_RGI_PRGR_ID VARCHAR(50),                                       -- 시스템등록프로그램ID
-    SYST_CHG_DT      DATE,                                              -- 시스템변경일시
-    SYST_CHG_PRAF_NO VARCHAR(50),                                       -- 시스템변경인사번호
-    SYST_CHG_OGNZ_NO VARCHAR(50),                                       -- 시스템변경조직번호
-    SYST_CHG_SYST_CD VARCHAR(50),                                       -- 시스템변경시스템코드
-    SYST_CHG_PRGR_ID VARCHAR(50)                                        -- 시스템변경프로그램ID
+    AUTH_ID          INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,  -- ?먮룞 利앷? ID (PK)
+    MENU_ID          INTEGER NOT NULL,                                  -- 硫붾돱 ID (FK)
+    TITLE            VARCHAR(100) NOT NULL,                             -- 沅뚰븳 ?쒕ぉ (e.g., ''異붽?'', ''?몄쭛'')
+    AUTH_MARK        VARCHAR(100) NOT NULL,                             -- 沅뚰븳 留덊겕 (e.g., ''add'', ''edit'')
+    ORDER_SEQ        INTEGER DEFAULT 0 NOT NULL,                        -- 沅뚰븳 ?쒖떆 ?쒖꽌 (?뺣젹??
+    SYST_RGI_DT      DATE,                                              -- ?쒖뒪?쒕벑濡앹씪??
+    SYST_RGI_PRAF_NO VARCHAR(50),                                       -- ?쒖뒪?쒕벑濡앹씤?щ쾲??
+    SYST_RGI_OGNZ_NO VARCHAR(50),                                       -- ?쒖뒪?쒕벑濡앹“吏곷쾲??
+    SYST_RGI_SYST_CD VARCHAR(50),                                       -- ?쒖뒪?쒕벑濡앹떆?ㅽ뀥肄붾뱶
+    SYST_RGI_PRGR_ID VARCHAR(50),                                       -- ?쒖뒪?쒕벑濡앺봽濡쒓렇?쭵D
+    SYST_CHG_DT      DATE,                                              -- ?쒖뒪?쒕?寃쎌씪??
+    SYST_CHG_PRAF_NO VARCHAR(50),                                       -- ?쒖뒪?쒕?寃쎌씤?щ쾲??
+    SYST_CHG_OGNZ_NO VARCHAR(50),                                       -- ?쒖뒪?쒕?寃쎌“吏곷쾲??
+    SYST_CHG_SYST_CD VARCHAR(50),                                       -- ?쒖뒪?쒕?寃쎌떆?ㅽ뀥肄붾뱶
+    SYST_CHG_PRGR_ID VARCHAR(50)                                        -- ?쒖뒪?쒕?寃쏀봽濡쒓렇?쭵D
 );
 
--- 제약 조건 추가
-ALTER TABLE ZT_MENU_AUTH ADD CONSTRAINT FK_ZT_MENU_AUTH_MENU FOREIGN KEY (MENU_ID) REFERENCES ZT_MENU (MENU_ID) ON DELETE CASCADE;  -- 메뉴 삭제 시 권한도 삭제
+-- ?쒖빟 議곌굔 異붽?
+ALTER TABLE ZT_MENU_AUTH ADD CONSTRAINT FK_ZT_MENU_AUTH_MENU FOREIGN KEY (MENU_ID) REFERENCES ZT_MENU (MENU_ID) ON DELETE CASCADE;  -- 硫붾돱 ??젣 ??沅뚰븳????젣
 
--- 인덱스 생성
+-- ?몃뜳???앹꽦
 CREATE INDEX IDX_ZT_MENU_AUTH_MENU ON ZT_MENU_AUTH (MENU_ID);
 
--- 컬럼 코멘트 추가
-COMMENT ON COLUMN ZT_MENU_AUTH.AUTH_ID IS '권한 ID (PK)';
-COMMENT ON COLUMN ZT_MENU_AUTH.MENU_ID IS '메뉴 ID (FK)';
-COMMENT ON COLUMN ZT_MENU_AUTH.TITLE IS '권한 제목';
-COMMENT ON COLUMN ZT_MENU_AUTH.AUTH_MARK IS '권한 마크';
-COMMENT ON COLUMN ZT_MENU_AUTH.ORDER_SEQ IS '권한 표시 순서';
-COMMENT ON COLUMN ZT_MENU_AUTH.SYST_RGI_DT IS '시스템등록일시';
-COMMENT ON COLUMN ZT_MENU_AUTH.SYST_RGI_PRAF_NO IS '시스템등록인사번호';
-COMMENT ON COLUMN ZT_MENU_AUTH.SYST_RGI_OGNZ_NO IS '시스템등록조직번호';
-COMMENT ON COLUMN ZT_MENU_AUTH.SYST_RGI_SYST_CD IS '시스템등록시스템코드';
-COMMENT ON COLUMN ZT_MENU_AUTH.SYST_RGI_PRGR_ID IS '시스템등록프로그램ID';
-COMMENT ON COLUMN ZT_MENU_AUTH.SYST_CHG_DT IS '시스템변경일시';
-COMMENT ON COLUMN ZT_MENU_AUTH.SYST_CHG_PRAF_NO IS '시스템변경인사번호';
-COMMENT ON COLUMN ZT_MENU_AUTH.SYST_CHG_OGNZ_NO IS '시스템변경조직번호';
-COMMENT ON COLUMN ZT_MENU_AUTH.SYST_CHG_SYST_CD IS '시스템변경시스템코드';
-COMMENT ON COLUMN ZT_MENU_AUTH.SYST_CHG_PRGR_ID IS '시스템변경프로그램ID';
-# --- ���Ѷ����� EAI/MCI ���� IP ���� (���� ȯ��) ---
-shinhan.integration.envrTypeCd=D
-shinhan.integration.eai.url=http://10.176.32.181
-shinhan.integration.internalMci.url=http://10.176.32.173
-shinhan.integration.bancaMci.url=http://10.176.32.117
-shinhan.integration.externalMci.url=http://10.176.32.176
-
-# --- ���Ѷ����� EAI/MCI ���� IP ���� (�׽�Ʈ ȯ��) ---
-shinhan.integration.envrTypeCd=T
-shinhan.integration.eai.url=http://10.174.32.181
-shinhan.integration.internalMci.url=http://10.174.32.173
-shinhan.integration.bancaMci.url=http://10.174.32.117
-shinhan.integration.externalMci.url=http://10.176.32.177
-
-# --- ���Ѷ����� EAI/MCI ���� IP ���� (� ȯ��) ---
-shinhan.integration.envrTypeCd=R
-shinhan.integration.eai.url=http://10.172.32.181
-shinhan.integration.internalMci.url=http://10.172.32.173
-shinhan.integration.bancaMci.url=http://10.172.32.117
-shinhan.integration.externalMci.url=http://10.172.32.177
+-- 而щ읆 肄붾찘??異붽?
+COMMENT ON COLUMN ZT_MENU_AUTH.AUTH_ID IS '沅뚰븳 ID (PK)';
+COMMENT ON COLUMN ZT_MENU_AUTH.MENU_ID IS '硫붾돱 ID (FK)';
+COMMENT ON COLUMN ZT_MENU_AUTH.TITLE IS '沅뚰븳 ?쒕ぉ';
+COMMENT ON COLUMN ZT_MENU_AUTH.AUTH_MARK IS '沅뚰븳 留덊겕';
+COMMENT ON COLUMN ZT_MENU_AUTH.ORDER_SEQ IS '沅뚰븳 ?쒖떆 ?쒖꽌';
+COMMENT ON COLUMN ZT_MENU_AUTH.SYST_RGI_DT IS '?쒖뒪?쒕벑濡앹씪??;
+COMMENT ON COLUMN ZT_MENU_AUTH.SYST_RGI_PRAF_NO IS '?쒖뒪?쒕벑濡앹씤?щ쾲??;
+COMMENT ON COLUMN ZT_MENU_AUTH.SYST_RGI_OGNZ_NO IS '?쒖뒪?쒕벑濡앹“吏곷쾲??;
+COMMENT ON COLUMN ZT_MENU_AUTH.SYST_RGI_SYST_CD IS '?쒖뒪?쒕벑濡앹떆?ㅽ뀥肄붾뱶';
+COMMENT ON COLUMN ZT_MENU_AUTH.SYST_RGI_PRGR_ID IS '?쒖뒪?쒕벑濡앺봽濡쒓렇?쭵D';
+COMMENT ON COLUMN ZT_MENU_AUTH.SYST_CHG_DT IS '?쒖뒪?쒕?寃쎌씪??;
+COMMENT ON COLUMN ZT_MENU_AUTH.SYST_CHG_PRAF_NO IS '?쒖뒪?쒕?寃쎌씤?щ쾲??;
+COMMENT ON COLUMN ZT_MENU_AUTH.SYST_CHG_OGNZ_NO IS '?쒖뒪?쒕?寃쎌“吏곷쾲??;
+COMMENT ON COLUMN ZT_MENU_AUTH.SYST_CHG_SYST_CD IS '?쒖뒪?쒕?寃쎌떆?ㅽ뀥肄붾뱶';
+COMMENT ON COLUMN ZT_MENU_AUTH.SYST_CHG_PRGR_ID IS '?쒖뒪?쒕?寃쏀봽濡쒓렇?쭵D';

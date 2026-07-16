@@ -1,4 +1,4 @@
-# ===== ë¹Œë“œ ê²°ê³¼ë¬¼ =====
+# ===== é®ëš®ë±¶ å¯ƒê³Œë‚µè‡¾?=====
 target/
 !**/src/main/**/target/
 !**/src/test/**/target/
@@ -9,7 +9,7 @@ target/
 *.ear
 *.nar
 
-# ===== ë¡œê·¸ =====
+# ===== æ¿¡ì’“ë ‡ =====
 *.log
 logs/
 spring-shell.log
@@ -61,27 +61,6 @@ build/
 Thumbs.db
 ehthumbs.db
 
-# ===== í™˜ê²½ì„¤ì • (ë¯¼ê°ì •ë³´ ë¶„ë¦¬ ì‹œ) =====
+# ===== ?ì„ê¼?ã…¼ì ™ (èª˜ì‡¨ì»§?ëº£ë‚« éºê¾¨â” ?? =====
 # application-local.properties
 # application-secret.properties
-
-# --- ½ÅÇÑ¶óÀÌÇÁ EAI/MCI ¿¬°è IP Á¤º¸ (°³¹ß È¯°æ) ---
-shinhan.integration.envrTypeCd=D
-shinhan.integration.eai.url=http://10.176.32.181
-shinhan.integration.internalMci.url=http://10.176.32.173
-shinhan.integration.bancaMci.url=http://10.176.32.117
-shinhan.integration.externalMci.url=http://10.176.32.176
-
-# --- ½ÅÇÑ¶óÀÌÇÁ EAI/MCI ¿¬°è IP Á¤º¸ (Å×½ºÆ® È¯°æ) ---
-shinhan.integration.envrTypeCd=T
-shinhan.integration.eai.url=http://10.174.32.181
-shinhan.integration.internalMci.url=http://10.174.32.173
-shinhan.integration.bancaMci.url=http://10.174.32.117
-shinhan.integration.externalMci.url=http://10.176.32.177
-
-# --- ½ÅÇÑ¶óÀÌÇÁ EAI/MCI ¿¬°è IP Á¤º¸ (¿î¿µ È¯°æ) ---
-shinhan.integration.envrTypeCd=R
-shinhan.integration.eai.url=http://10.172.32.181
-shinhan.integration.internalMci.url=http://10.172.32.173
-shinhan.integration.bancaMci.url=http://10.172.32.117
-shinhan.integration.externalMci.url=http://10.172.32.177
