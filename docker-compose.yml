@@ -14,7 +14,7 @@ services:
   gateway:
     build: 
       context: .
-      dockerfile: axhub-gateway/Dockerfile
+      dockerfile: dap-gateway/Dockerfile
     ports:
       - "8281:8081"
     volumes:
@@ -40,7 +40,7 @@ services:
   tool-sms:
     build: 
       context: .
-      dockerfile: axhub-tool-sms/Dockerfile
+      dockerfile: dap-tool-sms/Dockerfile
     ports:
       - "8282:8082"
     depends_on:
@@ -61,7 +61,7 @@ services:
   tool-email:
     build: 
       context: .
-      dockerfile: axhub-tool-email/Dockerfile
+      dockerfile: dap-tool-email/Dockerfile
     ports:
       - "8283:8083"
     depends_on:
@@ -82,7 +82,7 @@ services:
   tool-other:
     build: 
       context: .
-      dockerfile: axhub-tool-other/Dockerfile
+      dockerfile: dap-tool-other/Dockerfile
     ports:
       - "8284:8084"
     depends_on:
@@ -103,7 +103,7 @@ services:
   tool-payment:
     build:
       context: .
-      dockerfile: axhub-tool-payment/Dockerfile
+      dockerfile: dap-tool-payment/Dockerfile
     ports:
       - "8285:8085"
     depends_on:

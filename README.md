@@ -45,9 +45,9 @@ docker compose up -d --build
 媛쒕컻 以??뱀젙 紐⑤뱢留??꾩썙 ?붾쾭源낇빐????寃쎌슦 ?꾨옒? 媛숈씠 ?ㅽ뻾?⑸땲??
 
 - **Gateway ?쒕쾭 湲곕룞:**
-  - `./gradlew :axhub-gateway:bootRun`
+  - `./gradlew :dap-gateway:bootRun`
 - **Tool ?쒕쾭 湲곕룞 (?? other ??:**
-  - `./gradlew :axhub-tool-other:bootRun`
+  - `./gradlew :dap-tool-other:bootRun`
   - Tool ?쒕쾭媛 湲곕룞?섎㈃ ?먮룞?쇰줈 Gateway???먯떊???깅줉(Auto-Registration)?⑸땲??
 
 
@@ -70,7 +70,7 @@ docker compose up -d --build
 
 ### 2. ?꾨줈?뺤뀡 ?대씪?곕뱶 AI (Google Cloud Agent Builder ?? ?곕룞
 ?ㅼ젣 ?쇱씠釉??쒕퉬?ㅼ뿉???숈옉?섎뒗 ?대씪?곕뱶 Agent Builder??REST API 湲곕컲??OpenAPI Spec???붽뎄?⑸땲?? 
-`axhub-gateway`???대? **Agent Builder 洹쒓꺽??REST API(`/mcp/api/v1/tools/call`)瑜??ㅼ씠?곕툕濡??쒓났**?섎?濡? 蹂꾨룄??釉뚮┸吏???대뙌???놁씠 Endpoint URL怨?Swagger(OpenAPI) 臾몄꽌留??대씪?곕뱶 肄섏넄???깅줉?섎㈃ 利됱떆 ?쇱씠釉?梨쀫큸/?먯씠?꾪듃濡??쒕퉬?ㅽ븷 ???덉뒿?덈떎.
+`dap-gateway`???대? **Agent Builder 洹쒓꺽??REST API(`/mcp/api/v1/tools/call`)瑜??ㅼ씠?곕툕濡??쒓났**?섎?濡? 蹂꾨룄??釉뚮┸吏???대뙌???놁씠 Endpoint URL怨?Swagger(OpenAPI) 臾몄꽌留??대씪?곕뱶 肄섏넄???깅줉?섎㈃ 利됱떆 ?쇱씠釉?梨쀫큸/?먯씠?꾪듃濡??쒕퉬?ㅽ븷 ???덉뒿?덈떎.
 
 ### 3. (Legacy) 濡쒖뺄 肄붾뵫 AI (Cursor, Claude Desktop ?? ?곕룞
 ?쒖? MCP ?듭떊(Stdio)???붽뎄?섎뒗 濡쒖뺄 AI ?먯씠?꾪듃瑜??꾪빐 ?먮컮 湲곕컲??釉뚮┸吏 ?ㅽ겕由쏀듃(`McpBridge.java`)瑜??댁옣?섍퀬 ?덉뒿?덈떎. 釉뚮┸吏媛 Stdio ?붿껌??HTTP濡?蹂?섑븯??濡쒖뺄 ?섍꼍??Gateway濡??꾨떖?⑸땲??
@@ -78,9 +78,9 @@ docker compose up -d --build
 - **?ㅼ젙 諛⑸쾿**: IDE??`mcp_config.json` ?ㅼ젙 ?뚯씪???꾨옒? 媛숈씠 ?깅줉?⑸땲??
   ```json
   "mcpServers": {
-    "axhub-gateway": {
+    "dap-gateway": {
       "command": "java",
-      "args": ["C:/?덈?寃쎈줈/axhub-backend-main/McpBridge.java"]
+      "args": ["C:/?덈?寃쎈줈/dap-backend-main/McpBridge.java"]
     }
   }
   ```
@@ -140,11 +140,11 @@ MSA 諛??몃? ?쒖뒪??MCI) ?곕룞 ?섍꼍???덉젙?깆쓣 ?꾪빐 ?꾨꼍??3-T
 
 ```bash
 # ?ъ슜踰? javac濡?而댄뙆?????ㅽ뻾
-javac -encoding UTF-8 axhub-common/src/main/java/io/shinhanlife/axhub/common/util/PodScaffolder.java
-java -cp axhub-common/src/main/java io.shinhanlife.axhub.common.util.PodScaffolder [紐⑤뱢紐? [?ы듃踰덊샇]
+javac -encoding UTF-8 dap-common/src/main/java/io/shinhanlife/axhub/common/util/PodScaffolder.java
+java -cp dap-common/src/main/java io.shinhanlife.dap.common.util.PodScaffolder [紐⑤뱢紐? [?ы듃踰덊샇]
 
-# ?ㅽ뻾 ?덉떆 (axhub-tool-hr 紐⑤뱢??8086 ?ы듃濡??앹꽦)
-java -cp axhub-common/src/main/java io.shinhanlife.axhub.common.util.PodScaffolder hr 8086
+# ?ㅽ뻾 ?덉떆 (dap-tool-hr 紐⑤뱢??8086 ?ы듃濡??앹꽦)
+java -cp dap-common/src/main/java io.shinhanlife.dap.common.util.PodScaffolder hr 8086
 ```
 
 ### 2???앹꽦??紐⑤뱢???덈줈????Function)??異붽????? `ToolScaffolder`
@@ -152,11 +152,11 @@ java -cp axhub-common/src/main/java io.shinhanlife.axhub.common.util.PodScaffold
 
 ```bash
 # ?ъ슜踰? javac濡?而댄뙆?????ㅽ뻾
-javac -encoding UTF-8 axhub-common/src/main/java/io/shinhanlife/axhub/common/util/ToolScaffolder.java
-java -cp axhub-common/src/main/java io.shinhanlife.axhub.common.util.ToolScaffolder [Tool?대쫫] [?명꽣?섏씠?짪D] "[湲곕뒫?ㅻ챸]" "[洹몃９紐?" "[?듭떊諛⑹떇]" "[紐⑤뱢紐?"
+javac -encoding UTF-8 dap-common/src/main/java/io/shinhanlife/axhub/common/util/ToolScaffolder.java
+java -cp dap-common/src/main/java io.shinhanlife.dap.common.util.ToolScaffolder [Tool?대쫫] [?명꽣?섏씠?짪D] "[湲곕뒫?ㅻ챸]" "[洹몃９紐?" "[?듭떊諛⑹떇]" "[紐⑤뱢紐?"
 
 # ?ㅽ뻾 ?덉떆 (payment 紐⑤뱢??寃곗젣 ?뱀씤 湲곕뒫 異붽?)
-java -cp axhub-common/src/main/java io.shinhanlife.axhub.common.util.ToolScaffolder PaymentApproval PAY_001 "寃곗젣 ?뱀씤 泥섎━ 湲곕뒫" "COMMON" "HTTP" "axhub-tool-payment"
+java -cp dap-common/src/main/java io.shinhanlife.dap.common.util.ToolScaffolder PaymentApproval PAY_001 "寃곗젣 ?뱀씤 泥섎━ 湲곕뒫" "COMMON" "HTTP" "dap-tool-payment"
 ```
 
 ---
@@ -164,14 +164,14 @@ java -cp axhub-common/src/main/java io.shinhanlife.axhub.common.util.ToolScaffol
 ##  ?⑦궎吏 援ъ“ (Package Structure)
 
 ```text
-axhub-backend-main (Root)
-?쒋?? axhub-gateway           #  MCP ?쇱슦???덈툕 ?쒕쾭 (?몃? LLM怨??듭떊 諛?Tool 遺꾨같)
-?쒋?? axhub-common            # 怨듯넻 紐⑤뱢 (Security, Session, Config ??
-?쒋?? axhub-tool-core         # Tool 怨듯넻 湲곕뒫 (AbstractMcpToolService, Annotation, Scaffolder)
-?쒋?? axhub-tool-email        # [Tool] ?대찓??諛쒖넚 ?뱁솕 ?대뙌??紐⑤뱢
-?쒋?? axhub-tool-sms          # [Tool] SMS 諛쒖넚 ?뱁솕 ?대뙌??紐⑤뱢
-?쒋?? axhub-tool-payment      # [Tool] 寃곗젣 鍮꾩쫰?덉뒪 ?대뙌??紐⑤뱢 (Scaffolded)
-?붴?? axhub-tool-other        # [Tool] 湲고? 鍮꾩쫰?덉뒪(泥?뎄, 怨꾩빟, 怨좉컼, HR ?? ?대뙌??紐⑤뱢
+dap-backend-main (Root)
+?쒋?? dap-gateway           #  MCP ?쇱슦???덈툕 ?쒕쾭 (?몃? LLM怨??듭떊 諛?Tool 遺꾨같)
+?쒋?? dap-common            # 怨듯넻 紐⑤뱢 (Security, Session, Config ??
+?쒋?? dap-tool-core         # Tool 怨듯넻 湲곕뒫 (AbstractMcpToolService, Annotation, Scaffolder)
+?쒋?? dap-tool-email        # [Tool] ?대찓??諛쒖넚 ?뱁솕 ?대뙌??紐⑤뱢
+?쒋?? dap-tool-sms          # [Tool] SMS 諛쒖넚 ?뱁솕 ?대뙌??紐⑤뱢
+?쒋?? dap-tool-payment      # [Tool] 寃곗젣 鍮꾩쫰?덉뒪 ?대뙌??紐⑤뱢 (Scaffolded)
+?붴?? dap-tool-other        # [Tool] 湲고? 鍮꾩쫰?덉뒪(泥?뎄, 怨꾩빟, 怨좉컼, HR ?? ?대뙌??紐⑤뱢
 ```
 
 *(李멸퀬: 湲곗〈 ?⑥씪 紐⑤뱢 ?꾨줈?앺듃?먯꽌 留덉씠?щ줈?쒕퉬???뺤옣???꾪빐 紐⑤뱢蹂꾨줈 遺꾨━?섏뿀?쇰ŉ, 媛?Tool ?쒕쾭???낅┰?곸쑝濡??뺤옣 諛?諛고룷?????덉뒿?덈떎.)*
