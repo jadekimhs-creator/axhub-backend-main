@@ -5,6 +5,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import com.fasterxml.jackson.annotation.JsonUnwrapped;
+
 /**
  * @package io.shinhanlife.axhub.common.integration.mci.dto
  * @className MciRequestWrapper
@@ -19,7 +21,6 @@ import lombok.NoArgsConstructor;
  * 
  * </pre>
  */
-import com.fasterxml.jackson.annotation.JsonUnwrapped;
 
 @Data
 @Builder
