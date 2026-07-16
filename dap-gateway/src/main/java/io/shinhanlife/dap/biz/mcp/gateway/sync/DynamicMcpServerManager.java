@@ -1,5 +1,6 @@
 package io.shinhanlife.dap.biz.mcp.gateway.sync;
 
+import io.modelcontextprotocol.spec.McpSchema.ServerCapabilities;
 import io.modelcontextprotocol.server.McpServer;
 import io.modelcontextprotocol.server.McpSyncServer;
 import io.shinhanlife.dap.biz.mcp.gateway.dto.ToolMetadata;
@@ -51,7 +52,7 @@ public class DynamicMcpServerManager {
 
             McpSyncServer newServer = McpServer.sync(transport)
                 .serverInfo("DAP-Gateway-" + key, "1.0.0")
-                .capabilities(io.modelcontextprotocol.spec.McpSchema.ServerCapabilities.builder().tools(true).build())
+                .capabilities(ServerCapabilities.builder().tools(true).build())
                 .build();
                 
             categoryTransports.put(key, transport);

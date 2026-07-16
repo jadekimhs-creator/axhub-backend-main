@@ -1,5 +1,7 @@
 package io.shinhanlife.dap.biz.mcp.gateway.service;
 
+import java.util.HashMap;
+
 import io.shinhanlife.dap.biz.mcp.gateway.dto.ToolMetadata;
 import io.shinhanlife.dap.biz.mcp.gateway.resilience.FailureType;
 import io.shinhanlife.dap.biz.mcp.gateway.resilience.RetryPolicy;
@@ -219,9 +221,9 @@ public class ExecuteService {
                     LargeToolResponseService.Collector collector = largeResponses.newCollector(metadata.getName(), context.requestId());
 
                     while (true) {
-                        Map<String, Object> pagePayload = new java.util.HashMap<>(payload);
+                        Map<String, Object> pagePayload = new HashMap<>(payload);
                         if (pagePayload.containsKey("params")) {
-                            Map<String, Object> params = new java.util.HashMap<>((Map<String, Object>) pagePayload.get("params"));
+                            Map<String, Object> params = new HashMap<>((Map<String, Object>) pagePayload.get("params"));
                             params.put("arguments", objectMapper.convertValue(pageArguments, Map.class));
                             pagePayload.put("params", params);
                         } else {

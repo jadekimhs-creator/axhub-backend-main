@@ -1,5 +1,7 @@
 package io.shinhanlife.dap.biz.mcp.gateway.tool.large;
 
+import java.util.Iterator;
+
 import io.shinhanlife.dap.biz.mcp.gateway.config.McpGatewayProperties;
 import io.shinhanlife.dap.biz.mcp.gateway.guardrail.SensitiveDataMasker;
 import io.shinhanlife.dap.biz.mcp.gateway.resilience.FailureType;
@@ -266,7 +268,7 @@ public class LargeToolResponseService {
             preview.put("maxItemBytes", properties.largeResponseMaxItemBytes());
             if (masked.isObject()) {
                 ArrayNode fieldNames = json.createArrayNode();
-                java.util.Iterator<String> fieldNamesIter = masked.fieldNames();
+                Iterator<String> fieldNamesIter = masked.fieldNames();
                 while (fieldNamesIter.hasNext()) {
                     fieldNames.add(fieldNamesIter.next());
                 }
@@ -309,7 +311,7 @@ public class LargeToolResponseService {
 
         private int count(JsonNode node) {
             int count = 0;
-            java.util.Iterator<JsonNode> iter = node.elements();
+            Iterator<JsonNode> iter = node.elements();
             while(iter.hasNext()) {
                 iter.next();
                 count++;

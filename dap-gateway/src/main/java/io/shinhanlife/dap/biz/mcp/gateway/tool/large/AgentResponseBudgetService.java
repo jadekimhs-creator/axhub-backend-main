@@ -1,5 +1,8 @@
 package io.shinhanlife.dap.biz.mcp.gateway.tool.large;
 
+import java.util.Iterator;
+import java.util.Map;
+
 import io.shinhanlife.dap.biz.mcp.gateway.config.AgentResponseBudgetProperties;
 import io.shinhanlife.dap.biz.mcp.gateway.guardrail.SensitiveDataMasker;
 import org.springframework.stereotype.Service;
@@ -99,9 +102,9 @@ public class AgentResponseBudgetService {
         int copied = 0;
         int originalFields = 0;
         
-        java.util.Iterator<java.util.Map.Entry<String, JsonNode>> fields = masked.fields();
+        Iterator<Map.Entry<String, JsonNode>> fields = masked.fields();
         while (fields.hasNext()) {
-            java.util.Map.Entry<String, JsonNode> entry = fields.next();
+            Map.Entry<String, JsonNode> entry = fields.next();
             originalFields++;
             if (copied >= properties.maxFieldsPerItem()) {
                 continue;
@@ -135,9 +138,9 @@ public class AgentResponseBudgetService {
         ObjectNode source = (ObjectNode) item;
         ObjectNode limited = json.createObjectNode();
         
-        java.util.Iterator<java.util.Map.Entry<String, JsonNode>> fields = source.fields();
+        Iterator<Map.Entry<String, JsonNode>> fields = source.fields();
         while (fields.hasNext()) {
-            java.util.Map.Entry<String, JsonNode> entry = fields.next();
+            Map.Entry<String, JsonNode> entry = fields.next();
             JsonNode value = entry.getValue();
             if (value.isTextual()) {
                 limited.put(entry.getKey(), truncateText(value.asText()));
@@ -164,7 +167,7 @@ public class AgentResponseBudgetService {
         fallback.put("maxItemBytes", properties.maxItemBytes());
         if (item.isObject()) {
             ArrayNode fieldNames = json.createArrayNode();
-            java.util.Iterator<String> fieldNamesIter = item.fieldNames();
+            Iterator<String> fieldNamesIter = item.fieldNames();
             while (fieldNamesIter.hasNext()) {
                 fieldNames.add(fieldNamesIter.next());
             }
@@ -188,9 +191,9 @@ public class AgentResponseBudgetService {
     private ObjectNode copyWithout(ObjectNode source, String... excludedFields) {
         ObjectNode copy = json.createObjectNode();
         
-        java.util.Iterator<java.util.Map.Entry<String, JsonNode>> fields = source.fields();
+        Iterator<Map.Entry<String, JsonNode>> fields = source.fields();
         while (fields.hasNext()) {
-            java.util.Map.Entry<String, JsonNode> entry = fields.next();
+            Map.Entry<String, JsonNode> entry = fields.next();
             if (!excluded(entry.getKey(), excludedFields)) {
                 copy.set(entry.getKey(), entry.getValue());
             }

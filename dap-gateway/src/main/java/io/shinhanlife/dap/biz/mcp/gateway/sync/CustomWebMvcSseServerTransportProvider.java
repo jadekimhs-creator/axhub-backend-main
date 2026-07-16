@@ -1,5 +1,7 @@
 package io.shinhanlife.dap.biz.mcp.gateway.sync;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.modelcontextprotocol.json.TypeRef;
 import io.modelcontextprotocol.spec.McpSchema;
@@ -127,7 +129,7 @@ public class CustomWebMvcSseServerTransportProvider implements McpServerTranspor
         
         McpServerSession session = sessions.get(sessionId);
         try {
-            java.util.Map<String, Object> map = objectMapper.readValue(body, new com.fasterxml.jackson.core.type.TypeReference<java.util.Map<String, Object>>() {});
+            Map<String, Object> map = objectMapper.readValue(body, new TypeReference<Map<String, Object>>() {});
             io.modelcontextprotocol.spec.McpSchema.JSONRPCMessage message;
             
             if (map.containsKey("id")) {

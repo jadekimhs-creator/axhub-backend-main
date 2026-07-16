@@ -1,5 +1,7 @@
 package io.shinhanlife.dap.biz.mcp.gateway.sync;
 
+import java.util.UUID;
+
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -72,7 +74,7 @@ public class DynamicMcpController {
 
         if (sessionId == null || sessionId.isEmpty()) {
             // 새 세션 생성 (initialize 요청)
-            String newSessionId = java.util.UUID.randomUUID().toString();
+            String newSessionId = UUID.randomUUID().toString();
             SseEmitter emitter = transport.handleCustomSse(newSessionId, body);
             
             return ResponseEntity.ok()
