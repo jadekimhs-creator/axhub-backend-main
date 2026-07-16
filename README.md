@@ -1,16 +1,15 @@
-# AXHUB Backend
+# DAP Backend
 
-Spring Boot 기반 AXHUB 관리자 백엔드 API 서버 및 MCP(Model Context Protocol) Gateway / Tool 분산 서버 프로젝트입니다.
+Spring Boot 기반 DAP 관리자 백엔드 API 서버 및 MCP(Model Context Protocol) Gateway / Tool 분산 서버 프로젝트입니다.
 
 ---
 
 ##  아키텍처 개요 (Architecture Overview)
 
-AXHUB Backend는 3개의 주요 애플리케이션으로 분리 운영됩니다:
+DAP Backend는 2개의 주요 애플리케이션으로 분리 운영됩니다:
 
-1. **AXHUB Admin (`AxHubAdminApplication`)**: 관리자 웹 화면을 위한 REST API 서버
-2. **MCP Gateway (`AxHubGatewayApplication`)**: 외부 LLM(Claude, GPT 등) 서버의 MCP 통신을 받아, 내부 Tool 서버들로 분배(라우팅)하는 허브 서버 (포트: 8081)
-3. **MCP Tool (`AxHubToolApplication`)**: 실제 레거시 시스템(MCI, EAI 등)과 통신하여 비즈니스 로직(결제, 휴가신청 등)을 수행하는 어댑터 서버 (포트: 8082~8084 분산 구성 가능)
+1. **MCP Gateway (`DapGatewayApplication`)**: 외부 LLM(Claude, GPT 등) 서버의 MCP 통신을 받아, 내부 Tool 서버들로 분배(라우팅)하는 허브 서버이자 관리자 웹(Scaffolder)을 제공하는 통합 서버 (포트: 8081)
+2. **MCP Tool (`DapTool*Application`)**: 실제 레거시 시스템(MCI, EAI 등)과 통신하여 비즈니스 로직(결제, 휴가신청 등)을 수행하는 어댑터 서버 (포트: 8082~8085 등 분산 구성 가능)
 
 ---
 
@@ -33,9 +32,9 @@ AXHUB Backend는 3개의 주요 애플리케이션으로 분리 운영됩니다:
 
 ### 1. Gateway & Tool 서버 실행 (MCP 연동용)
 - **Gateway 서버 기동:**
-  - `./gradlew bootRun -PmainClass=io.shinhanlife.AxHubGatewayApplication` (기본 포트: 8081)
-- **Tool 서버 기동 (필요에 따라 N대 스케일 아웃 가능):**
-  - `./gradlew bootRun -PmainClass=io.shinhanlife.AxHubToolApplication --args="--server.port=8082"`
+  - `./gradlew :dap-gateway:bootRun`
+- **Tool 서버 기동:**
+  - `./gradlew :dap-tool-other:bootRun` (또는 dap-tool-payment 등)
   - Tool 서버가 기동되면 자동으로 Gateway(8081)에 자신을 등록(Auto-Registration)합니다.
   - **(선택) 특정 Tool 그룹만 실행하기:** 
     - 업무 특성에 따라 세분화된 그룹에 속한 Tool만 띄우고 싶다면, 실행 인수에 `--mcp.tool.target=그룹명`을 추가합니다.
@@ -46,11 +45,8 @@ AXHUB Backend는 3개의 주요 애플리케이션으로 분리 운영됩니다:
       - `HR`: 휴가 등록, 연차 갯수 조회
       - `CONTRACT`: 계약 상태, 계약 상세 조회
       - `CUSTOMER`: 고객 등급, 고객 상세 정보 조회
-    - IntelliJ IDEA: `Run/Debug Configurations`  `AxHubToolApplication`  `Program arguments` 에 `--mcp.tool.target=NOTIFICATION` 입력
+    - IntelliJ IDEA: `Run/Debug Configurations`에서 `DapTool*Application` 의 `Program arguments` 에 `--mcp.tool.target=NOTIFICATION` 입력
 
-### 2. Admin 관리자 서버 실행
-- **Admin 서버 기동:**
-  - `./gradlew bootRun -PmainClass=io.shinhanlife.AxHubAdminApplication` (포트: 8080)
 
 ---
 
@@ -64,9 +60,9 @@ AXHUB Backend는 3개의 주요 애플리케이션으로 분리 운영됩니다:
 - **설정 방법**: IDE의 `mcp_config.json` 설정 파일에 아래와 같이 등록합니다.
   ```json
   "mcpServers": {
-    "axhub-gateway": {
+    "dap-gateway": {
       "command": "java",
-      "args": ["C:/절대경로/axhub-backend-main/McpBridge.java"]
+      "args": ["C:/절대경로/dap-backend-main/McpBridge.java"]
     }
   }
   ```
@@ -74,7 +70,7 @@ AXHUB Backend는 3개의 주요 애플리케이션으로 분리 운영됩니다:
 
 ### 2. 프로덕션 클라우드 AI (Google Cloud Agent Builder 등) 연동
 실제 라이브 서비스에서 동작하는 클라우드 Agent Builder는 REST API 기반의 OpenAPI Spec을 요구합니다. 
-`axhub-gateway`는 이미 **Agent Builder 규격의 REST API(`/mcp/api/v1/tools/call`)를 네이티브로 제공**하므로, 별도의 브릿지나 어댑터 없이 Endpoint URL과 Swagger(OpenAPI) 문서만 클라우드 콘솔에 등록하면 즉시 라이브 챗봇/에이전트로 서비스할 수 있습니다.
+`dap-gateway`는 이미 **Agent Builder 규격의 REST API(`/mcp/api/v1/tools/call`)를 네이티브로 제공**하므로, 별도의 브릿지나 어댑터 없이 Endpoint URL과 Swagger(OpenAPI) 문서만 클라우드 콘솔에 등록하면 즉시 라이브 챗봇/에이전트로 서비스할 수 있습니다.
 
 ---
 
@@ -114,9 +110,9 @@ MSA 및 외부 시스템(MCI) 연동 환경의 안정성을 위해 완벽한 3-T
 
 ##  모듈(Pod) 및 Tool 코드 자동 생성 (Scaffolders)
 
-새로운 도메인의 기능을 추가할 때 발생하는 반복적인 설정(보일러플레이트, 설정 파일 복사 등)을 1초 만에 자동화하기 위해 **AXHUB Developer Portal (Web UI)** 및 **CLI 스캐폴더 2종**을 제공합니다.
+새로운 도메인의 기능을 추가할 때 발생하는 반복적인 설정(보일러플레이트, 설정 파일 복사 등)을 1초 만에 자동화하기 위해 **DAP Developer Portal (Web UI)** 및 **CLI 스캐폴더 2종**을 제공합니다.
 
-###  1. AXHUB Developer Portal (Web UI) - 가장 추천하는 방식!
+###  1. DAP Developer Portal (Web UI) - 가장 추천하는 방식!
 이제 더 이상 터미널에서 명령어를 칠 필요가 없습니다. Gateway 모듈에 내장된 웹 화면에서 빈칸만 채우면 코드가 마법처럼 찍혀 나옵니다.
 
 1. **접속 방법**: Gateway 서버 기동 후 브라우저에서 `http://localhost:8081/admin/scaffold.html` 접속
@@ -131,11 +127,11 @@ MSA 및 외부 시스템(MCI) 연동 환경의 안정성을 위해 완벽한 3-T
 
 ```bash
 # 사용법: javac로 컴파일 후 실행
-javac -encoding UTF-8 axhub-common/src/main/java/io/shinhanlife/axhub/common/util/PodScaffolder.java
-java -cp axhub-common/src/main/java io.shinhanlife.axhub.common.util.PodScaffolder [모듈명] [포트번호]
+javac -encoding UTF-8 dap-common/src/main/java/io/shinhanlife/dap/common/util/PodScaffolder.java
+java -cp dap-common/src/main/java io.shinhanlife.dap.common.util.PodScaffolder [모듈명] [포트번호]
 
-# 실행 예시 (axhub-tool-hr 모듈을 8086 포트로 생성)
-java -cp axhub-common/src/main/java io.shinhanlife.axhub.common.util.PodScaffolder hr 8086
+# 실행 예시 (dap-tool-hr 모듈을 8086 포트로 생성)
+java -cp dap-common/src/main/java io.shinhanlife.dap.common.util.PodScaffolder hr 8086
 ```
 
 ### 2⃣ 생성된 모듈에 새로운 툴(Function)을 추가할 때: `ToolScaffolder`
@@ -143,11 +139,11 @@ java -cp axhub-common/src/main/java io.shinhanlife.axhub.common.util.PodScaffold
 
 ```bash
 # 사용법: javac로 컴파일 후 실행
-javac -encoding UTF-8 axhub-common/src/main/java/io/shinhanlife/axhub/common/util/ToolScaffolder.java
-java -cp axhub-common/src/main/java io.shinhanlife.axhub.common.util.ToolScaffolder [Tool이름] [인터페이스ID] "[기능설명]" "[그룹명]" "[통신방식]" "[모듈명]"
+javac -encoding UTF-8 dap-common/src/main/java/io/shinhanlife/dap/common/util/ToolScaffolder.java
+java -cp dap-common/src/main/java io.shinhanlife.dap.common.util.ToolScaffolder [Tool이름] [인터페이스ID] "[기능설명]" "[그룹명]" "[통신방식]" "[모듈명]"
 
 # 실행 예시 (payment 모듈에 결제 승인 기능 추가)
-java -cp axhub-common/src/main/java io.shinhanlife.axhub.common.util.ToolScaffolder PaymentApproval PAY_001 "결제 승인 처리 기능" "COMMON" "HTTP" "axhub-tool-payment"
+java -cp dap-common/src/main/java io.shinhanlife.dap.common.util.ToolScaffolder PaymentApproval PAY_001 "결제 승인 처리 기능" "COMMON" "HTTP" "dap-tool-payment"
 ```
 
 ---
@@ -155,14 +151,14 @@ java -cp axhub-common/src/main/java io.shinhanlife.axhub.common.util.ToolScaffol
 ##  패키지 구조 (Package Structure)
 
 ```text
-axhub-backend-main (Root)
-├── axhub-gateway           #  MCP 라우팅 허브 서버 (외부 LLM과 통신 및 Tool 분배)
-├── axhub-common            # 공통 모듈 (Security, Session, Config 등)
-├── axhub-tool-core         # Tool 공통 기능 (AbstractMcpToolService, Annotation, Scaffolder)
-├── axhub-tool-email        # [Tool] 이메일 발송 특화 어댑터 모듈
-├── axhub-tool-sms          # [Tool] SMS 발송 특화 어댑터 모듈
-├── axhub-tool-payment      # [Tool] 결제 비즈니스 어댑터 모듈 (Scaffolded)
-└── axhub-tool-other        # [Tool] 기타 비즈니스(청구, 계약, 고객, HR 등) 어댑터 모듈
+dap-backend-main (Root)
+├── dap-gateway           #  MCP 라우팅 허브 서버 (외부 LLM과 통신 및 Tool 분배)
+├── dap-common            # 공통 모듈 (Security, Session, Config 등)
+├── dap-tool-core         # Tool 공통 기능 (AbstractMcpToolService, Annotation, Scaffolder)
+├── dap-tool-email        # [Tool] 이메일 발송 특화 어댑터 모듈
+├── dap-tool-sms          # [Tool] SMS 발송 특화 어댑터 모듈
+├── dap-tool-payment      # [Tool] 결제 비즈니스 어댑터 모듈 (Scaffolded)
+└── dap-tool-other        # [Tool] 기타 비즈니스(청구, 계약, 고객, HR 등) 어댑터 모듈
 ```
 
 *(참고: 기존 단일 모듈 프로젝트에서 마이크로서비스 확장을 위해 모듈별로 분리되었으며, 각 Tool 서버는 독립적으로 확장 및 배포할 수 있습니다.)*
