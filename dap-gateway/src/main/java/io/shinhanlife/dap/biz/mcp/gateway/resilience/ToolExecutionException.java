@@ -1,5 +1,20 @@
 package io.shinhanlife.dap.biz.mcp.gateway.resilience;
 
+
+/**
+ * @package io.shinhanlife.dap.biz.mcp.gateway.resilience
+ * @className ToolExecutionException
+ * @description AX HUB 시스템 처리 클래스
+ * @author 김형식
+ * @create 2026.09.01
+ * <pre>
+ * ---------- 개정이력 ----------
+ * 수정일      수정자    수정내용
+ * ---------- -------- ---------------------------
+ * 2026.09.01  김형식    최초생성
+ * 
+ * </pre>
+ */
 /**
  * Tool 실행 중 발생한 오류를 FailureType과 함께 전달하는 공통 예외입니다.
  *
