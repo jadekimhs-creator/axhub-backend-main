@@ -52,6 +52,12 @@ public class RegistryMcpToolSpecificationFactory {
                 .name(entry.getName())
                 .description(description(entry))
                 .inputSchema(inputSchema(entry))
+                .annotations(McpSchema.ToolAnnotations.builder()
+                        .readOnlyHint(Boolean.TRUE.equals(entry.getReadOnlyHint()))
+                        .destructiveHint(Boolean.TRUE.equals(entry.getDestructiveHint()))
+                        .idempotentHint(Boolean.TRUE.equals(entry.getIdempotentHint()))
+                        .openWorldHint(Boolean.TRUE.equals(entry.getOpenWorldHint()))
+                        .build())
                 .build();
 
         return McpServerFeatures.SyncToolSpecification.builder()

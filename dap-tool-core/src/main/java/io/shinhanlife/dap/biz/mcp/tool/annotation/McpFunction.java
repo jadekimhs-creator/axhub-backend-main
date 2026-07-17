@@ -39,5 +39,10 @@ public @interface McpFunction {
     // 추가: HITL 승인 체계 지원 (실행 전 사용자 승인 필요 여부)
     boolean requiresApproval() default false;
 
+    boolean readOnlyHint() default false;
+    boolean destructiveHint() default false;
+    boolean idempotentHint() default false;
+    boolean openWorldHint() default false;
+
     // 추가: 툴 별 기본 Timeout 설정 (기본 300초 = 300000ms)
 }

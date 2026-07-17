@@ -107,6 +107,10 @@ public class ToolRegistryHeartbeatSender {
                     meta.setVisible(isVisible);
                     meta.setIsRegistered(isRegister);
                     meta.setRequiresApproval(functionAnnotation.requiresApproval());
+                    meta.setReadOnlyHint(functionAnnotation.readOnlyHint());
+                    meta.setDestructiveHint(functionAnnotation.destructiveHint());
+                    meta.setIdempotentHint(functionAnnotation.idempotentHint());
+                    meta.setOpenWorldHint(functionAnnotation.openWorldHint());
                     
                     Map<String, String> prompts = new HashMap<>();
                     String promptText = functionAnnotation.prompt();

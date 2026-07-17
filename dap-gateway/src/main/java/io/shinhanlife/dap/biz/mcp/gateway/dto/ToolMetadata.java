@@ -71,6 +71,18 @@ public class ToolMetadata {
     @Builder.Default
     private Boolean requiresApproval = false;
 
+    @Builder.Default
+    private Boolean readOnlyHint = false;
+
+    @Builder.Default
+    private Boolean destructiveHint = false;
+
+    @Builder.Default
+    private Boolean idempotentHint = false;
+
+    @Builder.Default
+    private Boolean openWorldHint = false;
+
 
 
     // 3. 연동 아키텍처 구분 (DIRECT / MCI_EAI)

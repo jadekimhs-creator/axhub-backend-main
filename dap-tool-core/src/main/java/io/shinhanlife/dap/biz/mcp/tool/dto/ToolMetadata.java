@@ -58,6 +58,17 @@ public class ToolMetadata {
     @Builder.Default
     private Boolean requiresApproval = false;
 
+    @Builder.Default
+    private Boolean readOnlyHint = false;
+
+    @Builder.Default
+    private Boolean destructiveHint = false;
+
+    @Builder.Default
+    private Boolean idempotentHint = false;
+
+    @Builder.Default
+    private Boolean openWorldHint = false;
 
 
 }
