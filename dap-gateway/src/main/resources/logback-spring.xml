@@ -13,10 +13,10 @@
 
     <!-- 3. 파일(File) 출력 설정 (서버 운영용) -->
     <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <file>logs/axhub-gateway.log</file> <!-- 현재 로그가 쌓이는 파일 -->
+        <file>logs/dap-gateway.log</file> <!-- 현재 로그가 쌓이는 파일 -->
         <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
             <!-- 매일 자정에 날짜를 붙여서 지난 로그를 분리 저장 -->
-            <fileNamePattern>logs/axhub-gateway-%d{yyyy-MM-dd}.log</fileNamePattern>
+            <fileNamePattern>logs/dap-gateway-%d{yyyy-MM-dd}.log</fileNamePattern>
             <!-- 최대 30일치 로그만 보관하고 오래된 것은 자동 삭제 -->
             <maxHistory>30</maxHistory>
         </rollingPolicy>
