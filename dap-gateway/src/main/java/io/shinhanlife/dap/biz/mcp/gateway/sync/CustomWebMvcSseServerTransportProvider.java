@@ -49,6 +49,7 @@ public class CustomWebMvcSseServerTransportProvider implements McpServerTranspor
     private final String sseEndpoint;
     private final String messageEndpoint;
     private final Map<String, McpServerSession> sessions = new ConcurrentHashMap<>();
+    private final Map<String, CustomMcpSessionTransport> customTransports = new ConcurrentHashMap<>();
     private final ObjectMapper objectMapper;
 
     public CustomWebMvcSseServerTransportProvider(String sseEndpoint, String messageEndpoint, ObjectMapper objectMapper) {
@@ -71,6 +72,7 @@ public class CustomWebMvcSseServerTransportProvider implements McpServerTranspor
                 } catch (Exception ignored) {}
             });
             sessions.clear();
+            customTransports.clear();
         });
     }
 
@@ -108,27 +110,38 @@ public class CustomWebMvcSseServerTransportProvider implements McpServerTranspor
         return emitter;
     }
 
-    public SseEmitter handleCustomSse(String sessionId, String body) {
+    public org.springframework.web.servlet.mvc.method.annotation.SseEmitter handleCustomSse(String sessionId, String body) {
         if (sessionFactory == null) {
             throw new IllegalStateException("SessionFactory not configured");
         }
-
-        SseEmitter emitter = new SseEmitter(-1L);
-
-        CustomMcpSessionTransport sessionTransport = new CustomMcpSessionTransport(emitter, sessionId);
-        McpServerSession session = sessionFactory.create(sessionTransport);
-        sessions.put(sessionId, session);
-
-        emitter.onCompletion(() -> sessions.remove(sessionId));
-        emitter.onTimeout(() -> sessions.remove(sessionId));
-
+        
+        org.springframework.web.servlet.mvc.method.annotation.SseEmitter emitter = new org.springframework.web.servlet.mvc.method.annotation.SseEmitter(-1L);
+        
+        boolean isNew = !sessions.containsKey(sessionId);
+        
+        if (isNew) {
+            CustomMcpSessionTransport sessionTransport = new CustomMcpSessionTransport(emitter, sessionId);
+            customTransports.put(sessionId, sessionTransport);
+            McpServerSession session = sessionFactory.create(sessionTransport);
+            sessions.put(sessionId, session);
+            
+            // 주의: 클라이언트가 단일 POST 응답 후 연결을 끊더라도, 
+            // 웜 풀(Warm Pool) 스펙상 세션은 살려둬야 하므로 세션 삭제 로직 제외
+        } else {
+            // 기존 세션인 경우 Emitter 파이프만 덮어씌움 (Switching)
+            CustomMcpSessionTransport sessionTransport = customTransports.get(sessionId);
+            if (sessionTransport != null) {
+                sessionTransport.setEmitter(emitter);
+            }
+        }
+        
         new Thread(() -> {
             try {
-                // 커스텀 클라이언트는 endpoint 이벤트를 무시할 수 있지만, 표준 호환성을 위해 전송
+                // 커스텀 클라이언트는 endpoint 이벤트를 무시할 수 있지만 표준 호환성을 위해 전송
                 Thread.sleep(100);
-                emitter.send(SseEmitter.event().name("endpoint").data(messageEndpoint + "?sessionId=" + sessionId));
-
-                // Body로 들어온 initialize 등 즉시 처리
+                emitter.send(org.springframework.web.servlet.mvc.method.annotation.SseEmitter.event().name("endpoint").data(messageEndpoint + "?sessionId=" + sessionId));
+                
+                // Body로 들어온 메시지 즉시 비동기 처리
                 if (body != null && !body.trim().isEmpty()) {
                     handleMessage(sessionId, body);
                 }
@@ -136,14 +149,14 @@ public class CustomWebMvcSseServerTransportProvider implements McpServerTranspor
                 emitter.completeWithError(e);
             }
         }).start();
-
+        
         return emitter;
     }
 
-    public ResponseEntity<String> handleMessage(String sessionId, String body) {
+    public org.springframework.http.ResponseEntity<String> handleMessage(String sessionId, String body) {
         log.info("Received POST message for sessionId: " + sessionId + ", body: " + body);
         if (sessionId == null || !sessions.containsKey(sessionId)) {
-            return ResponseEntity.badRequest().body("Missing or invalid sessionId");
+            return ResponseEntity.badRequest().body("Unexpected request body");
         }
 
         McpServerSession session = sessions.get(sessionId);
@@ -171,13 +184,21 @@ public class CustomWebMvcSseServerTransportProvider implements McpServerTranspor
         }
     }
 
+    public boolean hasSession(String sessionId) {
+        return sessionId != null && sessions.containsKey(sessionId);
+    }
+
     private class CustomMcpSessionTransport implements McpServerTransport {
-        private final SseEmitter emitter;
+        private volatile org.springframework.web.servlet.mvc.method.annotation.SseEmitter emitter;
         private final String sessionId;
 
-        public CustomMcpSessionTransport(SseEmitter emitter, String sessionId) {
+        public CustomMcpSessionTransport(org.springframework.web.servlet.mvc.method.annotation.SseEmitter emitter, String sessionId) {
             this.emitter = emitter;
             this.sessionId = sessionId;
+        }
+
+        public void setEmitter(org.springframework.web.servlet.mvc.method.annotation.SseEmitter emitter) {
+            this.emitter = emitter;
         }
 
         @Override
@@ -187,18 +208,30 @@ public class CustomWebMvcSseServerTransportProvider implements McpServerTranspor
                 try {
                     String json = objectMapper.writeValueAsString(message);
                     log.info("Serialized message: " + json);
-                    emitter.send(SseEmitter.event().name("message").data(json));
-                    log.info("Message successfully sent to SSE emitter");
+                    if (this.emitter != null) {
+                        this.emitter.send(org.springframework.web.servlet.mvc.method.annotation.SseEmitter.event().name("message").data(json));
+                        log.info("Message successfully sent to SSE emitter");
+                        
+                        // Custom 프로토콜: 1회 요청당 1응답 후 종료 (스트림을 닫아버림)
+                        // 클라이언트가 한 번의 POST 후 응답을 받고 연결을 끊기 때문
+                        this.emitter.complete();
+                    }
                 } catch (Exception e) {
                     log.error("Error sending message to SSE emitter", e);
-                    emitter.completeWithError(e);
+                    if (this.emitter != null) {
+                        this.emitter.completeWithError(e);
+                    }
                 }
             });
         }
 
         @Override
         public Mono<Void> closeGracefully() {
-            return Mono.fromRunnable(emitter::complete);
+            return Mono.fromRunnable(() -> {
+                if (this.emitter != null) {
+                    this.emitter.complete();
+                }
+            });
         }
 
         @Override

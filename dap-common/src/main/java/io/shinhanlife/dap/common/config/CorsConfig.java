@@ -27,6 +27,7 @@ public class CorsConfig implements WebMvcConfigurer {
                 .allowedOriginPatterns("*")  // 외부 Agent Builder 등 모든 오리진 허용
                 .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS", "HEAD", "PATCH")  // 허용할 HTTP 메서드
                 .allowedHeaders("*")  // 모든 헤더 허용
+                .exposedHeaders("Mcp-Session-Id") // MCP-HTTP 세션 아이디 노출 허용
                 .allowCredentials(true)  // 쿠키/인증 정보 허용
                 .maxAge(3600);  // preflight 요청 캐시 시간 (초 단위)
     }

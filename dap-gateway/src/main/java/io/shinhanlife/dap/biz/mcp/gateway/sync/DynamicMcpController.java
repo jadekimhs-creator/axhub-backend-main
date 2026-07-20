@@ -70,18 +70,18 @@ public class DynamicMcpController {
             return ResponseEntity.badRequest().body("Unknown category: " + category);
         }
 
-        if (sessionId == null || sessionId.isEmpty()) {
-            // 새 세션 생성 (initialize 요청)
-            String newSessionId = UUID.randomUUID().toString();
-            SseEmitter emitter = transport.handleCustomSse(newSessionId, body);
-            
-            return ResponseEntity.ok()
-                    .header("Mcp-Session-Id", newSessionId)
-                    .body(emitter);
-        } else {
-            // 기존 세션 메시지 전송 (tools/call 등)
-            transport.handleMessage(sessionId, body);
-            return ResponseEntity.accepted().build();
+        boolean isNew = (sessionId == null || sessionId.isEmpty());
+        String activeSessionId = isNew ? java.util.UUID.randomUUID().toString() : sessionId;
+
+        if (!isNew && !transport.hasSession(activeSessionId)) {
+            // 클라이언트가 보낸 세션 ID가 만료되었거나 존재하지 않는 경우 (Warm Pool 스펙: 404 Not Found 반환)
+            return ResponseEntity.notFound().build();
         }
+
+        org.springframework.web.servlet.mvc.method.annotation.SseEmitter emitter = transport.handleCustomSse(activeSessionId, body);
+
+        return ResponseEntity.ok()
+                .header("Mcp-Session-Id", activeSessionId)
+                .body(emitter);
     }
 }
