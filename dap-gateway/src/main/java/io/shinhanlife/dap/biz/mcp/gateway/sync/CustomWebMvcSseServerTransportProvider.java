@@ -139,7 +139,7 @@ public class CustomWebMvcSseServerTransportProvider implements McpServerTranspor
             try {
                 // Body로 들어온 메시지 즉시 비동기 처리
                 if (body != null && !body.trim().isEmpty()) {
-                    handleMessage(sessionId, body);
+                    handleMessage(sessionId, body, emitter);
                 }
             } catch (Exception e) {
                 emitter.completeWithError(e);
@@ -150,6 +150,10 @@ public class CustomWebMvcSseServerTransportProvider implements McpServerTranspor
     }
 
     public org.springframework.http.ResponseEntity<String> handleMessage(String sessionId, String body) {
+        return handleMessage(sessionId, body, null);
+    }
+
+    public org.springframework.http.ResponseEntity<String> handleMessage(String sessionId, String body, org.springframework.web.servlet.mvc.method.annotation.SseEmitter emitter) {
         log.info("Received POST message for sessionId: " + sessionId + ", body: " + body);
         if (sessionId == null || !sessions.containsKey(sessionId)) {
             return ResponseEntity.badRequest().body("Unexpected request body");
@@ -173,6 +177,12 @@ public class CustomWebMvcSseServerTransportProvider implements McpServerTranspor
 
             session.handle(message).subscribe();
             log.info("Message sent to session handler");
+            
+            if (emitter != null && !map.containsKey("id")) {
+                emitter.complete();
+                log.info("Completed emitter for notification");
+            }
+            
             return ResponseEntity.ok().build();
         } catch (Exception e) {
             log.error("Failed to handle message", e);
