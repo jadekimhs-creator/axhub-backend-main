@@ -148,8 +148,8 @@ public class BusinessToolController {
             Class<?> paramType = targetMethod.getParameterTypes()[0];
             if (!Map.class.isAssignableFrom(paramType)) {
                 try {
-                    Map<String, Object> autoSchema = JsonSchemaGenerator.generatePropertiesSchema(paramType);
-                    String fullSchemaJson = "{\"type\":\"object\", \"properties\":" + objectMapper.writeValueAsString(autoSchema) + "}";
+                    Map<String, Object> autoSchema = JsonSchemaGenerator.generateSchema(paramType);
+                    String fullSchemaJson = objectMapper.writeValueAsString(autoSchema);
                     
                     JsonSchemaFactory factory = JsonSchemaFactory.getInstance(SpecVersion.VersionFlag.V7);
                     JsonSchema schema = factory.getSchema(fullSchemaJson);
