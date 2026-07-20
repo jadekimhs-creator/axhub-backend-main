@@ -137,10 +137,6 @@ public class CustomWebMvcSseServerTransportProvider implements McpServerTranspor
         
         new Thread(() -> {
             try {
-                // 커스텀 클라이언트는 endpoint 이벤트를 무시할 수 있지만 표준 호환성을 위해 전송
-                Thread.sleep(100);
-                emitter.send(org.springframework.web.servlet.mvc.method.annotation.SseEmitter.event().name("endpoint").data(messageEndpoint + "?sessionId=" + sessionId));
-                
                 // Body로 들어온 메시지 즉시 비동기 처리
                 if (body != null && !body.trim().isEmpty()) {
                     handleMessage(sessionId, body);
