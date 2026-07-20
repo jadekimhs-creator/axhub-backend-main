@@ -120,10 +120,7 @@ public class ToolRegistryHeartbeatSender {
                     if (method.getParameterCount() > 0) {
                         try {
                             Class<?> paramType = method.getParameterTypes()[0];
-                            Map<String, Object> schema = JsonSchemaGenerator.generatePropertiesSchema(paramType);
-                            Map<String, Object> finalSchema = new HashMap<>();
-                            finalSchema.put("type", "object");
-                            finalSchema.put("properties", schema);
+                            Map<String, Object> finalSchema = JsonSchemaGenerator.generateSchema(paramType);
                             meta.setParametersSchema(finalSchema);
                         } catch (Exception e) {
                             log.error("Failed to generate schema for {}", subToolName, e);
