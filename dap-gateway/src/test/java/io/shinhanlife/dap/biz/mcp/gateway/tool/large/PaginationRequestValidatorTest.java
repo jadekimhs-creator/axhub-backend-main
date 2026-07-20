@@ -1,8 +1,8 @@
-package io.shinhanlife.dap.biz.mcp.gateway.tool.large;
+package io.shinhanlife.dap.mcg.tool.large;
 
 
 /**
- * @package io.shinhanlife.dap.biz.mcp.gateway.tool.large
+ * @package io.shinhanlife.dap.mcg.tool.large
  * @className PaginationRequestValidatorTest
  * @description AX HUB 시스템 처리 클래스
  * @author 김형식
@@ -17,8 +17,8 @@ package io.shinhanlife.dap.biz.mcp.gateway.tool.large;
  */
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import io.shinhanlife.dap.biz.mcp.gateway.config.McpGatewayProperties;
-import io.shinhanlife.dap.biz.mcp.gateway.resilience.ToolExecutionException;
+import io.shinhanlife.dap.mcg.config.McpGatewayProperties;
+import io.shinhanlife.dap.mcg.resilience.ToolExecutionException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 

@@ -17,11 +17,11 @@ import java.util.Scanner;
  *  - 콘솔 창에 뜨는 질문에 차례대로 값을 입력하기만 하면 파일이 생성됩니다.
  * 
  * 방법 2. 커맨드라인(터미널)에서 실행 (명령어 기반)
- *  - 컴파일: javac -encoding UTF-8 dap-tool-core/src/main/java/io/shinhanlife/dap/biz/mcp/tool/util/ToolScaffolder.java
- *  - 실행: java -cp dap-tool-core/src/main/java io.shinhanlife.dap.biz.mcp.tool.util.ToolScaffolder [이름] [ID] "[설명]" "[그룹]" "[통신방식]" "[모듈명]"
+ *  - 컴파일: javac -encoding UTF-8 dap-tool-core/src/main/java/io/shinhanlife/dap/mcc/util/ToolScaffolder.java
+ *  - 실행: java -cp dap-tool-core/src/main/java io.shinhanlife.dap.mcc.util.ToolScaffolder [이름] [ID] "[설명]" "[그룹]" "[통신방식]" "[모듈명]"
  */
 /**
- * @package io.shinhanlife.dap.biz.mcp.tool.util
+ * @package io.shinhanlife.dap.mcc.util
  * @className ToolScaffolder
  * @description AX HUB 시스템 처리 클래스
  * @author 김형식
@@ -36,8 +36,8 @@ import java.util.Scanner;
  */
 public class ToolScaffolder {
 
-    private static final String BASE_PACKAGE = "io.shinhanlife.dap.biz.mcp.tool";
-    private static final String BASE_PACKAGE_PATH = "src/main/java/io/shinhanlife/dap/biz/mcp/tool";
+    private static final String BASE_PACKAGE = "io.shinhanlife.dap.mcc";
+    private static final String BASE_PACKAGE_PATH = "src/main/java/io/shinhanlife/dap/mcc";
 
     public static void main(String[] args) throws IOException {
         Scanner scanner = new Scanner(System.in);

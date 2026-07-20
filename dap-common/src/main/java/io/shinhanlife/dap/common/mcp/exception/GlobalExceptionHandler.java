@@ -15,8 +15,8 @@ package io.shinhanlife.dap.common.mcp.exception;
  * 
  * </pre>
  */
-import io.shinhanlife.dap.biz.mcp.adapter.dto.ErrorDetail;
-import io.shinhanlife.dap.biz.mcp.adapter.dto.JsonRpcResponse;
+import io.shinhanlife.dap.common.adapter.dto.ErrorDetail;
+import io.shinhanlife.dap.common.adapter.dto.JsonRpcResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;

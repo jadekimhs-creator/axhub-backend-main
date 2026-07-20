@@ -81,11 +81,11 @@ public class PodScaffolder {
         Files.writeString(modulePath.resolve("Dockerfile"), dockerfile);
 
         log.append("[4/6] Application 클래스 및 설정 파일 생성 중...\n");
-        Path srcPath = modulePath.resolve("src/main/java/io/shinhanlife/dap/biz/mcp/tool/" + shortName);
+        Path srcPath = modulePath.resolve("src/main/java/io/shinhanlife/dap/mcc/" + shortName);
         Files.createDirectories(srcPath);
 
         String appClass = """
-            package io.shinhanlife.dap.biz.mcp.tool.%s;
+            package io.shinhanlife.dap.mcc.%s;
             
             import org.springframework.boot.SpringApplication;
             import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -93,7 +93,7 @@ public class PodScaffolder {
             import org.springframework.cache.annotation.EnableCaching;
             
             /**
-             * @package io.shinhanlife.dap.biz.mcp.tool.%s
+             * @package io.shinhanlife.dap.mcc.%s
              * @className DapTool%sApplication
              * @description AX HUB 시스템 처리 클래스
              * @author %s
@@ -106,8 +106,8 @@ public class PodScaffolder {
              * 
              * </pre>
              */
-            @SpringBootApplication(scanBasePackages = {"io.shinhanlife.dap.biz.mcp.tool", "io.shinhanlife.dap.biz.mcp.adapter", "io.shinhanlife.dap.common.mcp", "io.shinhanlife.dap.common.config"})
-            @ConfigurationPropertiesScan(basePackages = {"io.shinhanlife.dap.biz.mcp.tool", "io.shinhanlife.dap.biz.mcp.adapter", "io.shinhanlife.dap.common.mcp", "io.shinhanlife.dap.common.config"})
+            @SpringBootApplication(scanBasePackages = {"io.shinhanlife.dap.mcc", "io.shinhanlife.dap.common.adapter", "io.shinhanlife.dap.common.mcp", "io.shinhanlife.dap.common.config"})
+            @ConfigurationPropertiesScan(basePackages = {"io.shinhanlife.dap.mcc", "io.shinhanlife.dap.common.adapter", "io.shinhanlife.dap.common.mcp", "io.shinhanlife.dap.common.config"})
             @EnableCaching
             public class DapTool%sApplication {
                 public static void main(String[] args) {

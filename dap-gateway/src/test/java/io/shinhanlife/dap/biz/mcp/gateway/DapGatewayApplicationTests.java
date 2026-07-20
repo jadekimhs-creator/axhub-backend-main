@@ -1,8 +1,8 @@
-package io.shinhanlife.dap.biz.mcp.gateway;
+package io.shinhanlife.dap.mcg;
 
 
 /**
- * @package io.shinhanlife.dap.biz.mcp.gateway
+ * @package io.shinhanlife.dap.mcg
  * @className DapGatewayApplicationTests
  * @description AX HUB 시스템 처리 클래스
  * @author 김형식
@@ -19,8 +19,8 @@ import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
-import io.shinhanlife.dap.biz.mcp.gateway.audit.AuditLogService;
-import io.shinhanlife.dap.biz.mcp.gateway.redis.RedisToolTraceService;
+import io.shinhanlife.dap.mcg.audit.AuditLogService;
+import io.shinhanlife.dap.mcg.redis.RedisToolTraceService;
 
 @SpringBootTest
 @ActiveProfiles("test")
