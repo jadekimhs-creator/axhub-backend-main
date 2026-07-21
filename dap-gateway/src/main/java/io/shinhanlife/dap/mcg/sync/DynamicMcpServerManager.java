@@ -54,6 +54,7 @@ public class DynamicMcpServerManager {
         getOrCreateServer("sms");
         getOrCreateServer("email");
         getOrCreateServer("other");
+        getOrCreateServer("sample");
     }
 
     private McpSyncServer getOrCreateServer(String categoryKey) {
