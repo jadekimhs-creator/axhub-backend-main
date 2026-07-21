@@ -3,7 +3,7 @@ WORKDIR /app
 COPY gradlew .
 COPY gradle gradle
 COPY build.gradle settings.gradle ./
-COPY dap-common dap-common
+
 COPY dap-gateway dap-gateway
 RUN chmod +x gradlew
 RUN ./gradlew :dap-gateway:build -x test
