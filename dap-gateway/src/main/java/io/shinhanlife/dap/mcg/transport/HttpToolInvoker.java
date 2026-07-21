@@ -40,14 +40,17 @@ public class HttpToolInvoker implements ToolInvoker {
     }
 
     @Override
-    public JsonNode invoke(Map<String, Object> payload, String targetUrl) {
+    public JsonNode invoke(Map<String, Object> payload, String targetUrl, Map<String, String> headers) {
         try {
-            Object httpResult = restClient.post()
+            RestClient.RequestBodySpec requestSpec = restClient.post()
                     .uri(targetUrl)
-                    .contentType(MediaType.APPLICATION_JSON)
-                    // TODO: Use actual tenant's key
-                    .header("X-Trace-Id", UUID.randomUUID().toString())
-                    .body(payload)
+                    .contentType(MediaType.APPLICATION_JSON);
+                    
+            if (headers != null) {
+                headers.forEach(requestSpec::header);
+            }
+            
+            Object httpResult = requestSpec.body(payload)
                     .retrieve()
                     .body(Object.class);
             

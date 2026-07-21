@@ -232,6 +232,10 @@ public class ExecuteService {
                     }
                     String executeApiUrl = targetUrl + "/mcp/" + metadata.getName();
                     
+                    Map<String, String> headers = new java.util.HashMap<>();
+                    headers.put("trace-id", java.util.UUID.randomUUID().toString());
+                    headers.put("request-id", context.requestId());
+                    
                     ObjectNode pageArguments = paginationValidator.normalize(arguments);
                     LargeToolResponseService.Collector collector = largeResponses.newCollector(metadata.getName(), context.requestId());
 
@@ -244,7 +248,7 @@ public class ExecuteService {
                         
                         JsonNode data = null;
                         try {
-                            data = toolInvoker.invoke(pagePayload, executeApiUrl);
+                            data = toolInvoker.invoke(pagePayload, executeApiUrl, headers);
                         } catch (org.springframework.web.client.RestClientResponseException e) {
                             // HTTP 4xx, 5xx 에러는 연결 오류가 아니라 비즈니스 로직 오류이거나 검증 실패이므로 원본 에러를 그대로 반환
                             throw new ToolExecutionException(FailureType.SERVER_ERROR, "Tool Pod HTTP 에러 (" + e.getStatusCode() + "): " + e.getResponseBodyAsString());
@@ -253,7 +257,7 @@ public class ExecuteService {
                                 String fallbackUrl = executeApiUrl.replaceAll("http://tool-[a-zA-Z0-9-]+", "http://localhost");
                                 log.warn(" [ExecuteService] 호스트를 찾을 수 없어 localhost로 재시도합니다: {}", fallbackUrl);
                                 try {
-                                    data = toolInvoker.invoke(pagePayload, fallbackUrl);
+                                    data = toolInvoker.invoke(pagePayload, fallbackUrl, headers);
                                 } catch (Exception ex) {
                                     throw new ToolExecutionException(FailureType.SERVER_ERROR, "Tool Pod 호출 실패 (localhost 재시도 포함): " + ex.getMessage());
                                 }

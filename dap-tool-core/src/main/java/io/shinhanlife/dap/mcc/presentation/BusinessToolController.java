@@ -70,10 +70,13 @@ public class BusinessToolController {
     public ResponseEntity<?> executeDynamicTool(
             @PathVariable("name") String functionName,
             @RequestHeader(value = "X-Request-Id", required = false) String headerRequestId,
+            @RequestHeader(value = "trace-id", required = false) String traceId,
+            @RequestHeader(value = "request-id", required = false) String requestId,
             @RequestBody(required = false) Map<String, Object> arguments) {
         
         String finalRequestId = headerRequestId;
         
+        log.info(" [Tool] IN - trace-id: {}, request-id: {}", traceId, requestId);
         log.info("\n [Tool] 동적 툴 실행 요청 수신 (함수명): {}", functionName);
         if (arguments != null) {
             try {
@@ -198,7 +201,13 @@ public class BusinessToolController {
                 log.info("[Tool -> MCP Gateway] 동적 툴 실행 결과 반환: {}", methodResult);
             }
             
-            return ResponseEntity.ok(methodResult);
+            log.info(" [Tool] OUT - trace-id: {}, request-id: {}", traceId, requestId);
+            
+            ResponseEntity.BodyBuilder responseBuilder = ResponseEntity.ok();
+            if (traceId != null) responseBuilder.header("trace-id", traceId);
+            if (requestId != null) responseBuilder.header("request-id", requestId);
+            
+            return responseBuilder.body(methodResult);
 
         } catch (Exception e) {
             log.error("[Tool] 리플렉션 실행 중 예외 발생: {}", e.getMessage());
