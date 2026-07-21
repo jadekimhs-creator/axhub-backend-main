@@ -106,8 +106,8 @@ public class PodScaffolder {
              * 
              * </pre>
              */
-            @SpringBootApplication(scanBasePackages = {"io.shinhanlife.dap.mcc", "io.shinhanlife.dap.common.adapter", "io.shinhanlife.dap.common.mcp", "io.shinhanlife.dap.common.config"})
-            @ConfigurationPropertiesScan(basePackages = {"io.shinhanlife.dap.mcc", "io.shinhanlife.dap.common.adapter", "io.shinhanlife.dap.common.mcp", "io.shinhanlife.dap.common.config"})
+            @SpringBootApplication(scanBasePackages = {"io.shinhanlife.dap.mcc", "io.shinhanlife.dap.common.adapter", "io.shinhanlife.dap.common.mcp", "io.shinhanlife.dap.common.config", "io.shinhanlife.dap.common.integration"})
+            @ConfigurationPropertiesScan(basePackages = {"io.shinhanlife.dap.mcc", "io.shinhanlife.dap.common.adapter", "io.shinhanlife.dap.common.mcp", "io.shinhanlife.dap.common.config", "io.shinhanlife.dap.common.integration"})
             @EnableCaching
             public class DapTool%sApplication {
                 public static void main(String[] args) {
