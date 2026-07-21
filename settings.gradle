@@ -1,6 +1,5 @@
 rootProject.name = 'dap-admin'
 
-include 'dap-common'
 include 'dap-gateway'
 include 'dap-tool-core'
 include 'dap-tool-sms'
