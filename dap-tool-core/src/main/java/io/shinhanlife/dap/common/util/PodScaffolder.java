@@ -135,12 +135,12 @@ public class PodScaffolder {
             # Suppress Kafka Connection Logs
             logging.level.org.apache.kafka=ERROR
             
-            # Auto Prefix Namespace
-            mcp.namespace=%s
+            # Auto Prefix Namespace (Disabled by default)
+            mcp.namespace=
             
             # API 보안 키 설정
             mcp.security.tenant-domains.TESTER-DEV=ALL
-            """.formatted(portStr, moduleName, shortName);
+            """.formatted(portStr, moduleName);
         Files.writeString(resPath.resolve("application.properties"), applicationProperties);
 
         String applicationLocalProperties = """
