@@ -25,8 +25,23 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class SlCommonHeaderDto {
     private String length;          // 전문길이
+    private SlGlobalId globalId;    // 글로벌ID
     private String headerVer;       // 전문헤더버전
     private String encodeFlag;      // 전문암호화여부
+
+    @Data
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class SlGlobalId {
+        private String writeDate;   // 전문작성일 (8)
+        private String sysCd;       // 생성시스템명 (8)
+        private String typeCd;      // 구분코드 (2)
+        private String detailCd;    // 세부업무코드 (4)
+        private String seqNo;       // 채번번호 (8)
+        private String step;        // 진행상황 (2)
+    }
+
     private String groupCoCd;       // 그룹사코드
     private String instCd;          // 기관코드
     private String applCd;          // 업무코드
