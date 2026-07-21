@@ -1,4 +1,4 @@
-package io.shinhanlife.dap.mcc.component;
+package io.shinhanlife.dap.common.integration.mci.component;
 
 import io.shinhanlife.glow.communication.dto.Transfer;
 import io.shinhanlife.glow.communication.module.mci.component.GlowMciComponent;

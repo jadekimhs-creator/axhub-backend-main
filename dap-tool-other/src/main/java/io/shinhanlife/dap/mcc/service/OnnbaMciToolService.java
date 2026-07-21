@@ -1,6 +1,6 @@
 package io.shinhanlife.dap.mcc.service;
 
-import io.shinhanlife.dap.mcc.component.AxhubMciComponent;
+import io.shinhanlife.dap.common.integration.mci.component.AxhubMciComponent;
 import io.shinhanlife.glow.communication.dto.Transfer;
 import org.springframework.stereotype.Service;
 import io.shinhanlife.dap.mcc.annotation.McpFunction;

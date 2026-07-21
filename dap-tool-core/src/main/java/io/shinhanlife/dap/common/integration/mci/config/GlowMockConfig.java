@@ -1,4 +1,4 @@
-package io.shinhanlife.dap.mcc.component;
+package io.shinhanlife.dap.common.integration.mci.config;
 
 import io.shinhanlife.glow.communication.module.mci.component.GlowMciComponent;
 import org.springframework.context.annotation.Bean;
