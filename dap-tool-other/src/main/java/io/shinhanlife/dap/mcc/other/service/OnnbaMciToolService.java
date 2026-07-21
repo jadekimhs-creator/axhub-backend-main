@@ -3,7 +3,7 @@ package io.shinhanlife.dap.mcc.other.service;
 import io.shinhanlife.dap.common.integration.mci.component.AxhubMciComponent;
 import io.shinhanlife.dap.mcc.annotation.McpFunction;
 import io.shinhanlife.dap.mcc.annotation.McpTool;
-import io.shinhanlife.dap.mcc.dto.Onnba3011ReqDto;
+import io.shinhanlife.dap.mcc.dto.Onnba3011Req;
 import io.shinhanlife.glow.communication.dto.Transfer;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -46,7 +46,7 @@ public class OnnbaMciToolService {
             prompt = "가입설계 한도를 계산하고 조회해줘.",
             mappingId = INTERFACE_CODE_3011
     )
-    public Object callOnnba3011(Onnba3011ReqDto req) {
+    public Object callOnnba3011(Onnba3011Req req) {
         log.info("[MCI Tool] 보종By가입설계한도계산조회 요청 수신.");
 
         try {

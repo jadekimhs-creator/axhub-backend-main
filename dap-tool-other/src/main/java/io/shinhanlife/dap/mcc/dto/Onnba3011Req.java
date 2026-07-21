@@ -12,7 +12,7 @@ import lombok.Data;
  * @create 2026.09.01
  */
 @Data
-public class Onnba3011ReqDto {
+public class Onnba3011Req {
 
     @JsonPropertyDescription("통합기계약보험 (유형: gs, 길이: 72)")
     @JsonProperty("unfcPrbuIrcoAddu")
