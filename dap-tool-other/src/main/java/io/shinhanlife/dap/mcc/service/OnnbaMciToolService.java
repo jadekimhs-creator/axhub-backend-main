@@ -53,7 +53,7 @@ public class OnnbaMciToolService {
             mappingId = "CLCNNB00001"
     )
     public Object callOnnba3011(Onnba3011ReqDto req) {
-        log.info("[MCI Tool] 보종By가입설계한도계산조회 요청 수신. 고객ID: {}", req.getCustomerId());
+        log.info("[MCI Tool] 보종By가입설계한도계산조회 요청 수신.");
 
         try {
             // 1. MCI 전문 통신을 위한 통합 Wrapper 객체 생성
