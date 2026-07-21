@@ -26,7 +26,7 @@ import io.shinhanlife.dap.mcc.dto.LeaveCountReq;
  */
 public class CommonUtilityService extends AbstractMcpToolService {
 
-    @McpFunction(displayName = "register_vacation 툴", name = "register_vacation", description = "휴가 등록", prompt = "내일 하루 연차 휴가를 등록해줘.", mappingId = "HR_VAC_01")
+    @McpFunction(register = false, displayName = "register_vacation 툴", name = "register_vacation", description = "휴가 등록", prompt = "내일 하루 연차 휴가를 등록해줘.", mappingId = "HR_VAC_01")
     public Object registerVacation(VacationRegisterReq data) {
         return executeLegacy("HTTP", "HR_VAC_01", data);
     }
