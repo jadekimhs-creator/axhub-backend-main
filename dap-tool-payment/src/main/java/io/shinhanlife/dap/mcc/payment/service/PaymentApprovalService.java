@@ -1,11 +1,12 @@
-package io.shinhanlife.dap.mcc.service;
+package io.shinhanlife.dap.mcc.payment.service;
 
 import io.shinhanlife.dap.mcc.annotation.McpFunction;
 import io.shinhanlife.dap.mcc.annotation.McpTool;
 import io.shinhanlife.dap.mcc.dto.PaymentApprovalReq;
-import io.shinhanlife.dap.mcc.dto.PaymentApprovalRes;
-import org.springframework.stereotype.Service;
+import io.shinhanlife.dap.mcc.service.AbstractMcpToolService;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
+
 import java.util.Map;
 import java.util.UUID;
 

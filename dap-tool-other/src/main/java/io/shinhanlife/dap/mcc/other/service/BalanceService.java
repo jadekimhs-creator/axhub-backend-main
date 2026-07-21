@@ -1,4 +1,4 @@
-package io.shinhanlife.dap.mcc.service;
+package io.shinhanlife.dap.mcc.other.service;
 
 
 /**
