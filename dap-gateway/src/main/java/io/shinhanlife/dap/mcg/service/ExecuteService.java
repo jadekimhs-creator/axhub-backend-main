@@ -230,20 +230,13 @@ public class ExecuteService {
                     if (metadata.getPodUrl() != null && !metadata.getPodUrl().isEmpty()) {
                         targetUrl = metadata.getPodUrl();
                     }
-                    String executeApiUrl = targetUrl + "/mcp/api/v1/tools/call";
+                    String executeApiUrl = targetUrl + "/mcp/" + metadata.getName();
                     
                     ObjectNode pageArguments = paginationValidator.normalize(arguments);
                     LargeToolResponseService.Collector collector = largeResponses.newCollector(metadata.getName(), context.requestId());
 
                     while (true) {
-                        Map<String, Object> pagePayload = new HashMap<>(payload);
-                        if (pagePayload.containsKey("params")) {
-                            Map<String, Object> params = new HashMap<>((Map<String, Object>) pagePayload.get("params"));
-                            params.put("arguments", objectMapper.convertValue(pageArguments, Map.class));
-                            pagePayload.put("params", params);
-                        } else {
-                            pagePayload.put("arguments", objectMapper.convertValue(pageArguments, Map.class));
-                        }
+                        Map<String, Object> pagePayload = objectMapper.convertValue(pageArguments, Map.class);
                         
                         try {
                             log.info(" [ExecuteService] 요청 페이로드(마스킹 적용): {}", objectMapper.writeValueAsString(dataMasker.mask(objectMapper.valueToTree(pagePayload))));

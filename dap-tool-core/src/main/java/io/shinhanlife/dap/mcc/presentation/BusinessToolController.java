@@ -65,26 +65,23 @@ public class BusinessToolController {
         return toolRegistryHeartbeatSender.getAllScannedTools();
     }
 
-    // JSON RPC 기반 단일 라우팅 엔드포인트
-    @PostMapping("/mcp/api/v1/tools/call")
-    public ResponseEntity<Map<String, Object>> executeDynamicTool(
+    // 순수 REST 기반 동적 라우팅 엔드포인트
+    @PostMapping("/mcp/{name}")
+    public ResponseEntity<?> executeDynamicTool(
+            @PathVariable("name") String functionName,
             @RequestHeader(value = "X-Request-Id", required = false) String headerRequestId,
-            @RequestBody(required = false) Map<String, Object> payload) {
+            @RequestBody(required = false) Map<String, Object> arguments) {
         
-        String finalRequestId = headerRequestId != null ? headerRequestId : (payload != null && payload.get("id") != null ? String.valueOf(payload.get("id")) : null);
-        Map<String, Object> params = payload != null ? (Map<String, Object>) payload.get("params") : null;
-        String functionName = params != null ? (String) params.get("name") : null;
+        String finalRequestId = headerRequestId;
         
         log.info("\n [Tool] 동적 툴 실행 요청 수신 (함수명): {}", functionName);
-        if (payload != null) {
+        if (arguments != null) {
             try {
-                log.info(" [Tool] 호출 파라미터: {}", objectMapper.writeValueAsString(payload));
+                log.info(" [Tool] 호출 파라미터: {}", objectMapper.writeValueAsString(arguments));
             } catch (Exception e) {
-                log.info(" [Tool] 호출 파라미터: {}", payload);
+                log.info(" [Tool] 호출 파라미터: {}", arguments);
             }
         }
-
-        Map<String, Object> arguments = params != null ? (Map<String, Object>) params.get("arguments") : null;
         Object targetBean = null;
         Method targetMethod = null;
         McpFunction targetFunctionAnnotation = null;
@@ -135,11 +132,7 @@ public class BusinessToolController {
             errorBody.put("details", errorDetails);
             if (finalRequestId != null) errorBody.put("request_id", finalRequestId);
 
-            Map<String, Object> error = new HashMap<>();
-            error.put("jsonrpc", "2.0");
-            error.put("error", errorBody);
-            error.put("id", payload != null ? payload.get("id") : null);
-            return ResponseEntity.status(404).body(error);
+            return ResponseEntity.status(404).body(errorBody);
         }
         // (기존 차단 로직 제거됨)
 
@@ -169,11 +162,7 @@ public class BusinessToolController {
                         errorBody.put("details", errorDetails);
                         if (finalRequestId != null) errorBody.put("request_id", finalRequestId);
 
-                        Map<String, Object> error = new HashMap<>();
-                        error.put("jsonrpc", "2.0");
-                        error.put("error", errorBody);
-                        error.put("id", payload != null ? payload.get("id") : null);
-                        return ResponseEntity.status(422).body(error);
+                        return ResponseEntity.status(422).body(errorBody);
                     }
                 } catch (Exception e) {
                     log.error("[Tool] 스키마 검증 중 오류 발생: {}", e.getMessage());
@@ -202,60 +191,14 @@ public class BusinessToolController {
             
             long elapsed = System.currentTimeMillis() - startTime;
             
-            // 5. 결과 조립 (JSON-RPC 응답 - Agent Builder 규격 적용)
-            Map<String, Object> innerResult = new HashMap<>();
-            if (methodResult instanceof Map && ((Map<?, ?>) methodResult).containsKey("contracts")) {
-                innerResult.putAll((Map<String, Object>) methodResult);
-            } else {
-                List<Object> contracts = new ArrayList<>();
-                if (methodResult != null) {
-                    contracts.add(methodResult);
-                }
-                innerResult.put("contracts", contracts);
-                
-                if (methodResult instanceof Map && ((Map<?, ?>) methodResult).containsKey("status")) {
-                    innerResult.put("status", ((Map<?, ?>) methodResult).get("status"));
-                } else {
-                    innerResult.put("status", "SUCCESS");
-                }
-            }
-
-            Map<String, Object> resultPayload = new HashMap<>();
-            resultPayload.put("status", "ok");
-            resultPayload.put("result", innerResult);
-            resultPayload.put("error_code", null);
-            resultPayload.put("error_message", null);
-            resultPayload.put("elapsed_ms", elapsed);
-            resultPayload.put("truncated", false);
-            int originalSize = 0;
+            // 5. 결과 반환 (순수 REST 응답)
             try {
-                if (methodResult instanceof Map && ((Map<?, ?>) methodResult).containsKey("legacy_response")) {
-                    Object legacyResp = ((Map<?, ?>) methodResult).get("legacy_response");
-                    if (legacyResp instanceof String) {
-                        originalSize = ((String) legacyResp).getBytes(java.nio.charset.StandardCharsets.UTF_8).length;
-                    }
-                } else {
-                    String jsonStr = objectMapper.writeValueAsString(innerResult);
-                    originalSize = jsonStr.getBytes(java.nio.charset.StandardCharsets.UTF_8).length;
-                }
+                log.info("[Tool -> MCP Gateway] 동적 툴 실행 결과 반환: {}", objectMapper.writeValueAsString(methodResult));
             } catch (Exception e) {
-                log.warn("Failed to calculate original_size", e);
-            }
-            resultPayload.put("original_size", originalSize);
-
-            Map<String, Object> rpcResponse = new LinkedHashMap<>(); // 순서 보장을 위해 LinkedHashMap 사용
-            rpcResponse.put("jsonrpc", "2.0");
-            rpcResponse.put("result", resultPayload);
-            rpcResponse.put("id", payload != null ? payload.get("id") : null);
-            
-            try {
-                log.info("[Tool -> MCP Gateway] 동적 툴 실행 결과 반환: {}", objectMapper.writeValueAsString(rpcResponse));
-            } catch (Exception e) {
-                log.info("[Tool -> MCP Gateway] 동적 툴 실행 결과 반환: {}", rpcResponse);
+                log.info("[Tool -> MCP Gateway] 동적 툴 실행 결과 반환: {}", methodResult);
             }
             
-            
-            return ResponseEntity.ok(rpcResponse);
+            return ResponseEntity.ok(methodResult);
 
         } catch (Exception e) {
             log.error("[Tool] 리플렉션 실행 중 예외 발생: {}", e.getMessage());
@@ -268,11 +211,7 @@ public class BusinessToolController {
             errorBody.put("details", errorDetails);
             if (finalRequestId != null) errorBody.put("request_id", finalRequestId);
 
-            Map<String, Object> error = new HashMap<>();
-            error.put("jsonrpc", "2.0");
-            error.put("error", errorBody);
-            error.put("id", payload != null ? payload.get("id") : null);
-            return ResponseEntity.status(502).body(error);
+            return ResponseEntity.status(502).body(errorBody);
         }
     }
 }
