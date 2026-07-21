@@ -163,7 +163,7 @@ public class PodScaffolder {
             
             # Gateway/Tool URLs
             axhub.gateway.url=http://localhost:8081
-            axhub.tool.url=http://localhost:${server.port}
+            axhub.tool.url=${AXHUB_TOOL_URL:http://localhost:${server.port}}
             
             # Disable Kafka
             spring.autoconfigure.exclude=org.springframework.boot.autoconfigure.kafka.KafkaAutoConfiguration

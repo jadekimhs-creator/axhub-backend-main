@@ -252,6 +252,9 @@ public class ExecuteService {
                         JsonNode data = null;
                         try {
                             data = toolInvoker.invoke(pagePayload, executeApiUrl);
+                        } catch (org.springframework.web.client.RestClientResponseException e) {
+                            // HTTP 4xx, 5xx 에러는 연결 오류가 아니라 비즈니스 로직 오류이거나 검증 실패이므로 원본 에러를 그대로 반환
+                            throw new ToolExecutionException(FailureType.SERVER_ERROR, "Tool Pod HTTP 에러 (" + e.getStatusCode() + "): " + e.getResponseBodyAsString());
                         } catch (Exception e) {
                             if (executeApiUrl.contains("http://tool-")) {
                                 String fallbackUrl = executeApiUrl.replaceAll("http://tool-[a-zA-Z0-9-]+", "http://localhost");
