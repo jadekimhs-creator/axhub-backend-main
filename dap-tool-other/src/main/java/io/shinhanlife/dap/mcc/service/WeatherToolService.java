@@ -30,7 +30,7 @@ import java.time.format.DateTimeFormatter;
 @Service
 @McpTool(
     routingType = "DIRECT",
-    categoryKey = "common"
+    categoryKey = "sample"
 )
 public class WeatherToolService extends AbstractMcpToolService {
 
