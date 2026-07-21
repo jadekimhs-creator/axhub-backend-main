@@ -14,16 +14,18 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public class AxhubMciComponent {
     
-    private final GlowMciComponent<Object, Object> mci;
+    @SuppressWarnings("rawtypes")
+    private final GlowMciComponent mci;
 
+    @SuppressWarnings("unchecked")
     public <O, I> Transfer<O> callTo(String itrfName, String rcvSvcId, I inputDto, Class<O> resBodyClass) {
-        log.info("[AxhubMciComponent] MCI 호출 준비 - 인터페이스: {}", itrfName);
+        log.info("[AxhubMciComponent] MCI 호출 준비 - 인터페이스: {}, 수신서비스: {}", itrfName, rcvSvcId);
         
         // Header 세팅 로직 생략 (Mock)
         
         Transfer<Object> request = Transfer.builder()
                 .body(inputDto)
-                .resBodyClass((Class<Object>) resBodyClass)
+                .resBodyClass((Class) resBodyClass)
                 .build();
                 
         return syncMci(request);
