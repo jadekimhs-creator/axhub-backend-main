@@ -49,7 +49,7 @@ public class ToolScaffolder {
         String baseName = getOrAsk(args, 0, scanner, "1. 생성할 Tool의 기본 이름 (예: ExchangeRate) [영문 PascalCase]: ");
         String interfaceId = getOrAsk(args, 1, scanner, "2. 레거시 API 인터페이스 ID (예: EXCH_001): ");
         String description = getOrAsk(args, 2, scanner, "3. Tool 기능 설명 (예: 환율 조회): ");
-        String group = getOrAsk(args, 3, scanner, "4. Tool 소속 그룹 (예: NOTIFICATION, CLAIM, POLICY, HR, CONTRACT, CUSTOMER 등): ");
+        String group = getOrAsk(args, 3, scanner, "4. Tool 소속 그룹 (예: SAMPLE, NOTIFICATION, CLAIM, POLICY, HR, CONTRACT, CUSTOMER 등): ");
         if (group.isEmpty()) group = "COMMON";
         String routingType = getOrAsk(args, 4, scanner, "5. 통신 프로토콜 (예: HTTP, TCP, MCI, EAI): ");
         if (routingType.trim().isEmpty()) {

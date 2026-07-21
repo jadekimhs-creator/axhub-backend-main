@@ -45,6 +45,7 @@ DAP Backend는 2개의 주요 애플리케이션으로 분리 운영됩니다:
       - `HR`: 휴가 등록, 연차 갯수 조회
       - `CONTRACT`: 계약 상태, 계약 상세 조회
       - `CUSTOMER`: 고객 등급, 고객 상세 정보 조회
+      - `SAMPLE`: 날씨, 환율, 명언 조회 등 외부 연동 샘플
     - IntelliJ IDEA: `Run/Debug Configurations`에서 `DapTool*Application` 의 `Program arguments` 에 `--mcp.tool.target=NOTIFICATION` 입력
 
 
@@ -66,7 +67,7 @@ DAP Backend는 2개의 주요 애플리케이션으로 분리 운영됩니다:
     }
   }
   ```
-- **특정 카테고리 툴 필터링**: `McpBridge.java` 내부의 URI 파라미터(`?categoryKey=common`)를 수정하여 원하는 도메인의 툴만 선택적으로 AI에게 학습시킬 수 있습니다.
+- **특정 카테고리 툴 필터링**: `McpBridge.java` 내부의 URI 파라미터(`?categoryKey=sample` 등)를 수정하여 원하는 도메인의 툴만 선택적으로 AI에게 학습시킬 수 있습니다.
 
 ### 2. 프로덕션 클라우드 AI (Google Cloud Agent Builder 등) 연동
 실제 라이브 서비스에서 동작하는 클라우드 Agent Builder는 REST API 기반의 OpenAPI Spec을 요구합니다. 
