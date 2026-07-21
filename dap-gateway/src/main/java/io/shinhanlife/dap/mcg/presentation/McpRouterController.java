@@ -19,7 +19,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.shinhanlife.dap.common.adapter.dto.JsonRpcRequest;
 import io.shinhanlife.dap.common.adapter.dto.JsonRpcResponse;
 import io.shinhanlife.dap.common.adapter.dto.Params;
-import io.shinhanlife.dap.mcg.config.GatewayFallbackProperties;
+
 import io.shinhanlife.dap.mcg.dto.ToolMetadata;
 import io.shinhanlife.dap.mcg.registry.RedisRegistryService;
 import io.shinhanlife.dap.mcg.service.ExecuteService;
@@ -53,19 +53,17 @@ public class McpRouterController {
     private final ExecuteService executeService;
     private final SecurityProperties securityProperties;
     private final ObjectMapper objectMapper;
-    private final GatewayFallbackProperties gatewayFallbackProperties;
+
     private final RestClient restClient;
 
     public McpRouterController(RedisRegistryService redisRegistryService,
                                ExecuteService executeService,
                                SecurityProperties securityProperties,
-                               ObjectMapper objectMapper,
-                               GatewayFallbackProperties gatewayFallbackProperties) {
+                               ObjectMapper objectMapper) {
         this.redisRegistryService = redisRegistryService;
         this.executeService = executeService;
         this.securityProperties = securityProperties;
         this.objectMapper = objectMapper;
-        this.gatewayFallbackProperties = gatewayFallbackProperties;
         
         // [수정됨] 1초 타임아웃을 강제하여 죽은 서버 대기로 인한 지연 방지
         SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
@@ -124,31 +122,7 @@ public class McpRouterController {
                 .map(ToolMetadata::getUid)
                 .collect(Collectors.toSet());
 
-        Set<String> fallbackUrls = new HashSet<>(gatewayFallbackProperties.getRoutes().values());
-        if (gatewayFallbackProperties.getDefaultUrl() != null) {
-            fallbackUrls.add(gatewayFallbackProperties.getDefaultUrl());
-        }
 
-        for (String url : fallbackUrls) {
-            try {
-                List<ToolMetadata> localTools = restClient.get()
-                        .uri(url + "/mcp/api/v1/tools/local")
-                        .retrieve()
-                        .body(new ParameterizedTypeReference<List<ToolMetadata>>() {});
-                        
-                if (localTools != null) {
-                    for (ToolMetadata t : localTools) {
-                        if (!Boolean.TRUE.equals(t.getIsRegistered()) && Boolean.TRUE.equals(t.getVisible()) && !knownTools.contains(t.getUid())) {
-                            activeTools.add(t);
-                            knownTools.add(t.getUid());
-                        }
-                    }
-                }
-            } catch (Exception e) {
-                log.warn("Failed to fetch local tools from fallback URL: {}", url);
-            }
-        }
-        
         if (categoryKey != null && !categoryKey.trim().isEmpty()) {
             activeTools = activeTools.stream()
                     .filter(t -> categoryKey.equals(t.getCategoryKey()))
