@@ -4,6 +4,7 @@ COPY gradlew .
 COPY gradle gradle
 COPY build.gradle settings.gradle ./
 
+COPY dap-tool-core dap-tool-core
 COPY dap-gateway dap-gateway
 RUN chmod +x gradlew
 RUN ./gradlew :dap-gateway:build -x test
