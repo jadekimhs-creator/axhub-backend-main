@@ -1,0 +1,35 @@
+### 대내 MCI 샘플 툴(send_mci_sample) 테스트
+# 이 스크립트는 IntelliJ IDEA의 HTTP Client 플러그인을 위한 테스트 파일입니다.
+# 1. 서버(Gateway 및 Tool 모듈)를 먼저 실행해 주세요.
+# 2. 아래 초록색 플레이(▶) 버튼을 누르면 툴 함수가 호출됩니다!
+
+POST http://localhost:8081/mcp/api/v1/tools/call
+Content-Type: application/json
+Accept: application/json
+
+{
+  "jsonrpc": "2.0",
+  "id": "test-1234",
+  "params": {
+    "name": "other_send_mci_sample",
+    "arguments": {
+      "tgrmCmnnhddValu": {
+        "envrTypeCd": "D",
+        "itrIfId": "IF_TEST_001"
+      },
+      "tgrmMsdvValu": {
+        "msgHddvValu": {
+          "msgTnsmTypeCd": "0"
+        },
+        "msgDtdvValu": {
+          "msgCd": "0000"
+        }
+      },
+      "tgrmDtdvValu": {
+        "customerName": "홍길동",
+        "targetDate": "20260901",
+        "remarks": "MCI 연동 테스트"
+      }
+    }
+  }
+}
