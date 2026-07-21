@@ -8,6 +8,7 @@ import io.shinhanlife.dap.mcc.annotation.McpTool;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import io.shinhanlife.dap.mcc.dto.Onnba3011ReqDto;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -37,12 +38,7 @@ public class OnnbaMciToolService {
     @Value("${shinhan.integration.mci.default-url:http://localhost:8081/api/mock/esb/api}")
     private String mciTargetUrl;
 
-    // AI가 인식하게 될 파라미터 DTO (기존 ONNBA3011_I 와 동일한 구조)
-    @Data
-    public static class Onnba3011ReqDto {
-        // 실제 가입설계한도계산 조회에 필요한 필드
-        private String customerId; 
-    }
+
 
     /**
      * AI Agent가 호출하게 될 메서드입니다.
