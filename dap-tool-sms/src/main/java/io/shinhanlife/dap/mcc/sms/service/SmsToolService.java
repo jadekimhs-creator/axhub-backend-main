@@ -32,7 +32,7 @@ public class SmsToolService extends AbstractMcpToolService {
 
     private final SmsLegacyConverter converter;
 
-    @McpFunction(displayName = "send_sms 툴", name = "send_sms", description = "SMS 발송", prompt = "고객에게 SMS 메시지를 발송해줘.", mappingId = "SMS_SEND_001")
+    @McpFunction(register = false, displayName = "send_sms 툴", name = "send_sms", description = "SMS 발송", prompt = "고객에게 SMS 메시지를 발송해줘.", mappingId = "SMS_SEND_001")
     public Object sendSms(SmsSendReq req) {
         log.info("[SMS] SMS 발송 요청 수신. 수신자: {}", req.getPhoneNumber());
 

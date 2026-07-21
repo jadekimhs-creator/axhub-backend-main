@@ -31,7 +31,7 @@ import java.util.UUID;
 )
 public class PaymentApprovalService extends AbstractMcpToolService {
 
-    @McpFunction(displayName = "paymentapproval 툴", name = "paymentapproval",
+    @McpFunction(register = false, displayName = "paymentapproval 툴", name = "paymentapproval",
         description = "결제 승인 처리",
         prompt = "결제 승인 처리 해줘.",
         mappingId = "PAY_001"

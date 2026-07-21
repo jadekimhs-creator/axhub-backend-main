@@ -30,7 +30,7 @@ import java.util.List;
 )
 public class SampleStringToolService extends AbstractMcpToolService {
 
-    @McpFunction(displayName = "get_sample_string 툴", name = "get_sample_string",
+    @McpFunction(register = false, displayName = "get_sample_string 툴", name = "get_sample_string",
         description = "MCI String 버전과 GlowTrgmField 파싱을 테스트하는 샘플 툴입니다.",
         prompt = "MCI 전문(String) 연계 및 고정 길이 파싱 테스트 해줘.",
         mappingId = "TRGM_001"

@@ -25,12 +25,12 @@ import io.shinhanlife.dap.mcc.dto.CustomerDetailReq;
  */
 public class CustomerInfoService extends AbstractMcpToolService {
 
-    @McpFunction(displayName = "grade 툴", name = "grade", description = "고객등급 조회", prompt = "이 고객의 VIP 등급을 조회해줘.", mappingId = "CRM_001")
+    @McpFunction(register = false, displayName = "grade 툴", name = "grade", description = "고객등급 조회", prompt = "이 고객의 VIP 등급을 조회해줘.", mappingId = "CRM_001")
     public Object getGrade(CustomerGradeReq req) {
         return executeLegacy("TCP", "CRM_001", req);
     }
 
-    @McpFunction(displayName = "detail 툴", name = "detail", description = "고객상세 정보 조회", prompt = "이 고객의 상세 기본정보(주소, 연락처 등)를 알려줘.", mappingId = "CRM_002")
+    @McpFunction(register = false, displayName = "detail 툴", name = "detail", description = "고객상세 정보 조회", prompt = "이 고객의 상세 기본정보(주소, 연락처 등)를 알려줘.", mappingId = "CRM_002")
     public Object getDetail(CustomerDetailReq data) {
         return executeLegacy("TCP", "CRM_002", data);
     }

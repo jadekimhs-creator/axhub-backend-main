@@ -29,7 +29,7 @@ import java.util.Map;
 @McpTool(routingType = "MCI", categoryKey = "common")
 public class BalanceService extends AbstractMcpToolService {
 
-    @McpFunction(displayName = "balance 툴", name = "balance",
+    @McpFunction(register = false, displayName = "balance 툴", name = "balance",
         description = "고객의 계좌 잔액을 조회합니다.",
         prompt = "고객 계좌 잔액을 조회해줘.",
         mappingId = "ACC_001"

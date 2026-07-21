@@ -30,12 +30,12 @@ import io.shinhanlife.dap.mcc.dto.BillingProcessReq;
 @lombok.extern.slf4j.Slf4j
 public class BillingProcessService extends AbstractMcpToolService {
 
-    @McpFunction(displayName = "status 툴", name = "status", description = "청구심사 상태 조회", prompt = "현재 접수된 청구건 상태를 알려줘.", mappingId = "BILL_001")
+    @McpFunction(register = false, displayName = "status 툴", name = "status", description = "청구심사 상태 조회", prompt = "현재 접수된 청구건 상태를 알려줘.", mappingId = "BILL_001")
     public Object getStatus(BillingStatusReq data) {
         return executeBillingLogic("BILL_001", data);
     }
 
-    @McpFunction(displayName = "process 툴", name = "process", description = "청구 처리", prompt = "현재 접수된 청구건에 대한 심사 처리를 진행해.", mappingId = "BILL_002")
+    @McpFunction(register = false, displayName = "process 툴", name = "process", description = "청구 처리", prompt = "현재 접수된 청구건에 대한 심사 처리를 진행해.", mappingId = "BILL_002")
     public Object processBilling(BillingProcessReq data) {
         return executeBillingLogic("BILL_002", data);
     }

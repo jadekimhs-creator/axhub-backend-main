@@ -34,7 +34,7 @@ import io.shinhanlife.dap.other.dto.MciSampleRequestDto;
 @McpTool(routingType = "MCI", categoryKey = "common")
 public class MciSampleTool {
 
-    @McpFunction(displayName = "MCI 샘플 전송", name = "send_mci_sample", description = "MCI 표준 헤더, 메시지부, 데이터부 구조를 갖는 샘플 연동")
+    @McpFunction(register = false, displayName = "MCI 샘플 전송", name = "send_mci_sample", description = "MCI 표준 헤더, 메시지부, 데이터부 구조를 갖는 샘플 연동")
     public ShinhanTelegramWrapper<MyBizDataDto> sendMciSample(MciSampleRequestDto params) {
         log.info("▶ [MCI Sample Tool] 요청을 수신했습니다. 전달된 파라미터: {}", params);
         

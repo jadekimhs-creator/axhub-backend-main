@@ -45,8 +45,7 @@ public class SampleMciToolService {
     /**
      * AI Agent가 호출하게 될 메서드입니다.
      */
-    @McpFunction(
-            name = "inquiry_customer_mci",
+    @McpFunction(register = false, name = "inquiry_customer_mci",
             displayName = "고객 정보 조회 (MCI)",
             description = "MCI 연동을 통해 고객의 상세 정보를 조회합니다.",
             prompt = "고객 정보를 조회해줘.",

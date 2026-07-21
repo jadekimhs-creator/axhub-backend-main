@@ -26,7 +26,7 @@ import java.util.Map;
 @McpTool(routingType = "EAI", categoryKey = "notification")
 public class EmailToolService extends AbstractMcpToolService {
 
-    @McpFunction(displayName = "send_email 툴", name = "send_email", description = "이메일 발송", prompt = "고객에게 이메일을 발송해줘.", mappingId = "EMAIL_SEND_001")
+    @McpFunction(register = false, displayName = "send_email 툴", name = "send_email", description = "이메일 발송", prompt = "고객에게 이메일을 발송해줘.", mappingId = "EMAIL_SEND_001")
     public Object sendEmail(EmailSendReq req) {
         log.info("[Email] 이메일 발송 요청 수신. 수신자: {}", req.getEmailAddress());
 
