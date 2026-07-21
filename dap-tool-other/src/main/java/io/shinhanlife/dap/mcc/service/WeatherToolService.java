@@ -40,7 +40,7 @@ public class WeatherToolService extends AbstractMcpToolService {
         this.restClient = RestClient.create();
     }
 
-    @McpFunction(register = true, displayName = "날씨 조회 툴", name = "weather",
+    @McpFunction(register = false, displayName = "날씨 조회 툴", name = "weather",
         description = "특정 도시의 현재 날씨, 온도, 풍속 정보를 조회합니다.",
         prompt = "서울 날씨 알려줘, 부산 기온 알려줘 등 실시간 기상 조회",
         mappingId = "WEATHER_001"

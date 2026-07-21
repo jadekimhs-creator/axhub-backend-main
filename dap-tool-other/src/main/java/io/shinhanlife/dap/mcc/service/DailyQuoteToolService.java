@@ -39,7 +39,7 @@ public class DailyQuoteToolService extends AbstractMcpToolService {
         new DailyQuoteRes("가장 큰 위험은 위험 없는 삶이다.", "스티븐 코비")
     );
 
-    @McpFunction(register = true, displayName = "랜덤 명언 툴", name = "daily_quote",
+    @McpFunction(register = false, displayName = "랜덤 명언 툴", name = "daily_quote",
         description = "무작위로 영감을 주는 명언을 하나 가져옵니다.",
         prompt = "오늘의 명언 하나 알려줘, 동기부여 명언 등",
         mappingId = "QUOTE_001"
