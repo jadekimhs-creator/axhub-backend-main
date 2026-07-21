@@ -31,7 +31,7 @@ public @interface McpFunction {
     String inputSchema() default "{}";
     
     // 추가: Redis 자동 등록 및 Heartbeat 대상 여부 제어
-    boolean register() default true;
+    boolean register() default false;
     
     // 추가: 툴 목록 노출 여부 제어 (false 시 라우팅은 되나 목록에서 숨김)
     boolean visible() default true;

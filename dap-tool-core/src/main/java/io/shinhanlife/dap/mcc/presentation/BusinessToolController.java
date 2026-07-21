@@ -77,7 +77,7 @@ public class BusinessToolController {
         String finalRequestId = headerRequestId;
         
         log.info(" [Tool] IN - trace-id: {}, request-id: {}", traceId, requestId);
-        log.info("\n [Tool] 동적 툴 실행 요청 수신 (함수명): {}", functionName);
+        log.info(" [Tool] 동적 툴 실행 요청 수신 (함수명): {}", functionName);
         if (arguments != null) {
             try {
                 log.info(" [Tool] 호출 파라미터: {}", objectMapper.writeValueAsString(arguments));
