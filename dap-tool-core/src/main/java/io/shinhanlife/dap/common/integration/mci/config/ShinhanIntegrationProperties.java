@@ -21,7 +21,6 @@ import org.springframework.context.annotation.Configuration;
  */
 @Getter
 @Setter
-@Configuration
 @ConfigurationProperties(prefix = "shinhan.integration")
 public class ShinhanIntegrationProperties {
     
