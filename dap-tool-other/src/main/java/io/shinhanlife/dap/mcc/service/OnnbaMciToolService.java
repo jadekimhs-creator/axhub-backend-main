@@ -1,6 +1,6 @@
 package io.shinhanlife.dap.mcc.service;
 
-import io.shinhanlife.dap.mcc.component.LicoMciComponent;
+import io.shinhanlife.dap.mcc.component.AxhubMciComponent;
 import io.shinhanlife.glow.communication.dto.Transfer;
 import org.springframework.stereotype.Service;
 import io.shinhanlife.dap.mcc.annotation.McpFunction;
@@ -31,8 +31,8 @@ public class OnnbaMciToolService {
 
     private static final String INTERFACE_CODE_3011 = "CLCNNB00001";
 
-    // Glow 기반의 LicoMciComponent 주입
-    private final LicoMciComponent mci;
+    // Glow 기반의 AxhubMciComponent 주입
+    private final AxhubMciComponent mci;
 
     /**
      * AI Agent가 호출하게 될 메서드입니다.

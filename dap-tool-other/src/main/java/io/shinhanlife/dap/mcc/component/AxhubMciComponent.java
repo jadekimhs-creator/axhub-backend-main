@@ -12,12 +12,12 @@ import org.springframework.stereotype.Component;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class LicoMciComponent {
+public class AxhubMciComponent {
     
     private final GlowMciComponent<Object, Object> mci;
 
     public <O, I> Transfer<O> callTo(String itrfName, String rcvSvcId, I inputDto, Class<O> resBodyClass) {
-        log.info("[LicoMciComponent] MCI 호출 준비 - 인터페이스: {}", itrfName);
+        log.info("[AxhubMciComponent] MCI 호출 준비 - 인터페이스: {}", itrfName);
         
         // Header 세팅 로직 생략 (Mock)
         
@@ -31,7 +31,7 @@ public class LicoMciComponent {
 
     @SuppressWarnings("unchecked")
     private <O> Transfer<O> syncMci(Transfer<Object> request) {
-        log.info("[LicoMciComponent] GlowMciComponent.sync() 호출");
+        log.info("[AxhubMciComponent] GlowMciComponent.sync() 호출");
         return (Transfer<O>) mci.sync(request);
     }
 }
