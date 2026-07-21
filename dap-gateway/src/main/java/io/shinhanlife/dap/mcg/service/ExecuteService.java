@@ -162,22 +162,53 @@ public class ExecuteService {
             long elapsedMillis = elapsedMillis(startedAt);
             
             String responseText = "";
-            try { responseText = objectMapper.writeValueAsString(result); } catch (Exception ignore) {}
+            long originalSize = 0;
+            try { 
+                responseText = objectMapper.writeValueAsString(result); 
+                originalSize = responseText.getBytes(java.nio.charset.StandardCharsets.UTF_8).length;
+            } catch (Exception ignore) {}
+            
+            Map<String, Object> finalResult = new java.util.LinkedHashMap<>();
+            finalResult.put("status", "ok");
+            finalResult.put("result", result);
+            finalResult.put("error_code", null);
+            finalResult.put("error_message", null);
+            finalResult.put("elapsed_ms", elapsedMillis);
+            finalResult.put("truncated", false);
+            finalResult.put("original_size", originalSize);
             
             auditLogService.toolFinished(context, metadata.getName(), elapsedMillis, true, "");
             redisTrace.finished(context, metadata, argumentsNode, elapsedMillis, true, "", responseText);
             
-            return result;
+            return finalResult;
         } catch (ToolExecutionException error) {
             long elapsedMillis = elapsedMillis(startedAt);
             auditLogService.toolFinished(context, toolName, elapsedMillis, false, error.failureType().name());
             redisTrace.finished(context, metadata, argumentsNode, elapsedMillis, false, error.failureType().name(), "");
-            throw error;
+            
+            Map<String, Object> errorResult = new java.util.LinkedHashMap<>();
+            errorResult.put("status", "error");
+            errorResult.put("result", null);
+            errorResult.put("error_code", error.failureType().name());
+            errorResult.put("error_message", error.getMessage());
+            errorResult.put("elapsed_ms", elapsedMillis);
+            errorResult.put("truncated", false);
+            errorResult.put("original_size", 0);
+            return errorResult;
         } catch (Exception error) {
             long elapsedMillis = elapsedMillis(startedAt);
             auditLogService.toolFinished(context, toolName, elapsedMillis, false, FailureType.INTERNAL_ERROR.name());
             redisTrace.finished(context, metadata, argumentsNode, elapsedMillis, false, FailureType.INTERNAL_ERROR.name(), "");
-            throw new ToolExecutionException(FailureType.INTERNAL_ERROR, "Tool execution failed: " + toolName, error);
+            
+            Map<String, Object> errorResult = new java.util.LinkedHashMap<>();
+            errorResult.put("status", "error");
+            errorResult.put("result", null);
+            errorResult.put("error_code", FailureType.INTERNAL_ERROR.name());
+            errorResult.put("error_message", error.getMessage());
+            errorResult.put("elapsed_ms", elapsedMillis);
+            errorResult.put("truncated", false);
+            errorResult.put("original_size", 0);
+            return errorResult;
         }
     }
 
