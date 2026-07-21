@@ -37,7 +37,7 @@ public class ExchangeRateToolService extends AbstractMcpToolService {
         this.restClient = RestClient.create();
     }
 
-    @McpFunction(register = false, displayName = "실시간 환율 조회 툴", name = "exchange_rate",
+    @McpFunction(register = true, displayName = "실시간 환율 조회 툴", name = "exchange_rate",
         description = "원하는 통화의 실시간 환율을 조회합니다. (예: USD, EUR, JPY)",
         prompt = "현재 달러 환율 알려줘, 엔화 환율은?",
         mappingId = "EXCHANGE_001"
