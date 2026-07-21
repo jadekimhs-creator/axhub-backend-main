@@ -233,8 +233,8 @@ public class ExecuteService {
                     String executeApiUrl = targetUrl + "/mcp/" + metadata.getName();
                     
                     Map<String, String> headers = new java.util.HashMap<>();
-                    headers.put("trace-id", java.util.UUID.randomUUID().toString());
-                    headers.put("request-id", context.requestId());
+                    headers.put("trace-id", context.requestId());
+                    headers.put("request-id", java.util.UUID.randomUUID().toString());
                     
                     ObjectNode pageArguments = paginationValidator.normalize(arguments);
                     LargeToolResponseService.Collector collector = largeResponses.newCollector(metadata.getName(), context.requestId());
