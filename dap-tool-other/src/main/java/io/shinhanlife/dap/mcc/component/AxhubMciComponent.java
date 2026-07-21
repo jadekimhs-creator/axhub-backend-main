@@ -25,7 +25,7 @@ public class AxhubMciComponent {
         
         Transfer<Object> request = Transfer.builder()
                 .body(inputDto)
-                .resBodyClass((Class) resBodyClass)
+                .resBodyClass((Class<Object>) (Class<?>) resBodyClass)
                 .build();
                 
         return syncMci(request);
