@@ -95,11 +95,13 @@ public class ScaffoldingController {
             File dir = new File(sourceDir);
             File[] files = dir.listFiles(f -> f.isDirectory() && f.getName().startsWith("dap-tool-") && !f.getName().equals("dap-tool-core"));
             
-            if (files == null) return List.of("dap-tool-other");
+            if (files == null || files.length == 0) {
+                return List.of("dap-tool-other", "dap-tool-email", "dap-tool-hr", "dap-tool-payment", "dap-tool-sms");
+            }
             
             return Arrays.stream(files).map(File::getName).sorted().collect(Collectors.toList());
         } catch (Exception e) {
-            return List.of("dap-tool-other");
+            return List.of("dap-tool-other", "dap-tool-email", "dap-tool-hr", "dap-tool-payment", "dap-tool-sms");
         }
     }
 }

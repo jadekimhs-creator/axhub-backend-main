@@ -486,7 +486,11 @@
                             <div class="col-md-6">
                                 <label class="form-label">Target Module</label>
                                 <select class="form-select" name="moduleName" id="targetModuleSelect" required>
-                                    <option value="axhub-tool-other">axhub-tool-other</option>
+                                    <option value="dap-tool-other">dap-tool-other</option>
+                                    <option value="dap-tool-email">dap-tool-email</option>
+                                    <option value="dap-tool-hr">dap-tool-hr</option>
+                                    <option value="dap-tool-payment">dap-tool-payment</option>
+                                    <option value="dap-tool-sms">dap-tool-sms</option>
                                 </select>
                                 <div class="input-hint">Destination Pod directory.</div>
                             </div>
@@ -654,7 +658,7 @@
             .then(modules => {
                 const select = document.getElementById('targetModuleSelect');
                 if (modules && modules.length > 0) {
-                    select.innerHTML = modules.map(m => `<option value="${m}" ${m === 'axhub-tool-other' ? 'selected' : ''}>${m}</option>`).join('');
+                    select.innerHTML = modules.map(m => `<option value="${m}" ${m === 'dap-tool-other' ? 'selected' : ''}>${m}</option>`).join('');
                 }
             })
             .catch(err => console.error('Failed to load modules:', err));
