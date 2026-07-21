@@ -64,14 +64,19 @@ public class WeatherToolService extends AbstractMcpToolService {
         }
 
         try {
+            String newRequestId = java.util.UUID.randomUUID().toString();
             String url = String.format("https://api.open-meteo.com/v1/forecast?latitude=%f&longitude=%f&current_weather=true", lat, lon);
             
+            log.info("[WeatherTool] OUTBOUND HTTP IN - request-id: {}", newRequestId);
             log.info("[WeatherTool] 날씨 조회 요청 URL: {}", url);
             
             String responseStr = restClient.get()
                     .uri(url)
+                    .header("request-id", newRequestId)
                     .retrieve()
                     .body(String.class);
+
+            log.info("[WeatherTool] OUTBOUND HTTP OUT - request-id: {}", newRequestId);
 
             ObjectMapper mapper = new ObjectMapper();
             JsonNode response = mapper.readTree(responseStr);
