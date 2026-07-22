@@ -315,8 +315,7 @@ public class ToolScaffolder {
         
         Files.writeString(serviceDir.resolve(baseName + "Service.java"), serviceContent);
 
-        if (!isMci) {
-            String legacyReqContent = """
+        String legacyReqContent = """
                 package %s.legacy;
 
                 import lombok.Data;
@@ -410,7 +409,6 @@ public class ToolScaffolder {
                     baseName, baseName, baseName, baseName, baseName, baseName
                 );
             Files.writeString(converterDir.resolve(baseName + "LegacyConverter.java"), converterContent);
-        }
 
         log.append("\n=========================================\n");
         log.append(" Scaffolding Complete! (Routing: " + routingType + ")\n");
@@ -418,12 +416,9 @@ public class ToolScaffolder {
         log.append("[Service] ").append(serviceDir.resolve(baseName + "Service.java")).append("\n");
         log.append("[Req DTO] ").append(dtoDir.resolve(baseName + "Req.java")).append("\n");
         log.append("[Res DTO] ").append(dtoDir.resolve(baseName + "Res.java")).append("\n");
-        
-        if (!isMci) {
-            log.append("[Legacy Req DTO] ").append(legacyDtoDir.resolve(baseName + "LegacyReq.java")).append("\n");
-            log.append("[Legacy Res DTO] ").append(legacyDtoDir.resolve(baseName + "LegacyRes.java")).append("\n");
-            log.append("[Legacy Converter] ").append(converterDir.resolve(baseName + "LegacyConverter.java")).append("\n");
-        }
+        log.append("[Legacy Req DTO] ").append(legacyDtoDir.resolve(baseName + "LegacyReq.java")).append("\n");
+        log.append("[Legacy Res DTO] ").append(legacyDtoDir.resolve(baseName + "LegacyRes.java")).append("\n");
+        log.append("[Legacy Converter] ").append(converterDir.resolve(baseName + "LegacyConverter.java")).append("\n");
         log.append("\n Tip: ").append(interfaceId).append(" 목업 데이터를 mock-responses.json에 추가하세요.\n");
         
         return log.toString();
