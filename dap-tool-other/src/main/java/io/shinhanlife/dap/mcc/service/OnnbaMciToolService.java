@@ -39,7 +39,7 @@ public class OnnbaMciToolService {
      * @McpFunction 어노테이션 하나로 AI 도구로 자동 노출 및 라우팅됩니다.
      */
     @McpFunction(
-            register = true, 
+            register = false,
             name = "calculate_subscription_limit",
             displayName = "보종By가입설계한도계산조회",
             description = "MCI 연동을 통해 보종By가입설계한도계산조회를 수행합니다.",
