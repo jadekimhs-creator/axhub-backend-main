@@ -88,9 +88,8 @@ public class ToolScaffolder {
         Path serviceDir = rootDir.resolve(Paths.get(moduleName, BASE_PACKAGE_PATH, "service"));
         Path dtoDir = rootDir.resolve(Paths.get(moduleName, BASE_PACKAGE_PATH, "dto"));
 
-        String shortName = moduleName.replace("dap-tool-", "").replace("-", "");
-        Path legacyDtoDir = rootDir.resolve(Paths.get(moduleName, BASE_PACKAGE_PATH, shortName, "dto"));
-        Path converterDir = rootDir.resolve(Paths.get(moduleName, BASE_PACKAGE_PATH, shortName, "converter"));
+        Path legacyDtoDir = rootDir.resolve(Paths.get(moduleName, BASE_PACKAGE_PATH, "legacy"));
+        Path converterDir = rootDir.resolve(Paths.get(moduleName, BASE_PACKAGE_PATH, "converter"));
 
         Files.createDirectories(serviceDir);
         Files.createDirectories(dtoDir);
@@ -253,7 +252,7 @@ public class ToolScaffolder {
                 import %s.annotation.McpTool;
                 import %s.dto.%sReq;
                 import %s.dto.%sRes;
-                import %s.%s.converter.%sLegacyConverter;
+                import %s.converter.%sLegacyConverter;
                 import org.springframework.stereotype.Service;
                 import org.mapstruct.factory.Mappers;
 
@@ -300,7 +299,7 @@ public class ToolScaffolder {
                     BASE_PACKAGE,
                     BASE_PACKAGE, baseName,
                     BASE_PACKAGE, baseName,
-                    BASE_PACKAGE, shortName, baseName,
+                    BASE_PACKAGE, baseName,
                     BASE_PACKAGE, baseName,
                     author,
                     createDate,
@@ -318,12 +317,12 @@ public class ToolScaffolder {
 
         if (!isMci) {
             String legacyReqContent = """
-                package %s.%s.dto;
+                package %s.legacy;
 
                 import lombok.Data;
 
                 /**
-                 * @package %s.%s.dto
+                 * @package %s.legacy
                  * @className %sLegacyReq
                  * @description AX HUB 시스템 처리 클래스
                  * @author %s
@@ -340,16 +339,16 @@ public class ToolScaffolder {
                 public class %sLegacyReq {
                     // TODO: Add legacy request fields here
                 }
-                """.formatted(BASE_PACKAGE, shortName, BASE_PACKAGE, shortName, baseName, author, createDate, createDate, author, baseName);
+                """.formatted(BASE_PACKAGE, BASE_PACKAGE, baseName, author, createDate, createDate, author, baseName);
             Files.writeString(legacyDtoDir.resolve(baseName + "LegacyReq.java"), legacyReqContent);
 
             String legacyResContent = """
-                package %s.%s.dto;
+                package %s.legacy;
 
                 import lombok.Data;
 
                 /**
-                 * @package %s.%s.dto
+                 * @package %s.legacy
                  * @className %sLegacyRes
                  * @description AX HUB 시스템 처리 클래스
                  * @author %s
@@ -366,22 +365,22 @@ public class ToolScaffolder {
                 public class %sLegacyRes {
                     // TODO: Add legacy response fields here
                 }
-                """.formatted(BASE_PACKAGE, shortName, BASE_PACKAGE, shortName, baseName, author, createDate, createDate, author, baseName);
+                """.formatted(BASE_PACKAGE, BASE_PACKAGE, baseName, author, createDate, createDate, author, baseName);
             Files.writeString(legacyDtoDir.resolve(baseName + "LegacyRes.java"), legacyResContent);
 
             String converterContent = """
-                package %s.%s.converter;
+                package %s.converter;
 
                 import %s.dto.%sReq;
                 import %s.dto.%sRes;
-                import %s.%s.dto.%sLegacyReq;
-                import %s.%s.dto.%sLegacyRes;
+                import %s.legacy.%sLegacyReq;
+                import %s.legacy.%sLegacyRes;
                 import org.mapstruct.Mapper;
                 import org.mapstruct.Mapping;
                 import org.mapstruct.factory.Mappers;
 
                 /**
-                 * @package %s.%s.converter
+                 * @package %s.converter
                  * @className %sLegacyConverter
                  * @description AX HUB 시스템 처리 클래스
                  * @author %s
@@ -402,12 +401,12 @@ public class ToolScaffolder {
                     %sRes toRes(%sLegacyRes legacyRes);
                 }
                 """.formatted(
-                    BASE_PACKAGE, shortName,
+                    BASE_PACKAGE,
                     BASE_PACKAGE, baseName,
                     BASE_PACKAGE, baseName,
-                    BASE_PACKAGE, shortName, baseName,
-                    BASE_PACKAGE, shortName, baseName,
-                    BASE_PACKAGE, shortName, baseName, author, createDate, createDate, author,
+                    BASE_PACKAGE, baseName,
+                    BASE_PACKAGE, baseName,
+                    BASE_PACKAGE, baseName, author, createDate, createDate, author,
                     baseName, baseName, baseName, baseName, baseName, baseName
                 );
             Files.writeString(converterDir.resolve(baseName + "LegacyConverter.java"), converterContent);
