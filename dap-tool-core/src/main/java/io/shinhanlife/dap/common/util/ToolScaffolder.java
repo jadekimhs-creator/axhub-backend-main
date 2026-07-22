@@ -221,10 +221,10 @@ public class ToolScaffolder {
                                     req, 
                                     Object.class
                             );
-                            return resTransfer.getBody() != null ? resTransfer.getBody() : "{\"status\":\"SUCCESS\"}";
+                            return resTransfer.getBody() != null ? resTransfer.getBody() : java.util.Map.of("status", "SUCCESS");
                         } catch (Exception e) {
                             log.error("[MCI Tool] 연동 중 오류 발생: {}", e.getMessage(), e);
-                            return "{\"status\":\"ERROR\", \"message\":\"" + e.getMessage() + "\"}";
+                            return java.util.Map.of("status", "ERROR", "message", e.getMessage() != null ? e.getMessage() : "Unknown error");
                         }
                     }
                 }
