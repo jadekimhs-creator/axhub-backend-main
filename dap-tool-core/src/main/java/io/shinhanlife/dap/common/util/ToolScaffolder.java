@@ -176,6 +176,7 @@ public class ToolScaffolder {
                 import org.springframework.stereotype.Service;
                 import lombok.RequiredArgsConstructor;
                 import lombok.extern.slf4j.Slf4j;
+                import java.util.Map;
 
                 /**
                  * @package %s.service
@@ -221,10 +222,10 @@ public class ToolScaffolder {
                                     req, 
                                     Object.class
                             );
-                            return resTransfer.getBody() != null ? resTransfer.getBody() : java.util.Map.of("status", "SUCCESS");
+                            return resTransfer.getBody() != null ? resTransfer.getBody() : Map.of("status", "SUCCESS");
                         } catch (Exception e) {
                             log.error("[MCI Tool] 연동 중 오류 발생: {}", e.getMessage(), e);
-                            return java.util.Map.of("status", "ERROR", "message", e.getMessage() != null ? e.getMessage() : "Unknown error");
+                            return Map.of("status", "ERROR", "message", e.getMessage() != null ? e.getMessage() : "Unknown error");
                         }
                     }
                 }
