@@ -324,6 +324,7 @@ public class ToolScaffolder {
                     createDate, author,
                     routingType, group.toLowerCase(),
                     baseName,
+                    baseName, baseName,
                     baseName, toolName, description, description + " 해줘.", interfaceId, register,
                     baseName,
                     baseName,
@@ -438,7 +439,7 @@ public class ToolScaffolder {
                     BASE_PACKAGE, baseName,
                     BASE_PACKAGE, baseName,
                     BASE_PACKAGE, baseName, author, createDate, createDate, author,
-                    baseName, baseName, baseName, baseName, baseName, baseName
+                    baseName, baseName, baseName, baseName, baseName, baseName, baseName
                 );
             Files.writeString(converterDir.resolve(baseName + "LegacyConverter.java"), converterContent);
 
