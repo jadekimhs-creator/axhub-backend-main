@@ -12,11 +12,14 @@
     </appender>
 
     <!-- 3. 파일(File) 출력 설정 (서버 운영용) -->
+    <!-- Logback에서 시스템 Hostname을 가져오기 위한 설정 -->
+    <property name="HOSTNAME" value="${HOSTNAME}" />
+
     <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <file>logs/axhub-tool-email.log</file> <!-- 현재 로그가 쌓이는 파일 -->
+        <file>/swlog/dap-tool-email/A01/${HOSTNAME}_A01.log</file> <!-- 현재 로그가 쌓이는 파일 -->
         <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
             <!-- 매일 자정에 날짜를 붙여서 지난 로그를 분리 저장 -->
-            <fileNamePattern>logs/axhub-tool-email-%d{yyyy-MM-dd}.log</fileNamePattern>
+            <fileNamePattern>/swlog/dap-tool-email/A01/${HOSTNAME}_A01_%d{yyyyMMdd}.log</fileNamePattern>
             <!-- 최대 30일치 로그만 보관하고 오래된 것은 자동 삭제 -->
             <maxHistory>30</maxHistory>
         </rollingPolicy>
