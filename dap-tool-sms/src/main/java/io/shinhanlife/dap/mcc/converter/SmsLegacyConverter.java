@@ -16,7 +16,7 @@ package io.shinhanlife.dap.mcc.converter;
  * </pre>
  */
 import io.shinhanlife.dap.mcc.dto.SmsSendReq;
-import io.shinhanlife.dap.mcc.sms.dto.SmsLegacyReqDto;
+import io.shinhanlife.dap.mcc.legacy.SmsLegacyReq;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
@@ -25,5 +25,5 @@ public interface SmsLegacyConverter {
 
     @Mapping(source = "phoneNumber", target = "phone")
     @Mapping(source = "message", target = "content")
-    SmsLegacyReqDto toLegacyReq(SmsSendReq req);
+    SmsLegacyReq toLegacyReq(SmsSendReq req);
 }

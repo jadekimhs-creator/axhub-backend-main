@@ -2,8 +2,9 @@ package io.shinhanlife.dap.mcc.service;
 
 import io.shinhanlife.dap.mcc.annotation.McpFunction;
 import io.shinhanlife.dap.mcc.annotation.McpTool;
+import io.shinhanlife.dap.mcc.converter.SmsLegacyConverter;
 import io.shinhanlife.dap.mcc.dto.SmsSendReq;
-import io.shinhanlife.dap.mcc.sms.dto.SmsLegacyReqDto;
+import io.shinhanlife.dap.mcc.legacy.SmsLegacyReq;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -35,7 +36,7 @@ public class SmsToolService extends AbstractMcpToolService {
         log.info("[SMS] SMS 발송 요청 수신. 수신자: {}", req.getPhoneNumber());
 
         // MapStruct를 이용한 자동 매핑 (AI DTO -> MCI DTO)
-        SmsLegacyReqDto legacyReq = converter.toLegacyReq(req);
+        SmsLegacyReq legacyReq = converter.toLegacyReq(req);
 
         // 레거시 시스템 연동 (EAI) - DTO 객체를 그대로 넘김
         Map<String, Object> result = executeLegacy("EAI", "SMS_SEND_001", legacyReq);
