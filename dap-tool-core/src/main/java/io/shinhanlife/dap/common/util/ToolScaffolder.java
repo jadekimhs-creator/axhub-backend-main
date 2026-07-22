@@ -182,7 +182,6 @@ public class ToolScaffolder {
                 import lombok.RequiredArgsConstructor;
                 import lombok.extern.slf4j.Slf4j;
                 import java.util.Map;
-                import org.mapstruct.factory.Mappers;
                 import %s.converter.%sLegacyConverter;
                 import %s.legacy.%sLegacyReq;
 
@@ -210,7 +209,7 @@ public class ToolScaffolder {
                 public class %sService {
 
                     private final AxhubMciComponent mci;
-                    private final %sLegacyConverter converter = Mappers.getMapper(%sLegacyConverter.class);
+                    private final %sLegacyConverter converter;
 
                     @McpFunction(
                         displayName = "%s 툴",
@@ -255,7 +254,7 @@ public class ToolScaffolder {
                     createDate, author,
                     routingType, group.toLowerCase(),
                     baseName,
-                    baseName, baseName,
+                    baseName,
                     baseName, toolName, description, description + " 해줘.", interfaceId, register,
                     baseName,
                     baseName,
@@ -272,7 +271,6 @@ public class ToolScaffolder {
                 import %s.dto.%sRes;
                 import %s.converter.%sLegacyConverter;
                 import org.springframework.stereotype.Service;
-                import org.mapstruct.factory.Mappers;
 
                 /**
                  * @package %s.service
@@ -293,9 +291,10 @@ public class ToolScaffolder {
                     routingType = "%s",
                     categoryKey = "%s"
                 )
+                @RequiredArgsConstructor
                 public class %sService extends AbstractMcpToolService {
 
-                    private final %sLegacyConverter converter = Mappers.getMapper(%sLegacyConverter.class);
+                    private final %sLegacyConverter converter;
 
                     @McpFunction(
                         displayName = "%s 툴",
@@ -324,7 +323,7 @@ public class ToolScaffolder {
                     createDate, author,
                     routingType, group.toLowerCase(),
                     baseName,
-                    baseName, baseName,
+                    baseName,
                     baseName, toolName, description, description + " 해줘.", interfaceId, register,
                     baseName,
                     baseName,

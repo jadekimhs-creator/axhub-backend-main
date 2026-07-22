@@ -5,7 +5,7 @@
 
 ##  개발 가이드라인
 * 패키지명은 `controller` 대신 `presentation`을 사용합니다.
-* MapStruct 사용 시, 테스트 환경 에러를 방지하기 위해 생성자(`new ...Impl()`) 대신 `Mappers.getMapper(인터페이스명.class)` 방식으로 인스턴스를 가져옵니다.
+* MapStruct 사용 시, Spring DI를 활용하여 의존성 주입(`private final Converter converter;`)을 받는 방식을 권장합니다. (단위 테스트 시에는 `@MockBean` 또는 직접 구현체를 주입하여 테스트)
 
 ##  명심해야 할 규칙 추가란
 * 이모지는 무조건 넣지 않는다
