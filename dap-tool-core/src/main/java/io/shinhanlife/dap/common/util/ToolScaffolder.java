@@ -103,6 +103,7 @@ public class ToolScaffolder {
             package %s.dto;
 
             import com.fasterxml.jackson.annotation.JsonInclude;
+            import %s.annotation.McpParameter;
             import lombok.Data;
 
             /**
@@ -122,9 +123,13 @@ public class ToolScaffolder {
             @Data
             @JsonInclude(JsonInclude.Include.NON_NULL)
             public class %sReq {
-                // TODO: Add request fields here
+                @McpParameter(description = "수신자 전화번호", required = true)
+                private String phoneNumber;
+
+                @McpParameter(description = "전송할 메시지 내용", required = true)
+                private String message;
             }
-            """.formatted(BASE_PACKAGE, BASE_PACKAGE, baseName, author, createDate, createDate, author, baseName);
+            """.formatted(BASE_PACKAGE, BASE_PACKAGE, BASE_PACKAGE, baseName, author, createDate, createDate, author, baseName);
         Files.writeString(dtoDir.resolve(baseName + "Req.java"), reqContent);
 
         // Generate Res DTO
@@ -177,6 +182,9 @@ public class ToolScaffolder {
                 import lombok.RequiredArgsConstructor;
                 import lombok.extern.slf4j.Slf4j;
                 import java.util.Map;
+                import org.mapstruct.factory.Mappers;
+                import %s.converter.%sLegacyConverter;
+                import %s.legacy.%sLegacyReq;
 
                 /**
                  * @package %s.service
@@ -202,6 +210,7 @@ public class ToolScaffolder {
                 public class %sService {
 
                     private final AxhubMciComponent mci;
+                    private final %sLegacyConverter converter = Mappers.getMapper(%sLegacyConverter.class);
 
                     @McpFunction(
                         displayName = "%s 툴",
@@ -216,10 +225,13 @@ public class ToolScaffolder {
                     public Object execute(%sReq req) {
                         log.info("[MCI Tool] {} 요청 수신.", "%s");
                         try {
+                            // MapStruct를 이용한 자동 매핑 (AI DTO -> MCI DTO)
+                            %sLegacyReq legacyReq = converter.toLegacyReq(req);
+
                             Transfer<Object> resTransfer = mci.callTo(
                                     "%s", 
                                     null, 
-                                    req, 
+                                    legacyReq, 
                                     Object.class
                             );
                             return resTransfer.getBody() != null ? resTransfer.getBody() : Map.of("status", "SUCCESS");
@@ -236,14 +248,19 @@ public class ToolScaffolder {
                     BASE_PACKAGE, baseName,
                     BASE_PACKAGE, baseName,
                     BASE_PACKAGE, baseName,
+                    BASE_PACKAGE, baseName,
+                    BASE_PACKAGE, baseName,
                     author,
                     createDate,
                     createDate, author,
                     routingType, group.toLowerCase(),
                     baseName,
+                    baseName, baseName,
                     baseName, toolName, description, description + " 해줘.", interfaceId, register,
                     baseName,
-                    baseName, interfaceId
+                    baseName,
+                    baseName,
+                    interfaceId
                 );
         } else {
             serviceContent = """
@@ -337,7 +354,15 @@ public class ToolScaffolder {
                  */
                 @Data
                 public class %sLegacyReq {
-                    // TODO: Add legacy request fields here
+                    /**
+                     * EAI 시스템이 요구하는 수신자 번호 파라미터명
+                     */
+                    private String phone;
+
+                    /**
+                     * EAI 시스템이 요구하는 메시지 내용 파라미터명
+                     */
+                    private String content;
                 }
                 """.formatted(BASE_PACKAGE, BASE_PACKAGE, baseName, author, createDate, createDate, author, baseName);
             Files.writeString(legacyDtoDir.resolve(baseName + "LegacyReq.java"), legacyReqContent);
@@ -396,9 +421,15 @@ public class ToolScaffolder {
                 @Mapper(componentModel = "spring")
                 public interface %sLegacyConverter {
 
+                    @Mapping(source = "phoneNumber", target = "phone")
+                    @Mapping(source = "message", target = "content")
                     %sLegacyReq toLegacyReq(%sReq req);
                     
-                    %sRes toRes(%sLegacyRes legacyRes);
+                    @Mapping(source = "phone", target = "phoneNumber")
+                    @Mapping(source = "content", target = "message")
+                    %sReq toReq(%sLegacyReq legacyReq);
+
+                    // %sRes toRes(%sLegacyRes legacyRes);
                 }
                 """.formatted(
                     BASE_PACKAGE,
