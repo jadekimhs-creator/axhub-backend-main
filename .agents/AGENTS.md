@@ -30,3 +30,9 @@
   * 현재 개발 대상은 **대내MCI / EAI (JSON)** 연동으로 한정한다. (대외MCI FixedLength 연동은 범위에서 제외)
   * 통신 노선, 데이터 변환 규격, 시스템별 연계 방식 등은 MCI/EIMS 상에서 관리되므로 코드 레벨에서 식별하거나 분기 처리하지 않는다. (단순 통합 JSON 요청만 수행)
   * 처리계 UI ↔ 처리계 AP 구간: `HTTPS` / `SSV`를 사용하며, FW에서 x-api를 통해 SSV↔DTO 변환을 수행한다.
+
+* 신한라이프 표준 로그 기준 (Logback 설정):
+  * **로그 생성 경로:** `/swlog/어플리케이션명(모듈명)/코드명/` (예: `/swlog/dap-gateway/A01/`)
+  * **로그 네이밍 규칙:** `${HOSTNAME}_코드명_yyyyMMdd.log` (예: `${HOSTNAME}_A01_20260722.log`)
+  * **기본 로그 구분 코드:** 시스템 운영기록 가동기록의 경우 `A01`을 기본으로 사용한다.
+  * **호스트명 동적 할당:** Logback 설정 시 `<property name="HOSTNAME" value="${HOSTNAME}" />` 를 선언하여 사용한다.
