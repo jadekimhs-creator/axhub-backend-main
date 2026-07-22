@@ -1,8 +1,7 @@
-package io.shinhanlife.dap.mcc.other.service;
+package io.shinhanlife.dap.mcc.service;
 
 import io.shinhanlife.dap.mcc.annotation.McpFunction;
 import io.shinhanlife.dap.mcc.annotation.McpTool;
-import io.shinhanlife.dap.mcc.service.AbstractMcpToolService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;

@@ -1,9 +1,8 @@
-package io.shinhanlife.dap.mcc.email.service;
+package io.shinhanlife.dap.mcc.service;
 
 import io.shinhanlife.dap.mcc.annotation.McpFunction;
 import io.shinhanlife.dap.mcc.annotation.McpTool;
 import io.shinhanlife.dap.mcc.dto.EmailSendReq;
-import io.shinhanlife.dap.mcc.service.AbstractMcpToolService;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.HashMap;

@@ -1,4 +1,4 @@
-package io.shinhanlife.dap.mcc.other.service;
+package io.shinhanlife.dap.mcc.service;
 
 import io.shinhanlife.dap.common.adapter.sender.ShinhanMciSender;
 import io.shinhanlife.dap.common.integration.mci.dto.MciRequestWrapper;

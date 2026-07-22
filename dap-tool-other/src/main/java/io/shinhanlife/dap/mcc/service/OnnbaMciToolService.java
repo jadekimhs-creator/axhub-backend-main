@@ -1,4 +1,4 @@
-package io.shinhanlife.dap.mcc.other.service;
+package io.shinhanlife.dap.mcc.service;
 
 import io.shinhanlife.dap.common.integration.mci.component.AxhubMciComponent;
 import io.shinhanlife.dap.mcc.annotation.McpFunction;

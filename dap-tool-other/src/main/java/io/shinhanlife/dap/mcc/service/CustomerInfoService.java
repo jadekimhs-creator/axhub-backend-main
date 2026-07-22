@@ -1,10 +1,9 @@
-package io.shinhanlife.dap.mcc.other.service;
+package io.shinhanlife.dap.mcc.service;
 
 import io.shinhanlife.dap.mcc.annotation.McpFunction;
 import io.shinhanlife.dap.mcc.annotation.McpTool;
 import io.shinhanlife.dap.mcc.dto.CustomerDetailReq;
 import io.shinhanlife.dap.mcc.dto.CustomerGradeReq;
-import io.shinhanlife.dap.mcc.service.AbstractMcpToolService;
 
 @McpTool(
     routingType = "TCP",

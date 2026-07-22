@@ -1,9 +1,9 @@
-package io.shinhanlife.dap.mcc.sms.dto;
+package io.shinhanlife.dap.mcc.legacy;
 
 
 /**
  * @package io.shinhanlife.dap.mcc.sms.dto
- * @className SmsLegacyReqDto
+ * @className SmsLegacyReq
  * @description AX HUB 시스템 처리 클래스
  * @author 김형식
  * @create 2026.09.01
@@ -20,7 +20,7 @@ import lombok.Getter;
 
 @Getter
 @Builder
-public class SmsLegacyReqDto {
+public class SmsLegacyReq {
     /**
      * EAI 시스템이 요구하는 수신자 번호 파라미터명
      */

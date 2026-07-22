@@ -1,4 +1,4 @@
-package io.shinhanlife.dap.mcc.sms.converter;
+package io.shinhanlife.dap.mcc.converter;
 
 
 /**
@@ -19,7 +19,6 @@ import io.shinhanlife.dap.mcc.dto.SmsSendReq;
 import io.shinhanlife.dap.mcc.sms.dto.SmsLegacyReqDto;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
-import org.mapstruct.factory.Mappers;
 
 @Mapper(componentModel = "spring")
 public interface SmsLegacyConverter {

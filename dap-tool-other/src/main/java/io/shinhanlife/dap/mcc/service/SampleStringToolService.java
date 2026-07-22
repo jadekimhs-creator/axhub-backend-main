@@ -1,10 +1,9 @@
-package io.shinhanlife.dap.mcc.other.service;
+package io.shinhanlife.dap.mcc.service;
 
 import io.shinhanlife.dap.mcc.annotation.McpFunction;
 import io.shinhanlife.dap.mcc.annotation.McpTool;
 import io.shinhanlife.dap.mcc.dto.MciSampleStringRes;
 import io.shinhanlife.dap.mcc.dto.SampleStringReq;
-import io.shinhanlife.dap.mcc.service.AbstractMcpToolService;
 import io.shinhanlife.glow.util.GlowMciParser;
 import org.springframework.stereotype.Service;
 

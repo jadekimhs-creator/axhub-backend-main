@@ -1,10 +1,8 @@
-package io.shinhanlife.dap.mcc.sms.service;
+package io.shinhanlife.dap.mcc.service;
 
 import io.shinhanlife.dap.mcc.annotation.McpFunction;
 import io.shinhanlife.dap.mcc.annotation.McpTool;
 import io.shinhanlife.dap.mcc.dto.SmsSendReq;
-import io.shinhanlife.dap.mcc.service.AbstractMcpToolService;
-import io.shinhanlife.dap.mcc.sms.converter.SmsLegacyConverter;
 import io.shinhanlife.dap.mcc.sms.dto.SmsLegacyReqDto;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
