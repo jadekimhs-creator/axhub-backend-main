@@ -1,0 +1,9 @@
+rootProject.name = 'dap-admin'
+
+include 'dat-gateway'
+include 'dat-was-lib'
+include 'dat-was-cus'
+include 'dat-was-sal'
+include 'dat-was-pro'
+include 'dat-was-sys'
+include 'dap-tool-report'

@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tool Playground</title>
+    <script src="./lib/tailwindcss.js"></script>
+    <style>
+        :root {
+            --font-sans: 'Geist Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            --font-mono: 'Geist Mono', SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+        }
+        * { font-family: var(--font-sans); }
+        body { background-color: #09090b; color: #f4f4f5; }
+        .geist-mono { font-family: var(--font-mono); }
+
+        .input-field {
+            width: 100%;
+            padding: 10px 14px;
+            font-size: 14px;
+            background-color: #18181b;
+            border: 1px solid #3f3f46;
+            border-radius: 8px;
+            color: #f4f4f5;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        .input-field:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.25);
+        }
+        .input-field::placeholder { color: #71717a; }
+
+        select.input-field {
+            appearance: none;
+            cursor: pointer;
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%2371717a' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+            background-position: right 12px center;
+            background-repeat: no-repeat;
+            background-size: 1.25em 1.25em;
+            padding-right: 2.5rem;
+        }
+        select.input-field option { background: #18181b; color: #f4f4f5; }
+        select.input-field optgroup { background: #27272a; color: #a1a1aa; font-weight: 600; }
+
+        .btn-execute {
+            background: linear-gradient(135deg, #3b82f6, #6366f1);
+            color: #ffffff;
+            font-weight: 600;
+            padding: 10px 24px;
+            border-radius: 8px;
+            font-size: 14px;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s;
+            box-shadow: 0 0 20px rgba(59, 130, 246, 0.3);
+        }
+        .btn-execute:hover { box-shadow: 0 0 30px rgba(99, 102, 241, 0.5); transform: translateY(-1px); }
+        .btn-execute:disabled { background: #27272a; color: #52525b; box-shadow: none; transform: none; cursor: not-allowed; }
+
+        .card { background: #18181b; border: 1px solid #3f3f46; border-radius: 12px; }
+
+        .json-pre {
+            background: #09090b;
+            border: 1px solid #27272a;
+            border-radius: 8px;
+            padding: 16px;
+            overflow-x: auto;
+            font-size: 13px;
+            line-height: 1.6;
+            color: #d4d4d8;
+        }
+        .json-key { color: #93c5fd; }
+        .json-string { color: #86efac; }
+        .json-number { color: #fbbf24; }
+        .json-boolean { color: #f472b6; }
+        .json-null { color: #71717a; }
+
+        #loadingOverlay {
+            display: none;
+            position: absolute;
+            inset: 0;
+            background: rgba(9,9,11,0.85);
+            backdrop-filter: blur(4px);
+            border-radius: 12px;
+            z-index: 10;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+        }
+        #loadingOverlay.active { display: flex; }
+
+        .spinner {
+            width: 24px; height: 24px;
+            border: 2px solid #3f3f46;
+            border-top-color: #3b82f6;
+            border-radius: 50%;
+            animation: spin 0.6s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+    </style>
+</head>
+<body class="min-h-screen" style="overflow-y: scroll;">
+
+    <header style="border-bottom: 1px solid #27272a; background: rgba(9,9,11,0.85); backdrop-filter: blur(16px);" class="sticky top-0 z-50">
+        <div class="max-w-6xl mx-auto px-6 h-14 flex items-center justify-between">
+            <div class="flex items-center space-x-5">
+                <a href="/index.html" class="flex items-center group">
+                    <div class="w-2 h-2 rounded-full mr-2" style="background:#3b82f6; box-shadow: 0 0 8px rgba(59,130,246,0.8);"></div>
+                    <span class="font-semibold tracking-tight text-sm" style="color:#f4f4f5;">AXHUB Gateway</span>
+                </a>
+                <div class="h-4 w-px" style="background:#27272a;"></div>
+                <nav class="flex space-x-5 text-[13px] font-medium">
+                    <a href="/admin/scaffold.html" style="color:#a1a1aa;" class="hover:text-white transition-colors">Scaffold</a>
+                    <a href="/catalog.html" style="color:#a1a1aa;" class="hover:text-white transition-colors">Catalog</a>
+                    <a href="/playground.html" style="color:#ffffff;" class="font-semibold">Playground</a>
+                    <a href="/chat.html" style="color:#a1a1aa;" class="hover:text-white transition-colors">Chat</a>
+                    <a href="/tester.html" style="color:#a1a1aa;" class="hover:text-white transition-colors">Tester</a>
+                    <a href="/tool-test-console.html" style="color:#a1a1aa;" class="hover:text-white transition-colors">Console</a>
+                    <a href="/tool-report.html" style="color:#a1a1aa;" class="hover:text-white transition-colors">Report</a>
+                </nav>
+            </div>
+            <div class="flex items-center space-x-3">
+                <label class="text-xs" style="color:#71717a;">Agent ID:</label>
+                <input type="text" id="agentId" value="TESTER-DEV" class="input-field" style="width:140px; padding:6px 10px; font-size:12px;">
+                <span class="text-[10px] uppercase tracking-widest px-2 py-1 rounded font-bold" style="background:rgba(59,130,246,0.1); color:#60a5fa; border:1px solid rgba(59,130,246,0.2);">v0.0.1</span>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-4xl mx-auto px-6 py-10">
+        <div class="mb-8">
+            <h1 class="text-2xl font-bold tracking-tight mb-2" style="color:#f4f4f5;">Test & Execute</h1>
+            <p class="text-sm" style="color:#a1a1aa;">Simulate tool executions and view raw RPC responses. Select a tool to auto-generate the input schema.</p>
+        </div>
+
+        <div class="card p-6 relative mb-8">
+            <div id="loadingOverlay">
+                <div class="spinner mb-3"></div>
+                <div class="text-sm font-medium" style="color:#a1a1aa;">Executing RPC Call...</div>
+            </div>
+
+            <form id="mcpForm" class="space-y-6">
+                <div>
+                    <label for="toolName" class="block text-sm font-semibold mb-2 flex items-center" style="color:#e4e4e7;">
+                        Select Tool
+                        <span id="integrationBadge" class="ml-3 px-2 py-0.5 rounded text-[10px] font-medium tracking-wide geist-mono hidden" style="background:#27272a; color:#a1a1aa; border:1px solid #3f3f46;"></span>
+                    </label>
+                    <select id="toolName" name="toolName" class="input-field">
+                        <option value="">Loading tools...</option>
+                    </select>
+                </div>
+
+                <div id="dynamicFormContainer" class="hidden">
+                    <h3 class="text-sm font-semibold mb-3 pb-2" style="color:#e4e4e7; border-bottom: 1px solid #27272a;">Parameters</h3>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4" id="dynamicFields"></div>
+                </div>
+
+                <div id="manualInputContainer" class="hidden p-4 rounded-lg space-y-4" style="background:#0a0a0c; border:1px solid #27272a;">
+                    <h3 class="text-sm font-semibold" style="color:#e4e4e7;">Manual Override (Hidden Tool)</h3>
+                    <div>
+                        <label class="block text-xs font-medium mb-1" style="color:#a1a1aa;">Tool Name</label>
+                        <input type="text" id="manualToolName" class="input-field" value="get_template_file_url">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium mb-1" style="color:#a1a1aa;">JSON Parameters</label>
+                        <textarea id="manualToolArgs" rows="3" class="input-field geist-mono">{"templateId": "test_excel"}</textarea>
+                    </div>
+                </div>
+
+                <div>
+                    <label for="userPrompt" class="block text-sm font-semibold mb-2" style="color:#e4e4e7;">Mock User Prompt</label>
+                    <textarea id="userPrompt" name="userPrompt" rows="2" class="input-field" style="resize:none;" placeholder="Provide context for the execution log..."></textarea>
+                </div>
+
+                <div class="flex items-center justify-between pt-4" style="border-top:1px solid #27272a;">
+                    <div class="flex items-center text-xs geist-mono">
+                        <span class="font-bold px-2 py-1 rounded mr-2" style="background:#27272a; color:#a1a1aa; border:1px solid #3f3f46;">POST</span>
+                        <span style="color:#71717a;">/mcp/api/v1/tools/call</span>
+                    </div>
+                    <button type="submit" class="btn-execute">Execute Tool</button>
+                </div>
+            </form>
+        </div>
+
+        <div id="resultContainer" class="hidden">
+            <h2 class="text-sm font-semibold tracking-tight mb-2 flex items-center justify-between" style="color:#e4e4e7;">
+                Execution Result
+                <span id="statusBadge" class="px-2 py-0.5 rounded text-[10px] font-medium tracking-wide geist-mono hidden"></span>
+            </h2>
+            <pre id="jsonResponse" class="json-pre geist-mono"></pre>
+        </div>
+    </main>
+
+    <script>
+        let actionPrompts = {};
+        let currentSchema = null;
+
+        const toolSelect = document.getElementById('toolName');
+        const dynamicFormContainer = document.getElementById('dynamicFormContainer');
+        const dynamicFields = document.getElementById('dynamicFields');
+
+        async function fetchTools() {
+            try {
+                const response = await fetch('/mcp/api/v1/tools/list');
+                const data = await response.json();
+                toolSelect.innerHTML = '<option value="" disabled selected>Select a tool to test...</option>';
+                actionPrompts = {};
+                const tools = data.result?.tools || [];
+                const groupedTools = {};
+                tools.forEach(tool => {
+                    const group = tool._meta?.category_key || 'Others';
+                    if (!groupedTools[group]) groupedTools[group] = [];
+                    groupedTools[group].push(tool);
+                });
+                Object.keys(groupedTools).sort().forEach(group => {
+                    const optgroup = document.createElement('optgroup');
+                    optgroup.label = group;
+                    groupedTools[group].forEach(tool => {
+                        const option = document.createElement('option');
+                        option.value = tool.name;
+                        option.textContent = tool.name;
+                        option.dataset.schema = JSON.stringify(tool.parametersSchema);
+                        option.dataset.prompts = JSON.stringify(tool.actionPrompts || {});
+                        option.dataset.integrationType = tool._meta?.integrationType || 'HTTP';
+                        optgroup.appendChild(option);
+                        if (tool.actionPrompts) Object.assign(actionPrompts, tool.actionPrompts);
+                    });
+                    toolSelect.appendChild(optgroup);
+                });
+                const optgroupManual = document.createElement('optgroup');
+                optgroupManual.label = 'Advanced';
+                const optionManual = document.createElement('option');
+                optionManual.value = 'MANUAL_INPUT';
+                optionManual.textContent = 'Custom/Hidden Tool';
+                optionManual.dataset.schema = "null";
+                optgroupManual.appendChild(optionManual);
+                toolSelect.appendChild(optgroupManual);
+            } catch (err) {
+                toolSelect.innerHTML = '<option value="">Failed to load tools</option>';
+            }
+        }
+
+        function renderDynamicForm() {
+            dynamicFields.innerHTML = '';
+            const selectedOption = toolSelect.options[toolSelect.selectedIndex];
+            if (!selectedOption || !selectedOption.dataset.schema) { dynamicFormContainer.classList.add('hidden'); return; }
+            const schemaStr = selectedOption.dataset.schema;
+            if (schemaStr === "null") { dynamicFormContainer.classList.add('hidden'); currentSchema = null; return; }
+            try {
+                const schema = JSON.parse(schemaStr);
+                currentSchema = schema;
+                if (!schema.properties || Object.keys(schema.properties).length === 0) { dynamicFormContainer.classList.add('hidden'); return; }
+                dynamicFormContainer.classList.remove('hidden');
+                for (const [key, value] of Object.entries(schema.properties)) {
+                    const fieldDiv = document.createElement('div');
+                    const label = document.createElement('label');
+                    label.className = 'block text-xs font-medium mb-1.5';
+                    label.style.color = '#a1a1aa';
+                    label.textContent = `${key} ${value.description ? '— ' + value.description : ''}`;
+                    fieldDiv.appendChild(label);
+                    let input;
+                    if (value.type === 'boolean') {
+                        input = document.createElement('input');
+                        input.type = 'checkbox';
+                        input.id = 'param_' + key;
+                    } else {
+                        input = document.createElement('input');
+                        input.type = value.type === 'number' || value.type === 'integer' ? 'number' : 'text';
+                        input.id = 'param_' + key;
+                        input.className = 'input-field';
+                        input.placeholder = `Enter ${key}`;
+                    }
+                    fieldDiv.appendChild(input);
+                    dynamicFields.appendChild(fieldDiv);
+                }
+            } catch(e) { dynamicFormContainer.classList.add('hidden'); }
+        }
+
+        function updatePrompt() {
+            const toolName = toolSelect.value;
+            const defaultPrompt = actionPrompts[toolName];
+            document.getElementById('userPrompt').value = defaultPrompt ? defaultPrompt : "Test execution";
+        }
+
+        toolSelect.addEventListener('change', () => {
+            const integrationBadge = document.getElementById('integrationBadge');
+            if (toolSelect.value === 'MANUAL_INPUT') {
+                document.getElementById('manualInputContainer').classList.remove('hidden');
+                dynamicFormContainer.classList.add('hidden');
+                document.getElementById('userPrompt').value = "Manual force execution";
+                integrationBadge.classList.add('hidden');
+            } else {
+                document.getElementById('manualInputContainer').classList.add('hidden');
+                
+                // Show Integration Type Badge
+                const selectedOption = toolSelect.options[toolSelect.selectedIndex];
+                if (selectedOption && selectedOption.dataset.integrationType) {
+                    let itype = selectedOption.dataset.integrationType;
+                    integrationBadge.textContent = 'TYPE: ' + itype;
+                    integrationBadge.classList.remove('hidden');
+                    
+                    // Add distinct colors for MCI/EAI
+                    if (itype === 'MCI') {
+                        integrationBadge.style.color = '#60a5fa'; // Blue
+                        integrationBadge.style.borderColor = 'rgba(59,130,246,0.3)';
+                    } else if (itype === 'EAI') {
+                        integrationBadge.style.color = '#34d399'; // Green
+                        integrationBadge.style.borderColor = 'rgba(52,211,153,0.3)';
+                    } else {
+                        integrationBadge.style.color = '#a1a1aa'; // Default Gray
+                        integrationBadge.style.borderColor = '#3f3f46';
+                    }
+                } else {
+                    integrationBadge.classList.add('hidden');
+                }
+
+                updatePrompt();
+                renderDynamicForm();
+            }
+        });
+
+        document.addEventListener('DOMContentLoaded', fetchTools);
+
+        function collectArguments() {
+            if (!currentSchema || !currentSchema.properties) return {};
+            const args = {};
+            for (const [key, value] of Object.entries(currentSchema.properties)) {
+                const input = document.getElementById('param_' + key);
+                if (input) {
+                    if (value.type === 'boolean') args[key] = input.checked;
+                    else if (value.type === 'number' || value.type === 'integer') args[key] = input.value ? Number(input.value) : 0;
+                    else args[key] = input.value;
+                }
+            }
+            return args;
+        }
+
+        document.getElementById('mcpForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            if(!toolSelect.value) return;
+            let finalToolName = toolSelect.value;
+            let finalArguments = {};
+            if (finalToolName === 'MANUAL_INPUT') {
+                finalToolName = document.getElementById('manualToolName').value.trim();
+                if (!finalToolName) return alert("Enter tool name");
+                try { finalArguments = JSON.parse(document.getElementById('manualToolArgs').value.trim() || '{}'); }
+                catch(err) { return alert("Invalid JSON format"); }
+            } else { finalArguments = collectArguments(); }
+
+            const loadingOverlay = document.getElementById('loadingOverlay');
+            const resultContainer = document.getElementById('resultContainer');
+            const jsonResponse = document.getElementById('jsonResponse');
+            const statusBadge = document.getElementById('statusBadge');
+            const btn = this.querySelector('button[type="submit"]');
+            resultContainer.classList.add('hidden');
+            loadingOverlay.classList.add('active');
+            btn.disabled = true;
+
+            const payload = { jsonrpc: "2.0", method: "tools/call", params: { name: finalToolName, arguments: finalArguments }, id: Date.now() };
+            try {
+                const startTime = Date.now();
+                const response = await fetch('/mcp/api/v1/tools/call', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Trace-Id': "MCP-REQ-" + Math.floor(Math.random() * 90000 + 10000),
+                        'X-Agent-Id': document.getElementById('agentId').value,
+                        'X-User-Prompt': encodeURIComponent(document.getElementById('userPrompt').value || '')
+                    },
+                    body: JSON.stringify(payload)
+                });
+                const data = await response.json();
+                const latency = Date.now() - startTime;
+                let formattedJson = JSON.stringify(data, null, 2)
+                    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+                    .replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g, function (match) {
+                        let cls = '';
+                        if (/^"/.test(match)) { cls = /:$/.test(match) ? 'json-key' : 'json-string'; }
+                        else if (/true|false/.test(match)) { cls = 'json-boolean'; }
+                        else if (/null/.test(match)) { cls = 'json-null'; }
+                        else { cls = 'json-number'; }
+                        return '<span class="' + cls + '">' + match + '</span>';
+                    });
+                jsonResponse.innerHTML = formattedJson;
+                statusBadge.classList.remove('hidden');
+                if(response.ok) {
+                    statusBadge.innerHTML = `200 OK &middot; ${latency}ms`;
+                    statusBadge.style.cssText = 'background:rgba(34,197,94,0.15); color:#4ade80; border:1px solid rgba(34,197,94,0.3); padding:2px 8px; border-radius:4px; font-size:10px;';
+                } else {
+                    statusBadge.innerHTML = `${response.status} ERR &middot; ${latency}ms`;
+                    statusBadge.style.cssText = 'background:rgba(239,68,68,0.15); color:#f87171; border:1px solid rgba(239,68,68,0.3); padding:2px 8px; border-radius:4px; font-size:10px;';
+                }
+            } catch (error) {
+                jsonResponse.textContent = "Error: " + error.message;
+                statusBadge.innerHTML = `FAILED`;
+                statusBadge.style.cssText = 'background:rgba(239,68,68,0.15); color:#f87171; border:1px solid rgba(239,68,68,0.3); padding:2px 8px; border-radius:4px; font-size:10px;';
+                statusBadge.classList.remove('hidden');
+            } finally {
+                loadingOverlay.classList.remove('active');
+                resultContainer.classList.remove('hidden');
+                btn.disabled = false;
+            }
+        });
+    </script>
+</body>
+</html>

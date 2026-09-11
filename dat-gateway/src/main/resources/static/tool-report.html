@@ -1,0 +1,219 @@
+﻿<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>AXHUB Tool Report</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      font-family: "Geist", "Pretendard", "Noto Sans KR", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #09090b;
+      color: #f4f4f5;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; min-height: 100vh; background: #09090b; color: #f4f4f5; overflow-y: scroll; }
+    a { color: inherit; text-decoration: none; }
+    header { position: sticky; top: 0; z-index: 50; border-bottom: 1px solid #27272a; background: rgba(9,9,11,.86); backdrop-filter: blur(16px); }
+    .nav-shell { max-width: 1152px; height: 56px; margin: 0 auto; padding: 0 24px; display: flex; align-items: center; justify-content: space-between; }
+    .nav-left, nav { display: flex; align-items: center; }
+    .brand { display: flex; align-items: center; font-size: 14px; font-weight: 600; letter-spacing: -.01em; }
+    .brand-dot { width: 8px; height: 8px; margin-right: 8px; border-radius: 999px; background: #3b82f6; box-shadow: 0 0 8px rgba(59,130,246,.8); }
+    .divider { width: 1px; height: 16px; margin: 0 20px; background: #27272a; }
+    nav { gap: 20px; font-size: 13px; font-weight: 500; color: #a1a1aa; }
+    nav a { transition: color .15s ease; white-space: nowrap; }
+    nav a:hover { color: #fff; }
+    nav .active { color: #fff; font-weight: 600; }
+    .version { padding: 4px 8px; border: 1px solid rgba(59,130,246,.2); border-radius: 5px; background: rgba(59,130,246,.1); color: #60a5fa; font-size: 10px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; }
+    main { max-width: 1152px; margin: 0 auto; padding: 40px 24px 72px; }
+    .page-heading { display: flex; align-items: flex-end; justify-content: space-between; gap: 24px; margin-bottom: 28px; }
+    h1 { margin: 0 0 10px; font-size: 30px; line-height: 1.2; letter-spacing: -.035em; }
+    .subtitle { margin: 0; color: #a1a1aa; font-size: 14px; line-height: 1.65; }
+    .count-badge { padding: 7px 11px; border: 1px solid #27272a; border-radius: 8px; background: #18181b; color: #a1a1aa; font-family: "Geist Mono", Consolas, monospace; font-size: 12px; white-space: nowrap; }
+    .panel { overflow: hidden; border: 1px solid #27272a; border-radius: 12px; background: #111113; box-shadow: 0 18px 50px rgba(0,0,0,.22); }
+    .toolbar { display: grid; grid-template-columns: 210px minmax(240px,1fr) 170px auto auto; gap: 10px; padding: 16px; border-bottom: 1px solid #27272a; background: #111113; }
+    input, select, button { min-height: 40px; border: 1px solid #3f3f46; border-radius: 7px; background: #18181b; color: #e4e4e7; padding: 8px 12px; font: inherit; font-size: 13px; outline: none; }
+    input::placeholder { color: #71717a; }
+    input:focus, select:focus { border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59,130,246,.12); }
+    button { cursor: pointer; font-weight: 600; transition: border-color .15s, background .15s, color .15s; }
+    button:hover { border-color: #52525b; background: #27272a; color: #fff; }
+    button.primary { min-width: 174px; border-color: #2563eb; background: #2563eb; color: #fff; }
+    button.primary:hover { background: #1d4ed8; }
+    button:disabled { cursor: not-allowed; opacity: .45; }
+    .table-wrap { max-height: 570px; overflow: auto; }
+    table { width: 100%; min-width: 980px; border-collapse: collapse; }
+    th, td { padding: 13px 15px; border-bottom: 1px solid #27272a; text-align: left; vertical-align: top; }
+    th { position: sticky; top: 0; z-index: 2; background: #18181b; color: #a1a1aa; font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; }
+    td { color: #d4d4d8; font-size: 13px; line-height: 1.55; }
+    tbody tr { transition: background .12s ease; }
+    tbody tr:hover { background: rgba(39,39,42,.5); }
+    td:first-child, th:first-child { width: 58px; text-align: center; }
+    input[type="checkbox"] { width: 16px; height: 16px; min-height: 0; accent-color: #3b82f6; }
+    code { color: #60a5fa; font-family: "Geist Mono", Consolas, monospace; font-size: 12px; }
+    .muted { color: #71717a; }
+    .panel-footer { min-height: 70px; display: flex; align-items: center; justify-content: space-between; gap: 20px; padding: 14px 16px; border-top: 1px solid #27272a; background: #111113; }
+    #message { color: #a1a1aa; font-size: 13px; }
+    #message.error { color: #fca5a5; }
+    .loading-row { padding: 42px !important; color: #71717a; text-align: center !important; }
+    @media (max-width: 900px) {
+      .nav-shell { overflow-x: auto; }
+      .version { display: none; }
+      nav { gap: 14px; }
+      .toolbar { grid-template-columns: 1fr 1fr; }
+      .page-heading { align-items: flex-start; flex-direction: column; }
+    }
+  </style>
+</head>
+<body>
+<header>
+  <div class="nav-shell">
+    <div class="nav-left">
+      <a id="gatewayHome" class="brand" href="#"><span class="brand-dot"></span><span>AXHUB Gateway</span></a>
+      <div class="divider"></div>
+      <nav>
+        <a data-gateway-path="/admin/scaffold.html" href="#">Scaffold</a>
+        <a data-gateway-path="/catalog.html" href="#">Catalog</a>
+        <a data-gateway-path="/playground.html" href="#">Playground</a>
+        <a data-gateway-path="/chat.html" href="#">Chat</a>
+        <a data-gateway-path="/tester.html" href="#">Tester</a>
+        <a data-gateway-path="/tool-test-console.html" href="#">Console</a>
+        <a class="active" href="/tool-report.html">Report</a>
+      </nav>
+    </div>
+    <span class="version">v0.0.1</span>
+  </div>
+</header>
+
+<main>
+  <div class="page-heading">
+    <div>
+      <h1>Tool Report</h1>
+      <p class="subtitle">보고서에 포함할 MCP 툴을 선택하고, 소스 어노테이션과 전문 필드를 동일한 Excel 양식으로 생성합니다.</p>
+    </div>
+    <span id="summaryBadge" class="count-badge">Loading tools...</span>
+  </div>
+
+  <section class="panel">
+    <div class="toolbar">
+      <select id="sourceType" aria-label="Tool 소스 프로젝트">
+        <option value="DAP_WAS_DAPMT">dap-was-dapmt 소스</option>
+        <option value="DAP_ADMIN">dap-admin 소스</option>
+      </select>
+      <input id="keyword" type="search" autocomplete="off" placeholder="툴명, 제목 또는 설명 검색">
+      <select id="category"><option value="">전체 카테고리</option></select>
+      <button id="selectAll" type="button">전체 선택</button>
+      <button id="clearAll" type="button">전체 해제</button>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>선택</th><th>툴명</th><th>제목</th><th>카테고리</th><th>연계 ID</th><th>설명</th></tr></thead>
+        <tbody id="tools"><tr><td class="loading-row" colspan="6">툴 목록을 불러오는 중입니다.</td></tr></tbody>
+      </table>
+    </div>
+    <div class="panel-footer">
+      <span id="message">소스 인덱스를 준비하고 있습니다.</span>
+      <button id="download" type="button" class="primary" disabled>Excel 보고서 생성</button>
+    </div>
+  </section>
+</main>
+
+<script>
+  const state = { tools: [], selected: new Set(), sourceType: 'DAP_WAS_DAPMT' };
+  const el = id => document.getElementById(id);
+
+  const gateway = location.origin;
+  el('gatewayHome').href = gateway + '/index.html';
+  document.querySelectorAll('[data-gateway-path]').forEach(link => link.href = gateway + link.dataset.gatewayPath);
+
+  function filtered() {
+    const keyword = el('keyword').value.trim().toLowerCase();
+    const category = el('category').value;
+    return state.tools.filter(tool => (!category || tool.categoryKey === category) &&
+      (!keyword || [tool.name, tool.title, tool.description].join(' ').toLowerCase().includes(keyword)));
+  }
+
+  function render() {
+    const visible = filtered();
+    el('tools').innerHTML = visible.length ? visible.map(tool => `<tr>
+      <td><input type="checkbox" aria-label="${escapeHtml(tool.name)} 선택" data-name="${escapeHtml(tool.name)}" ${state.selected.has(tool.name) ? 'checked' : ''}></td>
+      <td><code>${escapeHtml(tool.name)}</code></td><td>${escapeHtml(tool.title)}</td>
+      <td>${escapeHtml(tool.categoryKey)}</td><td>${escapeHtml(tool.mappingId || '-')}</td><td class="muted">${escapeHtml(tool.description)}</td>
+    </tr>`).join('') : '<tr><td class="loading-row" colspan="6">조건에 맞는 툴이 없습니다.</td></tr>';
+    el('tools').querySelectorAll('input[type=checkbox]').forEach(box => box.addEventListener('change', event => {
+      event.target.checked ? state.selected.add(event.target.dataset.name) : state.selected.delete(event.target.dataset.name);
+      updateStatus();
+    }));
+    updateStatus();
+  }
+
+  function updateStatus(text) {
+    el('message').textContent = text || `전체 ${state.tools.length}개 중 ${state.selected.size}개 선택`;
+    el('message').classList.remove('error');
+    el('summaryBadge').textContent = `${state.tools.length} tools · ${state.selected.size} selected`;
+    el('download').disabled = state.selected.size === 0;
+  }
+
+  function escapeHtml(value) {
+    return String(value ?? '').replace(/[&<>'"]/g, char => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[char]));
+  }
+
+  async function load() {
+    try {
+      state.sourceType = el('sourceType').value;
+      state.selected.clear();
+      state.tools = [];
+      el('tools').innerHTML = '<tr><td class="loading-row" colspan="6">선택한 프로젝트의 Tool 소스를 분석하고 있습니다.</td></tr>';
+      const response = await fetch(`/report/api/report-tools?sourceType=${encodeURIComponent(state.sourceType)}`);
+      const body = await response.json().catch(() => null);
+      if (!response.ok) {
+        throw new Error(body?.error || body?.message || `툴 목록 조회에 실패했습니다. (${response.status})`);
+      }
+      const tools = Array.isArray(body) ? body : body?.result?.tools;
+      if (!Array.isArray(tools)) {
+        throw new Error('툴 목록 응답 형식이 올바르지 않습니다.');
+      }
+      state.tools = tools;
+      [...new Set(state.tools.map(tool => tool.categoryKey))].sort().forEach(category => {
+        const option = document.createElement('option');
+        option.value = category; option.textContent = category; el('category').appendChild(option);
+      });
+      render();
+    } catch (error) {
+      el('tools').innerHTML = '<tr><td class="loading-row" colspan="6">툴 목록을 표시할 수 없습니다.</td></tr>';
+      el('message').textContent = error.message; el('message').classList.add('error');
+      el('summaryBadge').textContent = 'Load failed';
+    }
+  }
+
+  el('keyword').addEventListener('input', render);
+  el('sourceType').addEventListener('change', () => {
+    el('category').innerHTML = '<option value="">전체 카테고리</option>';
+    load();
+  });
+  el('category').addEventListener('change', render);
+  el('selectAll').addEventListener('click', () => { filtered().forEach(tool => state.selected.add(tool.name)); render(); });
+  el('clearAll').addEventListener('click', () => { filtered().forEach(tool => state.selected.delete(tool.name)); render(); });
+  el('download').addEventListener('click', async () => {
+    el('download').disabled = true; updateStatus('소스를 분석하고 Excel을 생성하는 중입니다.');
+    try {
+      const response = await fetch('/report/api/tool-reports/excel', {
+        method: 'POST', headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({toolNames: [...state.selected], sourceType: state.sourceType})
+      });
+      if (!response.ok) {
+        const body = await response.json().catch(() => ({}));
+        throw new Error(body.error || '보고서 생성에 실패했습니다.');
+      }
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob); const anchor = document.createElement('a');
+      anchor.href = url; anchor.download = 'tool-report.xlsx'; anchor.click(); URL.revokeObjectURL(url);
+      updateStatus(`선택한 ${state.selected.size}개 툴의 보고서를 생성했습니다.`);
+    } catch (error) {
+      el('message').textContent = error.message; el('message').classList.add('error');
+    } finally { el('download').disabled = state.selected.size === 0; }
+  });
+
+  load();
+</script>
+</body>
+</html>

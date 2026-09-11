@@ -1,0 +1,25 @@
+# 湲곕낯媛? 紐⑤뱺 ?띿뒪???뚯씪 CRLF (Windows 媛쒕컻 ?섍꼍)
+* text=auto eol=crlf
+
+# Shell ?ㅽ겕由쏀듃??LF 怨좎젙 (Linux CI/CD ?ㅽ뻾 ?섍꼍)
+*.sh text eol=lf
+mvnw text eol=lf
+gradlew text eol=lf
+
+# 諛붿씠?덈━ ?뚯씪 (以꾨컮轅?蹂???쒖쇅)
+*.jar binary
+*.war binary
+*.ear binary
+*.class binary
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.svg binary
+*.ttf binary
+*.woff binary
+*.woff2binary
+*.pdf binary
+*.zip binary
+*.tar.gz binary

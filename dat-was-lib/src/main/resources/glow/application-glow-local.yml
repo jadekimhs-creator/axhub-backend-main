@@ -1,0 +1,41 @@
+# Glow 로컬 환경 설정
+spring:
+  config:
+    activate:
+      on-profile: local
+
+glow:
+  communication:
+    common:
+      env-type: D
+    # Direct local process uses WireMock host port mapped by docker-compose.
+    http:
+      connection-timeout: 5
+      read-timeout: 5
+      api-list:
+        - name: memo
+          domain: ${AXHUB_MEMO_HTTP_DOMAIN:http://localhost:${server.port}}
+          url: ${AXHUB_MEMO_HTTP_URL:/api/mock/http/cmm_memo_retriever}
+          method: POST
+          content-type: application/json;charset=UTF-8
+          biz-pod: false
+        - name: insurance
+          domain: ${AXHUB_INSURANCE_HTTP_DOMAIN:http://localhost:${server.port}}
+          url: ${AXHUB_INSURANCE_HTTP_URL:/api/mock/http/ins_insurance_processor}
+          method: POST
+          content-type: application/json;charset=UTF-8
+          biz-pod: false
+    mci:
+      host: ${GLOW_COMMUNICATION_MCI_HOST:http://localhost}
+      port: ${GLOW_COMMUNICATION_MCI_PORT:8080}
+    extmci:
+      host: ${GLOW_COMMUNICATION_EXTMCI_HOST:http://localhost}
+      port: ${GLOW_COMMUNICATION_EXTMCI_PORT:8080}
+    eai:
+      host: ${GLOW_COMMUNICATION_EAI_HOST:http://localhost}
+      port: ${GLOW_COMMUNICATION_EAI_PORT:8080}
+
+axhub:
+  mock:
+    http:
+      enabled: true

@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="io.shinhanlife.axhub.sample.domain.repository.GlowSampleRepository">
+
+    <select id="selectStrnTerm" parameterType="string" resultType="io.shinhanlife.axhub.sample.dto.StrnTermListOutDTO$StrnTerm">
+        SELECT /*
+        --------------------------------------------------------------------------
+        -- 프로그램 설명 : 표준영문약어명조회
+        -- 프로그램명    :
+        --------------------------------------------------------------------------
+        */
+        '한글명' AS strnTermHanNm,
+        '영문약어' AS strnTermEngcAbrNm,
+        '영문명' AS strnTermEngNm,
+        '화면표기명' AS strnTermScrnTermNm
+        FROM DUAL
+        WHERE '한글명' LIKE '%' || NVL(#{strnTermHanNm}, '') || '%'
+    </select>
+
+    <insert id="insertAppliSystNtfyPati" parameterType="io.shinhanlife.axhub.sample.domain.model.AppliSystNtfyPatiModel">
+        INSERT /*
+        --------------------------------------------------------------------------
+        -- 업무파트명                : 프레임워크
+        -- 프로그램 한글명 또는 화면명 : 어플리케이션시스템알림등록
+        -- 프로그램명                : AppliSystNtfyPati
+        -------------------------------------------------------------------------- */
+        INTO S_TFG.GL_APPLI_SYST_NTFY_PATI
+        (   APPLI_SYST_NTFY_PATI_ID
+        ,APPLI_SYST_NTFY_KD_CD
+        ,APPLI_DUTJ_CD
+        ,APPLI_DUTJ_PRJC_CD
+        ,NTFY_MSG_CT
+        ,NTFY_OCC_DT
+        ,NTFY_CFM_DT
+        ,NTFY_TRGT_PRAF_NO
+        ,SHMS_PML_YN
+        ,NTFY_CFM_YN
+        ,SYST_RGI_DT
+        ,SYST_RGI_PRAF_NO
+        ,SYST_RGI_OGNZ_NO
+        ,SYST_RGI_SYST_CD
+        ,SYST_RGI_PRGR_ID
+        ,SYST_CHG_DT
+        ,SYST_CHG_PRAF_NO
+        ,SYST_CHG_OGNZ_NO
+        ,SYST_CHG_SYST_CD
+        ,SYST_CHG_PRGR_ID
+        ) VALUES (
+        #{appliSystNtfyPatiId}
+        ,NVL(#{appliSystNtfyKdCd},'ZZ')
+        ,NVL(#{appliDutjCd},'ZZ')
+        ,NVL(#{appliDutjPrjcCd},'ZZ')
+        ,#{ntfyMsgCt}
+        ,TO_DATE(#{ntfyOccDt}, 'YYYY-MM-DD HH24:MI:SS')
+        ,TO_DATE(#{ntfyCfmDt}, 'YYYY-MM-DD HH24:MI:SS')
+        ,#{ntfyTrgtPrafNo}
+        ,#{shmsPmlYn}
+        ,#{ntfyCfmYn}
+        ,SYSDATE
+        ,#{systRgiPrafNo}
+        ,#{systRgiOgnzNo}
+        ,#{systRgiSystCd}
+        ,#{systRgiPrgrId}
+        ,SYSDATE
+        ,#{systChgPrafNo}
+        ,#{systChgOgnzNo}
+        ,#{systChgSystCd}
+        ,#{systChgPrgrId}
+        )
+    </insert>
+
+</mapper>

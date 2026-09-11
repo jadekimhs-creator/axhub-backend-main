@@ -1,0 +1,59 @@
+plugins {
+    // Gateway와 모든 Tool Pod가 의존하는 공통 라이브러리 모듈입니다.
+    id 'java-library'
+}
+
+dependencies {
+    // 공통 REST Controller, HTTP Client, 예외 처리 기반입니다.
+    api 'org.springframework.boot:spring-boot-starter-web'
+
+    // Tool Request DTO의 Bean Validation을 지원합니다.
+    api 'org.springframework.boot:spring-boot-starter-validation'
+
+    // Tool Manifest/Registry 캐시 및 Redis 기반 공통 기능을 제공합니다.
+    api 'org.springframework.boot:spring-boot-starter-data-redis'
+
+    // Tool SLA, 로깅, 공통 Aspect를 적용합니다.
+    api 'org.springframework.boot:spring-boot-starter-aop'
+
+    // MCI/DB 연동에 필요한 JDBC 공통 기능입니다.
+    api 'org.springframework.boot:spring-boot-starter-jdbc'
+
+    // Tool 호출의 Circuit Breaker, Rate Limit, Retry 등 복원력 기능입니다.
+    api 'io.github.resilience4j:resilience4j-spring-boot3:2.2.0'
+    api 'io.github.resilience4j:resilience4j-core:2.2.0'
+    api 'io.github.resilience4j:resilience4j-circuitbreaker:2.2.0'
+    api 'io.github.resilience4j:resilience4j-ratelimiter'
+    api 'io.github.resilience4j:resilience4j-retry:2.2.0'
+
+    // MCI/업무 데이터 접근을 위한 MyBatis 지원입니다.
+    api 'org.mybatis.spring.boot:mybatis-spring-boot-starter:3.0.3'
+
+    // 현재 로컬 테스트 DB 및 SQL 로그 처리에 사용합니다.
+    api 'com.h2database:h2'
+
+    // Spring Data Redis가 사용하는 Redis Client를 공통 모듈에서 직접 참조합니다.
+    api 'io.lettuce:lettuce-core:6.6.0.RELEASE'
+
+    // MCI XML 전문, JSON Tool Schema/Manifest 처리에 사용합니다.
+    api 'com.fasterxml.jackson.dataformat:jackson-dataformat-xml'
+    api 'com.fasterxml.jackson.dataformat:jackson-dataformat-yaml'
+    api 'com.fasterxml.jackson.core:jackson-databind'
+    // MCP Java SDK 2.0.0의 mcp-json-jackson2가 호출하는 Schema API와 반드시 맞춘다.
+    // 3.x는 Schema.validate(JsonNode) 반환 규격이 달라 런타임 NoSuchMethodError가 발생한다.
+    api 'com.networknt:json-schema-validator:2.0.0'
+
+    // Boot 3.5.11 위에서 MCP Java SDK 2.0.0의 Server/Client와 Servlet 전송 계층을 사용합니다.
+    // Jackson 2 공급자를 명시해 Boot 3의 Jackson 계열과 맞춥니다.
+    api 'io.modelcontextprotocol.sdk:mcp-core'
+    api 'io.modelcontextprotocol.sdk:mcp-json-jackson2'
+
+    // Boot 3.5 호환 Spring AI 어노테이션 API를 유지합니다.
+    api 'org.springaicommunity:mcp-annotations:0.9.0'
+
+    // 이벤트 기반 확장이 필요한 Tool의 공통 Kafka 연동 기능입니다.
+    api 'org.springframework.kafka:spring-kafka:3.2.0'
+
+    // Tool Pod REST API 문서 및 Swagger UI를 제공합니다.
+    api 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.5.0'
+}

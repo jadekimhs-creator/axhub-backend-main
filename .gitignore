@@ -1,0 +1,260 @@
+# ===== 鍮뚮뱶 寃곌낵臾?=====
+target/
+!**/src/main/**/target/
+!**/src/test/**/target/
+*.class
+*.jar
+!gradle/wrapper/gradle-wrapper.jar
+*.war
+*.ear
+*.nar
+
+# ===== 濡쒓렇 =====
+*.log
+logs/
+spring-shell.log
+
+# ===== Maven =====
+.mvn/wrapper/maven-wrapper.jar
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.next
+release.properties
+dependency-reduced-pom.xml
+buildNumber.properties
+.mvn/timing.properties
+
+# ===== IntelliJ IDEA =====
+.idea/
+*.iws
+*.iml
+*.ipr
+out/
+
+# ===== Eclipse / STS =====
+.apt_generated
+.classpath
+.factorypath
+.project
+.settings
+.springBeans
+.sts4-cache
+bin/
+
+# ===== NetBeans =====
+/nbproject/private/
+/nbbuild/
+/dist/
+/nbdist/
+/.nb-gradle/
+build/
+.gradle/
+!**/src/main/**/build/
+!**/src/test/**/build/
+
+# ===== VS Code =====
+.vscode/
+
+# ===== 鍮뚮뱶 寃곌낵臾?=====
+target/
+!**/src/main/**/target/
+!**/src/test/**/target/
+*.class
+*.jar
+!gradle/wrapper/gradle-wrapper.jar
+*.war
+*.ear
+*.nar
+
+# ===== 濡쒓렇 =====
+*.log
+logs/
+spring-shell.log
+
+# ===== Maven =====
+.mvn/wrapper/maven-wrapper.jar
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.next
+release.properties
+dependency-reduced-pom.xml
+buildNumber.properties
+.mvn/timing.properties
+
+# ===== IntelliJ IDEA =====
+.idea/
+*.iws
+*.iml
+*.ipr
+out/
+
+# ===== Eclipse / STS =====
+.apt_generated
+.classpath
+.factorypath
+.project
+.settings
+.springBeans
+.sts4-cache
+bin/
+
+# ===== NetBeans =====
+/nbproject/private/
+/nbbuild/
+/dist/
+/nbdist/
+/.nb-gradle/
+build/
+.gradle/
+!**/src/main/**/build/
+!**/src/test/**/build/
+
+# ===== VS Code =====
+.vscode/
+
+# ===== OS =====
+.DS_Store
+Thumbs.db
+ehthumbs.db
+# ===== 鍮뚮뱶 寃곌낵臾?=====
+target/
+!**/src/main/**/target/
+!**/src/test/**/target/
+*.class
+*.jar
+!gradle/wrapper/gradle-wrapper.jar
+*.war
+*.ear
+*.nar
+
+# ===== 濡쒓렇 =====
+*.log
+logs/
+spring-shell.log
+
+# ===== Maven =====
+.mvn/wrapper/maven-wrapper.jar
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.next
+release.properties
+dependency-reduced-pom.xml
+buildNumber.properties
+.mvn/timing.properties
+
+# ===== IntelliJ IDEA =====
+.idea/
+*.iws
+*.iml
+*.ipr
+out/
+
+# ===== Eclipse / STS =====
+.apt_generated
+.classpath
+.factorypath
+.project
+.settings
+.springBeans
+.sts4-cache
+bin/
+
+# ===== NetBeans =====
+/nbproject/private/
+/nbbuild/
+/dist/
+/nbdist/
+/.nb-gradle/
+build/
+.gradle/
+!**/src/main/**/build/
+!**/src/test/**/build/
+
+# ===== VS Code =====
+.vscode/
+
+# ===== 鍮뚮뱶 寃곌낵臾?=====
+target/
+!**/src/main/**/target/
+!**/src/test/**/target/
+*.class
+*.jar
+!gradle/wrapper/gradle-wrapper.jar
+*.war
+*.ear
+*.nar
+
+# ===== 濡쒓렇 =====
+*.log
+logs/
+spring-shell.log
+
+# ===== Maven =====
+.mvn/wrapper/maven-wrapper.jar
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.next
+release.properties
+dependency-reduced-pom.xml
+buildNumber.properties
+.mvn/timing.properties
+
+# ===== IntelliJ IDEA =====
+.idea/
+*.iws
+*.iml
+*.ipr
+out/
+
+# ===== Eclipse / STS =====
+.apt_generated
+.classpath
+.factorypath
+.project
+.settings
+.springBeans
+.sts4-cache
+bin/
+
+# ===== NetBeans =====
+/nbproject/private/
+/nbbuild/
+/dist/
+/nbdist/
+/.nb-gradle/
+build/
+.gradle/
+!**/src/main/**/build/
+!**/src/test/**/build/
+
+# ===== VS Code =====
+.vscode/
+
+# ===== OS =====
+.DS_Store
+Thumbs.db
+ehthumbs.db
+
+# ===== ?섍꼍?ㅼ젙 (誘쇨컧?뺣낫 遺꾨━ ?? =====
+# application-local.yml
+# application-secret.yml
+
+# ===== Generated Sources =====
+**/src/main/generated/
+
+# ===== Temp Scratch Files =====
+/Dump*.java
+/Fix*.java
+/Test*.java
+/FindClass.java
+/Unzip.java
+/*.txt
+/*.json
+/patch.py
+/mcp-core-src.java
+/spring-ai-mcp-extracted/
+/dat-gateway/src/main/java/testmcp/

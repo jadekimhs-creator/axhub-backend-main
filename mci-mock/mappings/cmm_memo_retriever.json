@@ -1,0 +1,13 @@
+{
+  "request" : {
+    "method" : "POST",
+    "urlPath" : "/MEMO0000001"
+  },
+  "response" : {
+    "status" : 200,
+    "headers" : {
+      "Content-Type" : "application/json;charset=UTF-8"
+    },
+    "bodyFileName" : "cmm_memo_retriever.json"
+  }
+}

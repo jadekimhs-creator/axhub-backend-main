@@ -1,0 +1,80 @@
+spring:
+  application:
+    name: dap-admin
+  profiles:
+    active: local
+  sql:
+    init:
+      mode: always
+  lifecycle:
+    timeout-per-shutdown-phase: 20s
+  ai:
+    # 기본(외부) 모델로 사용할 OpenRouter 설정입니다.
+    openai:
+      api-key: ${OPENROUTER_API_KEY:}
+      base-url: https://openrouter.ai/api/v1
+      chat:
+        completions-path: /chat/completions
+        options:
+          model: cohere/north-mini-code:free
+          temperature: 0.3
+
+# 신한라이프 다중 모델 동적 라우팅을 위한 커스텀 설정
+shinhan:
+  ai:
+    base-url: https://dev-iam-litellm.shinhanlife.co.kr:18020
+    qwen-key: sk-UJ2IRenvaMPbY3ozQdj6zw
+    gemma-key: sk-EH107wYBZuu6RUTqthRl7A
+
+server:
+  port: 8081
+  http2:
+    enabled: true
+  shutdown: graceful
+
+report:
+  service-url: ${REPORT_SERVICE_URL:http://tool-report:8092}
+
+mcp:
+  tool-server-api-key: tool-server-key
+  gateway:
+    fallback:
+      default-url: http://localhost:8084
+      routes:
+        cmm: http://localhost:8082
+        cus: http://localhost:8084
+        sal: http://localhost:8082
+        # Existing SMS category callers continue to resolve to the SAL Pod.
+        sms: http://localhost:8082
+        oth: http://localhost:8084
+        hr: http://localhost:8084
+        pro: http://localhost:8085
+        sys: http://localhost:8086
+        iam: http://localhost:8086
+
+  agent-claims-required: false
+  trusted-claims-required: false
+  write-approval-required: false
+  default-page-size: 100
+  max-page-size: 500
+  max-pages-per-call: 3
+  max-stream-bytes: 1048576
+  max-response-bytes-from-tool: 5242880
+  tool-registry-sync-interval-millis: 5000
+  security:
+    tenant-domains:
+      TESTER-DEV: ALL
+      system: ALL
+      AUTO-TESTER: ALL
+      auto-tester: ALL
+
+mybatis:
+  mapper-locations: classpath:mapper/**/*.xml
+  type-aliases-package: ""
+  configuration:
+    map-underscore-to-camel-case: true
+
+logging:
+  level:
+    com.corundumstudio.socketio: DEBUG
+    org.apache.kafka: ERROR

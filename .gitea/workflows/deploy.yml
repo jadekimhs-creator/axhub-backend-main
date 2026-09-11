@@ -1,0 +1,68 @@
+name: Deploy to OCIWP
+
+on:
+  push:
+    branches:
+      - main
+      - master
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+
+      - name: Prepare Environment (Install Node.js & Git & Java 21)
+        run: |
+          if command -v apt-get &> /dev/null; then
+            apt-get update
+            apt-get install -y nodejs git openjdk-21-jdk rsync
+          elif command -v apk &> /dev/null; then
+            apk add --no-cache nodejs git openjdk21 rsync docker-cli docker-cli-compose
+          fi
+
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Sync Code to Host Volume
+        run: |
+          echo "Copying latest code to /app (Host Volume) and removing stale files..."
+          if command -v rsync &> /dev/null; then
+            rsync -a --delete --exclude='.git' --exclude='bin' --exclude='act_runner_data' . /app/
+          else
+            rm -rf /app/dap-* /app/src /app/build.gradle /app/settings.gradle
+            cp -a . /app/
+          fi
+
+      - name: Deploy Task on Host
+        run: |
+          echo "Starting Standard CI/CD Deploy pipeline..."
+          
+          # 1. runner에 설치된 java로 직접 빌드! (격리된 환경 문제 해결)
+          cd /app
+          chmod +x gradlew
+          ./gradlew bootJar -x test
+          
+          # 2. 빌드 결과 plain jar 아카이브 정리
+          find /app -name "*-plain.jar" -delete
+          
+          # 3. 좀비 컨테이너 청소 (현재 우리가 쓸 포트를 점유 중인 옛날 컨테이너들만 정확히 색출해서 사살)
+          echo "Finding and killing zombie containers holding our ports..."
+          for port in 6379 8080 8089 8281 8282 8283 8284 8285 8288; do
+            cid=$(docker ps -q --filter "publish=$port")
+            if [ ! -z "$cid" ]; then
+              echo "Force killing container $cid using port $port"
+              docker rm -f $cid
+            fi
+          done
+
+          # 4. 마운트된 /app 디렉토리로 이동하여 호스트의 도커 컴포즈 제어!
+          cd /app
+          docker system prune -f
+          ACTIVE_PROFILE=dev docker compose up -d --build --pull always --remove-orphans gateway tool-report mci-mock dozzle was-sal was-cus was-pro was-sys
+          
+          # 5. 배포 후 대롱대롱 매달려 있는 가비지 이미지 및 빌드 캐시 자동 소거 청소!
+          docker image prune -a -f
+          docker builder prune -a -f
+          
+          echo "CI/CD Deploy Success!"

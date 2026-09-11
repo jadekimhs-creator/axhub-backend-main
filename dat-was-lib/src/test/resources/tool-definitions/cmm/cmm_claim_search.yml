@@ -1,0 +1,30 @@
+name: cmm_claim_search
+display_name: 보험금 청구 상태 조회
+version: 1.0.0
+category_key: cmm
+description:
+  function: 청구번호 또는 계약번호로 보험금 청구 상태를 조회한다.
+  when_to_use: 사용자가 보험금 청구 진행 상태나 심사 결과를 확인하려는 경우 사용한다.
+  when_not_to_use: 보험금 청구를 새로 접수하거나 기존 청구를 변경하려는 경우에는 사용하지 않는다.
+  io_limits: 청구번호 또는 계약번호 중 하나 이상이 필요하며 조회 결과만 반환한다.
+display_description: 보험금 청구 상태와 심사 결과를 조회합니다.
+example_queries:
+  - 내 보험금 청구가 어디까지 진행됐는지 알려줘
+  - 계약번호로 최근 청구 상태를 확인해줘
+  - 청구 심사 결과가 나왔는지 조회해줘
+read_only: true
+destructive: false
+idempotent: true
+parameters_schema:
+  type: object
+  properties:
+    claimNo:
+      type: string
+      description: 조회할 보험금 청구번호
+  required:
+    - claimNo
+  additionalProperties: false
+tags:
+  - 보험금
+  - 청구조회
+owner_org: MCP_TOOL

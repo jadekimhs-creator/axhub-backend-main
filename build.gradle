@@ -1,0 +1,181 @@
+plugins {
+    id 'java'
+    id 'org.springframework.boot' version '3.5.11'
+    id 'io.spring.dependency-management' version '1.1.7'
+}
+
+
+// ============================================================================
+// 전체 프로젝트 공통 Maven 좌표
+// ============================================================================
+
+allprojects {
+
+    // 모든 모듈이 공유하는 Maven Group ID입니다.
+    group = 'io.shinhanlife'
+
+    // 모든 모듈이 공유하는 프로젝트 버전입니다.
+    version = '0.0.1-SNAPSHOT'
+}
+
+
+subprojects {
+
+    // 모든 하위 모듈에서 Java Plugin을 사용합니다.
+    apply plugin: 'java'
+
+    // Spring Boot BOM 기반 의존성 버전 관리를 위해 적용합니다.
+    apply plugin: 'io.spring.dependency-management'
+
+    java {
+        toolchain {
+            languageVersion = JavaLanguageVersion.of(21)
+        }
+    }
+
+    repositories {
+
+        // --------------------------------------------------------------------
+        // 외부 개발 환경
+        // --------------------------------------------------------------------
+        //
+        // 현재 인터넷이 가능한 환경에서는 Maven Central을 사용합니다.
+        //
+        // 신한라이프 폐쇄망 반입 시 아래 mavenCentral()은 제거하고
+        // 사내 Nexus Repository URL로 교체해야 합니다.
+        //
+        // 예:
+        //
+        // maven {
+        //     url = uri('https://내부-Nexus/repository/maven-public/')
+        // }
+        //
+        // Nexus 인증이 필요한 경우에는 credentials 설정도 추가해야 합니다.
+        //
+        // credentials {
+        //     username = findProperty('nexusUsername') ?: System.getenv('NEXUS_USERNAME')
+        //     password = findProperty('nexusPassword') ?: System.getenv('NEXUS_PASSWORD')
+        // }
+        //
+        // 계정/비밀번호를 build.gradle에 직접 작성하면 안 됩니다.
+        // --------------------------------------------------------------------
+
+        mavenCentral()
+    }
+
+
+    // ========================================================================
+    // Dependency Version Management
+    // ========================================================================
+
+    dependencyManagement {
+
+        imports {
+
+            // Spring Boot 3.5.11이 검증한
+            // Spring Framework / Jackson / Tomcat / Logback /
+            // JUnit 등 주요 라이브러리 버전을 공통 관리합니다.
+            // 하위 모듈에서는 Spring Boot가 관리하는 라이브러리라면
+            // 가급적 개별 버전을 직접 지정하지 않고 사용합니다.
+            mavenBom org.springframework.boot.gradle.plugin.SpringBootPlugin.BOM_COORDINATES
+
+            // Gateway에서 사용하는 Spring AI 의존성 버전 관리
+            mavenBom 'org.springframework.ai:spring-ai-bom:1.1.8'
+
+            // MCP SDK 버전 관리
+            mavenBom 'io.modelcontextprotocol.sdk:mcp-bom:2.0.0'
+
+        }
+    }
+
+
+    // ========================================================================
+    // Common Dependencies
+    // ========================================================================
+
+    dependencies {
+
+        // ====================================================================
+        // Lombok
+        // ====================================================================
+
+        // Lombok은 컴파일 시 Getter / Setter / Builder 등의
+        // 반복 코드를 생성합니다.
+        //
+        // compileOnly이므로 Runtime JAR에는 포함되지 않습니다.
+        compileOnly 'org.projectlombok:lombok'
+
+        // Lombok Annotation Processor입니다.
+        annotationProcessor 'org.projectlombok:lombok'
+
+        // 테스트 코드에서도 Lombok Annotation을 사용할 수 있도록 합니다.
+        testCompileOnly 'org.projectlombok:lombok'
+
+        // 테스트 코드용 Lombok Annotation Processor입니다.
+        testAnnotationProcessor 'org.projectlombok:lombok'
+
+
+        // ====================================================================
+        // MapStruct
+        // ====================================================================
+
+        // Tool DTO와
+        // MCI 요청/응답 DTO 사이의 Converter 구현체를
+        // 컴파일 시 자동 생성하기 위해 사용합니다.
+        implementation 'org.mapstruct:mapstruct:1.6.3'
+
+        // MapStruct Converter 구현 클래스를 생성하는
+        // Annotation Processor입니다.
+        annotationProcessor 'org.mapstruct:mapstruct-processor:1.6.3'
+
+
+        // ====================================================================
+        // Test
+        // ====================================================================
+
+        // Spring Boot Test / JUnit 5 / Mockito / AssertJ 등
+        // 공통 테스트 환경을 제공합니다.
+        testImplementation 'org.springframework.boot:spring-boot-starter-test'
+
+        // Gradle / IDE 환경에서 JUnit Platform 기반 테스트 실행을 지원합니다.
+        testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+    }
+
+
+    // ========================================================================
+    // Java Compile Options
+    // ========================================================================
+
+    tasks.withType(JavaCompile).configureEach {
+
+        // Reflection 및 MCP Schema 생성 시
+        // Java 메서드의 실제 파라미터명을 사용할 수 있도록
+        // 컴파일 결과에 파라미터 이름을 보존합니다.
+        options.compilerArgs << '-parameters'
+
+        // MapStruct가 생성하는 Converter 구현 클래스를
+        // Spring Bean(@Component)으로 생성합니다.
+        //
+        // 이를 통해 생성자 주입 등의 방식으로 사용할 수 있습니다.
+        options.compilerArgs << '-Amapstruct.defaultComponentModel=spring'
+    }
+
+
+    // ========================================================================
+    // Test Configuration
+    // ========================================================================
+
+    tasks.withType(Test).configureEach {
+
+        // 모든 하위 모듈에서 JUnit 5 Platform을 사용합니다.
+        useJUnitPlatform()
+    }
+}
+  
+task exportAllLibs(type: Copy) {  
+    into 'all-exported-libs'  
+    subprojects {  
+        from(it.configurations.findByName('runtimeClasspath'))  
+    }  
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE  
+} 

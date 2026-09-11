@@ -1,0 +1,13 @@
+{
+  "request" : {
+    "method" : "POST",
+    "urlPath" : "/CLAIM0000001"
+  },
+  "response" : {
+    "status" : 200,
+    "headers" : {
+      "Content-Type" : "application/json;charset=UTF-8"
+    },
+    "bodyFileName" : "ins_insurance_processor.json"
+  }
+}

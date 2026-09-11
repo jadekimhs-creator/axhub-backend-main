@@ -1,0 +1,12 @@
+server:
+  address: ${REPORT_SERVER_ADDRESS:0.0.0.0}
+  port: ${REPORT_SERVER_PORT:8092}
+
+spring:
+  application:
+    name: dap-tool-report
+
+report:
+  dap-was-dapmt-source-root: ${REPORT_DAP_WAS_DAPMT_SOURCE_ROOT:../dap-was-dapmt}
+  dap-admin-source-root: ${REPORT_DAP_ADMIN_SOURCE_ROOT:.}
+  output-filename-prefix: tool-report

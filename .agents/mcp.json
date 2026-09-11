@@ -1,0 +1,7 @@
+{
+  "mcpServers": {
+    "axhub-gateway": {
+      "url": "http://localhost:8281/mcp/sse"
+    }
+  }
+}

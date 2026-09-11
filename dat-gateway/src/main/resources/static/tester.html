@@ -1,0 +1,1203 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tool Auto Tester</title>
+    <script src="/lib/tailwindcss.js"></script>
+    <script src="/lib/chart.js"></script>
+    <style>
+        :root {
+            --font-sans: 'Geist Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            --font-mono: 'Geist Mono', SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+        }
+        body, .font-sans { font-family: var(--font-sans); }
+        code, pre, .font-mono { font-family: var(--font-mono); }
+    </style>
+    <style>
+        * { font-family: 'Geist', sans-serif; }
+        body { background-color: #09090b; color: #f4f4f5; }
+        .geist-mono { font-family: 'Geist Mono', monospace; }
+
+        .btn-execute { background: linear-gradient(135deg, #3b82f6, #6366f1); color: #ffffff; font-weight: 600; padding: 10px 24px; border-radius: 8px; font-size: 14px; border: none; cursor: pointer; transition: all 0.2s; box-shadow: 0 0 20px rgba(59, 130, 246, 0.3); }
+        .btn-execute:hover { box-shadow: 0 0 30px rgba(99, 102, 241, 0.5); transform: translateY(-1px); }
+        .btn-execute:disabled { background: #27272a; color: #52525b; box-shadow: none; transform: none; cursor: not-allowed; }
+
+        .btn-cancel { background: #ef4444; color: white; font-weight: 600; padding: 10px 24px; border-radius: 8px; font-size: 14px; border: none; cursor: pointer; transition: all 0.2s; box-shadow: 0 0 20px rgba(239, 68, 68, 0.3); }
+        .btn-cancel:hover { box-shadow: 0 0 30px rgba(239, 68, 68, 0.5); }
+
+        .btn-sm { background: #27272a; color: #d4d4d8; font-weight: 500; padding: 7px 16px; border-radius: 6px; font-size: 13px; border: 1px solid #3f3f46; cursor: pointer; transition: background 0.1s; }
+        .btn-sm:hover { background: #3f3f46; color: white; }
+        .btn-sm:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        .btn-stress { background: rgba(239, 68, 68, 0.1); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.3); font-weight: 500; padding: 7px 16px; border-radius: 6px; font-size: 13px; cursor: pointer; transition: background 0.1s; }
+        .btn-stress:hover { background: rgba(239, 68, 68, 0.2); }
+        .btn-stress:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        .card { background: #18181b; border: 1px solid #3f3f46; border-radius: 12px; }
+
+        .table { width: 100%; border-collapse: collapse; font-size: 15px; }
+        .table th { text-align: left; padding: 18px 24px; border-bottom: 1px solid #3f3f46; color: #a1a1aa; font-weight: 500; font-size: 14px; text-transform: uppercase; letter-spacing: 0.05em; }
+        .table td { padding: 18px 24px; border-bottom: 1px solid #27272a; vertical-align: middle; }
+        .table tr:last-child td { border-bottom: none; }
+        .table tr:hover td { background-color: rgba(255,255,255,0.02); }
+
+        .status-badge { display: inline-flex; align-items: center; justify-content: center; padding: 5px 12px; border-radius: 6px; font-size: 13px; font-weight: 600; letter-spacing: 0.02em; }
+        .status-idle { background: rgba(113, 113, 122, 0.15); color: #a1a1aa; border: 1px solid rgba(113, 113, 122, 0.3); }
+        .status-running { background: rgba(59, 130, 246, 0.15); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.3); }
+        .status-success { background: rgba(34, 197, 94, 0.15); color: #4ade80; border: 1px solid rgba(34, 197, 94, 0.3); }
+        .status-error { background: rgba(239, 68, 68, 0.15); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.3); }
+
+        .cat-badge { font-family: 'Geist Mono', monospace; font-size: 13px; padding: 5px 10px; border-radius: 6px; background: #27272a; color: #a1a1aa; border: 1px solid #3f3f46; }
+
+        /* Modal Styles */
+        .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); backdrop-filter: blur(4px); z-index: 100; align-items: center; justify-content: center; }
+        .modal-content { background: #18181b; border: 1px solid #3f3f46; border-radius: 12px; width: 95%; max-width: 900px; max-height: 85vh; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); }
+        .modal-header { padding: 20px 28px; border-b: 1px solid #3f3f46; flex-shrink: 0; display: flex; justify-content: space-between; align-items: center; }
+        .modal-body { padding: 28px; overflow-y: auto; flex-grow: 1; }
+        .modal-footer { padding: 20px 28px; border-t: 1px solid #3f3f46; background: #09090b; flex-shrink: 0; display: flex; justify-content: flex-end; align-items: center; gap: 12px; }
+        
+        .code-textarea { width: 100%; height: 400px; background: #09090b; border: 1px solid #3f3f46; border-radius: 8px; color: #a1a1aa; padding: 16px; font-size: 14px; font-family: 'Geist Mono', monospace; resize: vertical; }
+        .code-textarea:focus { outline: none; border-color: #3b82f6; color: #f4f4f5; }
+        .code-viewer { background: #09090b; border: 1px solid #3f3f46; border-radius: 8px; color: #a1a1aa; padding: 16px; font-size: 14px; font-family: 'Geist Mono', monospace; overflow: auto; max-height: 500px; white-space: pre-wrap; }
+        
+        .progress-bar-bg { width: 100%; height: 6px; background: #27272a; border-radius: 3px; overflow: hidden; margin-top: 10px; display: none; }
+        .progress-bar-fill { height: 100%; background: #3b82f6; width: 0%; transition: width 0.3s ease; }
+
+        .tab-btn { background: transparent; border: none; color: #a1a1aa; padding: 6px 12px; font-size: 13px; font-weight: 500; cursor: pointer; border-bottom: 2px solid transparent; }
+        .tab-btn.active { color: #3b82f6; border-bottom: 2px solid #3b82f6; }
+    </style>
+</head>
+<body class="min-h-screen" style="overflow-y: scroll;">
+    <header style="border-bottom: 1px solid #27272a; background: rgba(9,9,11,0.85); backdrop-filter: blur(16px);" class="sticky top-0 z-50">
+        <div class="max-w-[1720px] mx-auto px-6 h-16 flex items-center justify-between">
+            <div class="flex items-center space-x-6">
+                <a href="/index.html" class="flex items-center group">
+                    <div class="w-2 h-2 rounded-full mr-3" style="background:#3b82f6; box-shadow: 0 0 8px rgba(59,130,246,0.8);"></div>
+                    <span class="font-bold tracking-tight text-base" style="color:#f4f4f5;">AXHUB Gateway</span>
+                </a>
+                <div class="h-5 w-px" style="background:#27272a;"></div>
+                <nav class="flex space-x-6 text-[14px] font-medium">
+                    <a href="/admin/scaffold.html" style="color:#a1a1aa;" class="hover:text-white transition-colors">Scaffold</a>
+                    <a href="/catalog.html" style="color:#a1a1aa;" class="hover:text-white transition-colors">Catalog</a>
+                    <a href="/playground.html" style="color:#a1a1aa;" class="hover:text-white transition-colors">Playground</a>
+                    <a href="/chat.html" style="color:#a1a1aa;" class="hover:text-white transition-colors">Chat</a>
+                    <a href="/tester.html" style="color:#ffffff;" class="font-semibold">Tester</a>
+                    <a href="/tool-test-console.html" style="color:#a1a1aa;" class="hover:text-white transition-colors">Console</a>
+                    <a href="/tool-report.html" style="color:#a1a1aa;" class="hover:text-white transition-colors">Report</a>
+                </nav>
+            </div>
+            <div class="flex items-center">
+                <span class="text-[10px] uppercase tracking-widest px-2 py-1 rounded font-bold" style="background:rgba(59,130,246,0.1); color:#60a5fa; border:1px solid rgba(59,130,246,0.2);">v0.0.1</span>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-[1720px] mx-auto px-6 py-10">
+        <div class="flex items-center justify-between mb-6">
+            <div>
+                <h1 class="text-3xl font-bold tracking-tight mb-3" style="color:#f4f4f5;">Auto-Tester Dashboard</h1>
+                <p class="text-base" style="color:#a1a1aa;">Batch execute registered tools, customize payloads, and view detailed results.</p>
+            </div>
+            <div class="flex items-center gap-3">
+                <button id="exportJsonBtn" class="btn-sm flex items-center gap-2 h-10 px-4 text-sm" onclick="exportJson()">
+                    <svg class="w-4 h-4 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"></path></svg>
+                    Tools List JSON
+                </button>
+                <button id="exportCsvBtn" class="btn-sm flex items-center gap-2 h-10 px-4 text-sm" onclick="exportCsv()" style="display: none;">
+                    Export CSV
+                </button>
+                <button id="runFailedBtn" class="btn-sm flex items-center gap-2 h-10 px-4 text-sm" onclick="runAllTests(true)" style="display: none; background:#3f3f46;">
+                    Run Failed Only
+                </button>
+                <button id="cancelBtn" class="btn-cancel flex items-center gap-2" onclick="cancelTests()" style="display: none;">
+                    Stop Tests
+                </button>
+                <button id="runAllBtn" class="btn-execute flex items-center gap-2" onclick="runAllTests(false)">
+                    Run All Tests
+                </button>
+            </div>
+        </div>
+
+        <div class="progress-bar-bg" id="progressBarBg"><div class="progress-bar-fill" id="progressBarFill"></div></div>
+
+        <div class="flex gap-4 mb-6 mt-6">
+            <input type="text" id="searchInput" placeholder="Search by tool name..." class="bg-[#18181b] border border-[#3f3f46] text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 outline-none" oninput="applyFilters()">
+            <select id="moduleFilter" class="bg-[#18181b] border border-[#3f3f46] text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-48 p-2.5 outline-none" onchange="applyFilters()">
+                <option value="">All Modules</option>
+            </select>
+            <select id="categoryFilter" class="bg-[#18181b] border border-[#3f3f46] text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-48 p-2.5 outline-none" onchange="applyFilters()">
+                <option value="">All Categories</option>
+            </select>
+        </div>
+        
+        <div id="chartContainer" class="card mb-6 p-6 shadow-2xl" style="display:none; position:relative; background: radial-gradient(circle at top right, rgba(59,130,246,0.1), transparent 40%), #18181b; border: 1px solid rgba(63,63,70,0.8);">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-sm font-semibold flex items-center gap-2" style="color: #e4e4e7; letter-spacing: 0.05em; text-transform: uppercase;">
+                    <div class="w-2 h-2 rounded-full" style="background:#3b82f6; box-shadow: 0 0 8px rgba(59,130,246,0.8);"></div>
+                    Execution Latency Analysis
+                </h3>
+            </div>
+            <div style="height:300px; position:relative;">
+                <canvas id="latencyChart"></canvas>
+            </div>
+        </div>
+
+        <div id="logContainer" class="card mb-6 p-4 shadow-inner" style="background:#09090b; border: 1px solid rgba(63,63,70,0.5);">
+            <div class="flex items-center justify-between mb-2 pb-2" style="border-bottom: 1px dashed rgba(63,63,70,0.5);">
+                <h3 class="text-sm font-semibold flex items-center gap-2" style="color: #a1a1aa; letter-spacing: 0.05em; text-transform: uppercase;">
+                    <svg class="w-4 h-4 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l3 3-3 3m5 0h3M4 17h16M4 7h16"></path></svg>
+                    Real-time Execution Console
+                </h3>
+                <button onclick="clearLogs()" class="text-xs text-zinc-500 hover:text-white transition">Clear Logs</button>
+            </div>
+            <div id="logViewer" class="font-mono text-xs overflow-y-auto" style="height: 150px; color: #d4d4d8; line-height: 1.6;">
+                <div style="color: #71717a;">[System] Console initialized. Ready to execute tools.</div>
+            </div>
+        </div>
+
+        <div class="card overflow-hidden">
+            <div class="bg-[#09090b] px-8 py-5 border-b border-[#27272a] flex items-center justify-between">
+                <div class="text-base font-semibold text-slate-300">Tool List <span id="visibleCount" class="text-sm text-slate-500 ml-2"></span></div>
+                <div class="text-sm text-slate-500 geist-mono" id="progressInfo">Total: 0 / Completed: 0</div>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="table" id="toolsTable">
+                    <thead>
+                        <tr>
+                            <th style="width:8%">Module</th>
+                            <th style="width:8%">Category</th>
+                            <th style="width:34%">Tool Name (Title)</th>
+                            <th style="width:24%">Payload</th>
+                            <th style="width:12%">Status</th>
+                            <th style="width:14%" class="text-right">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="toolsTbody">
+                        <tr><td colspan="6" class="text-center text-zinc-500 py-10">Loading tools...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+    <!-- Modal for Editing Payload -->
+    <div id="payloadModal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div>
+                    <h3 class="text-lg font-semibold text-white">Edit Payload</h3>
+                    <p class="text-sm text-zinc-400">Modify the payload for <span id="payloadToolName" class="font-mono text-blue-400"></span></p>
+                </div>
+                <button onclick="closePayloadModal()" class="text-zinc-400 hover:text-white">&times;</button>
+            </div>
+            <div class="border-b border-[#3f3f46] flex px-4 pt-2">
+                <button id="tabFormBtn" class="tab-btn active" onclick="switchPayloadTab('form')">Smart Form</button>
+                <button id="tabJsonBtn" class="tab-btn" onclick="switchPayloadTab('json')">Raw JSON</button>
+            </div>
+            <div class="modal-body">
+                <div id="payloadFormContainer" class="flex flex-col gap-3"></div>
+                <div id="payloadJsonContainer" style="display:none;">
+                    <textarea id="payloadEditor" class="code-textarea"></textarea>
+                    <p id="payloadError" class="text-red-500 text-xs mt-2 hidden">Invalid JSON format</p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <div class="flex-grow text-xs text-zinc-500 flex items-center gap-1">
+                    <svg class="w-3 h-3 text-zinc-500" fill="currentColor" viewBox="0 0 20 20"><path d="M10 18a8 8 0 100-16 8 8 0 000 16zM9 9a1 1 0 012 0v4a1 1 0 11-2 0V9zm1-5a1 1 0 110 2 1 1 0 010-2z"></path></svg>
+                    Auto-saved to LocalStorage
+                </div>
+                <button onclick="resetPayload()" class="btn-sm py-2 px-4 text-red-400 hover:text-red-300 border border-red-500/30 hover:border-red-400 mr-2" style="font-size:12px;" title="저장된 페이로드를 삭제하고 스키마 기본값으로 초기화합니다">Reset to Schema</button>
+                <button onclick="closePayloadModal()" class="btn-sm py-2 px-4">Cancel</button>
+                <button onclick="savePayload()" class="btn-execute py-2 px-4" style="font-size:12px;">Save & Apply</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal for Viewing Result -->
+    <div id="resultModal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="text-lg font-semibold text-white">Execution Result</h3>
+                <button onclick="closeResultModal()" class="text-zinc-400 hover:text-white">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p class="text-sm text-zinc-400 mb-2">Response for <span id="resultToolName" class="font-mono text-blue-400"></span></p>
+                <div id="resultViewer" class="code-viewer"></div>
+            </div>
+            <div class="modal-footer">
+                <div class="flex-grow flex gap-2">
+                    <button class="btn-sm" onclick="copySnippet('curl')">Copy cURL</button>
+                    <button class="btn-sm" onclick="copySnippet('java')">Copy Java</button>
+                </div>
+                <button onclick="closeResultModal()" class="btn-sm py-2 px-4">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal for JSON Export -->
+    <div id="jsonExportModal" class="modal-overlay">
+        <div class="modal-content" style="max-width: 1200px; height: 85vh;">
+            <div class="modal-header">
+                <div>
+                    <h3 class="text-lg font-semibold text-white">Tools List JSON</h3>
+                    <p class="text-sm text-zinc-400">Complete tools list in JSON format</p>
+                </div>
+                <button onclick="closeJsonExportModal()" class="text-zinc-400 hover:text-white">&times;</button>
+            </div>
+            <div class="border-b border-[#3f3f46] px-6 py-3 flex gap-3 items-center bg-[#09090b]">
+                <input type="text" id="jsonSearchInput" placeholder="Search in filtered list..." class="bg-[#18181b] border border-[#3f3f46] text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2 outline-none" oninput="filterJsonExport()">
+                <button class="btn-sm whitespace-nowrap" style="color:#f97316; border-color:#ea580c;" onclick="downloadPostmanCollection()">Postman</button>
+                <button class="btn-sm whitespace-nowrap" style="color:#10b981; border-color:#059669;" onclick="downloadOpenApiSpec()">OpenAPI</button>
+                <button class="btn-sm whitespace-nowrap" style="color:#3b82f6; border-color:#2563eb;" onclick="downloadMarkdown()">Markdown</button>
+            </div>
+            <div class="modal-body" style="padding: 0;">
+                <textarea id="jsonExportViewer" class="code-textarea" style="height: 100%; border: none; border-radius: 0; padding: 20px;" readonly></textarea>
+            </div>
+            <div class="modal-footer">
+                <div class="flex-grow flex gap-2">
+                    <button class="btn-sm" onclick="copyJsonExport()">Copy JSON to Clipboard</button>
+                    <button class="btn-sm" onclick="downloadJsonExport()">Download JSON File</button>
+                </div>
+                <button onclick="closeJsonExportModal()" class="btn-sm py-2 px-4">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let allTools = [];
+        let filteredTools = [];
+        let isRunningAll = false;
+        let cancelRequested = false;
+        let currentEditIndex = -1;
+        let currentResultIndex = -1;
+        let chartInstance = null;
+        let currentPayloadMode = 'form'; // 'form' or 'json'
+        let pingIntervals = {};
+
+        function toggleAutoPing(index) {
+            const btn = document.getElementById(`ping-btn-${index}`);
+            if (pingIntervals[index]) {
+                clearInterval(pingIntervals[index]);
+                delete pingIntervals[index];
+                if(btn) {
+                    btn.textContent = 'Ping Off';
+                    btn.style.background = '';
+                    btn.style.color = '';
+                    btn.style.borderColor = '';
+                }
+                appendLog(`[Auto Ping] Stopped for ${allTools[index].name}.`, 'info');
+            } else {
+                appendLog(`[Auto Ping] Started for ${allTools[index].name} (Every 3 seconds).`, 'success');
+                executeCall(index);
+                pingIntervals[index] = setInterval(() => {
+                    executeCall(index);
+                }, 3000);
+                if(btn) {
+                    btn.textContent = 'Ping On';
+                    btn.style.background = '#10b981';
+                    btn.style.color = 'white';
+                    btn.style.borderColor = '#10b981';
+                }
+            }
+        }
+
+        function appendLog(message, type = 'info') {
+            const viewer = document.getElementById('logViewer');
+            if (!viewer) return;
+            const timeStr = new Date().toLocaleTimeString();
+            let color = '#a1a1aa';
+            if (type === 'success') color = '#34d399';
+            if (type === 'error') color = '#f87171';
+            const logLine = `<div style="color: ${color};"><span class="text-zinc-500">[${timeStr}]</span> ${message}</div>`;
+            viewer.innerHTML += logLine;
+            viewer.scrollTop = viewer.scrollHeight;
+        }
+
+        function clearLogs() {
+            const viewer = document.getElementById('logViewer');
+            if (viewer) viewer.innerHTML = '<div style="color: #71717a;">[System] Console cleared.</div>';
+        }
+
+        async function fetchTools() {
+            try {
+                const response = await fetch('/mcp/api/v1/tools/list');
+                const data = await response.json();
+                allTools = data.result?.tools || [];
+                
+                // Load LocalStorage Payloads
+                const savedPayloads = JSON.parse(localStorage.getItem('mcp_tester_payloads') || '{}');
+                
+                const categories = new Set();
+                const modules = new Set();
+                allTools.forEach(t => {
+                    t._customPayload = savedPayloads[t.name] || null;
+                    t._lastStatus = 'NOT RUN';
+                    t._isFailed = false;
+                    t._latency = 0;
+                    t._responseData = null;
+                    categories.add(t._meta?.category_key || 'oth');
+                    const modName = t.name ? t.name.split('_')[0].replace('dat-was-', '') : '';
+                    if (modName) {
+                        modules.add(modName);
+                    }
+                });
+                
+                const catSelect = document.getElementById('categoryFilter');
+                catSelect.innerHTML = '<option value="">All Categories</option>';
+                Array.from(categories).sort().forEach(cat => {
+                    catSelect.innerHTML += `<option value="${cat}">${cat.toUpperCase()}</option>`;
+                });
+
+                const modSelect = document.getElementById('moduleFilter');
+                modSelect.innerHTML = '<option value="">All Modules</option>';
+                Array.from(modules).sort().forEach(mod => {
+                    modSelect.innerHTML += `<option value="${mod}">${mod}</option>`;
+                });
+
+                applyFilters();
+            } catch (error) {
+                document.getElementById('toolsTbody').innerHTML = '<tr><td colspan="6" class="text-center text-red-400 py-8">Failed to load tools.</td></tr>';
+            }
+        }
+
+        function persistCustomPayloads() {
+            const dict = {};
+            allTools.forEach(t => {
+                if (t._customPayload) dict[t.name] = t._customPayload;
+            });
+            localStorage.setItem('mcp_tester_payloads', JSON.stringify(dict));
+        }
+
+        function generateDummyPayload(tool) {
+            if (tool._customPayload) return tool._customPayload;
+            
+            const schema = (tool.inputSchema || tool.parametersSchema);
+            if (!schema || !schema.properties) return {};
+            const payload = {};
+            for (const [key, value] of Object.entries(schema.properties)) {
+                if (value.example !== undefined) payload[key] = value.example;
+                else if (value.examples && Array.isArray(value.examples) && value.examples.length > 0) payload[key] = value.examples[0];
+                else if (value.default !== undefined) payload[key] = value.default;
+                else {
+                    if (value.type === 'string') {
+                        if (value.enum && value.enum.length > 0) payload[key] = value.enum[0];
+                        else payload[key] = "test_string";
+                    } else if (value.type === 'integer' || value.type === 'number') payload[key] = value.minimum !== undefined ? value.minimum : 1;
+                    else if (value.type === 'boolean') payload[key] = true;
+                    else payload[key] = null;
+                }
+            }
+            return payload;
+        }
+
+        function applyFilters() {
+            const search = document.getElementById('searchInput').value.toLowerCase();
+            const category = document.getElementById('categoryFilter').value;
+            const moduleFlt = document.getElementById('moduleFilter').value;
+            
+            filteredTools = allTools.filter(t => {
+                const matchSearch = t.name.toLowerCase().includes(search) || 
+                                    (t.title || '').toLowerCase().includes(search) ||
+                                    (t._meta?.title || '').toLowerCase().includes(search) ||
+                                    (t.description || '').toLowerCase().includes(search);
+                const matchCategory = !category || (t._meta?.category_key || 'oth') === category;
+                const toolMod = t.name ? t.name.split('_')[0].replace('dat-was-', '') : '';
+                const matchModule = !moduleFlt || toolMod === moduleFlt;
+                return matchSearch && matchCategory && matchModule;
+            });
+            
+            document.getElementById('visibleCount').textContent = `(${filteredTools.length} tools)`;
+            renderTable();
+            updateProgress(0, filteredTools.length);
+        }
+
+        function renderTable() {
+            const tbody = document.getElementById('toolsTbody');
+            if (filteredTools.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" class="text-center text-zinc-500 py-10">No tools match the filter.</td></tr>';
+                return;
+            }
+
+            let html = '';
+            filteredTools.forEach((tool) => {
+                const index = allTools.indexOf(tool);
+                const payload = generateDummyPayload(tool);
+                const payloadStr = JSON.stringify(payload);
+                const shortPayload = payloadStr.length > 50 ? payloadStr.substring(0, 50) + '...' : payloadStr;
+                const toolTitle = tool.title || tool._meta?.title || '';
+                
+                let statusHtml = '<span class="status-badge status-idle geist-mono">IDLE</span>';
+                if (tool._lastStatus !== 'NOT RUN') {
+                    if (tool._lastStatus.startsWith("STRESS:")) {
+                        statusHtml = `<span class="status-badge status-success geist-mono" style="border-color:#fbbf24; color:#fbbf24; background:rgba(251, 191, 36, 0.1);">${tool._lastStatus}</span>`;
+                    } else if (tool._isFailed) {
+                        statusHtml = `<span class="status-badge status-error geist-mono">${tool._lastStatus} &middot; ${tool._latency}ms</span>`;
+                    } else {
+                        statusHtml = `<span class="status-badge status-success geist-mono">${tool._lastStatus} &middot; ${tool._latency}ms</span>`;
+                    }
+                }
+
+                html += `
+                    <tr id="row-${index}">
+                        <td><span class="cat-badge" style="background:rgba(59,130,246,0.1); color:#60a5fa; border:1px solid rgba(59,130,246,0.2);">${tool.name ? tool.name.split('_')[0].replace('dat-was-', '') : 'unknown'}</span></td>
+                        <td><span class="cat-badge">${tool._meta?.category_key || 'oth'}</span></td>
+                        <td class="font-medium text-slate-200">
+                            <div class="flex items-center gap-2 flex-wrap">
+                                <span class="font-semibold text-slate-100 geist-mono text-[15px]">${tool.name}</span>
+                                ${toolTitle ? `<span class="text-xs font-medium text-blue-400 bg-blue-500/10 border border-blue-500/20 px-2.5 py-0.5 rounded-full shrink-0">(${toolTitle})</span>` : ''}
+                            </div>
+                        </td>
+                        <td class="text-sm text-zinc-400 geist-mono">
+                            <div class="flex items-center gap-3">
+                                <span class="truncate" title='${payloadStr.replace(/'/g, "&apos;")}'>${shortPayload}</span>
+                                <button class="btn-sm hover:text-white shrink-0" style="padding:4px 10px; font-size:12px;" onclick="openPayloadModal(${index})">Edit</button>
+                            </div>
+                        </td>
+                        <td id="status-${index}">${statusHtml}</td>
+                        <td class="text-right">
+                            <div class="flex items-center justify-end gap-2">
+                                <button class="btn-sm run-single-btn" onclick="runSingleTest(${index})">Test</button>
+                                <button class="btn-stress run-stress-btn" onclick="runStressTest(${index})">Stress</button>
+                                <button id="ping-btn-${index}" class="btn-sm" style="${pingIntervals[index] ? 'background:#10b981; color:white; border-color:#10b981;' : ''}" onclick="toggleAutoPing(${index})">${pingIntervals[index] ? 'Ping On' : 'Ping Off'}</button>
+                                <button class="btn-sm" style="${tool._responseData ? '' : 'display:none;'}" id="view-res-${index}" onclick="openResultModal(${index})">Result</button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            });
+            tbody.innerHTML = html;
+        }
+
+        function updateProgress(completed, total) {
+            document.getElementById('progressInfo').textContent = `Total: ${total} / Completed: ${completed}`;
+            if (total > 0) {
+                document.getElementById('progressBarFill').style.width = `${(completed / total) * 100}%`;
+            } else {
+                document.getElementById('progressBarFill').style.width = '0%';
+            }
+        }
+
+        async function executeCall(index) {
+            const tool = allTools[index];
+            const payload = generateDummyPayload(tool);
+            const statusCell = document.getElementById(`status-${index}`);
+            if(statusCell) statusCell.innerHTML = '<span class="status-badge status-running geist-mono">RUNNING...</span>';
+            
+            appendLog(`Executing ${tool.name}...`, 'info');
+            const res = await executeRawCall(tool.name, payload);
+            
+            tool._latency = res.latency;
+            tool._isFailed = !res.success;
+            tool._lastStatus = res.status;
+            tool._responseData = res.data;
+            
+            if (tool._isFailed) {
+                appendLog(`❌ [ERROR] ${tool.name} failed (${res.status}) - ${res.latency}ms`, 'error');
+            } else {
+                appendLog(`✅ [SUCCESS] ${tool.name} completed - ${res.latency}ms`, 'success');
+            }
+            
+            // Update UI if visible
+            const btnRes = document.getElementById(`view-res-${index}`);
+            if(btnRes) btnRes.style.display = 'inline-block';
+            
+            if(statusCell) {
+                if (tool._isFailed) statusCell.innerHTML = `<span class="status-badge status-error geist-mono">${tool._lastStatus} &middot; ${tool._latency}ms</span>`;
+                else statusCell.innerHTML = `<span class="status-badge status-success geist-mono">${tool._lastStatus} &middot; ${tool._latency}ms</span>`;
+            }
+        }
+        
+async function executeRawCall(name, payload) {
+    const tool = allTools.find(t => t.name === name);
+    if (tool && tool.inputSchema && tool.inputSchema.properties) {
+        const props = tool.inputSchema.properties;
+        for (const key in payload) {
+            if (props[key]) {
+                const type = props[key].type;
+                if ((type === 'integer' || type === 'number') && typeof payload[key] === 'string') {
+                    const parsed = Number(payload[key]);
+                    if (!isNaN(parsed)) payload[key] = parsed;
+                } else if (type === 'boolean' && typeof payload[key] === 'string') {
+                    payload[key] = payload[key].toLowerCase() === 'true';
+                }
+            }
+        }
+    }
+    const reqPayload = { jsonrpc: "2.0", method: "tools/call", params: { name: name, arguments: payload }, id: Date.now() };
+            const startTime = Date.now();
+            try {
+                const response = await fetch('/mcp/api/v1/tools/call', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'X-Agent-Id': 'AUTO-TESTER' },
+                    body: JSON.stringify(reqPayload)
+                });
+                const latency = Date.now() - startTime;
+                if (response.ok) {
+                    const data = await response.json();
+                    let respData = data;
+                    if (data?.result?.result) respData = data.result.result.data !== undefined ? data.result.result.data : data.result.result;
+                    else if (data?.error) respData = data.error;
+                    
+                    if (data.result && data.result.isError) return { success: false, latency, status: "ERR: MCP ERROR", data: respData };
+                    return { success: true, latency, status: "200 OK", data: respData };
+                } else {
+                    return { success: false, latency, status: `HTTP ${response.status}`, data: await response.text() };
+                }
+            } catch (error) {
+                return { success: false, latency: 0, status: "NET ERR", data: error.toString() };
+            }
+        }
+
+        async function runSingleTest(index) {
+            const btn = document.querySelector(`#row-${index} .run-single-btn`);
+            if(btn) btn.disabled = true;
+            await executeCall(index);
+            if(btn) btn.disabled = false;
+        }
+        
+        async function runStressTest(index) {
+            const reqCount = 50;
+            const tool = allTools[index];
+            const payload = generateDummyPayload(tool);
+            const statusCell = document.getElementById(`status-${index}`);
+            const btn1 = document.querySelector(`#row-${index} .run-single-btn`);
+            const btn2 = document.querySelector(`#row-${index} .run-stress-btn`);
+            
+            if(btn1) btn1.disabled = true;
+            if(btn2) btn2.disabled = true;
+            if(statusCell) statusCell.innerHTML = '<span class="status-badge status-running geist-mono" style="border-color:#fbbf24; color:#fbbf24; background:rgba(251, 191, 36, 0.1);">STRESS TESTING...</span>';
+            
+            const promises = [];
+            for(let i = 0; i < reqCount; i++) {
+                promises.push(executeRawCall(tool.name, payload));
+            }
+            
+            const results = await Promise.all(promises);
+            
+            const latencies = results.map(r => r.latency);
+            const max = Math.max(...latencies);
+            const min = Math.min(...latencies);
+            const avg = latencies.reduce((a, b) => a + b, 0) / reqCount;
+            const successes = results.filter(r => r.success).length;
+            
+            tool._lastStatus = `STRESS: ${successes}/${reqCount} OK`;
+            tool._latency = Math.round(avg);
+            tool._isFailed = (successes < reqCount);
+            tool._responseData = `[Stress Test Report - ${reqCount} Concurrent Requests]\n\nSuccess: ${successes}\nFailed: ${reqCount - successes}\n\nAvg Latency: ${avg.toFixed(2)} ms\nMax Latency: ${max} ms\nMin Latency: ${min} ms\n`;
+            
+            if(statusCell) {
+                statusCell.innerHTML = `<span class="status-badge status-success geist-mono" style="border-color:#fbbf24; color:#fbbf24; background:rgba(251, 191, 36, 0.1);">${tool._lastStatus} &middot; Avg ${Math.round(avg)}ms</span>`;
+            }
+            
+            const btnRes = document.getElementById(`view-res-${index}`);
+            if(btnRes) btnRes.style.display = 'inline-block';
+            
+            if(btn1) btn1.disabled = false;
+            if(btn2) btn2.disabled = false;
+        }
+
+        function cancelTests() {
+            cancelRequested = true;
+            document.getElementById('cancelBtn').innerHTML = 'Canceling...';
+        }
+
+        async function runAllTests(onlyFailed = false) {
+            if (isRunningAll) return;
+            isRunningAll = true;
+            cancelRequested = false;
+            
+            document.getElementById('chartContainer').style.display = 'none';
+            
+            const btnRun = document.getElementById('runAllBtn');
+            const btnCancel = document.getElementById('cancelBtn');
+            const btnFailed = document.getElementById('runFailedBtn');
+            
+            btnRun.style.display = 'none';
+            btnFailed.style.display = 'none';
+            btnCancel.style.display = 'flex';
+            btnCancel.innerHTML = 'Stop Tests';
+            
+            document.getElementById('progressBarBg').style.display = 'block';
+            
+            const targetTools = onlyFailed ? filteredTools.filter(t => t._isFailed) : filteredTools;
+            let completed = 0;
+            updateProgress(0, targetTools.length);
+
+            targetTools.forEach(t => {
+                const idx = allTools.indexOf(t);
+                t._lastStatus = 'NOT RUN';
+                t._isFailed = false;
+                t._responseData = null;
+                const cell = document.getElementById(`status-${idx}`);
+                if(cell) cell.innerHTML = '<span class="status-badge status-idle geist-mono">IDLE</span>';
+                const resBtn = document.getElementById(`view-res-${idx}`);
+                if(resBtn) resBtn.style.display = 'none';
+            });
+
+            const batchSize = 3;
+            for (let i = 0; i < targetTools.length; i += batchSize) {
+                if (cancelRequested) break;
+                
+                const batch = targetTools.slice(i, i + batchSize);
+                const promises = batch.map((tool) => {
+                    const idx = allTools.indexOf(tool);
+                    return executeCall(idx).then(() => {
+                        completed++;
+                        updateProgress(completed, targetTools.length);
+                    });
+                });
+                await Promise.all(promises);
+            }
+
+            isRunningAll = false;
+            btnCancel.style.display = 'none';
+            btnRun.style.display = 'flex';
+            
+            document.getElementById('exportCsvBtn').style.display = 'flex';
+            if (filteredTools.some(t => t._isFailed)) {
+                btnFailed.style.display = 'flex';
+            }
+            
+            renderChart(targetTools);
+        }
+        
+        function renderChart(testedTools) {
+            const dataTools = testedTools.filter(t => t._lastStatus !== 'NOT RUN');
+            if (dataTools.length === 0) return;
+            
+            document.getElementById('chartContainer').style.display = 'block';
+            const ctx = document.getElementById('latencyChart').getContext('2d');
+            
+            const gradientSuccess = ctx.createLinearGradient(0, 0, 0, 400);
+            gradientSuccess.addColorStop(0, 'rgba(56, 189, 248, 0.9)'); // sky-400
+            gradientSuccess.addColorStop(1, 'rgba(59, 130, 246, 0.1)'); // blue-500
+            
+            const gradientError = ctx.createLinearGradient(0, 0, 0, 400);
+            gradientError.addColorStop(0, 'rgba(248, 113, 113, 0.9)'); // red-400
+            gradientError.addColorStop(1, 'rgba(220, 38, 38, 0.1)');   // red-600
+
+            const fullLabels = dataTools.map(t => t.name);
+            const labels = dataTools.map(t => {
+                const parts = t.name.split('.');
+                let short = parts.length > 1 ? parts.slice(-2).join('.') : t.name;
+                return short.length > 18 ? short.substring(0, 16) + '..' : short;
+            });
+            const latencies = dataTools.map(t => t._latency);
+            const colors = dataTools.map(t => t._isFailed ? gradientError : gradientSuccess);
+            const borderColors = dataTools.map(t => t._isFailed ? 'rgba(248, 113, 113, 1)' : 'rgba(56, 189, 248, 1)');
+            
+            if (chartInstance) chartInstance.destroy();
+            
+            chartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Latency (ms)',
+                        data: latencies,
+                        backgroundColor: colors,
+                        borderColor: borderColors,
+                        borderWidth: 1,
+                        borderRadius: 6,
+                        borderSkipped: false,
+                        barPercentage: 0.6,
+                        categoryPercentage: 0.8
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    animation: {
+                        duration: 1200,
+                        easing: 'easeOutQuart'
+                    },
+                    plugins: {
+                        legend: { display: false },
+                        title: { display: false },
+                        tooltip: {
+                            backgroundColor: 'rgba(9, 9, 11, 0.9)',
+                            titleFont: { family: 'Geist', size: 14, weight: '600' },
+                            bodyFont: { family: 'Geist Mono', size: 13 },
+                            padding: 12,
+                            cornerRadius: 8,
+                            borderColor: 'rgba(63, 63, 70, 0.5)',
+                            borderWidth: 1,
+                            displayColors: false,
+                            callbacks: {
+                                title: function(context) {
+                                    return fullLabels[context[0].dataIndex];
+                                },
+                                label: function(context) {
+                                    return context.parsed.y + ' ms';
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: { color: 'rgba(255, 255, 255, 0.04)', drawBorder: false, tickLength: 0 },
+                            ticks: { color: '#71717a', font: { family: 'Geist Mono', size: 11 }, padding: 10 }
+                        },
+                        x: {
+                            grid: { display: false, drawBorder: false },
+                            ticks: { color: '#a1a1aa', font: { family: 'Geist', size: 12 }, maxRotation: 45, minRotation: 45, padding: 10 }
+                        }
+                    }
+                }
+            });
+        }
+
+        /* Edit Payload Modal & Smart Form */
+        function switchPayloadTab(mode) {
+            currentPayloadMode = mode;
+            document.getElementById('tabFormBtn').classList.toggle('active', mode === 'form');
+            document.getElementById('tabJsonBtn').classList.toggle('active', mode === 'json');
+            
+            document.getElementById('payloadFormContainer').style.display = mode === 'form' ? 'flex' : 'none';
+            document.getElementById('payloadJsonContainer').style.display = mode === 'json' ? 'block' : 'none';
+            
+            if (mode === 'form') {
+                // If switching back to form, maybe try to parse the JSON and populate the form
+                try {
+                    const parsed = JSON.parse(document.getElementById('payloadEditor').value);
+                    const tool = allTools[currentEditIndex];
+                    tool._tempParsed = parsed;
+                    renderSmartForm(tool, parsed);
+                } catch(e) {}
+            } else {
+                // If switching to JSON, serialize the current form to textarea
+                const formObj = serializeSmartForm();
+                document.getElementById('payloadEditor').value = JSON.stringify(formObj, null, 2);
+            }
+        }
+        
+        function renderSmartForm(tool, payloadToUse = null) {
+            const schema = (tool.inputSchema || tool.parametersSchema);
+            const form = document.getElementById('payloadFormContainer');
+            form.innerHTML = '';
+            
+            if(!schema || !schema.properties || Object.keys(schema.properties).length === 0) {
+               form.innerHTML = '<div class="text-sm text-zinc-500 py-4 text-center border border-[#3f3f46] rounded bg-[#18181b]">This tool requires no parameters.</div>';
+               return;
+            }
+            
+            const currentPayload = payloadToUse || generateDummyPayload(tool);
+            let html = '';
+            for (const [key, value] of Object.entries(schema.properties)) {
+                let val = currentPayload[key];
+                if(val === undefined) val = '';
+                
+                let inputHtml = '';
+                let typeLabel = value.type || 'string';
+                
+                if(value.enum && value.enum.length > 0) {
+                    let options = value.enum.map(e => `<option value="${e}" ${val===e?'selected':''}>${e}</option>`).join('');
+                    inputHtml = `<select data-key="${key}" data-type="enum" class="bg-[#09090b] border border-[#3f3f46] text-white text-sm rounded p-2 w-full focus:border-blue-500 outline-none">${options}</select>`;
+                    typeLabel = 'enum';
+                } else if(value.type === 'boolean') {
+                    inputHtml = `<input type="checkbox" data-key="${key}" data-type="boolean" class="w-4 h-4 text-blue-600 bg-[#09090b] border-[#3f3f46] rounded focus:ring-blue-500" ${val?'checked':''}>`;
+                } else if(value.type === 'integer' || value.type === 'number') {
+                    inputHtml = `<input type="number" data-key="${key}" data-type="number" value="${val}" class="bg-[#09090b] border border-[#3f3f46] text-white text-sm rounded p-2 w-full focus:border-blue-500 outline-none">`;
+                } else if (value.type === 'object' || value.type === 'array') {
+                    // For complex types, use a small text area
+                    let stringVal = typeof val === 'object' ? JSON.stringify(val) : val;
+                    inputHtml = `<textarea data-key="${key}" data-type="object" class="bg-[#09090b] border border-[#3f3f46] text-white text-sm rounded p-2 w-full focus:border-blue-500 outline-none h-20">${stringVal}</textarea>`;
+                } else {
+                    inputHtml = `<input type="text" data-key="${key}" data-type="string" value="${typeof val === 'object' ? JSON.stringify(val).replace(/"/g, '&quot;') : val}" class="bg-[#09090b] border border-[#3f3f46] text-white text-sm rounded p-2 w-full focus:border-blue-500 outline-none">`;
+                }
+                
+                let reqStar = (schema.required && schema.required.includes(key)) ? '<span class="text-red-500">*</span>' : '';
+                html += `<div class="bg-[#18181b] p-4 rounded-lg border border-[#27272a]">
+                            <label class="block text-sm font-medium text-slate-300 mb-2">${key} ${reqStar} <span class="text-xs text-zinc-500 font-mono font-normal ml-2">${typeLabel}</span></label>
+                            ${inputHtml}
+                            ${value.description ? `<p class="text-sm text-zinc-500 mt-2">${value.description}</p>` : ''}
+                         </div>`;
+            }
+            form.innerHTML = html;
+        }
+
+        function serializeSmartForm() {
+            const inputs = document.querySelectorAll('#payloadFormContainer [data-key]');
+            const obj = {};
+            inputs.forEach(el => {
+                const key = el.getAttribute('data-key');
+                const type = el.getAttribute('data-type');
+                if(type === 'boolean') {
+                    obj[key] = el.checked;
+                } else if(type === 'number') {
+                    obj[key] = Number(el.value);
+                } else if(type === 'object') {
+                    try { obj[key] = JSON.parse(el.value); } catch(e) { obj[key] = el.value; }
+                } else if(type === 'string' && (el.value.startsWith('{') || el.value.startsWith('['))) {
+                    try { obj[key] = JSON.parse(el.value); } catch(e) { obj[key] = el.value; }
+                } else {
+                    obj[key] = el.value;
+                }
+            });
+            return obj;
+        }
+
+        function openPayloadModal(index) {
+            currentEditIndex = index;
+            const tool = allTools[index];
+            const toolTitle = tool.title || tool._meta?.title || '';
+            document.getElementById('payloadToolName').textContent = toolTitle ? `${tool.name} (${toolTitle})` : tool.name;
+            const payload = generateDummyPayload(tool);
+            
+            // Initialize both modes
+            document.getElementById('payloadEditor').value = JSON.stringify(payload, null, 2);
+            renderSmartForm(tool, payload);
+            switchPayloadTab('form'); // Default to form mode
+            
+            document.getElementById('payloadError').classList.add('hidden');
+            document.getElementById('payloadModal').style.display = 'flex';
+        }
+
+        function closePayloadModal() {
+            document.getElementById('payloadModal').style.display = 'none';
+        }
+
+        function resetPayload() {
+            if (currentEditIndex === -1) return;
+            const tool = allTools[currentEditIndex];
+            
+            // 로컬 스토리지에서 삭제
+            const savedPayloads = JSON.parse(localStorage.getItem('mcp_tester_payloads') || '{}');
+            delete savedPayloads[tool.name];
+            localStorage.setItem('mcp_tester_payloads', JSON.stringify(savedPayloads));
+            
+            // 런타임 상태 초기화
+            tool._customPayload = null;
+            
+            // 새 스키마 기반 기본 페이로드 생성
+            const freshPayload = generateDummyPayload(tool);
+            
+            // UI 업데이트
+            document.getElementById('payloadEditor').value = JSON.stringify(freshPayload, null, 2);
+            renderSmartForm(tool, freshPayload);
+        }
+
+        function savePayload() {
+            let finalPayload = {};
+            if (currentPayloadMode === 'form') {
+                finalPayload = serializeSmartForm();
+            } else {
+                const raw = document.getElementById('payloadEditor').value;
+                try {
+                    finalPayload = JSON.parse(raw);
+                } catch (e) {
+                    document.getElementById('payloadError').classList.remove('hidden');
+                    return;
+                }
+            }
+            
+            allTools[currentEditIndex]._customPayload = finalPayload;
+            persistCustomPayloads(); // Save to LocalStorage
+            
+            closePayloadModal();
+            renderTable(); 
+        }
+
+        /* Result Modal & Code Snippets */
+        function openResultModal(index) {
+            currentResultIndex = index;
+            const tool = allTools[index];
+            const toolTitle = tool.title || tool._meta?.title || '';
+            document.getElementById('resultToolName').textContent = toolTitle ? `${tool.name} (${toolTitle})` : tool.name;
+            let resTxt = typeof tool._responseData === 'object' ? JSON.stringify(tool._responseData, null, 2) : tool._responseData;
+            document.getElementById('resultViewer').textContent = resTxt;
+            document.getElementById('resultModal').style.display = 'flex';
+        }
+
+        function closeResultModal() {
+            document.getElementById('resultModal').style.display = 'none';
+        }
+        
+        function copySnippet(type) {
+            if(currentResultIndex === -1) return;
+            const tool = allTools[currentResultIndex];
+            const payload = generateDummyPayload(tool);
+            const reqPayload = { jsonrpc: "2.0", method: "tools/call", params: { name: tool.name, arguments: payload }, id: Date.now() };
+            
+            let text = '';
+            if(type === 'curl') {
+                text = `curl -X POST http://localhost:8081/mcp/api/v1/tools/call \\\n  -H "Content-Type: application/json" \\\n  -d '${JSON.stringify(reqPayload)}'`;
+            } else if (type === 'java') {
+                const jsonStr = JSON.stringify(reqPayload).replace(/"/g, '\\"');
+                text = `// Java RestTemplate or WebClient Payload\nString payload = "${jsonStr}";\n\n// Example using RestTemplate:\n// HttpHeaders headers = new HttpHeaders();\n// headers.setContentType(MediaType.APPLICATION_JSON);\n// HttpEntity<String> request = new HttpEntity<>(payload, headers);\n// String response = restTemplate.postForObject("http://localhost:8081/mcp/api/v1/tools/call", request, String.class);`;
+            }
+            
+            navigator.clipboard.writeText(text).then(() => {
+                alert(`[${type.toUpperCase()}] code snippet copied to clipboard!`);
+            });
+        }
+
+        function exportCsv() {
+            if (filteredTools.length === 0) return;
+            let csvContent = "Module,Category,Tool Name,Title,Status,Latency(ms),Payload,Response\n";
+            filteredTools.forEach(tool => {
+                const modName = `"${(tool.name ? tool.name.split('_')[0].replace('dat-was-', '') : '').replace(/"/g, '""')}"`;
+                const category = `"${(tool._meta?.category_key || tool.categoryKey || 'oth').replace(/"/g, '""')}"`;
+                const name = `"${(tool.name || '').replace(/"/g, '""')}"`;
+                const title = `"${(tool.title || tool._meta?.title || '').replace(/"/g, '""')}"`;
+                const status = `"${(tool._lastStatus || 'NOT RUN').replace(/"/g, '""')}"`;
+                const latency = tool._latency || 0;
+                const payload = generateDummyPayload(tool);
+                const payloadStr = `"${JSON.stringify(payload).replace(/"/g, '""')}"`;
+                const resp = tool._responseData ? (typeof tool._responseData === 'object' ? JSON.stringify(tool._responseData) : tool._responseData) : "";
+                const responseStr = `"${resp.replace(/"/g, '""')}"`;
+                csvContent += `${modName},${category},${name},${title},${status},${latency},${payloadStr},${responseStr}\n`;
+            });
+            const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement("a");
+            link.setAttribute("href", url);
+            link.setAttribute("download", `mcp_tools_test_report_${new Date().toISOString().slice(0, 10)}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        let currentExportJson = [];
+
+        function exportJson() {
+            if (filteredTools.length === 0) {
+                alert("No tools match the current filter.");
+                return;
+            }
+            const cleanTools = filteredTools.map(t => {
+                const clean = { ...t };
+                delete clean._customPayload;
+                delete clean._lastStatus;
+                delete clean._isFailed;
+                delete clean._latency;
+                delete clean._responseData;
+                delete clean._tempParsed;
+                return clean;
+            });
+            currentExportJson = cleanTools;
+            document.getElementById('jsonSearchInput').value = '';
+            document.getElementById('jsonExportViewer').value = JSON.stringify({ tools: currentExportJson }, null, 2);
+            document.getElementById('jsonExportModal').style.display = 'flex';
+        }
+        
+        function filterJsonExport() {
+            const keyword = document.getElementById('jsonSearchInput').value.toLowerCase();
+            if (!keyword) {
+                document.getElementById('jsonExportViewer').value = JSON.stringify({ tools: currentExportJson }, null, 2);
+                return;
+            }
+            const filtered = currentExportJson.filter(t => 
+                (t.name && t.name.toLowerCase().includes(keyword)) || 
+                (t.description && t.description.toLowerCase().includes(keyword))
+            );
+            document.getElementById('jsonExportViewer').value = JSON.stringify({ tools: filtered }, null, 2);
+        }
+
+        function closeJsonExportModal() {
+            document.getElementById('jsonExportModal').style.display = 'none';
+        }
+        
+        function copyJsonExport() {
+            const viewer = document.getElementById('jsonExportViewer');
+            navigator.clipboard.writeText(viewer.value).then(() => {
+                alert("JSON copied to clipboard!");
+            });
+        }
+        
+        function downloadJsonExport() {
+            const viewer = document.getElementById('jsonExportViewer');
+            const blob = new Blob([viewer.value], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement("a");
+            link.setAttribute("href", url);
+            link.setAttribute("download", `mcp_tools_list_${new Date().toISOString().slice(0, 10)}.json`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        function downloadPostmanCollection() {
+            if (currentExportJson.length === 0) return;
+            const pmItems = currentExportJson.map(tool => {
+                const dummy = generateDummyPayload(tool);
+                return {
+                    name: tool.name,
+                    request: {
+                        method: "POST",
+                        header: [
+                            { key: "Content-Type", value: "application/json" },
+                            { key: "X-Agent-Id", value: "AUTO-TESTER" }
+                        ],
+                        body: {
+                            mode: "raw",
+                            raw: JSON.stringify({
+                                jsonrpc: "2.0",
+                                method: "tools/call",
+                                params: { name: tool.name, arguments: dummy },
+                                id: 1
+                            }, null, 2)
+                        },
+                        url: {
+                            raw: "{{baseUrl}}/mcp/api/v1/tools/call",
+                            host: ["{{baseUrl}}"],
+                            path: ["mcp", "api", "v1", "tools", "call"]
+                        },
+                        description: tool.description || ''
+                    }
+                };
+            });
+
+            const collection = {
+                info: {
+                    name: "AXHUB MCP Tools API",
+                    description: "Auto-generated Postman Collection for testing MCP Tools",
+                    schema: "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+                },
+                item: pmItems,
+                variable: [
+                    { key: "baseUrl", value: "http://localhost:8081" }
+                ]
+            };
+
+            const blob = new Blob([JSON.stringify(collection, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement("a");
+            link.setAttribute("href", url);
+            link.setAttribute("download", `AXHUB_MCP_Tools.postman_collection.json`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+        
+        function downloadOpenApiSpec() {
+            if (currentExportJson.length === 0) return;
+            const paths = {};
+            
+            // To make it standard OpenAPI, we'll map each tool as a distinct endpoint path (virtual)
+            // Or we just map /mcp/api/v1/tools/call and use tool names as different request bodies,
+            // but for documentation purposes, mapping them as separate virtual paths is usually better to view in Swagger UI.
+            currentExportJson.forEach(tool => {
+                const schemaProps = (tool.inputSchema || tool.parametersSchema)?.properties || {};
+                const required = (tool.inputSchema || tool.parametersSchema)?.required || [];
+                
+                paths[`/mcp/api/v1/tools/call?name=${tool.name}`] = {
+                    post: {
+                        summary: tool.name,
+                        description: tool.description || 'No description provided.',
+                        tags: [tool.categoryKey || 'Others'],
+                        requestBody: {
+                            required: true,
+                            content: {
+                                "application/json": {
+                                    schema: {
+                                        type: "object",
+                                        properties: {
+                                            jsonrpc: { type: "string", example: "2.0" },
+                                            method: { type: "string", example: "tools/call" },
+                                            id: { type: "integer", example: 1 },
+                                            params: {
+                                                type: "object",
+                                                properties: {
+                                                    name: { type: "string", example: tool.name },
+                                                    arguments: {
+                                                        type: "object",
+                                                        properties: schemaProps,
+                                                        required: required.length > 0 ? required : undefined
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        responses: {
+                            "200": {
+                                description: "Successful response"
+                            }
+                        }
+                    }
+                };
+            });
+
+            const openapi = {
+                openapi: "3.0.3",
+                info: {
+                    title: "AXHUB MCP Tools",
+                    version: "1.0.0",
+                    description: "OpenAPI Specification for AXHUB MCP Tools"
+                },
+                servers: [
+                    { url: "http://localhost:8081", description: "Local Gateway" },
+                    { url: "https://axhubmcp.devjun.net", description: "Dev Gateway" }
+                ],
+                paths: paths
+            };
+
+            const blob = new Blob([JSON.stringify(openapi, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement("a");
+            link.setAttribute("href", url);
+            link.setAttribute("download", `AXHUB_MCP_Tools_OpenAPI.json`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        function downloadMarkdown() {
+            if (currentExportJson.length === 0) return;
+            let md = "# AXHUB MCP Tools Documentation\n\n";
+            
+            // Group by category
+            const grouped = {};
+            currentExportJson.forEach(t => {
+                const cat = t.categoryKey || 'Others';
+                if(!grouped[cat]) grouped[cat] = [];
+                grouped[cat].push(t);
+            });
+            
+            Object.keys(grouped).sort().forEach(cat => {
+                md += `## Category: ${cat.toUpperCase()}\n\n`;
+                grouped[cat].forEach(tool => {
+                    md += `### \`${tool.name}\`\n\n`;
+                    md += `**Description:** ${tool.description || 'N/A'}\n\n`;
+                    
+                    const props = (tool.inputSchema || tool.parametersSchema)?.properties || {};
+                    const reqs = (tool.inputSchema || tool.parametersSchema)?.required || [];
+                    
+                    if (Object.keys(props).length > 0) {
+                        md += `#### Parameters\n\n`;
+                        md += `| Name | Type | Required | Description | Example |\n`;
+                        md += `|------|------|----------|-------------|---------|\n`;
+                        Object.keys(props).forEach(p => {
+                            const pData = props[p];
+                            const isReq = reqs.includes(p) ? '✅ Yes' : '❌ No';
+                            let example = pData.example !== undefined ? pData.example : (pData.examples ? pData.examples[0] : '');
+                            if (typeof example === 'object') example = JSON.stringify(example);
+                            md += `| \`${p}\` | \`${pData.type || 'string'}\` | ${isReq} | ${pData.description || ''} | \`${example}\` |\n`;
+                        });
+                        md += `\n`;
+                    } else {
+                        md += `*No parameters required.*\n\n`;
+                    }
+                    md += `---\n\n`;
+                });
+            });
+
+            const blob = new Blob([md], { type: 'text/markdown' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement("a");
+            link.setAttribute("href", url);
+            link.setAttribute("download", `AXHUB_MCP_Tools_Docs.md`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        document.addEventListener('DOMContentLoaded', fetchTools);
+    </script>
+</body>
+</html>

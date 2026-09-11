@@ -1,0 +1,41 @@
+# AX HUB Tool Pod 공통 Glow Framework 설정입니다.
+# Tool Pod의 application-{profile}.yml에서 이 파일과 환경별 Glow 설정을 함께 import합니다.
+logging:
+  level:
+    root: INFO
+    io.shinhanlife.axhub: DEBUG
+    io.shinhanlife.glow: INFO
+    org.springframework.web: INFO
+  pattern:
+    console: "[%d{yyyy-MM-dd HH:mm:ss.SSS}] [%-5level] [%thread] %logger{36} - %msg%n"
+
+spring:
+  data:
+    redis:
+      host: ${SPRING_DATA_REDIS_HOST:127.0.0.1}
+      port: ${SPRING_DATA_REDIS_PORT:6379}
+      password: ${SPRING_DATA_REDIS_PASSWORD:}
+
+glow:
+  communication:
+    http:
+      connection-timeout: 5
+      read-timeout: 5
+      # HTTP Tool target catalog. Scaffold adds local mock entries after a Tool is created.
+      api-list: []
+    mci:
+      uri: /ntl_mci/dap_rcv
+      receive-uri: /itrf/mciReceive
+      connection-timeout: 300
+      read-timeout: 300
+      encoding: UTF-8
+    extmci:
+      uri: /extmci
+      json-uri: /extmciJson
+      receive-uri: /app/extMciReceive
+      connection-timeout: 5
+      read-timeout: 30
+      encoding: EUC-KR
+    websocket:
+      endpoint: /ws-glow
+      allowed-origins: "*"

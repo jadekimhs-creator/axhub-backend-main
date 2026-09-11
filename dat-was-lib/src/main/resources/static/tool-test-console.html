@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AX HUB Tool Test Console</title>
+    <style>
+        :root { color-scheme: dark; --bg:#09090b; --surface:#18181b; --surface2:#27272a; --line:#3f3f46; --muted:#a1a1aa; --text:#f4f4f5; --blue:#60a5fa; --green:#34d399; --red:#fb7185; --yellow:#fbbf24; }
+        * { box-sizing:border-box; } body { margin:0; background:var(--bg); color:var(--text); font-family:Arial,"Malgun Gothic",sans-serif; }
+        header { border-bottom:1px solid var(--line); background:#111113; position:sticky; top:0; z-index:2; } .header-inner { max-width:1280px; min-height:64px; margin:auto; padding:0 24px; display:flex; align-items:center; justify-content:space-between; gap:16px; }
+        h1 { margin:0; font-size:18px; } h2 { font-size:15px; margin:0 0 14px; } p { color:var(--muted); line-height:1.55; }
+        main { max-width:1280px; margin:auto; padding:28px 24px 48px; } .intro { margin-bottom:20px; } .intro h1 { font-size:24px; margin-bottom:8px; }
+        .grid { display:grid; grid-template-columns:340px minmax(0,1fr); gap:18px; } .card { background:var(--surface); border:1px solid var(--line); border-radius:12px; padding:18px; }
+        label { display:block; color:var(--muted); font-size:12px; font-weight:700; margin:0 0 7px; } input, select, textarea { width:100%; border:1px solid var(--line); border-radius:8px; padding:10px 12px; background:#101012; color:var(--text); font:14px ui-monospace,SFMono-Regular,Consolas,monospace; } textarea { min-height:270px; resize:vertical; line-height:1.55; }
+        select { font-family:Arial,"Malgun Gothic",sans-serif; } .stack { display:grid; gap:12px; } .buttons { display:flex; gap:8px; flex-wrap:wrap; }
+        button { border:1px solid var(--line); border-radius:8px; padding:9px 12px; color:var(--text); background:var(--surface2); cursor:pointer; font-weight:700; } button:hover { border-color:var(--blue); } button.primary { background:#2563eb; border-color:#3b82f6; } button.danger { color:#fecdd3; } button:disabled { opacity:.5; cursor:not-allowed; }
+        .meta { display:flex; gap:8px; flex-wrap:wrap; margin:0 0 14px; } .badge { border:1px solid var(--line); border-radius:99px; padding:4px 8px; color:var(--muted); font-size:11px; font-family:ui-monospace,monospace; } .badge.ok { color:var(--green); border-color:#166534; } .badge.fail { color:var(--red); border-color:#9f1239; }
+        .notice { border-left:3px solid var(--blue); padding:10px 12px; background:#172554; color:#dbeafe; border-radius:4px; font-size:13px; margin-bottom:16px; } .hidden { display:none !important; }
+        .result { background:#101012; border:1px solid var(--line); border-radius:8px; padding:14px; white-space:pre-wrap; overflow:auto; max-height:520px; font:13px/1.55 ui-monospace,SFMono-Regular,Consolas,monospace; }
+        .case-list { display:grid; gap:8px; margin-top:12px; } .case-row { display:flex; align-items:center; gap:8px; padding:9px; border:1px solid var(--line); border-radius:8px; } .case-row main { padding:0; margin:0; flex:1; min-width:0; } .case-row strong,.case-row small { display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; } .case-row small { color:var(--muted); margin-top:3px; }
+        .run-log { margin-top:12px; font:12px/1.55 ui-monospace,monospace; color:var(--muted); white-space:pre-wrap; max-height:220px; overflow:auto; }
+        .modal-backdrop { position:fixed; inset:0; z-index:100; display:flex; align-items:center; justify-content:center; padding:20px; background:rgba(0,0,0,.68); }
+        .modal { width:min(420px,100%); padding:20px; background:var(--surface); border:1px solid var(--line); border-radius:12px; box-shadow:0 24px 70px rgba(0,0,0,.5); }
+        .modal-header { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:18px; } .modal-header h2 { margin:0; font-size:17px; }
+        .modal-close { padding:4px 8px; font-size:18px; line-height:1; } .modal-actions { display:flex; justify-content:flex-end; margin-top:18px; }
+        .footer-note { margin-top:18px; color:#71717a; font-size:12px; } @media (max-width:900px) { .grid { grid-template-columns:1fr; } .header-inner { padding:0 16px; } main { padding:20px 16px; } }
+    </style>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            corePlugins: {
+                preflight: false,
+            }
+        }
+    </script>
+</head>
+<body class="min-h-screen">
+    <header style="border-bottom: 1px solid #27272a; background: rgba(9,9,11,0.85); backdrop-filter: blur(16px);" class="sticky top-0 z-50">
+        <div class="max-w-6xl mx-auto px-6 h-14 flex items-center justify-between">
+            <div class="flex items-center space-x-5">
+                <a href="/index.html" class="flex items-center group" style="text-decoration:none;">
+                    <div class="w-2 h-2 rounded-full mr-2" style="background:#3b82f6; box-shadow: 0 0 8px rgba(59,130,246,0.8);"></div>
+                    <span class="font-semibold tracking-tight text-sm" style="color:#f4f4f5;">AXHUB Gateway</span>
+                </a>
+                <div class="h-4 w-px" style="background:#27272a;"></div>
+                <nav class="flex space-x-5 text-[13px] font-medium">
+                    <a href="/admin/scaffold.html" style="color:#a1a1aa; text-decoration:none;" class="hover:text-white transition-colors">Scaffold</a>
+                    <a href="/catalog.html" style="color:#a1a1aa; text-decoration:none;" class="hover:text-white transition-colors">Catalog</a>
+                    <a href="/playground.html" style="color:#a1a1aa; text-decoration:none;" class="hover:text-white transition-colors">Playground</a>
+                    <a href="/chat.html" style="color:#a1a1aa; text-decoration:none;" class="hover:text-white transition-colors">Chat</a>
+                    <a href="/tester.html" style="color:#a1a1aa; text-decoration:none;" class="hover:text-white transition-colors">Tester</a>
+                    <a href="/tool-test-console.html" style="color:#ffffff; text-decoration:none;" class="font-semibold">Console</a>
+                    <a href="/tool-report.html" style="color:#a1a1aa;" class="hover:text-white transition-colors">Report</a>
+                </nav>
+            </div>
+            <div class="flex items-center gap-3">
+                <button id="dtoDownloadButton" class="primary" type="button">DTO 다운로드</button>
+                <span class="badge" id="manifestStatus" style="border:1px solid #3f3f46; border-radius:99px; padding:4px 8px; color:#a1a1aa; font-size:11px; font-family:ui-monospace,monospace;">Manifest loading</span>
+                <span class="text-[10px] uppercase tracking-widest px-2 py-1 rounded font-bold" style="background:rgba(59,130,246,0.1); color:#60a5fa; border:1px solid rgba(59,130,246,0.2);">v0.0.1</span>
+            </div>
+        </div>
+    </header>
+<main>
+    <section class="intro"><h1>Schema 기반 Tool 테스트</h1><p>Tool을 선택하고 요청 JSON을 확인한 뒤 실행하세요. 검증한 요청은 브라우저에 저장되며, 저장된 케이스 전체를 한 번에 다시 실행할 수 있습니다.</p></section>
+    <div class="grid">
+        <aside class="stack">
+            <section class="card stack"><h2>1. Tool 선택</h2><div><label for="filter">검색</label><input id="filter" placeholder="이름, 설명으로 검색"></div><div><label for="toolSelect">Tool</label><select id="toolSelect" size="12"></select></div><div class="meta" id="toolMeta"></div><div class="buttons"><button id="sampleButton">Schema 샘플 채우기</button><button id="reloadButton">Manifest 새로고침</button></div></section>
+            <section class="card"><h2>저장된 테스트 케이스</h2><div class="buttons"><button class="primary" id="runAllButton">Run saved cases</button><button class="danger" id="clearCasesButton">전체 삭제</button></div><div id="caseList" class="case-list"></div><div id="runLog" class="run-log"></div></section>
+        </aside>
+        <section class="stack">
+            <section class="card"><h2>2. 요청 JSON</h2><div class="notice">필수값과 형식은 Tool의 inputSchema 기준입니다. MCI·외부 연동 Tool은 업무에 맞는 테스트 데이터를 입력한 후 저장하세요.</div><textarea id="arguments" spellcheck="false" aria-label="요청 JSON"></textarea><div class="buttons" style="margin-top:12px"><button id="saveButton">현재 요청 저장</button><button class="primary" id="executeButton">실행</button></div></section>
+            <section class="card"><h2>3. 실행 결과</h2><div class="meta"><span class="badge" id="httpStatus">대기</span><span class="badge" id="latency">-</span><span class="badge" id="traceId">trace-id: -</span><span class="badge" id="requestId">request-id: -</span></div><pre class="result" id="result">Tool을 선택하고 실행하세요.</pre></section>
+        </section>
+    </div>
+    <p class="footer-note">이 화면은 현재 Tool Pod의 <code>/tool-manifest</code>와 <code>/mcp/{toolName}</code>만 사용합니다. 저장된 케이스는 이 브라우저의 localStorage에만 보관됩니다.</p>
+</main>
+<div id="dtoDownloadModal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="dtoDownloadTitle">
+    <div class="modal">
+        <div class="modal-header">
+            <h2 id="dtoDownloadTitle">DTO 다운로드</h2>
+            <button id="dtoModalCloseButton" class="modal-close" type="button" aria-label="닫기">&times;</button>
+        </div>
+        <label for="dtoSelect">DTO 선택</label>
+        <select id="dtoSelect">
+            <option value="">DTO 목록 불러오는 중...</option>
+        </select>
+        <div class="modal-actions"><button id="dtoConfirmButton" class="primary" type="button">확인</button></div>
+    </div>
+</div>
+<script>
+(() => {
+  const STORAGE_KEY = 'axhub.tool-test-console.cases.v1';
+  const state = { tools: [], selected: null, cases: loadCases() };
+  const $ = id => document.getElementById(id);
+  const select = $('toolSelect'), args = $('arguments'), result = $('result');
+
+  async function loadDtoOptions() {
+    // 서버가 itrf/mci/**/io 패키지에서 찾은 DTO를 _I/_O 접미사 없이 이름 단위로 묶어 셀렉트박스를 구성한다.
+    const dtoSelect = $('dtoSelect');
+    try {
+      const response = await fetch('/dto-download/options', { headers: { 'Cache-Control': 'no-cache' } });
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      const dtoNames = await response.json();
+      dtoSelect.innerHTML = '';
+      for (const dtoName of dtoNames) {
+        const option = document.createElement('option');
+        option.value = dtoName;
+        option.textContent = dtoName;
+        dtoSelect.appendChild(option);
+      }
+      if (!dtoNames.length) dtoSelect.innerHTML = '<option value="">DTO 파일이 없습니다.</option>';
+    } catch (error) {
+      dtoSelect.innerHTML = '<option value="">DTO 목록을 불러오지 못했습니다.</option>';
+    }
+  }
+  function openDtoModal() { $('dtoDownloadModal').classList.remove('hidden'); loadDtoOptions(); $('dtoSelect').focus(); }
+  function closeDtoModal() { $('dtoDownloadModal').classList.add('hidden'); $('dtoDownloadButton').focus(); }
+  async function downloadSelectedDto() {
+    // 선택한 DTO 이름의 _I/_O 엑셀 생성 API를 순차 호출해 존재하는 파일을 각각 브라우저 다운로드로 저장한다.
+    const baseName = $('dtoSelect').value;
+    if (!baseName) return alert('다운로드할 DTO를 선택해주세요.');
+    const confirmButton = $('dtoConfirmButton');
+    confirmButton.disabled = true;
+    const errors = [];
+    let successCount = 0;
+    try {
+      for (const variant of ['I', 'O']) {
+        const dtoName = `${baseName}_${variant}`;
+        try {
+          const response = await fetch(`/dto-download/${encodeURIComponent(dtoName)}`, {
+            cache: 'no-store',
+            headers: { 'Cache-Control': 'no-cache' }
+          });
+          if (response.status === 404) continue; // _I/_O 중 한쪽만 존재하는 DTO는 정상 케이스이므로 건너뛴다.
+          if (!response.ok) {
+            // 422는 GlowTrgmField 메타데이터가 없어 설계서 양식으로 변환할 수 없는 경우다.
+            const message = (await response.text()).trim();
+            throw new Error(response.status === 422
+              ? `${dtoName}: dto의 내용이 엑셀파일 양식에 맞지않습니다 파일을 확인해주세요`
+              : message || `${dtoName} 다운로드에 실패했습니다. (HTTP ${response.status})`);
+          }
+          const blob = await response.blob();
+          const url = URL.createObjectURL(blob);
+          const link = document.createElement('a');
+          link.href = url;
+          link.download = `${dtoName}.xlsx`;
+          document.body.appendChild(link);
+          link.click();
+          link.remove();
+          URL.revokeObjectURL(url);
+          successCount += 1;
+          // 브라우저가 연속 다운로드를 한 번에 차단하지 않도록 다음 요청 전에 짧은 간격을 둔다.
+          await new Promise(resolve => setTimeout(resolve, 300));
+        } catch (error) {
+          errors.push(error.message);
+        }
+      }
+      if (successCount === 0) {
+        alert(errors.length ? errors.join('\n') : `${baseName} 파일을 찾을 수 없습니다.`);
+        return;
+      }
+      if (errors.length) alert(errors.join('\n'));
+      closeDtoModal();
+    } finally {
+      confirmButton.disabled = false;
+    }
+  }
+
+  function loadCases() { try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'); } catch (_) { return []; } }
+  function persistCases() { localStorage.setItem(STORAGE_KEY, JSON.stringify(state.cases)); renderCases(); }
+  function requestId() { return crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random().toString(16).slice(2)}`; }
+  function escapeHtml(value) { return String(value).replace(/[&<>]/g, item => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[item])); }
+
+  let isGatewayMode = false;
+
+  async function loadManifest() {
+    $('manifestStatus').textContent = 'Manifest loading';
+    try {
+      let response = await fetch('/tool-manifest', { headers: { 'Cache-Control': 'no-cache' } });
+      
+      if (!response.ok && response.status === 404) {
+          // Gateway 환경 감지 및 Fallback 처리
+          response = await fetch('/mcp/api/v1/tools/list');
+          if (!response.ok) throw new Error(`Gateway HTTP ${response.status}`);
+          
+          const rpcData = await response.json();
+          state.tools = rpcData.result?.tools || [];
+          isGatewayMode = true;
+          
+          $('manifestStatus').textContent = `${state.tools.length} tools · Gateway Mode`;
+          $('manifestStatus').className = 'badge ok';
+          renderTools();
+          return;
+      }
+      
+      if (!response.ok) throw new Error(`Manifest HTTP ${response.status}`);
+      const manifest = await response.json();
+      state.tools = (manifest.tools || []).filter(tool => tool._meta?.enabled !== false);
+      $('manifestStatus').textContent = `${state.tools.length} tools · rev ${manifest.revision || '-'}`;
+      $('manifestStatus').className = 'badge ok';
+      renderTools();
+    } catch (error) {
+      $('manifestStatus').textContent = `Load error: ${error.message}`;
+      $('manifestStatus').className = 'badge fail';
+      select.innerHTML = '<option>Tool 목록을 불러오지 못했습니다</option>';
+    }
+  }
+
+  function renderTools() {
+    const query = $('filter').value.trim().toLowerCase();
+    const tools = state.tools.filter(tool => `${tool.name} ${tool.title || ''} ${tool.description || ''}`.toLowerCase().includes(query));
+    select.innerHTML = '';
+    for (const tool of tools) {
+      const option = document.createElement('option'); option.value = tool.name;
+      option.textContent = `${tool.name} — ${tool.title || tool.description || ''}`; select.appendChild(option);
+    }
+    if (tools.length) choose(tools.find(tool => tool.name === state.selected?.name) || tools[0]);
+    else { state.selected = null; $('toolMeta').innerHTML = ''; args.value = ''; }
+  }
+
+  function choose(tool) {
+    state.selected = tool; select.value = tool.name;
+    const meta = tool._meta || {}; const hints = tool.annotations || {};
+    $('toolMeta').innerHTML = [
+      `<span class="badge">${escapeHtml(tool.name)}</span>`,
+      `<span class="badge">timeout ${meta.timeoutMillis || 300000}ms</span>`,
+      hints.readOnlyHint ? '<span class="badge ok">read-only</span>' : '',
+      hints.destructiveHint ? '<span class="badge fail">destructive</span>' : ''
+    ].join('');
+    args.value = JSON.stringify(exampleForSchema(tool.inputSchema || tool.parametersSchema || {}), null, 2);
+    result.textContent = tool.description || '설명이 없습니다.';
+    resetResult();
+  }
+
+  function exampleForSchema(schema) {
+    if (schema.default !== undefined) return schema.default;
+    if (Array.isArray(schema.examples) && schema.examples.length) return schema.examples[0];
+    if (Array.isArray(schema.enum) && schema.enum.length) return schema.enum[0];
+    if (schema.type === 'object' || schema.properties) {
+      const output = {}; const required = new Set(schema.required || []);
+      for (const [name, property] of Object.entries(schema.properties || {})) {
+        if (required.has(name) || property.default !== undefined || property.examples?.length || property.enum?.length) output[name] = exampleForSchema(property);
+      }
+      return output;
+    }
+    if (schema.type === 'array') return [];
+    if (schema.type === 'integer') return 1;
+    if (schema.type === 'number') return 1.0;
+    if (schema.type === 'boolean') return false;
+    if (schema.format === 'date') return new Date().toISOString().slice(0, 10);
+    if (schema.format === 'date-time') return new Date().toISOString();
+    return 'test-value';
+  }
+
+  function parseArguments() { try { const value = JSON.parse(args.value || '{}'); if (value && typeof value === 'object' && !Array.isArray(value)) return value; throw new Error('요청 JSON은 객체여야 합니다.'); } catch (error) { throw new Error(`요청 JSON 오류: ${error.message}`); } }
+  function endpointFor(tool) {
+    const fallback = `/mcp/${encodeURIComponent(tool.name)}`;
+    try { const endpoint = new URL(tool.endpoint || fallback, window.location.origin); return endpoint.origin === window.location.origin ? `${endpoint.pathname}${endpoint.search}` : fallback; } catch (_) { return fallback; }
+  }
+  function resetResult() { $('httpStatus').textContent = '대기'; $('httpStatus').className = 'badge'; $('latency').textContent = '-'; $('traceId').textContent = 'trace-id: -'; $('requestId').textContent = 'request-id: -'; }
+
+  async function execute(tool = state.selected, body = null) {
+    if (!tool) throw new Error('실행할 Tool을 선택하세요.');
+    const payload = body || parseArguments(); const trace = requestId(), request = requestId(), started = performance.now();
+    $('executeButton').disabled = true; $('httpStatus').textContent = '실행 중'; $('httpStatus').className = 'badge';
+    try {
+      let response;
+      if (isGatewayMode) {
+          const reqPayload = { jsonrpc: "2.0", method: "tools/call", params: { name: tool.name, arguments: payload }, id: Date.now() };
+          response = await fetch('/mcp/api/v1/tools/call', { 
+              method: 'POST', 
+              headers: { 'Content-Type':'application/json', 'trace-id':trace, 'request-id':request, 'X-Request-Id':request }, 
+              body: JSON.stringify(reqPayload) 
+          });
+      } else {
+          response = await fetch(endpointFor(tool), { 
+              method: 'POST', 
+              headers: { 'Content-Type':'application/json', 'trace-id':trace, 'request-id':request, 'X-Request-Id':request }, 
+              body: JSON.stringify(payload) 
+          });
+      }
+      const text = await response.text(); let data; try { data = text ? JSON.parse(text) : null; } catch (_) { data = text; }
+      
+      let isOk = response.ok;
+      let displayStatus = response.status;
+      if (isGatewayMode && isOk && data?.result?.isError) {
+          isOk = false;
+          displayStatus = "MCP ERR";
+      }
+      
+      const elapsed = Math.round(performance.now() - started);
+      $('httpStatus').textContent = `HTTP ${displayStatus}`; $('httpStatus').className = `badge ${isOk ? 'ok' : 'fail'}`;
+      $('latency').textContent = `${elapsed}ms`; $('traceId').textContent = `trace-id: ${response.headers.get('trace-id') || trace}`; $('requestId').textContent = `request-id: ${response.headers.get('request-id') || request}`;
+      let displayData = data;
+      if (isGatewayMode && data && typeof data === 'object') {
+          if (data.result && data.result.result) {
+              displayData = data.result.result.data !== undefined ? data.result.result.data : data.result.result;
+          } else if (data.error) {
+              displayData = data.error;
+          } else if (data.result && data.result.error_message) {
+              displayData = { error: data.result.error_message, code: data.result.error_code };
+          }
+      }
+      
+      result.textContent = JSON.stringify(displayData, null, 2); return { ok: isOk, status: displayStatus, elapsed, data };
+    } finally { $('executeButton').disabled = false; }
+  }
+
+  function saveCase() {
+    try {
+      const payload = parseArguments(); const name = window.prompt('테스트 케이스 이름', state.selected.name);
+      if (!name) return;
+      state.cases.push({ id: requestId(), name, toolName: state.selected.name, arguments: payload, savedAt: new Date().toISOString() }); persistCases();
+    } catch (error) { alert(error.message); }
+  }
+  function renderCases() {
+    const list = $('caseList'); list.innerHTML = '';
+    if (!state.cases.length) { list.innerHTML = '<p style="margin:0;color:#a1a1aa;font-size:13px">저장된 케이스가 없습니다.</p>'; return; }
+    for (const item of state.cases) {
+      const row = document.createElement('div'); row.className = 'case-row';
+      row.innerHTML = `<main><strong>${escapeHtml(item.name)}</strong><small>${escapeHtml(item.toolName)}</small></main><button data-run="${item.id}">실행</button><button class="danger" data-delete="${item.id}">삭제</button>`;
+      list.appendChild(row);
+    }
+  }
+  async function runSavedCases() {
+    if (!state.cases.length) return alert('저장된 테스트 케이스가 없습니다.');
+    $('runAllButton').disabled = true; $('runLog').textContent = `총 ${state.cases.length}건 실행 시작\n`;
+    let success = 0;
+    for (const item of state.cases) {
+      const tool = state.tools.find(candidate => candidate.name === item.toolName);
+      if (!tool) { $('runLog').textContent += `FAIL ${item.name} · Tool 없음\n`; continue; }
+      try { const execution = await execute(tool, item.arguments); success += execution.ok ? 1 : 0; $('runLog').textContent += `${execution.ok ? 'PASS' : 'FAIL'} ${item.name} · HTTP ${execution.status} · ${execution.elapsed}ms\n`; }
+      catch (error) { $('runLog').textContent += `FAIL ${item.name} · ${error.message}\n`; }
+    }
+    $('runLog').textContent += `완료: ${success}/${state.cases.length} 성공`; $('runAllButton').disabled = false;
+  }
+
+  select.addEventListener('change', () => choose(state.tools.find(tool => tool.name === select.value)));
+  $('filter').addEventListener('input', renderTools);
+  $('sampleButton').addEventListener('click', () => { if (state.selected) args.value = JSON.stringify(exampleForSchema(state.selected.inputSchema || state.selected.parametersSchema || {}), null, 2); });
+  $('reloadButton').addEventListener('click', loadManifest);
+  $('saveButton').addEventListener('click', saveCase);
+  $('executeButton').addEventListener('click', async () => { try { await execute(); } catch (error) { $('httpStatus').textContent = '입력 오류'; $('httpStatus').className = 'badge fail'; result.textContent = error.message; } });
+  $('runAllButton').addEventListener('click', runSavedCases);
+  $('clearCasesButton').addEventListener('click', () => { if (confirm('저장된 테스트 케이스를 모두 삭제할까요?')) { state.cases = []; persistCases(); } });
+  $('dtoDownloadButton').addEventListener('click', openDtoModal);
+  $('dtoModalCloseButton').addEventListener('click', closeDtoModal);
+  $('dtoConfirmButton').addEventListener('click', downloadSelectedDto);
+  $('dtoDownloadModal').addEventListener('click', event => { if (event.target === $('dtoDownloadModal')) closeDtoModal(); });
+  document.addEventListener('keydown', event => { if (event.key === 'Escape' && !$('dtoDownloadModal').classList.contains('hidden')) closeDtoModal(); });
+  $('caseList').addEventListener('click', async event => { const id = event.target.dataset.run || event.target.dataset.delete; if (!id) return; const item = state.cases.find(candidate => candidate.id === id); if (event.target.dataset.delete) { state.cases = state.cases.filter(candidate => candidate.id !== id); persistCases(); return; } const tool = state.tools.find(candidate => candidate.name === item.toolName); try { await execute(tool, item.arguments); } catch (error) { result.textContent = error.message; } });
+  renderCases(); loadManifest();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,19 @@
+# Glow 개발 환경 설정
+spring:
+  config:
+    activate:
+      on-profile: dev
+
+glow:
+  communication:
+    common:
+      env-type: D
+    mci:
+      host: ${GLOW_COMMUNICATION_MCI_HOST:https://dev-ichmci.shinhanlife.co.kr}
+      port: ${GLOW_COMMUNICATION_MCI_PORT:26160}
+    extmci:
+      host: ${GLOW_COMMUNICATION_EXTMCI_HOST:http://host.docker.internal}
+      port: ${GLOW_COMMUNICATION_EXTMCI_PORT:8080}
+    eai:
+      host: ${GLOW_COMMUNICATION_EAI_HOST:tcp://host.docker.internal}
+      port: ${GLOW_COMMUNICATION_EAI_PORT:9999}

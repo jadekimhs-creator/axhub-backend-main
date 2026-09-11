@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AX HUB - ChatClient</title>
+    <script src="./lib/tailwindcss.js"></script>
+    <script src="./vendor/marked.umd.js"></script>
+    <style>
+        :root {
+            --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+        }
+        body { font-family: var(--font-sans); background-color: #0f1115; color: #e2e8f0; }
+        .scrollbar-hide::-webkit-scrollbar { display: none; }
+        .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+        
+        .message-enter { animation: fadeInUp 0.3s ease-out forwards; }
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .typing-dot { animation: typing 1.4s infinite ease-in-out; fill: #94a3b8; }
+        .typing-dot:nth-child(1) { animation-delay: 0s; }
+        .typing-dot:nth-child(2) { animation-delay: 0.2s; }
+        .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+        @keyframes typing {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-3px); }
+        }
+
+        .markdown-content > :first-child { margin-top: 0; }
+        .markdown-content > :last-child { margin-bottom: 0; }
+        .markdown-content p { margin: 0.5rem 0; }
+        .markdown-content ul, .markdown-content ol { margin: 0.5rem 0; padding-left: 1.5rem; }
+        .markdown-content ul { list-style: disc; }
+        .markdown-content ol { list-style: decimal; }
+        .markdown-content a { color: #6ee7b7; text-decoration: underline; }
+        .markdown-content code { padding: 0.125rem 0.3rem; border-radius: 0.25rem; background: #0f1115; color: #f1f5f9; }
+        .markdown-content pre { margin: 0.75rem 0; padding: 0.75rem; overflow-x: auto; border-radius: 0.5rem; background: #0f1115; }
+        .markdown-content pre code { padding: 0; background: transparent; }
+        .markdown-content blockquote { margin: 0.5rem 0; padding-left: 0.75rem; border-left: 3px solid #34d399; color: #cbd5e1; }
+        .markdown-content table { width: 100%; margin: 0.5rem 0; border-collapse: collapse; }
+        .markdown-content th, .markdown-content td { padding: 0.4rem; border: 1px solid #475569; text-align: left; }
+    </style>
+</head>
+<body class="h-screen flex flex-col bg-[#0f1115]">
+    <!-- Top Navigation -->
+    <header style="border-bottom: 1px solid #27272a; background: rgba(9,9,11,0.85); backdrop-filter: blur(16px);" class="sticky top-0 z-50">
+        <div class="max-w-6xl mx-auto px-6 h-14 flex items-center justify-between">
+            <div class="flex items-center space-x-5">
+                <a href="/index.html" class="flex items-center group">
+                    <div class="w-2 h-2 rounded-full mr-2" style="background:#3b82f6; box-shadow: 0 0 8px rgba(59,130,246,0.8);"></div>
+                    <span class="font-semibold tracking-tight text-sm" style="color:#f4f4f5;">AXHUB Gateway</span>
+                </a>
+                <div class="h-4 w-px" style="background:#27272a;"></div>
+                <nav class="flex space-x-5 text-[13px] font-medium">
+                    <a href="/admin/scaffold.html" style="color:#a1a1aa;" class="hover:text-white transition-colors">Scaffold</a>
+                    <a href="/catalog.html" style="color:#a1a1aa;" class="hover:text-white transition-colors">Catalog</a>
+                    <a href="/playground.html" style="color:#a1a1aa;" class="hover:text-white transition-colors">Playground</a>
+                    <a href="/chat.html" style="color:#ffffff;" class="font-semibold">Chat</a>
+                    <a href="/tester.html" style="color:#a1a1aa;" class="hover:text-white transition-colors">Tester</a>
+                    <a href="/tool-test-console.html" style="color:#a1a1aa;" class="hover:text-white transition-colors">Console</a>
+                    <a href="/tool-report.html" style="color:#a1a1aa;" class="hover:text-white transition-colors">Report</a>
+                </nav>
+            </div>
+            <div class="flex items-center">
+                <span class="text-[10px] uppercase tracking-widest px-2 py-1 rounded font-bold" style="background:rgba(59,130,246,0.1); color:#60a5fa; border:1px solid rgba(59,130,246,0.2);">v0.0.1</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content Area -->
+    <main class="flex-1 flex flex-col items-center justify-center p-4 w-full">
+        <!-- Chat Container -->
+        <div class="w-full max-w-3xl w-full flex-1 max-h-[85vh] flex flex-col bg-[#16181d] rounded-2xl shadow-2xl overflow-hidden border border-white/5 relative">
+        
+        <!-- Header -->
+        <div class="px-6 py-4 border-b border-white/5 flex items-center justify-between bg-[#16181d] z-10">
+            <div class="flex items-center gap-3">
+                <div class="w-8 h-8 rounded-full bg-emerald-500/20 flex items-center justify-center">
+                    <svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                </div>
+                <div>
+                    <h1 class="text-sm font-semibold tracking-wide text-white">AX HUB Assistant</h1>
+                    <p class="text-[11px] text-slate-500">Powered by Mock Engine & MCP Tools</p>
+                </div>
+            </div>
+            <div class="flex items-center gap-4">
+                <select id="model-select" class="bg-[#1e2128] text-slate-300 text-xs px-3 py-1.5 rounded-lg border border-white/10 focus:outline-none focus:border-emerald-500/50 cursor-pointer">
+                    <optgroup label="[신한라이프 내부망]">
+                        <option value="Qwen3-Coder" selected>Qwen3-Coder</option>
+                        <option value="Gemma-4-31B">Gemma-4-31B</option>
+                    </optgroup>
+                    <optgroup label="[외부 OpenRouter 무료]">
+                        <option value="cohere/north-mini-code:free">Cohere North Mini Code</option>
+                        <option value="inclusionai/ling-3.0-flash:free">Ling 3.0 Flash</option>
+                        <option value="openai/gpt-oss-20b:free">GPT-OSS 20B</option>
+                        <option value="google/gemma-4-31b-it:free">Google Gemma 4 31B</option>
+                        <option value="nvidia/nemotron-3-nano-30b-a3b:free">NVIDIA Nemotron 3 Nano</option>
+                    </optgroup>
+                </select>
+
+                <div class="flex items-center gap-2">
+                    <span class="relative flex h-2.5 w-2.5">
+                      <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                      <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+                    </span>
+                    <span class="text-xs text-slate-400">Online</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Chat Area -->
+        <div id="chat-box" class="flex-1 overflow-y-auto p-6 flex flex-col gap-6 scrollbar-hide scroll-smooth">
+            
+            <!-- System Greeting -->
+            <div class="flex gap-4 message-enter">
+                <div class="w-8 h-8 rounded-full bg-emerald-500/10 flex-shrink-0 flex items-center justify-center mt-1 border border-emerald-500/20">
+                    <svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"></path></svg>
+                </div>
+                <div class="flex flex-col gap-1 max-w-[80%]">
+                    <span class="text-xs text-slate-500 ml-1 font-medium">Assistant</span>
+                    <div class="bg-[#1e2128] px-5 py-3.5 rounded-2xl rounded-tl-sm text-sm text-slate-200 leading-relaxed border border-white/5 shadow-sm">
+                        안녕하세요! 저는 AX HUB Assistant입니다. <br>
+                        채팅을 통해 MCP(도구)들을 직접 호출해보세요. <br><br>
+                        💡 <strong>예시:</strong> "오늘 서울 날씨 어때?"
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Input Area -->
+        <div class="p-4 bg-[#16181d] border-t border-white/5 relative">
+            <div class="relative flex items-center w-full max-w-full mx-auto group">
+                <input type="text" id="chat-input" placeholder="메시지를 입력하세요... (예: 서울 날씨 어때?)" 
+                    class="w-full bg-[#1e2128] text-slate-200 text-sm px-5 py-4 rounded-xl border border-white/5 focus:outline-none focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/50 transition-all placeholder-slate-600 pr-12 shadow-inner"
+                    onkeypress="handleKeyPress(event)">
+                <button onclick="sendMessage()" class="absolute right-2 p-2 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-white transition-colors flex items-center justify-center shadow-lg shadow-emerald-500/20">
+                    <svg class="w-4 h-4 translate-x-[1px]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path></svg>
+                </button>
+            </div>
+        </div>
+
+    </div>
+    </main>
+
+    <!-- 로딩 인디케이터 템플릿 -->
+    <template id="loading-template">
+        <div class="flex gap-4 message-enter" id="loading-indicator">
+            <div class="w-8 h-8 rounded-full bg-emerald-500/10 flex-shrink-0 flex items-center justify-center mt-1 border border-emerald-500/20">
+                <svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"></path></svg>
+            </div>
+            <div class="flex flex-col gap-1 max-w-[80%]">
+                <span class="text-xs text-slate-500 ml-1 font-medium">Assistant</span>
+                <div class="bg-[#1e2128] px-5 py-4 rounded-2xl rounded-tl-sm border border-white/5 flex items-center gap-1 shadow-sm h-[48px]">
+                    <svg width="24" height="24" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <circle class="typing-dot" cx="4" cy="12" r="3"/>
+                        <circle class="typing-dot" cx="12" cy="12" r="3"/>
+                        <circle class="typing-dot" cx="20" cy="12" r="3"/>
+                    </svg>
+                </div>
+            </div>
+        </div>
+    </template>
+
+    <script>
+        const chatBox = document.getElementById('chat-box');
+        const chatInput = document.getElementById('chat-input');
+        const loadingTemplate = document.getElementById('loading-template');
+        let isLoading = false;
+
+        function handleKeyPress(e) {
+            if (e.key === 'Enter') {
+                sendMessage();
+            }
+        }
+
+        function appendUserMessage(text) {
+            const div = document.createElement('div');
+            div.className = 'flex gap-4 justify-end message-enter';
+            div.innerHTML = `
+                <div class="flex flex-col gap-1 max-w-[80%] items-end">
+                    <span class="text-xs text-slate-500 mr-1 font-medium">You</span>
+                    <div class="bg-emerald-500/10 px-5 py-3.5 rounded-2xl rounded-tr-sm text-sm text-emerald-50 leading-relaxed border border-emerald-500/20 shadow-sm whitespace-pre-wrap">${escapeHtml(text)}</div>
+                </div>
+            `;
+            chatBox.appendChild(div);
+            scrollToBottom();
+        }
+
+        function appendBotMessageContainer() {
+            const div = document.createElement('div');
+            div.className = 'flex gap-4 message-enter';
+            div.innerHTML = `
+                <div class="w-8 h-8 rounded-full bg-emerald-500/10 flex-shrink-0 flex items-center justify-center mt-1 border border-emerald-500/20">
+                    <svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"></path></svg>
+                </div>
+                <div class="flex flex-col gap-1 max-w-[80%]">
+                    <span class="text-xs text-slate-500 ml-1 font-medium">Assistant</span>
+                    <div class="bg-[#1e2128] px-5 py-3.5 rounded-2xl rounded-tl-sm text-sm text-slate-200 leading-relaxed border border-white/5 shadow-sm markdown-content bot-text"></div>
+                </div>
+            `;
+            chatBox.appendChild(div);
+            scrollToBottom();
+            return div.querySelector('.bot-text');
+        }
+
+        function showLoading() {
+            const clone = loadingTemplate.content.cloneNode(true);
+            chatBox.appendChild(clone);
+            scrollToBottom();
+        }
+
+        function hideLoading() {
+            const loadingIndicator = document.getElementById('loading-indicator');
+            if (loadingIndicator) {
+                loadingIndicator.remove();
+            }
+        }
+
+        function scrollToBottom() {
+            chatBox.scrollTo({ top: chatBox.scrollHeight, behavior: 'smooth' });
+        }
+
+        function escapeHtml(unsafe) {
+            return unsafe
+                 .replace(/&/g, "&amp;")
+                 .replace(/</g, "&lt;")
+                 .replace(/>/g, "&gt;")
+                 .replace(/"/g, "&quot;")
+                 .replace(/'/g, "&#039;");
+        }
+
+        function sanitizeRenderedHtml(html) {
+            const template = document.createElement('template');
+            template.innerHTML = html;
+            template.content.querySelectorAll('script, iframe, object, embed, style, link, meta').forEach(element => element.remove());
+            template.content.querySelectorAll('*').forEach(element => {
+                [...element.attributes].forEach(attribute => {
+                    const name = attribute.name.toLowerCase();
+                    const value = attribute.value.trim();
+                    if (name.startsWith('on') || name === 'style' ||
+                        (['href', 'src', 'xlink:href'].includes(name) && /^(javascript|data|vbscript):/i.test(value))) {
+                        element.removeAttribute(attribute.name);
+                    }
+                });
+            });
+            return template.innerHTML;
+        }
+
+        function normalizeMarkdown(markdown) {
+            // 일부 모델은 문단 뒤의 제목 표기(예: "설명입니다.## 제목") 앞 줄바꿈을 생략한다.
+            // 또한 "###제목", "###📝 제목"처럼 해시 뒤 공백을 생략하는 출력도 제목으로 보정한다.
+            return markdown
+                .replace(/\r\n?/g, '\n')
+                .replace(/([^\n])((?:#{1,6})\s+)/g, '$1\n$2')
+                .replace(/(^|\n)(#{1,6})([^\s#])/g, '$1$2 $3');
+        }
+
+        function renderMarkdown(container, markdown) {
+            // 프로젝트에 포함한 표준 GFM 렌더러가 제목, 강조, 표, 목록, 코드, 링크 등을 일괄 처리한다.
+            const normalizedMarkdown = normalizeMarkdown(markdown);
+            if (typeof marked !== 'undefined') {
+                const html = marked.parse(normalizedMarkdown, { breaks: true, gfm: true });
+                container.innerHTML = sanitizeRenderedHtml(html);
+                return;
+            }
+
+            // 로컬 라이브러리 로딩에 실패한 경우에는 안전한 일반 텍스트로 표시한다.
+            container.textContent = normalizedMarkdown;
+        }
+
+        function consumeSseEvents(buffer, onData) {
+            // Spring SSE는 응답 본문의 줄바꿈을 여러 data: 줄로 전송한다.
+            // data 줄을 단순 연결하면 Markdown 표의 행 구분이 사라지므로, 이벤트 단위로 복원한다.
+            let eventEnd;
+            while ((eventEnd = buffer.indexOf('\n\n')) !== -1) {
+                const event = buffer.substring(0, eventEnd);
+                buffer = buffer.substring(eventEnd + 2);
+                const dataLines = event.split('\n')
+                    .filter(line => line.startsWith('data:'))
+                    .map(line => line.substring(5));
+
+                if (dataLines.length > 0) onData(dataLines.join('\n'));
+            }
+            return buffer;
+        }
+
+        async function sendMessage() {
+            const text = chatInput.value.trim();
+            if (!text || isLoading) return;
+
+            const selectedModel = document.getElementById('model-select').value;
+
+            // 1. 유저 메시지 추가
+            appendUserMessage(text);
+            chatInput.value = '';
+            isLoading = true;
+
+            // 2. 로딩 애니메이션
+            showLoading();
+
+            try {
+                // 3. 백엔드 통신 (SSE Stream)
+                const response = await fetch('/api/chat', {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'X-Agent-Id': 'TESTER-DEV' // 권한 통과를 위한 테스트 Agent ID
+                    },
+                    body: JSON.stringify({ message: text, model: selectedModel })
+                });
+
+                if (!response.ok) throw new Error('Network response was not ok');
+                
+                // 4. 로딩 숨기고 봇 응답 컨테이너 생성
+                hideLoading();
+                const textContainer = appendBotMessageContainer();
+                let responseText = '';
+
+                // 5. 스트림 읽기
+                const reader = response.body.getReader();
+                const decoder = new TextDecoder("utf-8");
+                let sseBuffer = '';
+
+                const appendResponse = (data) => {
+                    responseText += data;
+                    renderMarkdown(textContainer, responseText);
+                    scrollToBottom();
+                };
+
+                while (true) {
+                    const { done, value } = await reader.read();
+                    sseBuffer += decoder.decode(value || new Uint8Array(), { stream: !done }).replace(/\r\n/g, '\n');
+                    sseBuffer = consumeSseEvents(sseBuffer, appendResponse);
+                    if (done) break;
+                }
+
+            } catch (error) {
+                console.error(error);
+                hideLoading();
+                const textContainer = appendBotMessageContainer();
+                textContainer.innerHTML = "서버와의 통신에 실패했습니다. Gateway가 켜져있는지 확인해주세요.";
+            } finally {
+                isLoading = false;
+            }
+        }
+    </script>
+</body>
+</html>

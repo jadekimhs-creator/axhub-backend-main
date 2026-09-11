@@ -1,0 +1,3116 @@
+<!DOCTYPE html>
+<html lang="ko" class="dark" data-bs-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AX HUB Developer Portal</title>
+    <!-- Geist Fonts (System Fallback) -->
+    <style>
+        :root {
+            --font-sans: 'Geist Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            --font-mono: 'Geist Mono', SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+        }
+        body, .font-sans { font-family: var(--font-sans); }
+        code, pre, .font-mono { font-family: var(--font-mono); }
+    </style>
+    <script src="../lib/tailwindcss.js"></script>
+    <!-- Bootstrap CSS -->
+    <link href="../vendor/bootstrap.min.css" rel="stylesheet">
+    <style id="document-generator-styles">
+.document-generator {
+    --docgen-panel: #111113;
+    --docgen-panel-soft: #18181b;
+    --docgen-line: #2a2a2f;
+    --docgen-line-strong: #3f3f46;
+    --docgen-text: #f4f4f5;
+    --docgen-muted: #92929d;
+    --docgen-blue: #3b82f6;
+    --docgen-blue-soft: rgba(59, 130, 246, 0.12);
+    --docgen-green: #6ee7a0;
+    --docgen-amber: #facc50;
+    --docgen-danger: #fb7185;
+    color: var(--docgen-text);
+}
+
+.document-generator *,
+.document-generator *::before,
+.document-generator *::after {
+    box-sizing: border-box;
+}
+
+.document-generator .docgen-workspace {
+    display: grid;
+    grid-template-columns: minmax(340px, 0.9fr) minmax(460px, 1.35fr);
+    margin: -2rem -1.5rem;
+    min-height: 680px;
+}
+
+.document-generator .docgen-config,
+.document-generator .docgen-preview {
+    padding: 28px;
+}
+
+.document-generator .docgen-config {
+    border-right: 1px solid var(--docgen-line);
+}
+
+.document-generator .docgen-section-title {
+    margin: 0 0 6px;
+    color: var(--docgen-text);
+    font-size: 16px;
+    font-weight: 650;
+}
+
+.document-generator .docgen-section-copy {
+    margin: 0 0 24px;
+    color: var(--docgen-muted);
+    font-size: 13px;
+    line-height: 1.6;
+}
+
+.document-generator .docgen-field {
+    margin-bottom: 25px;
+}
+
+.document-generator .docgen-field-label {
+    display: block;
+    margin-bottom: 9px;
+    color: var(--docgen-text);
+    font-size: 13px;
+    font-weight: 650;
+}
+
+.document-generator select,
+.document-generator input[type="text"] {
+    width: 100%;
+    padding: 13px 14px;
+    border: 1px solid var(--docgen-line-strong);
+    border-radius: 7px;
+    outline: 0;
+    background: var(--docgen-panel-soft);
+    color: var(--docgen-text);
+    font: inherit;
+}
+
+.document-generator select:focus,
+.document-generator input[type="text"]:focus {
+    border-color: var(--docgen-blue);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.12);
+}
+
+.document-generator .docgen-hint {
+    margin-top: 9px;
+    color: var(--docgen-muted);
+    font-size: 12px;
+}
+
+.document-generator .docgen-two-col {
+    display: grid;
+    grid-template-columns: 1fr 150px;
+    gap: 18px;
+}
+
+.document-generator .docgen-check-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+}
+
+.document-generator .docgen-check-card {
+    display: flex;
+    align-items: center;
+    min-height: 58px;
+    gap: 11px;
+    padding: 12px 14px;
+    border: 1px solid var(--docgen-line-strong);
+    border-radius: 7px;
+    background: var(--docgen-panel-soft);
+    color: #d4d4d8;
+    cursor: pointer;
+    font-size: 13px;
+}
+
+.document-generator .docgen-check-card:hover {
+    border-color: #52525b;
+}
+
+.document-generator .docgen-check-card:has(input:checked) {
+    border-color: rgba(59, 130, 246, 0.72);
+    background: var(--docgen-blue-soft);
+    color: #fff;
+}
+
+.document-generator input[type="checkbox"] {
+    width: 17px;
+    height: 17px;
+    margin: 0;
+    accent-color: var(--docgen-blue);
+}
+
+.document-generator .docgen-mini-badge {
+    margin-left: auto;
+    padding: 4px 7px;
+    border: 1px solid var(--docgen-line-strong);
+    border-radius: 5px;
+    background: #27272a;
+    color: #a1a1aa;
+    font: 600 10px 'Geist Mono', monospace;
+}
+
+.document-generator .docgen-action-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 18px;
+    margin-top: 30px;
+    padding-top: 24px;
+    border-top: 1px solid var(--docgen-line);
+}
+
+.document-generator .docgen-source-label {
+    color: var(--docgen-muted);
+    font-size: 12px;
+}
+
+.document-generator .docgen-primary {
+    padding: 13px 22px;
+    border: 0;
+    border-radius: 7px;
+    background: var(--docgen-blue);
+    color: #fff;
+    cursor: pointer;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.document-generator .docgen-primary:hover {
+    background: #2563eb;
+}
+
+.document-generator .docgen-primary:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+}
+
+.document-generator .docgen-meta-card {
+    min-height: 155px;
+    padding: 20px;
+    border: 1px solid var(--docgen-line-strong);
+    border-radius: 8px;
+    background: var(--docgen-panel-soft);
+}
+
+.document-generator .docgen-meta-title {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 20px;
+}
+
+.document-generator .docgen-meta-title h2 {
+    margin: 0 0 8px;
+    color: var(--docgen-text);
+    font-size: 17px;
+}
+
+.document-generator .docgen-meta-title p {
+    margin: 0;
+    color: var(--docgen-muted);
+    font-size: 13px;
+    line-height: 1.5;
+}
+
+.document-generator .docgen-status {
+    padding: 5px 8px;
+    border: 1px solid rgba(110, 231, 160, 0.28);
+    border-radius: 5px;
+    background: rgba(110, 231, 160, 0.07);
+    color: var(--docgen-green);
+    font: 700 10px 'Geist Mono', monospace;
+    white-space: nowrap;
+}
+
+.document-generator .docgen-meta-badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 24px;
+}
+
+.document-generator .docgen-tag {
+    padding: 5px 8px;
+    border: 1px solid #3f3f46;
+    border-radius: 5px;
+    background: #27272a;
+    color: #a1a1aa;
+    font: 600 10px 'Geist Mono', monospace;
+}
+
+.document-generator .docgen-tag.docgen-blue {
+    border-color: #2563eb;
+    background: rgba(37, 99, 235, 0.08);
+    color: #60a5fa;
+}
+
+.document-generator .docgen-list {
+    display: grid;
+    gap: 10px;
+    margin-top: 18px;
+}
+
+.document-generator .docgen-row {
+    display: grid;
+    grid-template-columns: 42px 1fr auto;
+    align-items: center;
+    min-height: 68px;
+    gap: 14px;
+    padding: 13px 16px;
+    border: 1px solid var(--docgen-line);
+    border-radius: 7px;
+    background: #151518;
+    opacity: 0.42;
+    transition: opacity 0.15s, border-color 0.15s;
+}
+
+.document-generator .docgen-row.docgen-enabled {
+    border-color: #303037;
+    opacity: 1;
+}
+
+.document-generator .docgen-number {
+    display: grid;
+    place-items: center;
+    width: 34px;
+    height: 34px;
+    border-radius: 6px;
+    background: #27272a;
+    color: #a1a1aa;
+    font: 600 11px 'Geist Mono', monospace;
+}
+
+.document-generator .docgen-name {
+    margin-bottom: 5px;
+    color: var(--docgen-text);
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.document-generator .docgen-description {
+    color: var(--docgen-muted);
+    font-size: 11px;
+}
+
+.document-generator .docgen-mode {
+    padding: 5px 8px;
+    border: 1px solid #3f3f46;
+    border-radius: 5px;
+    background: #27272a;
+    color: var(--docgen-muted);
+    font: 700 10px 'Geist Mono', monospace;
+}
+
+.document-generator .docgen-mode.docgen-auto { color: var(--docgen-green); }
+.document-generator .docgen-mode.docgen-mixed { color: var(--docgen-amber); }
+.document-generator .docgen-mode.docgen-separate {
+    border-color: #2563eb;
+    background: rgba(37, 99, 235, 0.08);
+    color: #60a5fa;
+}
+
+.document-generator .docgen-legend {
+    margin: 16px 0 10px;
+    color: var(--docgen-muted);
+    font-size: 11px;
+    line-height: 1.6;
+}
+
+.document-generator .docgen-files {
+    display: grid;
+    gap: 10px;
+}
+
+.document-generator .docgen-file {
+    min-height: 72px;
+    padding: 14px 16px;
+    border: 1px dashed #3f3f46;
+    border-radius: 7px;
+}
+
+.document-generator .docgen-file.docgen-disabled {
+    display: none;
+}
+
+.document-generator .docgen-file-kind {
+    margin-bottom: 9px;
+    color: var(--docgen-green);
+    font: 700 10px 'Geist Mono', monospace;
+}
+
+.document-generator .docgen-file-name {
+    color: #a1a1aa;
+    font: 500 11px 'Geist Mono', monospace;
+    word-break: break-all;
+}
+
+.document-generator .docgen-loading { color: var(--docgen-muted); }
+.document-generator .docgen-error { color: var(--docgen-danger); }
+
+.docgen-toast {
+    position: fixed;
+    right: 24px;
+    bottom: 24px;
+    z-index: 1080;
+    padding: 13px 16px;
+    border: 1px solid #3f3f46;
+    border-radius: 8px;
+    background: #18181b;
+    box-shadow: 0 18px 50px rgba(0, 0, 0, 0.45);
+    color: #e4e4e7;
+    font-size: 12px;
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(10px);
+    transition: 0.2s;
+}
+
+.docgen-toast.docgen-show {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+@media (max-width: 900px) {
+    .document-generator .docgen-workspace {
+        grid-template-columns: 1fr;
+    }
+
+    .document-generator .docgen-config {
+        border-right: 0;
+        border-bottom: 1px solid var(--docgen-line);
+    }
+
+    .document-generator .docgen-two-col {
+        grid-template-columns: 1fr;
+    }
+}
+    </style>
+    <style>
+        :root {
+            --bg-color: #09090b;
+            --surface-color: #18181b;
+            --border-color: #3f3f46; /* zinc-700 */
+            --text-primary: #f4f4f5; /* zinc-100 */
+            --text-secondary: #a1a1aa; /* zinc-400 */
+            --accent-color: #3b82f6;
+            --accent-hover: #2563eb;
+            --link-color: #60a5fa; /* blue-400 */
+            --radius-md: 6px;
+            --radius-sm: 4px;
+        }
+        
+        body {
+            font-family: 'Geist Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            min-height: 100vh;
+            padding: 0;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .container {
+            max-width: 1000px; /* Tighter layout */
+            width: 95%;
+            margin: 0 auto;
+        }
+
+        /* Editorial / Tech Header */
+        .page-header {
+            text-align: left;
+            margin-bottom: 2rem;
+            padding-bottom: 2rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .page-header h1 {
+            font-weight: 600;
+            font-size: 2rem;
+            letter-spacing: -0.04em;
+            color: var(--text-primary);
+            margin-bottom: 0.25rem;
+        }
+
+        .page-header p {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+            margin: 0;
+        }
+
+        /* Clean Panel */
+        .panel {
+            background: var(--surface-color);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            overflow: hidden;
+        }
+
+        /* Minimalist Tabs */
+        .nav-tabs {
+            border-bottom: 1px solid var(--border-color);
+            background: #0f0f11;
+            padding: 0 1.5rem;
+            gap: 1.5rem;
+        }
+
+        .nav-tabs .nav-item {
+            margin-bottom: -1px;
+        }
+
+        .nav-tabs .nav-link {
+            border: none;
+            color: var(--text-secondary);
+            font-weight: 500;
+            font-size: 0.875rem;
+            padding: 1rem 0;
+            border-bottom: 2px solid transparent;
+            transition: color 0.15s ease;
+            background: transparent !important;
+        }
+
+        .nav-tabs .nav-link:hover {
+            color: var(--text-primary);
+            border-color: transparent;
+        }
+
+        .nav-tabs .nav-link.active {
+            color: var(--text-primary);
+            border-bottom: 2px solid var(--text-primary);
+            font-weight: 600;
+        }
+
+        .tab-content {
+            padding: 2rem 1.5rem;
+            background: var(--surface-color);
+        }
+
+        /* Dense Forms */
+        .form-label {
+            font-weight: 500;
+            color: var(--text-primary);
+            font-size: 0.875rem;
+            margin-bottom: 0.35rem;
+        }
+
+        .form-control, .form-select {
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--border-color);
+            padding: 0.5rem 0.75rem;
+            font-size: 0.875rem;
+            background-color: var(--surface-color);
+            color: var(--text-primary);
+            box-shadow: none;
+        }
+
+        .form-control:focus, .form-select:focus {
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.25);
+            background-color: var(--surface-color);
+            color: var(--text-primary);
+        }
+
+        .form-control:focus, .form-select:focus {
+            border-color: var(--text-secondary);
+            box-shadow: 0 0 0 1px var(--text-secondary);
+            outline: none;
+        }
+        
+        .form-control::placeholder {
+            color: #a1a1aa; /* zinc-400 */
+        }
+
+        .input-hint {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            margin-top: 0.35rem;
+        }
+
+        /* Utilitarian Button */
+        .btn-action {
+            background: var(--accent-color);
+            color: #ffffff;
+            border: none;
+            border-radius: var(--radius-sm);
+            padding: 0.5rem 1rem;
+            font-weight: 500;
+            font-size: 0.875rem;
+            transition: background-color 0.1s ease, transform 0.1s ease;
+        }
+
+        .btn-action:hover {
+            background: var(--accent-hover);
+            color: #ffffff;
+        }
+        
+        .btn-action:active {
+            transform: scale(0.98); /* Tactile feedback */
+        }
+        
+        .btn-secondary-action {
+            background: var(--surface-color);
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-sm);
+            padding: 0.3rem 0.75rem;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+
+        .btn-secondary-action:hover {
+            background: #f4f4f5;
+        }
+
+        /* Result Box - Terminal Style */
+        #resultBox {
+            display: none;
+            margin-top: 1.5rem;
+            border-radius: var(--radius-md);
+            padding: 1.25rem;
+            white-space: pre-wrap;
+            font-family: 'Geist Mono', Consolas, monospace;
+            font-size: 0.8rem;
+            line-height: 1.6;
+            background-color: #09090b; /* zinc-950 */
+            color: #e4e4e7; /* zinc-200 */
+            border: 1px solid #27272a;
+        }
+        
+        #resultBox.success {
+            border-top: 3px solid #10b981;
+        }
+        
+        #resultBox.error {
+            border-top: 3px solid #ef4444;
+        }
+
+        /* Dense Table */
+        .table {
+            font-size: 0.875rem;
+            margin-bottom: 0;
+        }
+        
+        .table th {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-secondary);
+            font-weight: 500;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.75rem;
+            background: transparent;
+        }
+        
+        .table td {
+            vertical-align: middle;
+            padding: 1rem 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+            color: var(--text-primary);
+        }
+
+        .table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .badge-mono {
+            font-family: 'Geist Mono', monospace;
+            font-size: 0.7rem;
+            font-weight: 500;
+            padding: 0.25em 0.5em;
+            border-radius: 4px;
+            background: #f4f4f5;
+            color: var(--text-secondary);
+            border: 1px solid var(--border-color);
+        }
+
+        a.tool-link {
+            color: var(--text-primary);
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        a.tool-link:hover {
+            text-decoration: underline;
+            color: var(--link-color);
+        }
+        
+        /* Modal styling overrides - DARK THEME */
+        .modal-content {
+            border-radius: var(--radius-md);
+            border: 1px solid var(--border-color);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.8);
+            background-color: #18181b;
+            color: var(--text-primary);
+        }
+        
+        .modal-header {
+            border-bottom: 1px solid var(--border-color);
+            padding: 1.25rem 1.5rem;
+            background-color: #18181b;
+        }
+        
+        .modal-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+        
+        .modal-body {
+            background-color: #18181b;
+            color: var(--text-primary);
+        }
+
+        .modal-body .form-label {
+            color: #d4d4d8 !important;
+        }
+        
+        .modal-footer {
+            border-top: 1px solid var(--border-color);
+            padding: 1rem 1.5rem;
+            background-color: #18181b;
+        }
+
+        .modal-backdrop.show {
+            opacity: 0.7;
+        }
+
+        .btn-close {
+            filter: invert(1);
+        }
+
+        /* Badge overrides for dark theme */
+        .badge-mono {
+            font-family: 'Geist Mono', monospace;
+            font-size: 0.7rem;
+            font-weight: 500;
+            padding: 0.25em 0.5em;
+            border-radius: 4px;
+            background: #27272a;
+            color: #a1a1aa;
+            border: 1px solid #3f3f46;
+        }
+
+        /* Bootstrap secondary button override */
+        .btn-secondary-action:hover {
+            background: #27272a;
+            color: var(--text-primary);
+        }
+
+        /* Table hover for dark */
+        .table > tbody > tr:hover > td {
+            background-color: rgba(255,255,255,0.03);
+        }
+
+        /* Tool name in table - ensure visibility */
+        .table td {
+            color: #e4e4e7 !important;
+        }
+
+        .table td a.tool-link {
+            color: #e4e4e7 !important;
+        }
+
+        .table td a.tool-link:hover {
+            color: #60a5fa !important;
+        }
+
+        /* Category badge in table */
+        .badge {
+            font-size: 0.7rem;
+            font-weight: 500;
+        }
+
+        /* Alert/Notice dark theme */
+        .alert-warning {
+            background-color: rgba(245, 158, 11, 0.1);
+            border-color: rgba(245, 158, 11, 0.3);
+            color: #fbbf24;
+        }
+
+        /* Select option dark theme */
+        select option, select optgroup {
+            background-color: #18181b;
+            color: #f4f4f5;
+        }
+        .container {
+            max-width: 72rem !important;
+            padding-left: 1.5rem !important;
+            padding-right: 1.5rem !important;
+            width: 100% !important;
+        }
+    </style>
+</head>
+<body style="overflow-y: scroll;">
+
+<header style="border-bottom: 1px solid #27272a; background: rgba(9,9,11,0.85); backdrop-filter: blur(16px);" class="sticky top-0 z-50">
+    <div class="max-w-6xl mx-auto px-6 h-14 flex items-center justify-between">
+        <div class="flex items-center space-x-5">
+            <a href="/index.html" class="flex items-center group">
+                <div class="w-2 h-2 rounded-full mr-2" style="background:#3b82f6; box-shadow: 0 0 8px rgba(59,130,246,0.8);"></div>
+                <span class="font-semibold tracking-tight text-sm" style="color:#f4f4f5;">AXHUB Gateway</span>
+            </a>
+            <div class="h-4 w-px" style="background:#27272a;"></div>
+            <nav class="flex space-x-5 text-[13px] font-medium">
+                <a href="/admin/scaffold.html" style="color:#ffffff;" class="font-semibold">Scaffold</a>
+                <a href="/catalog.html" style="color:#a1a1aa;" class="hover:text-white transition-colors">Catalog</a>
+                <a href="/playground.html" style="color:#a1a1aa;" class="hover:text-white transition-colors">Playground</a>
+                <a href="/chat.html" style="color:#a1a1aa;" class="hover:text-white transition-colors">Chat</a>
+                <a href="/tester.html" style="color:#a1a1aa;" class="hover:text-white transition-colors">Tester</a>
+                <a href="/tool-test-console.html" style="color:#a1a1aa;" class="hover:text-white transition-colors">Console</a>
+                <a href="/tool-report.html" style="color:#a1a1aa;" class="hover:text-white transition-colors">Report</a>
+            </nav>
+        </div>
+        <div class="flex items-center">
+            <span class="text-[10px] uppercase tracking-widest px-2 py-1 rounded font-bold" style="background:rgba(59,130,246,0.1); color:#60a5fa; border:1px solid rgba(59,130,246,0.2);">v0.0.1</span>
+        </div>
+    </div>
+</header>
+
+<div class="container">
+    <div class="page-header">
+        <h1>Developer Portal</h1>
+        <p>AX HUB No-Code Scaffolding Wizard</p>
+    </div>
+
+    <div class="panel">
+        <ul class="nav nav-tabs" id="myTab" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="pod-tab" data-bs-toggle="tab" data-bs-target="#pod" type="button" role="tab">Pod Module</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="pod-new-tab" data-bs-toggle="tab" data-bs-target="#pod-new" type="button" role="tab">Pod Module New</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="tool-tab" data-bs-toggle="tab" data-bs-target="#tool" type="button" role="tab">Tool Function</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="mci-response-tab" data-bs-toggle="tab" data-bs-target="#mci-response" type="button" role="tab">MCI Request/Response 변환</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="document-tab" data-bs-toggle="tab" data-bs-target="#document" type="button" role="tab" onclick="loadDocumentGenerator()">Document Generator</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="list-tab" data-bs-toggle="tab" data-bs-target="#list" type="button" role="tab" onclick="loadToolList()">Registry</button>
+            </li>
+        </ul>
+        
+        <div class="card-body p-0">
+            <div class="tab-content" id="myTabContent">
+                
+                <!-- Pod Creation Form -->
+                <div class="tab-pane fade show active" id="pod" role="tabpanel">
+                    <form id="podForm">
+                        <div class="row mb-4">
+                            <div class="col-md-12">
+                                <label class="form-label">Workspace Path</label>
+                                <div class="input-group">
+                                    <input type="text" class="form-control" name="workspacePath" id="podWorkspacePathInput" placeholder="직접 폴더 경로를 입력(붙여넣기) 하거나 선택하세요" value="C:\Users\09863406\IdeaProjects\dat-was-datmt">
+                                    <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" style="border-color: #3f3f46; color: #a1a1aa;">폴더 선택</button>
+                                    <ul class="dropdown-menu dropdown-menu-end dropdown-menu-dark" style="background-color: #18181b; border-color: #3f3f46;">
+                                        <li><a class="dropdown-item" href="#" onclick="const input = document.getElementById('podWorkspacePathInput'); input.value='C:\\Users\\09863406\\IdeaProjects\\dat-was-datmt'; input.dispatchEvent(new Event('change')); return false;" style="color: #f4f4f5;">dat-was-datmt (기본)</a></li>
+                                        <li><a class="dropdown-item" href="#" onclick="const input = document.getElementById('podWorkspacePathInput'); input.value='c:\\eGovFrameDev-4.3.1-64bit\\workspace-egov\\axhub-backend-main'; input.dispatchEvent(new Event('change')); return false;" style="color: #f4f4f5;">axhub-backend-main</a></li>
+                                        <li><hr class="dropdown-divider" style="border-color: #3f3f46;"></li>
+                                        <li><a class="dropdown-item" href="#" onclick="openServerFolderPicker('podWorkspacePathInput'); return false;" style="color: #f4f4f5;">폴더 선택(+)</a></li>
+                                    </ul>
+                                </div>
+                                <input type="file" id="podFolderPicker" webkitdirectory directory style="display: none;" onchange="
+                                    if(this.files && this.files.length > 0) {  if(this.files[0].path) {
+                                        let firstFilePath = this.files[0].path;
+                                        let relPath = this.files[0].webkitRelativePath;
+                                        let folderPath = firstFilePath.substring(0, firstFilePath.length - relPath.length);
+                                        if (folderPath.endsWith('\\') || folderPath.endsWith('/')) {
+                                            folderPath = folderPath.substring(0, folderPath.length - 1);
+                                        }
+                                        const input = document.getElementById('podWorkspacePathInput');
+                                        input.value = folderPath;
+                                        input.dispatchEvent(new Event('change'));
+                                    }
+                                ">
+                                <div class="input-hint">직접 경로를 붙여넣거나 우측 <b>[폴더 선택]</b> 버튼을 눌러 선택하세요.</div>
+                            </div>
+                        </div>
+                        <div class="mb-4">
+                            <label class="form-label">Module Name</label>
+                            <input type="text" class="form-control" name="moduleName" placeholder="e.g. hr (will be prefixed with axhub-tool-)" required>
+                        </div>
+                        <div class="mb-4">
+                            <label class="form-label">Service Port</label>
+                            <input type="number" class="form-control" name="port" placeholder="e.g. 8086" required>
+                            <div class="input-hint">Unique port for Gateway routing and local development.</div>
+                        </div>
+                        <div class="mb-4">
+                            <label class="form-label">Pod 업무 설명</label>
+                            <textarea class="form-control" name="podDescription" id="podDescription" rows="3" placeholder="예: 보험 계약과 보험금 지급을 처리하는 처리계 서버"></textarea>
+                            <div class="d-flex justify-content-between align-items-center mt-2">
+                                <div class="input-hint">설명을 입력하면 AI가 한국어 업무 내용으로 tool-service-manifest.yml 초안을 작성합니다.</div>
+                                <div class="d-flex gap-2 align-items-center">
+                                    <select id="podAiModelSelect" class="form-select" aria-label="Pod Manifest AI 모델 선택" style="width:220px;">
+                                        <optgroup label="[신한라이프 내부망]"><option value="Qwen3-Coder" selected>Qwen3-Coder</option><option value="Gemma-4-31B">Gemma-4-31B</option></optgroup>
+                                        <optgroup label="[외부 OpenRouter 무료]"><option value="cohere/north-mini-code:free">Cohere North Mini Code</option><option value="inclusionai/ling-3.0-flash:free">InclusionAI Ling 3 Flash</option><option value="openai/gpt-oss-20b:free">OpenAI GPT-OSS 20B</option><option value="google/gemma-4-31b-it:free">Google Gemma 4 31B</option><option value="nvidia/nemotron-3-nano-30b-a3b:free">NVIDIA Nemotron 3 Nano</option></optgroup>
+                                    </select>
+                                    <button type="button" class="btn-secondary-action" onclick="createPodManifestDraft(this)">AI로 Manifest 채우기</button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mb-4">
+                            <label class="form-label">tool-service-manifest.yml</label>
+                            <textarea class="form-control" name="toolServiceManifest" id="toolServiceManifest" rows="12" placeholder="AI 초안 또는 직접 작성한 YAML"></textarea>
+                        </div>
+                        <div class="row mb-4">
+                            <div class="col-md-6">
+                                <label class="form-label">Author</label>
+                                <input type="text" class="form-control" name="author" placeholder="Defaults to OS user">
+                            </div>
+                            <div class="col-md-6 mt-3 mt-md-0">
+                                <label class="form-label">Date</label>
+                                <input type="text" class="form-control" name="date" placeholder="Defaults to today">
+                            </div>
+                        </div>
+                        <div class="d-flex justify-content-end mt-4">
+                            <button type="submit" class="btn-action">Generate Pod</button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Standalone Pod Creation Form: intentionally separate from the legacy Pod Module flow. -->
+                <div class="tab-pane fade" id="pod-new" role="tabpanel">
+                    <form id="newPodForm">
+                        <div class="mb-4">
+                            <label class="form-label">Pod Project Path</label>
+                            <div class="input-group">
+                                <input type="text" class="form-control" name="workspacePath" id="newPodWorkspacePathInput"
+                                       value="C:\Users\09863406\IdeaProjects\"
+                                       placeholder="새 Pod 프로젝트 루트 경로 (예: ...\\workspace\\dat-was-datsu)" required>
+                                <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" style="border-color: #3f3f46; color: #a1a1aa;">폴더 선택</button>
+                                <ul class="dropdown-menu dropdown-menu-end dropdown-menu-dark" style="background-color: #18181b; border-color: #3f3f46;">
+                                    <li><a class="dropdown-item" href="#" onclick="const input = document.getElementById('newPodWorkspacePathInput'); input.value='C:\\Users\\09863406\\IdeaProjects\\'; return false;" style="color: #f4f4f5;">IdeaProjects (기본)</a></li>
+                                    <li><hr class="dropdown-divider" style="border-color: #3f3f46;"></li>
+                                    <li><a class="dropdown-item" href="#" onclick="openServerFolderPicker('newPodWorkspacePathInput'); return false;" style="color: #f4f4f5;">폴더 선택(+)</a></li>
+                                </ul>
+                            </div>
+                            <div class="input-hint">새 Pod 프로젝트 루트(예: <code>...\\workspace\\dat-was-datsu</code>)를 지정하세요. 생성 시 이 폴더 아래에 새 서비스 모듈이 생성되며, 기존 파일이 있으면 덮어쓰지 않습니다.</div>
+                        </div>
+                        <div class="mb-4">
+                            <label class="form-label">New Module Name</label>
+                            <input type="text" class="form-control" name="moduleName"
+                                   pattern="^dat-was-[a-z0-9]+(?:-[a-z0-9]+)*$"
+                                   placeholder="예: dat-was-payment" required>
+                            <div class="input-hint">`dat-was-`로 시작하는 영문 소문자, 숫자, 하이픈 이름을 입력하세요.</div>
+                        </div>
+                        <div class="mb-4">
+                            <label class="form-label">Service Port</label>
+                            <input type="number" class="form-control" name="port" min="1" max="65535"
+                                   placeholder="예: 8099" required>
+                        </div>
+                        <div class="mb-4">
+                            <label class="form-label">연관 Pod (선택)</label>
+                            <select class="form-select" id="newPodTargetModuleSelect" multiple size="5"></select>
+                            <div class="input-hint">선택한 Pod와 confusable-servers를 서로 갱신합니다. 선택한 Workspace 안의 Pod만 표시됩니다.</div>
+                        </div>
+                        <div class="mb-4">
+                            <label class="form-label">Pod 업무 설명</label>
+                            <textarea class="form-control" name="podDescription" id="newPodDescription" rows="3">업무 지원으로서 총무, 준법, 감사 대상 시스템을 처리하는 업무 서버</textarea>
+                            <div class="d-flex justify-content-between align-items-center mt-2">
+                                <div class="input-hint">설명을 입력하면 AI가 한국어 업무 내용으로 tool-service-manifest.yml 초안을 작성합니다.</div>
+                                <div class="d-flex gap-2 align-items-center">
+                                    <select id="newPodAiModelSelect" class="form-select" aria-label="New Pod Manifest AI 모델 선택" style="width:220px;">
+                                        <optgroup label="[신한라이프 내부망]"><option value="Qwen3-Coder" selected>Qwen3-Coder</option><option value="Gemma-4-31B">Gemma-4-31B</option></optgroup>
+                                        <optgroup label="[외부 OpenRouter 무료]"><option value="cohere/north-mini-code:free">Cohere North Mini Code</option><option value="inclusionai/ling-3.0-flash:free">InclusionAI Ling 3 Flash</option><option value="openai/gpt-oss-20b:free">OpenAI GPT-OSS 20B</option><option value="google/gemma-4-31b-it:free">Google Gemma 4 31B</option><option value="nvidia/nemotron-3-nano-30b-a3b:free">NVIDIA Nemotron 3 Nano</option></optgroup>
+                                    </select>
+                                    <button type="button" class="btn-secondary-action" onclick="createNewPodManifestDraft(this)">AI로 Manifest 채우기</button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mb-4">
+                            <label class="form-label">tool-service-manifest.yml</label>
+                            <textarea class="form-control" name="toolServiceManifest" id="newToolServiceManifest" rows="12" placeholder="AI 초안 또는 직접 작성한 YAML"></textarea>
+                        </div>
+                        <div class="mb-4">
+                            <label class="form-label">Author</label>
+                            <input type="text" class="form-control" name="author" placeholder="미입력 시 OS 사용자명">
+                        </div>
+                        <div class="alert alert-secondary" role="alert">
+                            기존 Pod Module과 별도로 생성됩니다. 공통 라이브러리는 Maven 좌표로 참조하며, Manifest와 연관 Pod 갱신은 선택한 Workspace 안에서만 수행합니다.
+                        </div>
+                        <div class="d-flex justify-content-end mt-4">
+                            <button type="submit" class="btn-action">Generate New Pod Project</button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Tool Creation Form -->
+                <div class="tab-pane fade" id="tool" role="tabpanel">
+                    <form id="toolForm">
+                        <div class="row mb-4">
+                            <div class="col-md-12">
+                                <label class="form-label">Workspace Path</label>
+                                <div class="input-group">
+                                    <input type="text" class="form-control" name="workspacePath" id="workspacePathInput" placeholder="직접 폴더 경로를 입력(붙여넣기) 하거나 선택하세요" value="C:\Users\09863406\IdeaProjects\dat-was-datmt">
+                                    <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" style="border-color: #3f3f46; color: #a1a1aa;">폴더 선택</button>
+                                    <ul class="dropdown-menu dropdown-menu-end dropdown-menu-dark" style="background-color: #18181b; border-color: #3f3f46;">
+                                        <li><a class="dropdown-item" href="#" onclick="const input = document.getElementById('workspacePathInput'); input.value='C:\\Users\\09863406\\IdeaProjects\\dat-was-datmt'; input.dispatchEvent(new Event('change')); return false;" style="color: #f4f4f5;">dat-was-datmt (기본)</a></li>
+                                        <li><a class="dropdown-item" href="#" onclick="const input = document.getElementById('workspacePathInput'); input.value='c:\\eGovFrameDev-4.3.1-64bit\\workspace-egov\\axhub-backend-main'; input.dispatchEvent(new Event('change')); return false;" style="color: #f4f4f5;">axhub-backend-main</a></li>
+                                        <li><hr class="dropdown-divider" style="border-color: #3f3f46;"></li>
+                                        <li><a class="dropdown-item" href="#" onclick="openServerFolderPicker('workspacePathInput'); return false;" style="color: #f4f4f5;">폴더 선택(+)</a></li>
+                                    </ul>
+                                </div>
+                                <input type="file" id="toolFolderPicker" webkitdirectory directory style="display: none;" onchange="
+                                    if(this.files && this.files.length > 0) {  if(this.files[0].path) {
+                                        let firstFilePath = this.files[0].path;
+                                        let relPath = this.files[0].webkitRelativePath;
+                                        let folderPath = firstFilePath.substring(0, firstFilePath.length - relPath.length);
+                                        if (folderPath.endsWith('\\') || folderPath.endsWith('/')) {
+                                            folderPath = folderPath.substring(0, folderPath.length - 1);
+                                        }
+                                        const input = document.getElementById('workspacePathInput');
+                                        input.value = folderPath;
+                                        input.dispatchEvent(new Event('change'));
+                                    }
+                                ">
+                                <div class="input-hint">직접 경로를 붙여넣거나 우측 <b>[폴더 선택]</b> 버튼을 눌러 선택하세요.</div>
+                            </div>
+                        </div>
+                        <div class="row mb-4">
+                            <div class="col-md-6">
+                                <label class="form-label">Target Module</label>
+                                <select class="form-select" name="moduleName" id="targetModuleSelect" required>
+                                    <option value="dat-was-cus">dat-was-cus</option>
+                                    <option value="dat-was-hr">dat-was-hr</option>
+                                    <option value="dat-was-sal">dat-was-sal</option>
+                                    <option value="dat-was-pro">dat-was-pro</option>
+                                    <option value="dat-was-sys">dat-was-sys</option>
+                                </select>
+                                <div class="input-hint">Destination Pod directory.</div>
+                            </div>
+                            <div class="col-md-6 mt-3 mt-md-0">
+                                <label class="form-label">Gateway Registration</label>
+                                <select class="form-select" name="register">
+                                    <option value="true" selected>True (Public)</option>
+                                    <option value="false">False (Private)</option>
+                                </select>
+                                <div class="input-hint">Controls dynamic routing exposure.</div>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label mb-1">Domain Category</label>
+                                <div class="row g-2">
+                                    <div class="col-md-5">
+                                        <select id="domainCategorySelect" class="form-select">
+                                            <option value="">새 도메인 생성</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-7">
+                                        <input type="text" id="domainCategoryName" class="form-control" name="categoryKey" pattern="^[a-z0-9]{3}$" maxlength="3" minlength="3" placeholder="e.g. cmm (3글자 영소문자)" oninput="this.value = this.value.toLowerCase()" required>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6 mt-3 mt-md-0">
+                                <label class="form-label">Protocol</label>
+                                    <select class="form-select" name="routingType">
+                                        <option value="MCI" selected>MCI (Legacy)</option>
+                                        <option value="HTTP">HTTP (REST)</option>
+                                    </select>
+                            </div>
+                        </div>
+                        <div class="mb-4 p-3 rounded" style="background:#18181b; border:1px solid #3f3f46;">
+                            <div class="d-flex justify-content-between align-items-center gap-3">
+                                <div>
+                                    <label class="form-label mb-1">Multi Tool UseCase (HTTP / MCI)</label>
+                                    <div class="input-hint mt-0">현재 Tool을 같은 UseCase에 추가하면, Tool별 Client를 호출하는 여러 MCP Tool 메서드가 생성됩니다.</div>
+                                </div>
+                                <button type="button" class="btn-secondary-action" onclick="addCurrentToolToGroup()">현재 Tool 묶음에 추가</button>
+                            </div>
+                            <div class="row g-2 mt-1">
+                                <div class="col-md-4"><select id="toolGroupUseCaseSelect" class="form-select"><option value="">새 UseCase 생성</option></select></div>
+                                <div class="col-md-5"><input id="toolGroupUseCaseName" type="text" class="form-control" placeholder="UseCase 이름 e.g. Customer"></div>
+                                <div class="col-md-7"><div id="toolGroupSummary" class="input-hint pt-2">묶음에 추가된 Tool 없음 — 일반 Generate Tool은 기존 단일 Tool 생성입니다.</div></div>
+                            </div>
+                        </div>
+                        <div class="mb-4 p-3 rounded" style="background:#18181b; border:1px solid #3f3f46;">
+                            <label class="form-label" for="toolNaturalLanguage">AI Tool 초안 만들기</label>
+                            <div id="toolNaturalLanguageGuide" class="input-hint mt-0 mb-2">
+                                만들려는 Tool을 제안서처럼 적어주세요. <strong>업무 목적 → 입력값 → 출력값 → 사용 시점 → 제외 범위 → 연계 방식</strong> 순서로 구체적으로 작성할수록 정확한 초안을 만들 수 있습니다.
+                            </div>
+                            <textarea id="toolNaturalLanguage" class="form-control" rows="8" aria-describedby="toolNaturalLanguageGuide" placeholder="예: 고객번호로 보험계약 상태를 조회하는 Tool을 만들어주세요.&#10;목적: 고객의 계약 유지 상태 확인&#10;입력: 고객번호(필수), 기준일자(선택)&#10;출력: 계약번호, 상품명, 계약상태, 계약일자&#10;사용 시점: 고객이 보유 계약이나 계약 상태를 문의할 때&#10;제외 범위: 계약 변경 및 해지 처리&#10;연계 방식: MCI"></textarea>
+                            <div class="d-flex justify-content-between align-items-center gap-2 mt-2 flex-wrap">
+                                <button type="button" class="btn-secondary-action" onclick="loadToolDraftSample()">샘플 불러오기</button>
+                                <div class="d-flex gap-2 flex-wrap">
+                                    <select id="aiModelSelect" class="form-select" aria-label="AI 모델 선택">
+                                        <optgroup label="[신한라이프 내부망]">
+                                            <option value="Qwen3-Coder" selected>Qwen3-Coder</option>
+                                            <option value="Gemma-4-31B">Gemma-4-31B</option>
+                                        </optgroup>
+                                        <optgroup label="[외부 OpenRouter 무료]">
+                                            <option value="cohere/north-mini-code:free">Cohere North Mini Code</option>
+                                            <option value="inclusionai/ling-3.0-flash:free">InclusionAI Ling 3 Flash</option>
+                                            <option value="openai/gpt-oss-20b:free">OpenAI GPT-OSS 20B</option>
+                                            <option value="google/gemma-4-31b-it:free">Google Gemma 4 31B</option>
+                                            <option value="nvidia/nemotron-3-nano-30b-a3b:free">NVIDIA Nemotron 3 Nano</option>
+                                        </optgroup>
+                                    </select>
+                                    <button id="toolDraftButton" type="button" class="btn-action" onclick="createAiToolDraft()">AI로 Tool 채우기</button>
+                                </div>
+                            </div>
+                            <div class="input-hint">잘 모르는 항목은 생략해도 됩니다. 선택한 AI가 입력 내용을 바탕으로 Tool 기본 정보와 Input/Output Fields를 채웁니다. Legacy Interface ID와 Client System Code는 실제 연계 명세를 확인해 직접 입력하세요.</div>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Base Name (PascalCase)</label>
+                                <input type="text" class="form-control" name="baseName" placeholder="e.g. ExchangeRate" required>
+                                <div class="input-hint">Used for class generation (ExchangeRateService).</div>
+                            </div>
+                            <div class="col-md-6 mt-3 mt-md-0">
+                                <label class="form-label">Legacy Interface ID</label>
+                                <input type="text" class="form-control" name="interfaceId" placeholder="e.g. EXCH_001" required>
+                            </div>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-md-5">
+                                <label class="form-label">Tool Title (Display Name)</label>
+                                <input type="text" class="form-control" name="title" placeholder="e.g. Employee Information Search" required>
+                                <div class="input-hint">Short, human-facing name shown in tool lists and the Portal.</div>
+                            </div>
+                            <div class="col-md-7 mt-3 mt-md-0">
+                                <label class="form-label">Description (LLM Prompt)</label>
+                                <input type="text" class="form-control" name="description" placeholder="e.g. Use when the user asks to find an employee by employee ID." required>
+                                <div class="input-hint">LLM call guidance: purpose, when to use it, required conditions, and exclusions.</div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3 p-3 rounded" style="background:#18181b; border:1px solid #3f3f46;">
+                            <div class="form-label mb-2">Tool Schema V17 Metadata</div>
+                            <div class="input-hint mb-3">LLM이 Tool을 올바르게 선택하도록 기능·사용 조건·제외 조건·입출력 제한을 분리해 입력합니다.</div>
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label class="form-label">Function Description</label>
+                                    <textarea class="form-control" name="functionDescription" rows="2" placeholder="이 Tool이 수행하는 핵심 기능"></textarea>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Display Description</label>
+                                    <textarea class="form-control" name="displayDescription" rows="2" placeholder="Portal에 보여줄 짧은 설명"></textarea>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">When To Use</label>
+                                    <textarea class="form-control" name="whenToUse" rows="2" placeholder="어떤 사용자 요청에서 이 Tool을 사용하는지"></textarea>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">When Not To Use</label>
+                                    <textarea class="form-control" name="whenNotToUse" rows="2" placeholder="이 Tool을 사용하면 안 되는 조건"></textarea>
+                                </div>
+                                <div class="col-md-12">
+                                    <label class="form-label">I/O Limits</label>
+                                    <textarea class="form-control" name="ioLimits" rows="2" placeholder="허용되는 입력, 반환 범위, 건수 제한 등"></textarea>
+                                </div>
+                                <div class="col-md-8">
+                                    <label class="form-label">Example Queries (3~10)</label>
+                                    <textarea class="form-control" name="exampleQueries" rows="3" placeholder="한 줄에 하나씩 입력\n예: 사번 10001 직원 정보를 조회해줘"></textarea>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label">Tags</label>
+                                    <input type="text" class="form-control" name="tags" placeholder="employee, search">
+                                    <label class="form-label mt-3">Owner Organization</label>
+                                    <input type="text" class="form-control" name="ownerOrg" value="MCP_TOOL">
+                                </div>
+                            </div>
+                            <div class="row g-3 mt-1">
+                                <div class="col-md-4">
+                                    <label class="form-label">Timeout (ms)</label>
+                                    <input type="number" class="form-control" name="timeoutMillis" value="5000" min="1" step="1">
+                                    <div class="input-hint">Tool 호출 최대 대기 시간입니다.</div>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label">Retry Max Attempts</label>
+                                    <input type="number" class="form-control" name="retryMaxAttempts" value="3" min="1" step="1">
+                                    <div class="input-hint">최초 호출을 포함한 최대 시도 횟수입니다.</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Input Schema Resource (Optional)</label>
+                                <input type="text" class="form-control" name="inputSchemaResource" placeholder="e.g. classpath:mcp/input-schema.json">
+                            </div>
+                            <div class="col-md-6 mt-3 mt-md-0">
+                                <label class="form-label">Output Schema Resource (Optional)</label>
+                                <input type="text" class="form-control" name="outputSchemaResource" placeholder="e.g. classpath:mcp/output-schema.json">
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                    <label class="form-label mb-0">Input Fields (JSON)</label>
+                                    <div class="d-flex gap-1">
+                                        <button type="button" class="btn-secondary-action" style="padding: 0.2rem 0.45rem; font-size: 0.72rem;" onclick="openFieldEditor('inputFields')">필드 편집</button>
+                                        <button type="button" class="btn-secondary-action" style="padding: 0.2rem 0.45rem; font-size: 0.72rem;" onclick="loadFieldExample('inputFields')">예제 넣기</button>
+                                        <button type="button" class="btn-secondary-action" style="padding: 0.2rem 0.45rem; font-size: 0.72rem;" onclick="copyFieldJson('inputFields')">복사</button>
+                                    </div>
+                                </div>
+                                <textarea id="inputFields" class="form-control" name="inputFields" rows="4" placeholder='[{"name":"employeeId","type":"String","description":"Employee ID","example":"EMP10001","required":true}]'></textarea>
+                            </div>
+                            <div class="col-md-6 mt-3 mt-md-0">
+                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                    <label class="form-label mb-0">Output Fields (JSON)</label>
+                                    <div class="d-flex gap-1">
+                                        <button type="button" class="btn-secondary-action" style="padding: 0.2rem 0.45rem; font-size: 0.72rem;" onclick="openFieldEditor('outputFields')">필드 편집</button>
+                                        <button type="button" class="btn-secondary-action" style="padding: 0.2rem 0.45rem; font-size: 0.72rem;" onclick="loadFieldExample('outputFields')">예제 넣기</button>
+                                        <button type="button" class="btn-secondary-action" style="padding: 0.2rem 0.45rem; font-size: 0.72rem;" onclick="copyFieldJson('outputFields')">복사</button>
+                                    </div>
+                                </div>
+                                <textarea id="outputFields" class="form-control" name="outputFields" rows="4" placeholder='[{"name":"employeeName","type":"String","description":"Employee name","example":"Hong Gildong","required":true}]'></textarea>
+                            </div>
+                        </div>
+
+
+                        <div class="row mb-4">
+                            <div class="col-md-6">
+                                <label class="form-label">HTTP API Name (Glow api-list)</label>
+                                <input type="text" class="form-control" name="httpApiName" pattern="^[a-zA-Z0-9_-]+$" placeholder="비우면 Tool 이름으로 자동 생성">
+                                <div class="input-hint">HTTP only. Must match glow.communication.http.api-list[].name; URL and method are read from Glow YAML.</div>
+                            </div>
+                            <div class="col-md-6 mt-3 mt-md-0">
+                                <label class="form-label">Target System Code (MCI Only)</label>
+                                <input type="text" class="form-control" name="clientSystemCode" pattern="^([a-zA-Z0-9]{4}|[a-zA-Z0-9]{9})$" maxlength="9" minlength="4" placeholder="e.g. CFPA or ONBTI2370" oninput="this.value = this.value.toUpperCase()">
+                                <div class="input-hint">Required for MCI Protocol (4 or 9 characters).</div>
+                            </div>
+                        </div>
+                        
+                        <div class="row mb-4">
+                            <div class="col-md-6">
+                                <label class="form-label">Author</label>
+                                <input type="text" class="form-control" name="author" placeholder="Defaults to OS user">
+                            </div>
+                            <div class="col-md-6 mt-3 mt-md-0">
+                                <label class="form-label">Date</label>
+                                <input type="text" class="form-control" name="date" placeholder="Defaults to today">
+                            </div>
+                        </div>
+                        
+                        <div class="d-flex justify-content-end mt-4">
+                            <button type="submit" class="btn-action">Generate Tool</button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Glow MCI Request/Response Converter -->
+                <div class="tab-pane fade" id="mci-response" role="tabpanel" aria-labelledby="mci-response-tab">
+                    <div class="mb-4 p-3 rounded" style="background:#18181b; border:1px solid #3f3f46;">
+                        <div class="d-flex justify-content-between align-items-start gap-3 flex-wrap">
+                            <div>
+                                <h2 id="mciTransformHeading" style="font-size:1.05rem; color:#f4f4f5; margin:0 0 0.45rem;">Glow MCI Request/Response를 LLM DTO로 변환</h2>
+                                <div id="mciTransformHint" class="input-hint mt-0">XXXX_I.java 또는 XXXX_O.java의 전문 구조와 <code>@GlowTrgmField.description</code>은 원문 그대로 읽고, AI는 축약 필드명을 업무 의미가 드러나는 영문 camelCase로만 제안합니다.</div>
+                            </div>
+                            <span class="badge-mono">구조: Parser · 이름: AI · 출력: MapStruct</span>
+                        </div>
+                    </div>
+
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-3">
+                            <label class="form-label" for="mciTransformMode">변환 대상</label>
+                            <select id="mciTransformMode" class="form-select">
+                                <option value="RESPONSE" selected>Response (_O.java)</option>
+                                <option value="REQUEST">Request (_I.java)</option>
+                            </select>
+                        </div>
+                        <div class="col-md-5">
+                            <label id="mciSourceFileLabel" class="form-label" for="mciResponseFile">XXXX_O.java 파일</label>
+                            <input class="form-control" type="file" id="mciResponseFile" accept=".java,text/x-java-source">
+                            <div class="input-hint">파일을 선택하면 아래 소스 입력란에 UTF-8 텍스트로 불러옵니다. 소스를 직접 붙여넣어도 됩니다.</div>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label" for="mciResponseAiModel">필드명 추천 AI</label>
+                            <select id="mciResponseAiModel" class="form-select">
+                                <optgroup label="[신한라이프 내부망]">
+                                    <option value="Qwen3-Coder" selected>Qwen3-Coder</option>
+                                    <option value="Gemma-4-31B">Gemma-4-31B</option>
+                                </optgroup>
+                                <optgroup label="[외부 OpenRouter 무료]">
+                                    <option value="cohere/north-mini-code:free">Cohere North Mini Code</option>
+                                    <option value="inclusionai/ling-3.0-flash:free">InclusionAI Ling 3 Flash</option>
+                                    <option value="openai/gpt-oss-20b:free">OpenAI GPT-OSS 20B</option>
+                                    <option value="google/gemma-4-31b-it:free">Google Gemma 4 31B</option>
+                                    <option value="nvidia/nemotron-3-nano-30b-a3b:free">NVIDIA Nemotron 3 Nano</option>
+                                </optgroup>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label id="mciSourceInputLabel" class="form-label" for="mciResponseSource">MCI 응답 소스</label>
+                        <textarea id="mciResponseSource" class="form-control" rows="13" spellcheck="false" placeholder="package ...;&#10;&#10;public class ONBSZ0460_O {&#10;    @GlowTrgmField(order = 1, length = 8, description = &quot;인사번호&quot;)&#10;    private String prafNo;&#10;}"></textarea>
+                    </div>
+
+                    <div class="d-flex justify-content-end mb-4">
+                        <button id="mciResponseAnalyzeButton" type="button" class="btn-action" onclick="analyzeMciResponse()">AI로 필드명 분석</button>
+                    </div>
+
+                    <div id="mciResponseResultArea" style="display:none;">
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-6">
+                                <label id="mciDtoPackageLabel" class="form-label" for="mciResponsePackage">LLM DTO Package</label>
+                                <input id="mciResponsePackage" type="text" class="form-control" value="io.shinhanlife.dat.mcc.biz.pro.dto">
+                            </div>
+                            <div class="col-md-6">
+                                <label id="mciDtoClassLabel" class="form-label" for="mciResponseClassName">LLM DTO Class</label>
+                                <input id="mciResponseClassName" type="text" class="form-control" placeholder="IndividualCustomerDetailInquiryResponse">
+                                <div class="input-hint">업무 의미가 드러나는 PascalCase 이름으로 최종 확인하세요.</div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label" for="mciConverterPackage">Converter Package</label>
+                                <input id="mciConverterPackage" type="text" class="form-control" value="io.shinhanlife.dat.mcc.biz.pro.converter">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label" for="mciConverterClassName">Converter Class</label>
+                                <input id="mciConverterClassName" type="text" class="form-control" placeholder="IndividualCustomerDetailInquiryConverter">
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <div class="d-flex justify-content-between align-items-center mb-2 flex-wrap gap-2">
+                                <div>
+                                    <label class="form-label mb-0">필드 매핑 검토</label>
+                                    <div class="input-hint mt-1">AI 제안은 직접 수정할 수 있습니다. description은 Glow 원문 그대로 생성 DTO의 <code>@Schema</code>에 반영됩니다.</div>
+                                </div>
+                                <span id="mciResponseFieldCount" class="badge-mono"></span>
+                            </div>
+                            <div class="table-responsive rounded" style="border:1px solid #3f3f46;">
+                                <table class="table mb-0" style="color:#d4d4d8; font-size:0.82rem;">
+                                    <thead style="background:#18181b; color:#a1a1aa;">
+                                    <tr>
+                                        <th style="width:7%;">사용</th>
+                                        <th style="width:17%;">소유 타입</th>
+                                        <th style="width:15%;">전문 필드</th>
+                                        <th style="width:22%;">Glow 설명</th>
+                                        <th style="width:23%;">LLM 필드명</th>
+                                        <th style="width:10%;">Java 타입</th>
+                                        <th style="width:6%;">확인</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody id="mciResponseMappingBody"></tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <div class="d-flex justify-content-end mb-4">
+                            <button id="mciResponseGenerateButton" type="button" class="btn-action" onclick="generateMciResponseSources()">DTO / Converter 미리보기 생성</button>
+                        </div>
+
+                        <div id="mciResponsePreviewArea" style="display:none;">
+                            <div class="row g-3">
+                                <div class="col-lg-6">
+                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                        <label id="mciDtoPreviewLabel" class="form-label mb-0">LLM DTO.java</label>
+                                        <div class="d-flex gap-2">
+                                            <button type="button" class="btn-secondary-action" onclick="copyMciResponseSource('mciResponsePreview')">복사</button>
+                                            <button type="button" class="btn-secondary-action" onclick="downloadMciResponseSource('response')">다운로드</button>
+                                        </div>
+                                    </div>
+                                    <textarea id="mciResponsePreview" class="form-control" rows="22" spellcheck="false" readonly></textarea>
+                                </div>
+                                <div class="col-lg-6">
+                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                        <label class="form-label mb-0">Converter.java</label>
+                                        <div class="d-flex gap-2">
+                                            <button type="button" class="btn-secondary-action" onclick="copyMciResponseSource('mciConverterPreview')">복사</button>
+                                            <button type="button" class="btn-secondary-action" onclick="downloadMciResponseSource('converter')">다운로드</button>
+                                        </div>
+                                    </div>
+                                    <textarea id="mciConverterPreview" class="form-control" rows="22" spellcheck="false" readonly></textarea>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="mciResponseStatus" class="input-hint mt-3" role="status" aria-live="polite"></div>
+                </div>
+
+                <!-- Document Generator -->
+                <div class="tab-pane fade document-generator" id="document" role="tabpanel" aria-labelledby="document-tab">
+                    <div class="docgen-workspace">
+                        <section class="docgen-config">
+                            <h2 class="docgen-section-title">Document Generator</h2>
+                            <p class="docgen-section-copy">Tool Metadata를 기준으로 개발 산출물 Excel을 생성합니다. 선택된 문서만 파일과 시트에 포함됩니다.</p>
+
+                            <div class="docgen-field">
+                                <label class="docgen-field-label" for="docgenToolSelect">Tool</label>
+                                <select id="docgenToolSelect" disabled><option>Tool Metadata를 불러오는 중...</option></select>
+                                <div id="docgenGrowToolHint" class="docgen-hint">Gateway의 ToolMetadata 목록을 조회하고 있습니다.</div>
+                            </div>
+
+                            <div class="docgen-two-col docgen-field">
+                                <div>
+                                    <label class="docgen-field-label" for="docgenDocumentType">Document Type</label>
+                                    <select id="docgenDocumentType"><option>Program Definition / Design</option></select>
+                                </div>
+                                <div>
+                                    <label class="docgen-field-label" for="docgenVersion">Version</label>
+                                    <input id="docgenVersion" type="text" value="1.0" autocomplete="off">
+                                </div>
+                            </div>
+
+                            <div class="docgen-field">
+                                <label class="docgen-field-label">Included Sheets</label>
+                                <div class="docgen-check-grid">
+                                    <label class="docgen-check-card"><input id="docgenProgramCheck" type="checkbox" checked><span>프로그램정의서</span></label>
+                                    <label class="docgen-check-card"><input id="docgenProcessCheck" type="checkbox" checked><span>처리설계</span></label>
+                                    <label class="docgen-check-card"><input id="docgenInterfaceCheck" type="checkbox" checked><span>인터페이스</span><span class="docgen-mini-badge">별도 파일</span></label>
+                                    <label class="docgen-check-card"><input id="docgenRevisionCheck" type="checkbox" checked><span>개정이력</span></label>
+                                </div>
+                            </div>
+
+                            <div class="docgen-action-row">
+                                <span class="docgen-source-label">Tool metadata · Generated XLSX</span>
+                                <button id="docgenGenerateBtn" class="docgen-primary" type="button" disabled>Generate EXCEL</button>
+                            </div>
+                        </section>
+
+                        <section class="docgen-preview">
+                            <div class="docgen-meta-card">
+                                <div class="docgen-meta-title">
+                                    <div>
+                                        <h2 id="docgenToolTitle" class="docgen-loading">Tool Metadata loading...</h2>
+                                        <p id="docgenToolDescription">등록된 Tool 목록을 가져오는 중입니다.</p>
+                                    </div>
+                                    <span id="docgenMetadataStatus" class="docgen-status">SYNC</span>
+                                </div>
+                                <div class="docgen-meta-badges">
+                                    <span id="docgenCategoryTag" class="docgen-tag">Category · -</span>
+                                    <span id="docgenInterfaceTag" class="docgen-tag">Interface · -</span>
+                                    <span class="docgen-tag docgen-blue">Tool Metadata</span>
+                                </div>
+                            </div>
+
+                            <div class="docgen-list">
+                                <div id="docgenProgramRow" class="docgen-row docgen-enabled"><span class="docgen-number">01</span><div><div class="docgen-name">프로그램정의서</div><div class="docgen-description">Basic information · Runtime · Process summary</div></div><span class="docgen-mode docgen-auto">AUTO</span></div>
+                                <div id="docgenProcessRow" class="docgen-row docgen-enabled"><span class="docgen-number">02</span><div><div class="docgen-name">처리설계</div><div class="docgen-description">Tool metadata + common design</div></div><span class="docgen-mode docgen-mixed">MIXED</span></div>
+                                <div id="docgenInterfaceRow" class="docgen-row docgen-enabled"><span class="docgen-number">03</span><div><div class="docgen-name">인터페이스</div><div class="docgen-description">Request In · Response Out · 2 sheets</div></div><span class="docgen-mode docgen-separate">2 SHEETS · SEPARATE</span></div>
+                                <div id="docgenRevisionRow" class="docgen-row docgen-enabled"><span class="docgen-number">04</span><div><div class="docgen-name">개정이력</div><div class="docgen-description">Version · Date · Change information</div></div><span class="docgen-mode">MANUAL</span></div>
+                            </div>
+
+                            <p class="docgen-legend">AUTO: Tool metadata · MIXED: Metadata + common design · MANUAL: Review required<br>Output Files · 인터페이스 정의서는 별도 Excel 파일로 생성됩니다.</p>
+                            <div class="docgen-files">
+                                <div id="docgenProgramFile" class="docgen-file"><div class="docgen-file-kind">PROGRAM SPEC</div><div id="docgenProgramFileName" class="docgen-file-name">tool_프로그램정의서_v1.0_YYYYMMDD.xlsx</div></div>
+                                <div id="docgenInterfaceFile" class="docgen-file"><div class="docgen-file-kind">INTERFACE SPEC · REQUEST IN / RESPONSE OUT</div><div id="docgenInterfaceFileName" class="docgen-file-name">tool_인터페이스정의서_v1.0_YYYYMMDD.xlsx</div></div>
+                            </div>
+                        </section>
+                    </div>
+                </div>
+
+                <!-- Tool List Form -->
+                <div class="tab-pane fade" id="list" role="tabpanel">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <div>
+                            <h5 class="mb-1" style="font-size: 1rem; font-weight: 600;">Active Tools</h5>
+                            <div class="input-hint mt-0">Tools dynamically registered in the Gateway.</div>
+                        </div>
+                        <div class="d-flex gap-2">
+                            <select id="groupFilterSelect" class="form-select" style="width: auto; min-width: 140px; padding: 0.25rem 0.5rem; font-size: 0.8rem; height: 30px;" onchange="filterTools()">
+                                <option value="ALL">All Categories</option>
+                            </select>
+                            <input type="text" id="toolFilter" class="form-control" style="padding: 0.25rem 0.5rem; font-size: 0.8rem; height: 30px;" placeholder="Search..." onkeyup="filterTools()">
+                            <button class="btn-secondary-action text-nowrap" style="height: 30px;" onclick="loadToolList()">Refresh</button>
+                        </div>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table align-middle" id="toolTable">
+                            <thead>
+                                <tr>
+                                    <th style="width: 10%;">Category</th>
+                                    <th style="width: 20%;">Tool Name</th>
+                                    <th style="width: 40%;">Description</th>
+                                    <th style="width: 15%;">Pod</th>
+                                    <th style="width: 15%;">Interface</th>
+                                </tr>
+                            </thead>
+                            <tbody id="toolListBody">
+                                <tr>
+                                    <td colspan="5" class="text-center py-5 text-muted">Loading data...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+    
+    <div id="resultBox"></div>
+</div>
+
+<!-- Field Editor Modal -->
+<div class="modal fade" id="fieldEditorModal" tabindex="-1" aria-labelledby="fieldEditorModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-xl modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="fieldEditorModalLabel">필드 편집</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <p class="input-hint mt-0 mb-3">행을 추가해 필드를 입력하면 저장할 때 JSON으로 자동 변환됩니다.</p>
+        <div class="d-flex flex-wrap gap-2 align-items-center mb-3">
+          <span class="input-hint mt-0 mb-0">빠른 입력:</span>
+          <button type="button" class="btn-secondary-action" onclick="applyFieldTemplate('customer')">고객조회</button>
+          <button type="button" class="btn-secondary-action" onclick="applyFieldTemplate('list')">목록조회</button>
+          <button type="button" class="btn-secondary-action" onclick="applyFieldTemplate('detail')">단건조회</button>
+          <button type="button" class="btn-secondary-action" onclick="applyFieldTemplate('write')">등록/변경</button>
+          <button type="button" class="btn-secondary-action" onclick="applyFieldTemplate('clear')">초기화</button>
+        </div>
+        <div class="mb-4">
+          <label class="form-label">자연어 초안 만들기</label>
+          <div class="input-group">
+            <input id="fieldNaturalLanguage" type="text" class="form-control" placeholder="예: 고객번호로 계약 상태를 조회">
+            <button id="fieldDraftButton" type="button" class="btn-action" onclick="createNaturalFieldDraft()">AI 초안 만들기</button>
+          </div>
+          <div class="input-hint">Chat 화면과 같은 AI 모델이 문장을 분석해 현재 Input 또는 Output 필드 초안을 만듭니다.</div>
+        </div>
+        <div class="table-responsive">
+          <table class="table align-middle" id="fieldEditorTable">
+            <thead>
+              <tr>
+                <th style="min-width: 150px;">Name</th>
+                <th style="min-width: 125px;">Type</th>
+                <th style="min-width: 170px;">Enum values / List item type</th>
+                <th style="min-width: 260px;">Object list item fields (JSON)</th>
+                <th style="min-width: 210px;">Description</th>
+                <th style="min-width: 150px;">Pattern (Regex)</th>
+                <th style="min-width: 180px;">Examples (Enter 단위 구분)</th>
+                <th style="min-width: 125px;">Required</th>
+                <th style="width: 1%;">삭제</th>
+              </tr>
+            </thead>
+            <tbody id="fieldEditorBody"></tbody>
+          </table>
+        </div>
+        <button type="button" class="btn-secondary-action" onclick="addFieldEditorRow()">+ 필드 추가</button>
+        <div class="mt-4">
+          <label class="form-label">JSON 미리보기</label>
+          <pre id="fieldEditorPreview" class="mb-0 p-3 rounded" style="background:#09090b; border:1px solid #27272a; color:#e4e4e7; font-size:0.78rem; max-height:190px; overflow:auto;"></pre>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn-secondary-action" data-bs-dismiss="modal" style="padding: 0.5rem 1rem; font-size: 0.875rem;">취소</button>
+        <button type="button" class="btn-action" onclick="applyFieldEditor()">JSON에 적용</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Sub Field Editor Modal -->
+<div class="modal fade" id="subFieldEditorModal" tabindex="-1" aria-hidden="true" style="z-index: 1060;">
+  <div class="modal-dialog modal-xl modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">하위 필드(itemFields) 편집</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div class="table-responsive">
+          <table class="table table-sm align-middle">
+            <thead>
+              <tr>
+                <th style="width:15%">Name</th>
+                <th style="width:15%">Type</th>
+                <th style="width:15%">Details</th>
+                <th style="width:15%">Description</th>
+                <th style="width:10%">Pattern</th>
+                <th style="width:15%">Examples</th>
+                <th style="width:10%">Required</th>
+                <th style="width:5%"></th>
+              </tr>
+            </thead>
+            <tbody id="subFieldEditorBody"></tbody>
+          </table>
+        </div>
+        <button type="button" class="btn-action mt-2" onclick="addSubFieldEditorRow()">+ 하위 필드 추가</button>
+        <div class="mt-4">
+          <label class="form-label">JSON 미리보기</label>
+          <pre id="subFieldEditorPreview" class="mb-0 p-3 rounded" style="background:#09090b; border:1px solid #27272a; color:#e4e4e7; font-size:0.78rem; max-height:190px; overflow:auto;"></pre>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn-secondary-action" data-bs-dismiss="modal">취소</button>
+        <button type="button" class="btn-action" onclick="applySubFieldEditor()">적용</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Edit Tool Modal -->
+<div class="modal fade" id="editToolModal" tabindex="-1" aria-labelledby="editToolModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="editToolModalLabel">Edit Tool Definition</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <form id="editToolForm">
+          <div class="mb-3">
+            <label class="form-label">Tool Name</label>
+            <input type="text" class="form-control" id="editToolName" name="toolName" readonly style="background-color: #f4f4f5; color: #a1a1aa;">
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Category</label>
+            <input type="text" class="form-control" id="editCategoryKey" name="categoryKey" pattern="^[a-z0-9]{3}$" maxlength="3" minlength="3" oninput="this.value = this.value.toLowerCase()">
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Description</label>
+            <textarea class="form-control" id="editDescription" name="description" rows="3"></textarea>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Registry Exposure</label>
+            <select class="form-select" id="editRegister" name="register">
+                <option value="true">True (Public)</option>
+                <option value="false">False (Private)</option>
+            </select>
+          </div>
+          <div style="font-size: 0.8rem; color: #d97706; background: #fffbeb; padding: 0.75rem; border: 1px solid #fde68a; border-radius: var(--radius-sm); margin-top: 1rem;">
+            <strong>Notice:</strong> Applying edits modifies the physical Java source code. A rebuild of the backend container is required for changes to take effect.
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn-secondary-action" data-bs-dismiss="modal" style="padding: 0.5rem 1rem; font-size: 0.875rem;">Cancel</button>
+        <button type="button" class="btn-action" onclick="submitToolUpdate()">Apply Changes</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Bootstrap JS -->
+<script src="../vendor/bootstrap.bundle.min.js"></script>
+<script id="document-generator-script">
+(() => {
+    'use strict';
+
+    const state = { tools: [], selected: null };
+    let checks = null;
+    let initialized = false;
+
+    const dg = (id) => document.getElementById(id);
+
+    function initialize() {
+        if (!initialized) {
+            checks = {
+                program: dg('docgenProgramCheck'),
+                process: dg('docgenProcessCheck'),
+                interface: dg('docgenInterfaceCheck'),
+                revision: dg('docgenRevisionCheck')
+            };
+            Object.entries(checks).forEach(([name, checkbox]) => checkbox.addEventListener('change', () => {
+                dg(`docgen${capitalize(name)}Row`).classList.toggle('docgen-enabled', checkbox.checked);
+                updateOutputPreview();
+            }));
+            dg('docgenToolSelect').addEventListener('change', selectTool);
+            dg('docgenVersion').addEventListener('input', updateOutputPreview);
+            dg('docgenGenerateBtn').addEventListener('click', generateFiles);
+            initialized = true;
+        }
+        loadTools();
+    }
+
+    async function loadTools() {
+        const select = dg('docgenToolSelect');
+        const button = dg('docgenGenerateBtn');
+        select.disabled = true;
+        button.disabled = true;
+        dg('docgenGrowToolHint').textContent = 'Gateway의 ToolMetadata 목록을 조회하고 있습니다.';
+        try {
+            const response = await fetch('/mcp/api/v1/tools/list', { cache: 'no-store' });
+            if (!response.ok) throw new Error(`Gateway HTTP ${response.status}`);
+            const payload = await response.json();
+            const tools = payload?.result?.tools;
+            if (!Array.isArray(tools)) throw new Error('ToolMetadata 응답 형식이 올바르지 않습니다.');
+            state.tools = tools.slice().sort((a, b) =>
+                (a.categoryKey || '').localeCompare(b.categoryKey || '') ||
+                (a.name || '').localeCompare(b.name || '')
+            );
+            select.innerHTML = state.tools.map((tool, index) =>
+                `<option value="${index}">[${escapeHtml(tool.categoryKey || 'etc')}] ${escapeHtml(tool.name || tool.displayName || tool.uid)}</option>`
+            ).join('');
+            select.disabled = state.tools.length === 0;
+            dg('docgenGrowToolHint').textContent = `ToolMetadata에 등록된 ${state.tools.length}개 Tool을 모두 표시합니다.`;
+            if (state.tools.length) {
+                select.value = '0';
+                selectTool();
+            } else {
+                showMetadataError('등록된 Tool이 없습니다.');
+            }
+        } catch (error) {
+            state.tools = [];
+            state.selected = null;
+            showMetadataError(error.message);
+            select.innerHTML = '<option>Tool Metadata 조회 실패</option>';
+            dg('docgenGrowToolHint').innerHTML = `<span class="docgen-error">${escapeHtml(error.message)}</span> · Gateway 실행 상태를 확인하세요.`;
+        }
+    }
+
+    function selectTool() {
+        state.selected = state.tools[Number(dg('docgenToolSelect').value)] || null;
+        const tool = state.selected;
+        if (!tool) return;
+        dg('docgenVersion').value = normalizeVersion(tool.semver || dg('docgenVersion').value || '1.0');
+        dg('docgenToolTitle').classList.remove('docgen-loading', 'docgen-error');
+        dg('docgenToolTitle').textContent = tool.displayName || tool.name;
+        dg('docgenToolDescription').textContent = tool.description || '설명이 등록되지 않은 Tool입니다.';
+        dg('docgenCategoryTag').textContent = `Category · ${tool.categoryKey || '-'}`;
+        dg('docgenInterfaceTag').textContent = `Interface · ${tool.integrationType || '-'}`;
+        dg('docgenMetadataStatus').textContent = tool.enabled === false ? 'DISABLED' : 'READY';
+        updateOutputPreview();
+    }
+
+    function showMetadataError(message) {
+        dg('docgenToolTitle').className = 'docgen-error';
+        dg('docgenToolTitle').textContent = 'Tool Metadata unavailable';
+        dg('docgenToolDescription').textContent = message;
+        dg('docgenMetadataStatus').textContent = 'ERROR';
+        dg('docgenGenerateBtn').disabled = true;
+    }
+
+    function updateOutputPreview() {
+        const toolName = safeFilename(state.selected?.displayName || state.selected?.name || 'tool');
+        const version = safeVersion(dg('docgenVersion').value);
+        const date = yyyymmdd();
+        const hasProgram = checks.program.checked || checks.process.checked || checks.revision.checked;
+        dg('docgenProgramFile').classList.toggle('docgen-disabled', !hasProgram);
+        dg('docgenInterfaceFile').classList.toggle('docgen-disabled', !checks.interface.checked);
+        dg('docgenProgramFileName').textContent = `${toolName}_프로그램정의서_v${version}_${date}.xlsx`;
+        dg('docgenInterfaceFileName').textContent = `${toolName}_인터페이스정의서_v${version}_${date}.xlsx`;
+        dg('docgenGenerateBtn').disabled = !state.selected || (!hasProgram && !checks.interface.checked);
+    }
+
+    async function generateFiles() {
+        const tool = state.selected;
+        if (!tool) return notify('생성할 Tool을 선택하세요.');
+        const button = dg('docgenGenerateBtn');
+        const version = safeVersion(dg('docgenVersion').value);
+        const date = yyyymmdd();
+        const toolName = safeFilename(tool.displayName || tool.name || 'tool');
+        const hasProgram = checks.program.checked || checks.process.checked || checks.revision.checked;
+        const request = {
+            tool,
+            version,
+            includeProgram: checks.program.checked,
+            includeProcess: checks.process.checked,
+            includeRevision: checks.revision.checked
+        };
+
+        button.disabled = true;
+        button.textContent = 'Generating...';
+        try {
+            if (hasProgram) {
+                await requestDownload('/mcp/api/v1/admin/documents/program', request,
+                    `${toolName}_프로그램정의서_v${version}_${date}.xlsx`);
+            }
+            if (checks.interface.checked) {
+                await requestDownload('/mcp/api/v1/admin/documents/interface', request,
+                    `${toolName}_인터페이스정의서_v${version}_${date}.xlsx`);
+            }
+            notify('선택한 Excel 문서 다운로드를 완료했습니다.');
+        } catch (error) {
+            notify(error.message);
+        } finally {
+            button.textContent = 'Generate EXCEL';
+            updateOutputPreview();
+        }
+    }
+
+    async function requestDownload(url, payload, filename) {
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+        if (!response.ok) {
+            let message = `문서 생성에 실패했습니다. (HTTP ${response.status})`;
+            try {
+                const error = await response.json();
+                if (error?.error) message = error.error;
+            } catch (_) {
+                // JSON 오류 응답이 아닌 경우 기본 메시지를 사용합니다.
+            }
+            throw new Error(message);
+        }
+        const blob = await response.blob();
+        const href = URL.createObjectURL(blob);
+        const anchor = document.createElement('a');
+        anchor.href = href;
+        anchor.download = filename;
+        document.body.appendChild(anchor);
+        anchor.click();
+        anchor.remove();
+        URL.revokeObjectURL(href);
+    }
+
+    function safeFilename(value) { return String(value).replace(/[\\/:*?"<>|]/g, '_').trim() || 'tool'; }
+    function safeVersion(value) { return String(value || '1.0').replace(/^v/i, '').replace(/[^0-9A-Za-z._-]/g, '_') || '1.0'; }
+    function normalizeVersion(value) { return String(value).replace(/^v/i, '') || '1.0'; }
+    function yyyymmdd() {
+        const date = new Date();
+        return `${date.getFullYear()}${String(date.getMonth() + 1).padStart(2, '0')}${String(date.getDate()).padStart(2, '0')}`;
+    }
+    function capitalize(value) { return value.charAt(0).toUpperCase() + value.slice(1); }
+    function escapeHtml(value) {
+        return String(value).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;').replace(/'/g, '&apos;');
+    }
+    function notify(message) {
+        const toast = dg('docgenToast');
+        toast.textContent = message;
+        toast.classList.add('docgen-show');
+        window.setTimeout(() => toast.classList.remove('docgen-show'), 2800);
+    }
+
+    window.loadDocumentGenerator = initialize;
+})();
+</script>
+<div id="docgenToast" class="docgen-toast"></div>
+<script>
+    function handleFormSubmit(formId, apiUrl) {
+        document.getElementById(formId).addEventListener('submit', function(e) {
+            e.preventDefault();
+            const formData = new FormData(this);
+            const data = Object.fromEntries(formData.entries());
+            if (formId === 'podForm') {
+                data.targetModules = JSON.stringify(currentTargetModules());
+            } else if (formId === 'newPodForm') {
+                data.targetModules = JSON.stringify(currentNewPodTargetModules());
+            }
+            const btn = this.querySelector('button[type="submit"]');
+            const originalText = btn.innerHTML;
+            
+            btn.innerHTML = 'Processing...';
+            btn.disabled = true;
+            btn.style.opacity = '0.7';
+
+            fetch(apiUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            })
+            .then(response => response.text())
+            .then(result => {
+                const resultBox = document.getElementById('resultBox');
+                resultBox.style.display = 'block';
+                
+                if (result.includes('[오류]') || result.includes('오류 발생:')) {
+                    resultBox.className = 'error';
+                    resultBox.textContent = result;
+                } else {
+                    resultBox.className = 'success';
+                    resultBox.textContent = result + "\n\n> Note: Please sync Gradle in your IDE to reflect source code generation.";
+                }
+            })
+            .catch(error => {
+                const resultBox = document.getElementById('resultBox');
+                resultBox.style.display = 'block';
+                resultBox.className = 'error';
+                resultBox.textContent = "Network error: " + error;
+            })
+            .finally(() => {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+                btn.style.opacity = '1';
+            });
+        });
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const loadModules = () => {
+            const workspacePath = document.querySelector('#toolForm input[name="workspacePath"]')?.value || document.querySelector('input[name="workspacePath"]')?.value || '';
+            fetch(`/api/v1/scaffold/modules?workspacePath=${encodeURIComponent(workspacePath)}`)
+                .then(res => res.json())
+                .then(modules => {
+                    const select = document.getElementById('targetModuleSelect');
+                    if (modules && modules.length > 0) {
+                        select.innerHTML = modules.map(m => `<option value="${m}" ${m === 'dat-was-cus' ? 'selected' : ''}>${m}</option>`).join('');
+                    }
+                    if (typeof loadCategoriesForSelection === 'function') {
+                        loadCategoriesForSelection();
+                    }
+                })
+                .catch(err => console.error('Failed to load modules:', err));
+        };
+        loadModules();
+        const wsInputs = document.querySelectorAll('input[name="workspacePath"]');
+          wsInputs.forEach(wsInput => {
+              wsInput.addEventListener('change', loadModules);
+              wsInput.addEventListener('blur', loadModules);
+          });
+    });
+
+    handleFormSubmit('podForm', '/api/v1/scaffold/pod');
+    handleFormSubmit('newPodForm', '/api/v1/scaffold/pod-new');
+
+    function currentTargetModules() {
+        return Array.from(document.querySelectorAll('#targetModuleSelect option'))
+            .map(option => option.value.trim())
+            .filter(moduleName => /^dat-was-[a-z0-9-]+$/.test(moduleName));
+    }
+
+    function currentNewPodTargetModules() {
+        return Array.from(document.querySelectorAll('#newPodTargetModuleSelect option:checked'))
+            .map(option => option.value.trim())
+            .filter(moduleName => /^dat-was-[a-z0-9-]+$/.test(moduleName));
+    }
+
+    async function loadNewPodTargetModules() {
+        const workspacePath = document.getElementById('newPodWorkspacePathInput').value.trim();
+        const moduleName = document.querySelector('#newPodForm [name="moduleName"]').value.trim();
+        const select = document.getElementById('newPodTargetModuleSelect');
+        try {
+            const response = await fetch('/api/v1/scaffold/modules?workspacePath=' + encodeURIComponent(workspacePath));
+            const modules = await response.json();
+            select.innerHTML = (modules || [])
+                .filter(name => name !== moduleName)
+                .map(name => '<option value="' + name + '">' + name + '</option>')
+                .join('');
+        } catch (error) {
+            console.error('Failed to load New Pod modules:', error);
+        }
+    }
+
+    document.getElementById('newPodWorkspacePathInput').addEventListener('change', loadNewPodTargetModules);
+    document.getElementById('newPodWorkspacePathInput').addEventListener('blur', loadNewPodTargetModules);
+    document.querySelector('#newPodForm [name="moduleName"]').addEventListener('input', loadNewPodTargetModules);
+    loadNewPodTargetModules();
+
+    async function createPodManifestDraft(button) {
+        const description = document.getElementById('podDescription').value.trim();
+        if (!description) { alert('Pod 업무 설명을 입력해주세요.'); return; }
+        if (button) { button.disabled = true; button.textContent = 'AI 생성 중...'; }
+        try {
+            const response = await fetch('/api/v1/scaffold/pod-draft', {
+                method: 'POST', headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({
+                    description,
+                    moduleName: document.querySelector('#podForm [name="moduleName"]').value,
+                    targetModules: JSON.stringify(currentTargetModules()),
+                    model: document.getElementById('podAiModelSelect').value
+                })
+            });
+            const result = await response.json();
+            if (!response.ok) throw new Error(result.error || 'AI Manifest 생성 실패');
+            document.getElementById('toolServiceManifest').value = result.toolServiceManifest || '';
+        } catch (error) { alert(error.message); }
+        finally { if (button) { button.disabled = false; button.textContent = 'AI로 Manifest 채우기'; } }
+    }
+
+    async function createNewPodManifestDraft(button) {
+        const description = document.getElementById('newPodDescription').value.trim();
+        if (!description) { alert('Pod 업무 설명을 입력해주세요.'); return; }
+        if (button) { button.disabled = true; button.textContent = 'AI 생성 중...'; }
+        try {
+            const response = await fetch('/api/v1/scaffold/pod-new-draft', {
+                method: 'POST', headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({
+                    description,
+                    moduleName: document.querySelector('#newPodForm [name="moduleName"]').value,
+                    targetModules: JSON.stringify(currentNewPodTargetModules()),
+                    model: document.getElementById('newPodAiModelSelect').value
+                })
+            });
+            const result = await response.json();
+            if (!response.ok) throw new Error(result.error || 'AI Manifest 생성 실패');
+            document.getElementById('newToolServiceManifest').value = result.toolServiceManifest || '';
+        } catch (error) { alert(error.message); }
+        finally { if (button) { button.disabled = false; button.textContent = 'AI로 Manifest 채우기'; } }
+    }
+
+    const groupedTools = [];
+
+    function toMethodName(baseName) {
+        return baseName ? baseName.charAt(0).toLowerCase() + baseName.slice(1) : '';
+    }
+
+    function parseToolFields(id) {
+        const text = document.getElementById(id).value.trim();
+        if (!text) return [];
+        const fields = JSON.parse(text);
+        if (!Array.isArray(fields)) throw new Error(`${id} must be a JSON array.`);
+        return fields;
+    }
+
+    function currentToolDefinition() {
+        const form = document.getElementById('toolForm');
+        const data = Object.fromEntries(new FormData(form).entries());
+        if (!data.baseName) {
+            throw new Error('Base Name을 입력해주세요.');
+        }
+        if (data.routingType === 'MCI' && (!data.interfaceId || !data.clientSystemCode)) {
+            throw new Error('MCI Tool은 Legacy Interface ID와 Target System Code를 입력해야 합니다.');
+        }
+        if (data.routingType === 'HTTP' && !data.httpApiName) {
+            throw new Error('HTTP Tool은 HTTP API Name을 입력해야 합니다.');
+        }
+        if (!['MCI', 'HTTP'].includes(data.routingType)) {
+            throw new Error('여러 Tool UseCase는 MCI 또는 HTTP 프로토콜만 지원합니다.');
+        }
+        return {
+            baseName: data.baseName,
+            methodName: toMethodName(data.baseName),
+            interfaceId: data.interfaceId,
+            title: data.title || data.baseName,
+            description: data.description || '',
+            group: data.categoryKey,
+            routingType: data.routingType,
+            register: data.register === 'true',
+            clientSystemCode: data.clientSystemCode,
+            httpApiName: data.httpApiName || null,
+            inputFields: parseToolFields('inputFields'),
+            outputFields: parseToolFields('outputFields'),
+            definitionOptions: {
+                functionDescription: data.functionDescription || '', displayDescription: data.displayDescription || '',
+                whenToUse: data.whenToUse || '', whenNotToUse: data.whenNotToUse || '', ioLimits: data.ioLimits || '',
+                exampleQueries: (data.exampleQueries || '').split(/[\n,]+/).map(value => value.trim()).filter(Boolean),
+                tags: (data.tags || '').split(',').map(value => value.trim()).filter(Boolean), ownerOrg: data.ownerOrg || 'MCP_TOOL',
+                timeoutMillis: Number(data.timeoutMillis || 5000),
+                retryMaxAttempts: Number(data.retryMaxAttempts || 3)
+            }
+        };
+    }
+
+    function addCurrentToolToGroup() {
+        try {
+            const tool = currentToolDefinition();
+            if (groupedTools.some(item => item.methodName === tool.methodName || item.baseName === tool.baseName)) {
+                throw new Error('같은 Base Name 또는 메서드명이 이미 묶음에 있습니다.');
+            }
+            groupedTools.push(tool);
+            renderToolGroupSummary();
+        } catch (error) {
+            alert(error.message);
+        }
+    }
+
+    async function loadUseCasesForSelection() {
+        const moduleName = document.getElementById('targetModuleSelect').value;
+        const workspacePath = document.querySelector('#toolForm input[name="workspacePath"]')?.value || document.querySelector('input[name="workspacePath"]')?.value || '';
+        const categoryKey = document.querySelector('#toolForm [name="categoryKey"]').value.trim();
+        const select = document.getElementById('toolGroupUseCaseSelect');
+        select.innerHTML = '<option value="">새 UseCase 생성</option>';
+        if (!/^[a-z0-9]{3}$/.test(categoryKey)) return;
+        try {
+            const response = await fetch(`/api/v1/scaffold/usecases?moduleName=${encodeURIComponent(moduleName)}&categoryKey=${encodeURIComponent(categoryKey)}&workspacePath=${encodeURIComponent(workspacePath)}`);
+            if (!response.ok) throw new Error('UseCase 목록 조회 실패');
+            const useCases = await response.json();
+            if (Array.isArray(useCases)) {
+                useCases.forEach(useCaseName => select.add(new Option(`기존 ${useCaseName}에 함수 추가`, useCaseName)));
+            } else {
+                console.error('API Error:', useCases);
+                alert('서버 응답 오류 (UseCase): 배열이 아닙니다.\n\n' + JSON.stringify(useCases, null, 2));
+            }
+        } catch (error) {
+            console.warn(error);
+        }
+    }
+
+    async function loadCategoriesForSelection() {
+        const moduleName = document.getElementById('targetModuleSelect').value;
+        const workspacePath = document.querySelector('#toolForm input[name="workspacePath"]')?.value || document.querySelector('input[name="workspacePath"]')?.value || '';
+        const select = document.getElementById('domainCategorySelect');
+        const nameInput = document.getElementById('domainCategoryName');
+        select.innerHTML = '<option value="">새 도메인 생성</option>';
+        try {
+            const response = await fetch(`/api/v1/scaffold/categories?moduleName=${encodeURIComponent(moduleName)}&workspacePath=${encodeURIComponent(workspacePath)}`);
+            if (!response.ok) throw new Error('Category 목록 조회 실패');
+            const categories = await response.json();
+            if (Array.isArray(categories)) {
+                categories.forEach(cat => select.add(new Option(`기존 ${cat} 도메인`, cat)));
+            } else {
+                console.error('API Error:', categories);
+                alert('서버 응답 오류 (Category): 배열이 아닙니다.\n\n' + JSON.stringify(categories, null, 2));
+            }
+        } catch (error) {
+            console.warn(error);
+        }
+        if (!nameInput.value) {
+            nameInput.value = '';
+            nameInput.readOnly = false;
+        }
+        loadUseCasesForSelection();
+    }
+
+    document.getElementById('domainCategoryName').addEventListener('input', loadUseCasesForSelection);
+    document.getElementById('targetModuleSelect').addEventListener('change', loadCategoriesForSelection);
+    document.getElementById('domainCategorySelect').addEventListener('change', function() {
+        const nameInput = document.getElementById('domainCategoryName');
+        if (this.value) {
+            nameInput.value = this.value;
+            nameInput.readOnly = true;
+        } else {
+            nameInput.value = '';
+            nameInput.readOnly = false;
+        }
+        loadUseCasesForSelection();
+    });
+    document.getElementById('toolGroupUseCaseSelect').addEventListener('change', function() {
+        const nameInput = document.getElementById('toolGroupUseCaseName');
+        if (this.value) {
+            nameInput.value = this.value.replace(/UseCase$/, '');
+            nameInput.readOnly = true;
+        } else {
+            nameInput.value = '';
+            nameInput.readOnly = false;
+        }
+    });
+
+    function renderToolGroupSummary() {
+        const summary = document.getElementById('toolGroupSummary');
+        summary.textContent = groupedTools.length
+            ? `${groupedTools.length}개 Tool: ${groupedTools.map(tool => `${tool.baseName} → ${tool.methodName}()`).join(', ')}`
+            : '묶음에 추가된 Tool 없음 — 일반 Generate Tool은 기존 단일 Tool 생성입니다.';
+    }
+
+    document.getElementById('toolForm').addEventListener('submit', function(e) {
+        const useCaseName = document.getElementById('toolGroupUseCaseName').value.trim();
+        if (useCaseName) {
+            e.preventDefault();
+            e.stopImmediatePropagation();
+            if (!/^[A-Z][A-Za-z0-9]*$/.test(useCaseName)) {
+                alert('UseCase 이름은 PascalCase로 입력해주세요. 예: Customer');
+                return;
+            }
+            try {
+                const current = currentToolDefinition();
+                const tools = groupedTools.some(item => item.methodName === current.methodName) ? groupedTools : [...groupedTools, current];
+                const data = Object.fromEntries(new FormData(this).entries());
+                
+                const btn = this.querySelector('button[type="submit"]');
+                const originalText = btn.innerHTML;
+                btn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> 처리중...';
+                btn.disabled = true;
+
+                fetch('/api/v1/scaffold/tool-group', {
+                    method: 'POST', headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({useCaseName, moduleName: data.moduleName, author: data.author, date: data.date, workspacePath: data.workspacePath, tools})
+                }).then(response => response.text()).then(result => {
+                    const resultBox = document.getElementById('resultBox');
+                    resultBox.style.display = 'block'; resultBox.className = result.startsWith('Error:') ? 'error' : 'success';
+                    resultBox.textContent = result + (result.startsWith('Error:') ? '' : "\n\n> Note: Please sync Gradle in your IDE to reflect source code generation.");
+                }).catch(error => {
+                    const resultBox = document.getElementById('resultBox');
+                    resultBox.style.display = 'block'; resultBox.className = 'error';
+                    resultBox.textContent = "Network error: " + error;
+                }).finally(() => {
+                    btn.innerHTML = originalText;
+                    btn.disabled = false;
+                });
+            } catch (error) {
+                alert(error.message);
+            }
+        }
+    });
+
+    handleFormSubmit('toolForm', '/api/v1/scaffold/tool');
+
+    const fieldExamples = {
+        inputFields: [
+            { name: 'employeeId', type: 'String', description: 'Employee identifier', example: 'EMP10001', required: true },
+            { name: 'page', type: 'Integer', description: 'Page number', example: '1', required: false }
+        ],
+        outputFields: [
+            { name: 'employeeName', type: 'String', description: 'Employee name', example: 'Hong Gildong', required: true }
+        ]
+    };
+
+    function loadFieldExample(fieldId) {
+        document.getElementById(fieldId).value = JSON.stringify(fieldExamples[fieldId], null, 2);
+    }
+
+    async function copyFieldJson(fieldId) {
+        const textarea = document.getElementById(fieldId);
+        const value = textarea.value.trim() || JSON.stringify(fieldExamples[fieldId], null, 2);
+        try {
+            await navigator.clipboard.writeText(value);
+        } catch (error) {
+            textarea.value = value;
+            textarea.select();
+            document.execCommand('copy');
+            textarea.setSelectionRange(0, 0);
+        }
+    }
+
+    const fieldTypes = ['String', 'Integer', 'Long', 'Double', 'Boolean', 'BigDecimal', 'List'];
+    const typeExamples = {
+        String: 'example',
+        Integer: '1',
+        Long: '1',
+        Double: '1.0',
+        Boolean: 'true',
+        BigDecimal: '1000.00',
+        List: 'C001'
+    };
+    const fieldTemplates = {
+        customer: {
+            inputFields: [
+                { name: 'customerId', type: 'String', description: 'Customer identifier', example: 'CUST00001', required: true }
+            ],
+            outputFields: [
+                { name: 'customerId', type: 'String', description: 'Customer identifier', example: 'CUST00001', required: true },
+                { name: 'customerName', type: 'String', description: 'Customer name', example: 'Hong Gildong', required: false }
+            ]
+        },
+        list: {
+            inputFields: [
+                { name: 'page', type: 'Integer', description: 'Page number', example: '1', required: false },
+                { name: 'pageSize', type: 'Integer', description: 'Items per page', example: '20', required: false }
+            ],
+            outputFields: [
+                { name: 'totalCount', type: 'Long', description: 'Total result count', example: '100', required: false }
+            ]
+        },
+        detail: {
+            inputFields: [
+                { name: 'id', type: 'String', description: 'Item identifier', example: 'ID00001', required: true }
+            ],
+            outputFields: [
+                { name: 'resultCode', type: 'String', description: 'Result code', example: 'SUCCESS', required: true },
+                { name: 'resultMessage', type: 'String', description: 'Result message', example: 'Completed', required: false }
+            ]
+        },
+        write: {
+            inputFields: [
+                { name: 'requestId', type: 'String', description: 'Request identifier', example: 'REQ00001', required: true },
+                { name: 'requestType', type: 'String', description: 'Registration or update type', example: 'CREATE', required: true }
+            ],
+            outputFields: [
+                { name: 'resultCode', type: 'String', description: 'Result code', example: 'SUCCESS', required: true },
+                { name: 'resultMessage', type: 'String', description: 'Result message', example: 'Completed', required: false }
+            ]
+        }
+    };
+    let currentSubFieldTargetInput = null;
+    let subFieldEditorModalInstance = null;
+
+    function openSubFieldEditor(inputEl) {
+        currentSubFieldTargetInput = inputEl;
+        let fields = [];
+        if (inputEl.value.trim()) {
+            try { fields = JSON.parse(inputEl.value); } catch(e) {}
+        }
+        document.getElementById('subFieldEditorBody').replaceChildren();
+        (fields.length ? fields : [{}]).forEach(addSubFieldEditorRow);
+        if (!subFieldEditorModalInstance) {
+            subFieldEditorModalInstance = new bootstrap.Modal(document.getElementById('subFieldEditorModal'));
+        }
+        updateSubFieldEditorPreview();
+        subFieldEditorModalInstance.show();
+    }
+
+    function addSubFieldEditorRow(field = {}) {
+        const row = document.createElement('tr');
+        const makeInput = (val, ph) => {
+            const el = document.createElement('input');
+            el.type = 'text'; el.className = 'form-control form-control-sm';
+            el.value = val || ''; el.placeholder = ph;
+            return el;
+        };
+        const n = makeInput(field.name, 'name'); n.dataset.field = 'name';
+        const d = makeInput(field.description, 'desc'); d.dataset.field = 'description';
+        const p = makeInput(field.pattern, 'pattern'); p.dataset.field = 'pattern';
+        const e = document.createElement('textarea');
+        e.className = 'form-control form-control-sm';
+        e.rows = 2; e.dataset.field = 'example';
+        e.value = (field.examples || []).join('\n') || '';
+        const t = document.createElement('select');
+        t.className = 'form-select form-select-sm'; t.dataset.field = 'type';
+        ['String', 'Integer', 'Long', 'Double', 'Boolean', 'BigDecimal'].forEach(type => {
+            t.add(new Option(type, type, false, (field.type || 'String') === type));
+        });
+        const det = makeInput(field.type !== 'List' ? (field.enumValues||[]).join(',') : '', 'Enum csv (콤마 구분)');
+        det.dataset.field = 'details';
+        t.addEventListener('change', () => {
+            det.placeholder = 'Enum csv (콤마 구분)';
+        });
+        const req = document.createElement('select');
+        req.className = 'form-select form-select-sm'; req.dataset.field = 'required';
+        req.add(new Option('Required', 'true', false, field.required === true || field.required === 'true'));
+        req.add(new Option('Optional', 'false', false, !(field.required === true || field.required === 'true')));
+        
+        [n, t, det, d, p, e, req].forEach(ctrl => {
+            const td = document.createElement('td'); td.appendChild(ctrl); row.appendChild(td);
+            ctrl.addEventListener('input', updateSubFieldEditorPreview);
+            ctrl.addEventListener('change', updateSubFieldEditorPreview);
+        });
+        const del = document.createElement('button');
+        del.type = 'button'; del.className = 'btn-secondary-action'; del.textContent = 'X';
+        del.style.padding = '0.1rem 0.4rem';
+        del.onclick = () => { row.remove(); updateSubFieldEditorPreview(); };
+        const delTd = document.createElement('td'); delTd.appendChild(del); row.appendChild(delTd);
+        document.getElementById('subFieldEditorBody').appendChild(row);
+        updateSubFieldEditorPreview();
+    }
+
+    function currentSubEditorFields() {
+        return [...document.querySelectorAll('#subFieldEditorBody tr')].map(row => {
+            const type = row.querySelector('[data-field="type"]').value;
+            const details = row.querySelector('[data-field="details"]').value.trim();
+            return {
+                name: row.querySelector('[data-field="name"]').value.trim(),
+                type,
+                description: row.querySelector('[data-field="description"]').value.trim(),
+                pattern: row.querySelector('[data-field="pattern"]').value.trim(),
+                examples: row.querySelector('[data-field="example"]').value.split('\n').map(s=>s.trim()).filter(Boolean),
+                required: row.querySelector('[data-field="required"]').value === 'true',
+                enumValues: type !== 'List' ? details.split(',').map(s=>s.trim()).filter(Boolean) : [],
+                itemType: null, itemFields: []
+            };
+        }).filter(f => f.name);
+    }
+
+    function updateSubFieldEditorPreview() {
+        const preview = document.getElementById('subFieldEditorPreview');
+        if (preview) preview.textContent = JSON.stringify(currentSubEditorFields(), null, 2);
+    }
+
+    function applySubFieldEditor() {
+        const fields = currentSubEditorFields();
+        currentSubFieldTargetInput.value = JSON.stringify(fields);
+        currentSubFieldTargetInput.dispatchEvent(new Event('input'));
+        currentSubFieldTargetInput.dispatchEvent(new Event('change'));
+        subFieldEditorModalInstance.hide();
+    }
+
+    let fieldEditorTargetId = null;
+    let fieldEditorModalInstance = null;
+
+    function openFieldEditor(targetId) {
+        const textarea = document.getElementById(targetId);
+        let fields = [];
+        if (textarea.value.trim()) {
+            try {
+                fields = JSON.parse(textarea.value);
+                if (!Array.isArray(fields)) throw new Error('not an array');
+            } catch (error) {
+                alert('현재 JSON 형식이 올바르지 않습니다. JSON을 수정한 후 다시 열어주세요.');
+                return;
+            }
+        }
+
+        fieldEditorTargetId = targetId;
+        document.getElementById('fieldEditorModalLabel').textContent = targetId === 'inputFields'
+            ? 'Input Fields 편집'
+            : 'Output Fields 편집';
+        const body = document.getElementById('fieldEditorBody');
+        body.replaceChildren();
+        (fields.length ? fields : [{}]).forEach(addFieldEditorRow);
+        updateFieldEditorPreview();
+
+        if (!fieldEditorModalInstance) {
+            fieldEditorModalInstance = new bootstrap.Modal(document.getElementById('fieldEditorModal'));
+        }
+        fieldEditorModalInstance.show();
+    }
+
+    function addFieldEditorRow(field = {}) {
+        const row = document.createElement('tr');
+        const makeInput = (value, placeholder) => {
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.className = 'form-control form-control-sm';
+            input.value = value || '';
+            input.placeholder = placeholder;
+            return input;
+        };
+        const nameInput = makeInput(field.name, 'e.g. employeeId');
+        nameInput.dataset.field = 'name';
+        const descriptionInput = makeInput(field.description, 'e.g. Employee ID');
+        descriptionInput.dataset.field = 'description';
+        
+        const patternInput = makeInput(field.pattern, 'e.g. ^[0-9]{4}$');
+        patternInput.dataset.field = 'pattern';
+
+        const exampleInput = document.createElement('textarea');
+        exampleInput.className = 'form-control form-control-sm';
+        exampleInput.placeholder = 'e.g. EMP10001\nEMP10002';
+        exampleInput.rows = 2;
+        exampleInput.dataset.field = 'example';
+        exampleInput.value = (field.examples || []).join('\n') || '';
+
+        const typeSelect = document.createElement('select');
+        typeSelect.className = 'form-select form-select-sm';
+        typeSelect.dataset.field = 'type';
+        fieldTypes.forEach(type => {
+            const option = new Option(type, type, false, (field.type || 'String') === type);
+            typeSelect.add(option);
+        });
+        const createDetailsInput = (type, value) => {
+            let input;
+            if (type === 'List') {
+                input = document.createElement('select');
+                input.className = 'form-select form-select-sm';
+                ['String', 'Integer', 'Long', 'Double', 'Boolean', 'BigDecimal', 'Object'].forEach(itemType => {
+                    input.add(new Option(itemType, itemType, false, (value || 'String') === itemType));
+                });
+            } else {
+                input = makeInput(value, 'Enum csv (콤마 구분)');
+            }
+            input.dataset.field = 'details';
+            return input;
+        };
+        let detailsInput = createDetailsInput(field.type || 'String',
+            field.type !== 'List' ? (field.enumValues || []).join(', ') : field.itemType);
+
+        const requiredSelect = document.createElement('select');
+        requiredSelect.className = 'form-select form-select-sm';
+        requiredSelect.dataset.field = 'required';
+        requiredSelect.add(new Option('Required', 'true', false, field.required === true || field.required === 'true'));
+        requiredSelect.add(new Option('Optional', 'false', false, !(field.required === true || field.required === 'true')));
+
+        const itemFieldsContainer = document.createElement('div');
+        itemFieldsContainer.className = 'd-flex gap-1';
+        
+        const itemFieldsInput = makeInput(field.type === 'List' && field.itemType === 'Object'
+            ? JSON.stringify(field.itemFields || []) : '', 'JSON 직접입력 또는 우측 편집 클릭');
+        itemFieldsInput.dataset.field = 'itemFields';
+        itemFieldsInput.style.flex = '1';
+        
+        const editItemBtn = document.createElement('button');
+        editItemBtn.type = 'button';
+        editItemBtn.className = 'btn-secondary-action';
+        editItemBtn.textContent = '편집';
+        editItemBtn.style.padding = '0.2rem 0.5rem';
+        editItemBtn.onclick = () => {
+            if (typeof openSubFieldEditor === 'function') openSubFieldEditor(itemFieldsInput);
+        };
+        
+        itemFieldsContainer.appendChild(itemFieldsInput);
+        itemFieldsContainer.appendChild(editItemBtn);
+
+        const updateObjectListFieldsState = () => {
+            const objectList = typeSelect.value === 'List' && detailsInput.value === 'Object';
+            itemFieldsInput.disabled = !objectList;
+            editItemBtn.disabled = !objectList;
+            itemFieldsInput.placeholder = objectList
+                ? 'JSON 직접입력 또는 우측 편집 클릭'
+                : 'Select List > Object to enter item fields';
+            if (!objectList) itemFieldsInput.value = '';
+        };
+        const bindDetailsInput = () => {
+            detailsInput.addEventListener('input', updateFieldEditorPreview);
+            detailsInput.addEventListener('change', () => {
+                updateObjectListFieldsState();
+                updateFieldEditorPreview();
+            });
+        };
+        typeSelect.addEventListener('change', () => {
+            if (!exampleInput.value.trim()) exampleInput.value = typeExamples[typeSelect.value];
+            const replacement = createDetailsInput(typeSelect.value, typeSelect.value === 'List' ? 'String' : '');
+            detailsInput.replaceWith(replacement);
+            detailsInput = replacement;
+            bindDetailsInput();
+            updateObjectListFieldsState();
+            updateFieldEditorPreview();
+        });
+        bindDetailsInput();
+        updateObjectListFieldsState();
+        [nameInput, descriptionInput, patternInput, exampleInput, requiredSelect, itemFieldsInput].forEach(control => {
+            control.addEventListener('input', updateFieldEditorPreview);
+            control.addEventListener('change', updateFieldEditorPreview);
+        });
+
+        [nameInput, typeSelect, detailsInput, itemFieldsContainer, descriptionInput, patternInput, exampleInput, requiredSelect].forEach(control => {
+            const cell = document.createElement('td');
+            cell.appendChild(control);
+            row.appendChild(cell);
+        });
+        const deleteCell = document.createElement('td');
+        const deleteButton = document.createElement('button');
+        deleteButton.type = 'button';
+        deleteButton.className = 'btn-secondary-action';
+        deleteButton.textContent = '삭제';
+        deleteButton.addEventListener('click', () => {
+            row.remove();
+            updateFieldEditorPreview();
+        });
+        deleteCell.appendChild(deleteButton);
+        row.appendChild(deleteCell);
+        document.getElementById('fieldEditorBody').appendChild(row);
+        updateFieldEditorPreview();
+    }
+
+    function currentEditorFields() {
+        return [...document.querySelectorAll('#fieldEditorBody tr')]
+            .map(row => {
+                const type = row.querySelector('[data-field="type"]').value;
+                const details = row.querySelector('[data-field="details"]').value.trim();
+                let itemFields = [];
+                if (type === 'List' && details === 'Object') {
+                    const itemFieldsText = row.querySelector('[data-field="itemFields"]').value.trim();
+                    try {
+                        itemFields = itemFieldsText ? JSON.parse(itemFieldsText) : [];
+                        if (!Array.isArray(itemFields)) itemFields = [];
+                    } catch (e) {
+                        itemFields = [];
+                    }
+                }
+                return {
+                    name: row.querySelector('[data-field="name"]').value.trim(), type,
+                    description: row.querySelector('[data-field="description"]').value.trim(),
+                    pattern: row.querySelector('[data-field="pattern"]').value.trim(),
+                    examples: row.querySelector('[data-field="example"]').value.split('\n').map(e => e.trim()).filter(Boolean),
+                    required: row.querySelector('[data-field="required"]').value === 'true',
+                    enumValues: type !== 'List' ? details.split(',').map(value => value.trim()).filter(Boolean) : [],
+                    itemType: type === 'List' ? (details || 'String') : null,
+                    itemFields
+                };
+            })
+            .filter(field => field.name);
+    }
+
+    function updateFieldEditorPreview() {
+        const preview = document.getElementById('fieldEditorPreview');
+        if (preview) preview.textContent = JSON.stringify(currentEditorFields(), null, 2);
+    }
+
+    function applyFieldTemplate(templateName) {
+        const body = document.getElementById('fieldEditorBody');
+        body.replaceChildren();
+        const fields = templateName === 'clear'
+            ? [{}]
+            : (fieldTemplates[templateName]?.[fieldEditorTargetId] || []);
+        (fields.length ? fields : [{}]).forEach(addFieldEditorRow);
+        updateFieldEditorPreview();
+    }
+
+    async function createNaturalFieldDraft() {
+        const source = document.getElementById('fieldNaturalLanguage').value.trim();
+        if (!source) {
+            alert('필드 초안을 만들 문장을 입력해주세요.');
+            return;
+        }
+        const button = document.getElementById('fieldDraftButton');
+        const originalLabel = button.textContent;
+        button.textContent = 'AI 생성 중...';
+        button.disabled = true;
+        try {
+            const response = await fetch('/api/v1/scaffold/field-draft', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ description: source, target: fieldEditorTargetId, model: selectedAiModel() })
+            });
+            const result = await response.json();
+            if (!response.ok) throw new Error(result.error || 'AI 초안 생성에 실패했습니다.');
+            if (!Array.isArray(result.fields) || result.fields.length === 0) {
+                throw new Error('AI가 사용할 수 있는 필드를 만들지 못했습니다.');
+            }
+            const body = document.getElementById('fieldEditorBody');
+            body.replaceChildren();
+            result.fields.forEach(addFieldEditorRow);
+            updateFieldEditorPreview();
+        } catch (error) {
+            alert(`AI 초안 생성 실패: ${error.message}`);
+        } finally {
+            button.textContent = originalLabel;
+            button.disabled = false;
+        }
+    }
+
+    function selectedAiModel() {
+        return document.getElementById('aiModelSelect').value;
+    }
+
+    const TOOL_DRAFT_SAMPLE = `고객번호로 보험계약 상태를 조회하는 Tool을 만들어주세요.
+목적: 고객의 계약 유지 상태 확인
+입력: 고객번호(필수), 기준일자(선택)
+출력: 계약번호, 상품명, 계약상태, 계약일자
+사용 시점: 고객이 보유 계약이나 계약 상태를 문의할 때
+제외 범위: 계약 변경 및 해지 처리
+연계 방식: MCI`;
+
+    function loadToolDraftSample() {
+        const input = document.getElementById('toolNaturalLanguage');
+        if (input.value.trim() && !confirm('작성 중인 내용 대신 샘플을 불러올까요?')) return;
+        input.value = TOOL_DRAFT_SAMPLE;
+        input.focus();
+    }
+
+    async function createAiToolDraft() {
+        const source = document.getElementById('toolNaturalLanguage').value.trim();
+        if (!source) {
+            alert('AI가 만들 Tool 설명을 입력해주세요.');
+            return;
+        }
+        const button = document.getElementById('toolDraftButton');
+        const originalLabel = button.textContent;
+        button.textContent = 'AI 생성 중...';
+        button.disabled = true;
+        try {
+            const response = await fetch('/api/v1/scaffold/tool-draft', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ description: source, model: selectedAiModel() })
+            });
+            const result = await response.json();
+            if (!response.ok) throw new Error(result.error || 'AI Tool 초안 생성에 실패했습니다.');
+
+            const form = document.getElementById('toolForm');
+            form.elements.baseName.value = result.baseName || '';
+            form.elements.title.value = result.title || '';
+            form.elements.description.value = result.description || '';
+            if (!form.elements.categoryKey.value) {
+                form.elements.categoryKey.value = result.categoryKey || '';
+                if (typeof loadUseCasesForSelection === 'function') loadUseCasesForSelection();
+            }
+            const routingType = String(result.routingType || 'MCI').trim().toUpperCase();
+            form.elements.routingType.value = routingType === 'HTTP' ? 'HTTP' : 'MCI';
+            const useCaseSelect = document.getElementById('toolGroupUseCaseSelect');
+            const useCaseNameInput = document.getElementById('toolGroupUseCaseName');
+            if (useCaseSelect.value === '' && !useCaseNameInput.value.trim() && result.baseName) {
+                useCaseNameInput.value = result.baseName;
+                useCaseNameInput.readOnly = false;
+            }
+            form.elements.httpApiName.value = result.httpApiName || '';
+            form.elements.functionDescription.value = result.functionDescription || '';
+            form.elements.displayDescription.value = result.displayDescription || '';
+            form.elements.whenToUse.value = result.whenToUse || '';
+            form.elements.whenNotToUse.value = result.whenNotToUse || '';
+            form.elements.ioLimits.value = result.ioLimits || '';
+            form.elements.exampleQueries.value = Array.isArray(result.exampleQueries)
+                ? result.exampleQueries.join('\n') : (result.exampleQueries || '');
+            form.elements.tags.value = Array.isArray(result.tags)
+                ? result.tags.join(', ') : (result.tags || '');
+            form.elements.ownerOrg.value = result.ownerOrg || 'MCP_TOOL';
+            document.getElementById('inputFields').value = JSON.stringify(result.inputFields || [], null, 2);
+            document.getElementById('outputFields').value = JSON.stringify(result.outputFields || [], null, 2);
+            alert('Tool 초안을 채웠습니다. Legacy Interface ID와 Client System Code는 실제 연계 명세를 확인해 입력해주세요.');
+        } catch (error) {
+            alert(`AI Tool 초안 생성 실패: ${error.message}`);
+        } finally {
+            button.textContent = originalLabel;
+            button.disabled = false;
+        }
+    }
+
+    function applyFieldEditor() {
+        const names = new Set();
+        const fields = currentEditorFields();
+        for (const field of fields) {
+            const name = field.name;
+            if (!/^[A-Za-z_$][A-Za-z0-9_$]*$/.test(name)) {
+                alert(`필드명 "${name}"은(는) Java 필드명 형식으로 입력해주세요.`);
+                return;
+            }
+            if (names.has(name)) {
+                alert(`필드명 "${name}"이(가) 중복되었습니다.`);
+                return;
+            }
+            names.add(name);
+        }
+        document.getElementById(fieldEditorTargetId).value = JSON.stringify(fields, null, 2);
+        fieldEditorModalInstance.hide();
+    }
+
+    function loadToolList() {
+        const tbody = document.getElementById('toolListBody');
+        tbody.innerHTML = '<tr><td colspan="5" class="text-center py-5 text-muted">Loading data...</td></tr>';
+        
+        fetch('/mcp/api/v1/tools/list', {
+            method: 'GET',
+        })
+        .then(res => res.json())
+        .then(data => {
+            let tools = data.result.tools || [];
+            if (tools.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" class="text-center py-5 text-muted">No tools registered.</td></tr>';
+                return;
+            }
+            
+            tools.sort((a, b) => {
+                const gA = a.categoryKey || '';
+                const gB = b.categoryKey || '';
+                return gA.localeCompare(gB);
+            });
+            
+            const groupSet = new Set();
+            tools.forEach(t => groupSet.add(t.categoryKey || 'unknown'));
+            const groupSelect = document.getElementById('groupFilterSelect');
+            const currentSelectedGroup = groupSelect.value;
+            groupSelect.innerHTML = '<option value="ALL">All Categories</option>';
+            Array.from(groupSet).sort().forEach(g => {
+                const opt = document.createElement('option');
+                opt.value = g;
+                opt.textContent = g;
+                groupSelect.appendChild(opt);
+            });
+            if (groupSet.has(currentSelectedGroup)) {
+                groupSelect.value = currentSelectedGroup;
+            }
+            
+            tbody.innerHTML = tools.map(t => {
+                const isReg = t.registered !== false;
+                const badgeHtml = isReg ? '' : ' <span class="badge-mono" style="color:#d97706;border-color:#fde68a;background:#fffbeb;">Private</span>';
+                const escDesc = (t.description || '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
+                
+                return `
+                <tr class="tool-row">
+                    <td><span class="badge-mono">${t.categoryKey || 'unknown'}</span></td>
+                    <td>
+                        <a href="javascript:void(0)" onclick="openEditModal('${t.name}', '${t.categoryKey}', '${escDesc}', ${isReg})" class="tool-link">
+                            ${t.name}
+                        </a>
+                        ${badgeHtml}
+                    </td>
+                    <td class="text-secondary" style="font-size:0.8rem;">${t.description}</td>
+                    <td><span class="badge-mono">${t.podUrl}</span></td>
+                    <td><span class="badge-mono">${t.integrationType}</span> <span class="text-secondary ms-1" style="font-size:0.75rem;">${t.mciServiceId || '-'}</span></td>
+                </tr>
+            `}).join('');
+            
+            filterTools();
+        })
+        .catch(err => {
+            tbody.innerHTML = `<tr><td colspan="5" class="text-center py-5 text-danger">Error loading data: ${err.message}</td></tr>`;
+        });
+    }
+
+    function filterTools() {
+        const input = document.getElementById('toolFilter').value.toLowerCase();
+        const selectedGroup = document.getElementById('groupFilterSelect').value;
+        const rows = document.querySelectorAll('.tool-row');
+        
+        rows.forEach(row => {
+            const name = row.cells[1].textContent.toLowerCase();
+            const group = row.cells[0].textContent;
+            
+            const matchText = name.includes(input) || group.toLowerCase().includes(input);
+            const matchGroup = (selectedGroup === 'ALL' || group === selectedGroup);
+            
+            if (matchText && matchGroup) {
+                row.style.display = '';
+            } else {
+                row.style.display = 'none';
+            }
+        });
+    }
+
+    let editModalInstance = null;
+    function openEditModal(toolName, categoryKey, description, isReg) {
+        document.getElementById('editToolName').value = toolName;
+        document.getElementById('editCategoryKey').value = categoryKey !== 'null' ? categoryKey : '';
+        document.getElementById('editDescription').value = description;
+        document.getElementById('editRegister').value = isReg ? 'true' : 'false';
+        
+        if (!editModalInstance) {
+            editModalInstance = new bootstrap.Modal(document.getElementById('editToolModal'));
+        }
+        editModalInstance.show();
+    }
+
+    function submitToolUpdate() {
+        const toolName = document.getElementById('editToolName').value;
+        const categoryKey = document.getElementById('editCategoryKey').value;
+        const description = document.getElementById('editDescription').value;
+        const register = document.getElementById('editRegister').value;
+        
+        const btn = document.querySelector('#editToolModal .btn-action');
+        const originalText = btn.innerHTML;
+        btn.innerHTML = 'Processing...';
+        btn.disabled = true;
+        btn.style.opacity = '0.7';
+
+        fetch('/api/v1/scaffold/tool/update', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                toolName: toolName,
+                categoryKey: categoryKey,
+                description: description,
+                register: register
+            })
+        })
+        .then(response => response.text())
+        .then(result => {
+            if (result.includes('[오류]') || result.includes('오류 발생:')) {
+                alert('Error updating source:\n' + result);
+            } else {
+                alert('Source code updated successfully.\nPlease rebuild the Pod container to reflect changes.');
+                editModalInstance.hide();
+                loadToolList();
+            }
+        })
+        .catch(err => {
+            alert('Network error: ' + err);
+        })
+        .finally(() => {
+            btn.innerHTML = originalText;
+            btn.disabled = false;
+            btn.style.opacity = '1';
+        });
+    }
+</script>
+
+<script>
+const mciResponseState = {
+    parsed: null,
+    responseSource: '',
+    converterSource: '',
+    autoConverterName: '',
+    mode: 'RESPONSE'
+};
+
+document.getElementById('mciTransformMode').addEventListener('change', function() {
+    mciResponseState.mode = this.value;
+    document.getElementById('mciResponseResultArea').style.display = 'none';
+    document.getElementById('mciResponsePreviewArea').style.display = 'none';
+    mciResponseState.parsed = null;
+    updateMciTransformMode();
+});
+
+document.getElementById('mciResponseFile').addEventListener('change', async function() {
+    const file = this.files && this.files[0];
+    if (!file) return;
+    try {
+        document.getElementById('mciResponseSource').value = (await file.text()).replace(/^\uFEFF/, '');
+        setMciResponseStatus(`${file.name} 파일을 불러왔습니다.`, false);
+    } catch (error) {
+        setMciResponseStatus(`파일을 읽지 못했습니다: ${error.message}`, true);
+    }
+});
+
+document.getElementById('mciResponseClassName').addEventListener('input', function() {
+    const converterInput = document.getElementById('mciConverterClassName');
+    if (!converterInput.value || converterInput.value === mciResponseState.autoConverterName) {
+        mciResponseState.autoConverterName = converterNameFor(this.value);
+        converterInput.value = mciResponseState.autoConverterName;
+    }
+});
+
+document.getElementById('mciResponsePackage').addEventListener('input', function() {
+    const converterPackage = document.getElementById('mciConverterPackage');
+    if (this.value.endsWith('.dto')) converterPackage.value = this.value.slice(0, -4) + '.converter';
+});
+
+async function analyzeMciResponse() {
+    const source = document.getElementById('mciResponseSource').value.trim();
+    const labels = mciTransformLabels();
+    if (!source) {
+        setMciResponseStatus(`XXXX_${labels.suffix}.java 파일을 선택하거나 소스를 붙여넣어 주세요.`, true);
+        return;
+    }
+    const button = document.getElementById('mciResponseAnalyzeButton');
+    setMciResponseButtonBusy(button, true, 'AI 분석 중...');
+    setMciResponseStatus(`Glow ${labels.korean} 전문 구조를 분석하고 AI가 LLM 필드명을 제안하고 있습니다.`, false);
+    try {
+        const response = await fetch(`/api/v1/scaffold/mci-${labels.endpoint}/analyze`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({
+                source,
+                model: document.getElementById('mciResponseAiModel').value
+            })
+        });
+        const result = await response.json();
+        if (!response.ok) throw new Error(result.error || `AI 분석 실패 (HTTP ${response.status})`);
+        mciResponseState.parsed = result.parsed;
+        mciResponseState.responseSource = '';
+        mciResponseState.converterSource = '';
+        initializeMciResponseNames(result.parsed);
+        renderMciResponseMappings(result.parsed, result.mappings || []);
+        document.getElementById('mciResponseResultArea').style.display = 'block';
+        document.getElementById('mciResponsePreviewArea').style.display = 'none';
+        setMciResponseStatus(`AI 제안을 불러왔습니다. 필드명과 개인정보 표시를 검토한 뒤 ${labels.dto} 미리보기를 생성하세요.`, false);
+    } catch (error) {
+        setMciResponseStatus(error.message, true);
+    } finally {
+        setMciResponseButtonBusy(button, false, 'AI로 필드명 분석');
+    }
+}
+
+function initializeMciResponseNames(parsed) {
+    const rootName = parsed?.rootClassName || 'MciOutput';
+    const labels = mciTransformLabels();
+    const baseName = rootName.replace(/_[OI]$/, '') || 'MciOutput';
+    const dtoName = `${baseName}${labels.dto}`;
+    const converterName = `${baseName}Converter`;
+    document.getElementById('mciResponseClassName').value = dtoName;
+    document.getElementById('mciConverterClassName').value = converterName;
+    mciResponseState.autoConverterName = converterName;
+
+    const sourcePackage = parsed?.packageName || '';
+    const applicationRoot = sourcePackage.includes('.infra.')
+        ? sourcePackage.substring(0, sourcePackage.indexOf('.infra.')) : '';
+    if (applicationRoot) {
+        document.getElementById('mciResponsePackage').value = `${applicationRoot}.biz.pro.dto`;
+        document.getElementById('mciConverterPackage').value = `${applicationRoot}.biz.pro.converter`;
+    }
+}
+
+function renderMciResponseMappings(parsed, mappings) {
+    const tbody = document.getElementById('mciResponseMappingBody');
+    tbody.replaceChildren();
+    const mappingByKey = new Map(mappings.map(mapping => [
+        `${mapping.ownerType}#${mapping.sourceName}`, mapping
+    ]));
+    let fieldCount = 0;
+    let sensitiveCount = 0;
+    (parsed.types || []).forEach(type => {
+        (type.fields || []).forEach(field => {
+            fieldCount++;
+            if (field.sensitive) sensitiveCount++;
+            const mapping = mappingByKey.get(`${type.name}#${field.name}`) || {
+                ownerType: type.name,
+                sourceName: field.name,
+                targetName: field.name,
+                include: true
+            };
+            tbody.appendChild(createMciResponseMappingRow(type, field, mapping));
+        });
+    });
+    document.getElementById('mciResponseFieldCount').textContent = sensitiveCount
+        ? `${fieldCount}개 필드 · 개인정보 후보 ${sensitiveCount}개`
+        : `${fieldCount}개 필드`;
+}
+
+function createMciResponseMappingRow(type, field, mapping) {
+    const row = document.createElement('tr');
+    row.dataset.ownerType = type.name;
+    row.dataset.sourceName = field.name;
+
+    const includeCell = document.createElement('td');
+    const include = document.createElement('input');
+    include.type = 'checkbox';
+    include.className = 'form-check-input mci-response-include';
+    include.checked = mapping.include !== false;
+    includeCell.appendChild(include);
+
+    const ownerCell = document.createElement('td');
+    ownerCell.textContent = type.name;
+    const sourceCell = document.createElement('td');
+    const sourceCode = document.createElement('code');
+    sourceCode.textContent = field.name;
+    sourceCell.appendChild(sourceCode);
+    const descriptionCell = document.createElement('td');
+    descriptionCell.textContent = field.description || '(설명 없음)';
+
+    const targetCell = document.createElement('td');
+    const targetInput = document.createElement('input');
+    targetInput.type = 'text';
+    targetInput.className = 'form-control form-control-sm mci-response-target';
+    targetInput.value = mapping.targetName || field.name;
+    targetInput.pattern = '^[a-z][A-Za-z0-9]*$';
+    targetInput.title = '영문 소문자로 시작하는 camelCase Java 필드명을 입력하세요.';
+    targetInput.addEventListener('input', validateMciResponseMappingRows);
+    targetCell.appendChild(targetInput);
+
+    const typeCell = document.createElement('td');
+    typeCell.textContent = field.type;
+    const warningCell = document.createElement('td');
+    if (field.sensitive) {
+        const badge = document.createElement('span');
+        badge.className = 'badge-mono';
+        badge.style.color = '#fca5a5';
+        badge.style.borderColor = '#7f1d1d';
+        badge.style.background = 'rgba(127,29,29,0.22)';
+        badge.textContent = 'PII';
+        badge.title = '개인정보 가능성이 있는 필드입니다. Tool 입출력 노출 여부를 반드시 확인하세요.';
+        warningCell.appendChild(badge);
+    } else {
+        warningCell.textContent = '-';
+    }
+    [includeCell, ownerCell, sourceCell, descriptionCell, targetCell, typeCell, warningCell]
+        .forEach(cell => row.appendChild(cell));
+    return row;
+}
+
+function validateMciResponseMappingRows() {
+    const usedByOwner = new Map();
+    let valid = true;
+    document.querySelectorAll('#mciResponseMappingBody tr').forEach(row => {
+        const input = row.querySelector('.mci-response-target');
+        const include = row.querySelector('.mci-response-include').checked;
+        input.classList.remove('is-invalid');
+        if (!include) return;
+        const name = input.value.trim();
+        const owner = row.dataset.ownerType;
+        const used = usedByOwner.get(owner) || new Set();
+        if (!/^[a-z][A-Za-z0-9]*$/.test(name) || used.has(name)) {
+            input.classList.add('is-invalid');
+            valid = false;
+        }
+        used.add(name);
+        usedByOwner.set(owner, used);
+    });
+    return valid;
+}
+
+function collectMciResponseMappings() {
+    const usedByOwner = new Map();
+    return Array.from(document.querySelectorAll('#mciResponseMappingBody tr')).map(row => {
+        const targetInput = row.querySelector('.mci-response-target');
+        const includeChk = row.querySelector('.mci-response-include');
+        let targetName = targetInput.value.trim();
+        let include = includeChk.checked;
+        const owner = row.dataset.ownerType;
+        const used = usedByOwner.get(owner) || new Set();
+        // targetName이 camelCase 패턴에 맞지 않거나 중복이면 자동으로 sourceName으로 fallback
+        if (include && (!/^[a-z][A-Za-z0-9]*$/.test(targetName) || used.has(targetName))) {
+            const fallback = row.dataset.sourceName;
+            if (/^[a-z][A-Za-z0-9]*$/.test(fallback) && !used.has(fallback)) {
+                targetName = fallback;
+                targetInput.value = fallback;
+                targetInput.classList.remove('is-invalid');
+            } else {
+                include = false;
+                includeChk.checked = false;
+            }
+        }
+        if (include) used.add(targetName);
+        usedByOwner.set(owner, used);
+        return {
+            ownerType: row.dataset.ownerType,
+            sourceName: row.dataset.sourceName,
+            targetName,
+            include
+        };
+    });
+}
+
+async function generateMciResponseSources() {
+    if (!mciResponseState.parsed) {
+        setMciResponseStatus('먼저 AI 필드명 분석을 실행하세요.', true);
+        return;
+    }
+    const labels = mciTransformLabels();
+    const button = document.getElementById('mciResponseGenerateButton');
+    setMciResponseButtonBusy(button, true, `${labels.dto} 소스 생성 중...`);
+    try {
+        const payload = {
+            source: document.getElementById('mciResponseSource').value,
+            converterPackage: document.getElementById('mciConverterPackage').value.trim(),
+            converterClassName: document.getElementById('mciConverterClassName').value.trim(),
+            mappings: collectMciResponseMappings()
+        };
+        payload[labels.dto.toLowerCase() + 'Package'] = document.getElementById('mciResponsePackage').value.trim();
+        payload[labels.dto.toLowerCase() + 'ClassName'] = document.getElementById('mciResponseClassName').value.trim();
+        const response = await fetch(`/api/v1/scaffold/mci-${labels.endpoint}/generate`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(payload)
+        });
+        const result = await response.json();
+        if (!response.ok) throw new Error(result.error || `소스 생성 실패 (HTTP ${response.status})`);
+        mciResponseState.responseSource = result[labels.dto.toLowerCase() + 'Source'] || '';
+        mciResponseState.converterSource = result.converterSource || '';
+        document.getElementById('mciResponsePreview').value = mciResponseState.responseSource;
+        document.getElementById('mciConverterPreview').value = mciResponseState.converterSource;
+        document.getElementById('mciResponsePreviewArea').style.display = 'block';
+        setMciResponseStatus(`${labels.dto}와 MapStruct Converter를 생성했습니다. 미리보기 검토 후 다운로드하세요.`, false);
+    } catch (error) {
+        setMciResponseStatus(error.message, true);
+    } finally {
+        setMciResponseButtonBusy(button, false, `${labels.dto} / Converter 미리보기 생성`);
+    }
+}
+
+function updateMciTransformMode() {
+    const labels = mciTransformLabels();
+    document.getElementById('mciTransformHeading').textContent = 'Glow MCI Request/Response를 LLM DTO로 변환';
+    document.getElementById('mciTransformHint').innerHTML = `선택한 XXXX_${labels.suffix}.java의 전문 구조와 <code>@GlowTrgmField.description</code>은 원문 그대로 읽고, AI는 축약 필드명을 업무 의미가 드러나는 영문 camelCase로만 제안합니다.`;
+    document.getElementById('mciSourceFileLabel').textContent = `XXXX_${labels.suffix}.java 파일`;
+    document.getElementById('mciSourceInputLabel').textContent = `MCI ${labels.korean} 소스`;
+    document.getElementById('mciDtoPackageLabel').textContent = `${labels.dto} Package`;
+    document.getElementById('mciDtoClassLabel').textContent = `${labels.dto} Class`;
+    document.getElementById('mciDtoPreviewLabel').textContent = `${labels.dto}.java`;
+    document.getElementById('mciResponseClassName').placeholder = `IndividualCustomerDetailInquiry${labels.dto}`;
+    document.getElementById('mciConverterClassName').placeholder = `IndividualCustomerDetailInquiry${labels.dto}Converter`;
+    document.getElementById('mciResponseAnalyzeButton').textContent = 'AI로 필드명 분석';
+    document.getElementById('mciResponseGenerateButton').textContent = `${labels.dto} / Converter 미리보기 생성`;
+    document.getElementById('mciResponseSource').placeholder = `package ...;\n\npublic class ONBSZ0460_${labels.suffix} {\n    @GlowTrgmField(order = 1, length = 8, description = \"인사번호\")\n    private String prafNo;\n}`;
+}
+
+function mciTransformLabels() {
+    const isRequest = document.getElementById('mciTransformMode').value === 'REQUEST';
+    return isRequest
+        ? {dto: 'Request', korean: '요청', suffix: 'I', endpoint: 'request'}
+        : {dto: 'Response', korean: '응답', suffix: 'O', endpoint: 'response'};
+}
+
+async function copyMciResponseSource(elementId) {
+    const textarea = document.getElementById(elementId);
+    if (!textarea.value) return;
+    try {
+        await navigator.clipboard.writeText(textarea.value);
+    } catch (_) {
+        textarea.select();
+        document.execCommand('copy');
+        textarea.setSelectionRange(0, 0);
+    }
+    setMciResponseStatus('소스를 클립보드에 복사했습니다.', false);
+}
+
+function downloadMciResponseSource(kind) {
+    const response = kind === 'response';
+    const source = response ? mciResponseState.responseSource : mciResponseState.converterSource;
+    const className = document.getElementById(response ? 'mciResponseClassName' : 'mciConverterClassName').value.trim();
+    if (!source || !className) {
+        setMciResponseStatus('먼저 소스 미리보기를 생성하세요.', true);
+        return;
+    }
+    const blob = new Blob([source], {type: 'text/x-java-source;charset=utf-8'});
+    const href = URL.createObjectURL(blob);
+    const anchor = document.createElement('a');
+    anchor.href = href;
+    anchor.download = `${className}.java`;
+    document.body.appendChild(anchor);
+    anchor.click();
+    anchor.remove();
+    URL.revokeObjectURL(href);
+}
+
+function converterNameFor(responseName) {
+    if (!responseName) return '';
+    if (responseName.endsWith('Response')) {
+        return responseName.slice(0, -8) + 'Converter';
+    }
+    if (responseName.endsWith('Request')) {
+        return responseName.slice(0, -7) + 'Converter';
+    }
+    return responseName + 'Converter';
+}
+
+function setMciResponseButtonBusy(button, busy, text) {
+    button.disabled = busy;
+    button.textContent = text;
+    button.style.opacity = busy ? '0.7' : '1';
+}
+
+function setMciResponseStatus(message, error) {
+    const status = document.getElementById('mciResponseStatus');
+    status.textContent = message || '';
+    status.style.color = error ? '#f87171' : '#a1a1aa';
+}
+</script>
+
+
+<script>
+function openServerFolderPicker(inputId) {
+    fetch("/api/v1/scaffold/browse-folder")
+    .then(res => res.text())
+    .then(path => {
+        if(path && !path.startsWith("Error:") && path !== "") {
+            const input = document.getElementById(inputId);
+            input.value = path;
+            input.dispatchEvent(new Event("change"));
+        } else if (path.startsWith("Error:")) {
+            alert(path);
+        }
+    })
+    .catch(err => console.error(err));
+}
+</script>
+</body>
+</html>

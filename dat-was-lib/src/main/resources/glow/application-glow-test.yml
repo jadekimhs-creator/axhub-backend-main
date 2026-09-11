@@ -1,0 +1,19 @@
+# Glow 테스트 환경 설정
+spring:
+  config:
+    activate:
+      on-profile: test
+
+glow:
+  communication:
+    common:
+      env-type: T
+    mci:
+      host: ${GLOW_COMMUNICATION_MCI_HOST}
+      port: ${GLOW_COMMUNICATION_MCI_PORT}
+    extmci:
+      host: ${GLOW_COMMUNICATION_EXTMCI_HOST}
+      port: ${GLOW_COMMUNICATION_EXTMCI_PORT}
+    eai:
+      host: ${GLOW_COMMUNICATION_EAI_HOST}
+      port: ${GLOW_COMMUNICATION_EAI_PORT}

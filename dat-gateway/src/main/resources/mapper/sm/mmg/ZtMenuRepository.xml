@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="io.shinhanlife.axhub.biz.sm.mmg.domain.repository.MenuRepository">
+
+    <select id="selectMenu" resultType="io.shinhanlife.axhub.biz.sm.mmg.dto.MenuOutDto">
+        SELECT MENU_ID
+             , PARENT_MENU_ID
+             , NAME
+             , PATH
+             , TITLE
+             , ICON
+             , IS_HIDE
+             , IS_HIDE_TAB
+             , LINK
+             , IS_IFRAME
+             , KEEP_ALIVE
+             , ORDER_SEQ
+             , IS_ACTIVE
+        FROM S_TIS.ZT_MENU
+        WHERE 1=1
+        <if test="isActive != null and isActive != ''">
+            AND IS_ACTIVE = #{isActive}
+        </if>
+        <if test="path != null and path != ''">
+            AND PATH LIKE CONCAT('%', #{path}, '%')
+        </if>
+        <if test="title != null and title != ''">
+            AND TITLE LIKE CONCAT('%', #{title}, '%')
+        </if>
+        ORDER BY ORDER_SEQ ASC
+    </select>
+
+    <select id="selectMenuById" resultType="io.shinhanlife.axhub.biz.sm.mmg.dto.MenuOutDto">
+        SELECT MENU_ID
+             , PARENT_MENU_ID
+             , NAME
+             , PATH
+             , TITLE
+             , ICON
+             , IS_HIDE
+             , IS_HIDE_TAB
+             , LINK
+             , IS_IFRAME
+             , KEEP_ALIVE
+             , ORDER_SEQ
+             , IS_ACTIVE
+        FROM S_TIS.ZT_MENU
+        WHERE MENU_ID = #{menuId}
+    </select>
+
+    <insert id="insertMenu"
+            parameterType="io.shinhanlife.axhub.biz.sm.mmg.dto.MenuSaveInDto"
+            useGeneratedKeys="true"
+            keyProperty="menuId">
+        INSERT INTO S_TIS.ZT_MENU (
+            PARENT_MENU_ID, NAME, PATH, TITLE, ICON,
+            IS_HIDE, IS_HIDE_TAB, LINK, IS_IFRAME, KEEP_ALIVE,
+            ORDER_SEQ, IS_ACTIVE,
+            SYST_RGI_DT, SYST_RGI_PRAF_NO, SYST_RGI_OGNZ_NO, SYST_RGI_SYST_CD, SYST_RGI_PRGR_ID,
+            SYST_CHG_DT, SYST_CHG_PRAF_NO, SYST_CHG_OGNZ_NO, SYST_CHG_SYST_CD, SYST_CHG_PRGR_ID
+        ) VALUES (
+            #{parentMenuId}, #{name}, #{path}, #{title}, #{icon},
+            #{isHide}, #{isHideTab}, #{link}, #{isIframe}, #{keepAlive},
+            #{orderSeq}, #{isActive},
+            #{systRgiDt}, #{systRgiPrafNo}, #{systRgiOgnzNo}, #{systRgiSystCd}, #{systRgiPrgrId},
+            #{systChgDt}, #{systChgPrafNo}, #{systChgOgnzNo}, #{systChgSystCd}, #{systChgPrgrId}
+        )
+    </insert>
+
+    <update id="updateMenu" parameterType="io.shinhanlife.axhub.biz.sm.mmg.dto.MenuSaveInDto">
+        UPDATE S_TIS.ZT_MENU
+        SET
+            PARENT_MENU_ID   = #{parentMenuId},
+            NAME             = #{name},
+            PATH             = #{path},
+            TITLE            = #{title},
+            ICON             = #{icon},
+            IS_HIDE          = #{isHide},
+            IS_HIDE_TAB      = #{isHideTab},
+            LINK             = #{link},
+            IS_IFRAME        = #{isIframe},
+            KEEP_ALIVE       = #{keepAlive},
+            ORDER_SEQ        = #{orderSeq},
+            IS_ACTIVE        = #{isActive},
+            SYST_CHG_DT      = #{systChgDt},
+            SYST_CHG_PRAF_NO = #{systChgPrafNo},
+            SYST_CHG_OGNZ_NO = #{systChgOgnzNo},
+            SYST_CHG_SYST_CD = #{systChgSystCd},
+            SYST_CHG_PRGR_ID = #{systChgPrgrId}
+        WHERE MENU_ID = #{menuId}
+    </update>
+
+    <delete id="deleteMenu">
+        DELETE FROM S_TIS.ZT_MENU
+        WHERE MENU_ID = #{menuId}
+    </delete>
+
+</mapper>

@@ -1,0 +1,57 @@
+# Local 환경 전용 설정 (H2 메모리 DB 등)
+spring:
+  datasource:
+    url: jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;
+    username: sa
+    password: password
+  h2:
+    console:
+      enabled: true
+  autoconfigure:
+    exclude: org.springframework.boot.autoconfigure.kafka.KafkaAutoConfiguration
+
+eims:
+  http:
+    url: http://localhost:${server.port}/api/gateway
+  tcp:
+    host: 127.0.0.1
+    port: 8090
+    timeout: 5000
+  jsp:
+    form:
+      url: http://localhost:${server.port}/mock/jsp-form
+    json:
+      url: http://localhost:${server.port}/mock/jsp-json
+  mci:
+    url: http://localhost:${server.port}/api/mock/esb/api
+  mcistring:
+    url: http://localhost:${server.port}/api/mock/esb/string
+
+mcp:
+  tool-server-api-key: tool-server-key
+  adapter:
+    url: http://localhost:${server.port}/rpc/v1/execute
+  gateway:
+    url: http://localhost:${server.port}/mcp/api/v1
+    fallback:
+      default-url: http://localhost:8084
+      routes:
+        cmm: http://localhost:8082
+        cus: http://localhost:8084
+        sal: http://localhost:8082
+        sms: http://localhost:8082
+        oth: http://localhost:8084
+        email: http://localhost:8083
+        payment: http://localhost:8085
+        hr: http://localhost:8084
+        pro: http://localhost:8085
+        sys: http://localhost:8086
+  tool:
+    host: localhost
+
+logging:
+  level:
+    org.apache.kafka: ERROR
+
+report:
+  service-url: ${REPORT_SERVICE_URL:http://127.0.0.1:8092}

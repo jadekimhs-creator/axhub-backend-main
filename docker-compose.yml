@@ -1,0 +1,147 @@
+name: ax_hub_mcp_tool
+
+services:
+
+
+  gateway:
+    build: 
+      context: .
+      dockerfile: dat-gateway/Dockerfile
+    ports:
+      - "8281:8081"
+    volumes:
+      - ./:/src
+    depends_on:
+      tool-report:
+        condition: service_started
+    environment:
+      - TZ=Asia/Seoul
+      - AXHUB_SOURCE_DIR=/src
+      - JAVA_TOOL_OPTIONS=-Xms64m -Xmx384m
+      - SPRING_PROFILES_ACTIVE=${ACTIVE_PROFILE:-local}
+      - MCP_GATEWAY_FALLBACK_DEFAULT_URL=http://was-cus:8084
+      - MCP_GATEWAY_FALLBACK_ROUTES_CUS=http://was-cus:8084
+      - MCP_GATEWAY_FALLBACK_ROUTES_SAL=http://was-sal:8082
+      # Backward-compatible route during the SMS-to-SAL Pod name transition.
+      - MCP_GATEWAY_FALLBACK_ROUTES_SMS=http://was-sal:8082
+      - MCP_GATEWAY_FALLBACK_ROUTES_OTH=http://was-cus:8084
+      - MCP_GATEWAY_FALLBACK_ROUTES_HR=http://was-cus:8084
+      - MCP_GATEWAY_FALLBACK_ROUTES_PRO=http://was-pro:8085
+      - MCP_GATEWAY_FALLBACK_ROUTES_SYS=http://was-sys:8086
+      - REPORT_SERVICE_URL=http://tool-report:8092
+
+  tool-report:
+    build:
+      context: .
+      dockerfile: dap-tool-report/Dockerfile
+    volumes:
+      - ./:/src:ro
+      - ../dap-was-dapmt:/tool-src/dap-was-dapmt:ro
+    environment:
+      - TZ=Asia/Seoul
+      - REPORT_SERVER_ADDRESS=0.0.0.0
+      - REPORT_SERVER_PORT=8092
+      - REPORT_DAP_ADMIN_SOURCE_ROOT=/src
+      - REPORT_DAP_WAS_DAPMT_SOURCE_ROOT=/tool-src/dap-was-dapmt
+      - JAVA_TOOL_OPTIONS=-Xms64m -Xmx384m
+
+  mci-mock:
+    image: wiremock/wiremock:latest
+    ports:
+      - "8089:8080"
+    volumes:
+      - ./mci-mock:/home/wiremock
+
+  was-sal:
+    build: 
+      context: .
+      dockerfile: dat-was-sal/Dockerfile
+    ports:
+      - "8282:8082"
+    environment:
+      - TZ=Asia/Seoul
+      - AXHUB_GATEWAY_URL=http://gateway:8081
+      - AXHUB_SOURCE_DIR=/src
+      - AXHUB_TOOL_URL=http://was-sal:8082
+      - GLOW_COMMUNICATION_MCI_HOST=http://mci-mock
+      - GLOW_COMMUNICATION_MCI_PORT=8080
+      - GLOW_COMMUNICATION_EXTMCI_HOST=http://mci-mock
+      - GLOW_COMMUNICATION_EXTMCI_PORT=8080
+      - GLOW_COMMUNICATION_EAI_HOST=http://mci-mock
+      - GLOW_COMMUNICATION_EAI_PORT=8080
+      - SPRING_PROFILES_ACTIVE=${ACTIVE_PROFILE:-local}
+
+  was-cus:
+    build: 
+      context: .
+      dockerfile: dat-was-cus/Dockerfile
+    ports:
+      - "8284:8084"
+    environment:
+      - TZ=Asia/Seoul
+      - AXHUB_GATEWAY_URL=http://gateway:8081
+      - AXHUB_TOOL_URL=http://was-cus:8084
+      - GLOW_COMMUNICATION_MCI_HOST=http://mci-mock
+      - GLOW_COMMUNICATION_MCI_PORT=8080
+      - GLOW_COMMUNICATION_EXTMCI_HOST=http://mci-mock
+      - GLOW_COMMUNICATION_EXTMCI_PORT=8080
+      - GLOW_COMMUNICATION_EAI_HOST=http://mci-mock
+      - GLOW_COMMUNICATION_EAI_PORT=8080
+      - SPRING_PROFILES_ACTIVE=${ACTIVE_PROFILE:-local}
+
+  dozzle:
+    image: amir20/dozzle:latest
+    ports:
+      - "8288:8080"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /home/ubuntu/app/ax_hub_mcp_tool:/app
+    restart: always
+
+  gitea-runner:
+    image: gitea/act_runner:latest
+    environment:
+      - GITEA_INSTANCE_URL=https://git.devjun.net
+      - GITEA_RUNNER_REGISTRATION_TOKEN=2N7ciuFIp2Jm29EWtzfl7ruQtpwGgB4ngFcXC2lF
+      - GITEA_RUNNER_NAME=ociwp-runner
+      - GLOW_COMMUNICATION_EXTMCI_PORT=8080
+      - GITEA_RUNNER_LABELS=ubuntu-latest,ubuntu-22.04,linux-arm64
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /home/ubuntu/app/ax_hub_mcp_tool:/app
+      - ./act_runner_data:/data
+    restart: always
+
+  was-pro:
+    build:
+      context: .
+      dockerfile: dat-was-pro/Dockerfile
+    ports:
+      - "8285:8085"
+    environment:
+      - TZ=Asia/Seoul
+      - AXHUB_GATEWAY_URL=http://gateway:8081
+      - AXHUB_TOOL_URL=http://was-pro:8085
+      - GLOW_COMMUNICATION_MCI_HOST=http://mci-mock
+      - GLOW_COMMUNICATION_MCI_PORT=8080
+      - GLOW_COMMUNICATION_EXTMCI_HOST=http://mci-mock
+      - GLOW_COMMUNICATION_EXTMCI_PORT=8080
+      - GLOW_COMMUNICATION_EAI_HOST=http://mci-mock
+      - GLOW_COMMUNICATION_EAI_PORT=8080
+
+  was-sys:
+    build:
+      context: .
+      dockerfile: dat-was-sys/Dockerfile
+    ports:
+      - "8286:8086"
+    environment:
+      - TZ=Asia/Seoul
+      - AXHUB_GATEWAY_URL=http://gateway:8081
+      - AXHUB_TOOL_URL=http://was-sys:8086
+      - GLOW_COMMUNICATION_MCI_HOST=http://mci-mock
+      - GLOW_COMMUNICATION_MCI_PORT=8080
+      - GLOW_COMMUNICATION_EXTMCI_HOST=http://mci-mock
+      - GLOW_COMMUNICATION_EXTMCI_PORT=8080
+      - GLOW_COMMUNICATION_EAI_HOST=http://mci-mock
+      - GLOW_COMMUNICATION_EAI_PORT=8080

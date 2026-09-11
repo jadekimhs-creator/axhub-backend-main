@@ -1,0 +1,99 @@
+{
+  "BILL_001": {
+    "status": "SUCCESS",
+    "message": "청구 심사 상태 조회가 완료되었습니다.",
+    "data": {
+      "billingStatus": "PROCESSING",
+      "expectedCompletionDate": "2026-07-05"
+    }
+  },
+  "BILL_002": {
+    "status": "SUCCESS",
+    "message": "청구 처리가 완료되었습니다.",
+    "data": {
+      "processId": "PRC-998811",
+      "result": "APPROVED"
+    }
+  },
+  "BOND_001": {
+    "status": "SUCCESS",
+    "message": "디지털 증권 발행 가능 한도 조회가 완료되었습니다.",
+    "data": {
+      "availableLimit": 500000000,
+      "currency": "KRW"
+    }
+  },
+  "BOND_002": {
+    "status": "SUCCESS",
+    "message": "디지털 증권 발행이 성공적으로 완료되었습니다.",
+    "data": {
+      "bondId": "BND-2026-07-04-1234",
+      "issuedAmount": 10000000
+    }
+  },
+  "HR_VAC_01": {
+    "status": "SUCCESS",
+    "message": "연차 휴가 등록이 완료되었습니다.",
+    "data": {
+      "vacationId": "VAC-8877",
+      "status": "APPROVED"
+    }
+  },
+  "HR_VAC_02": {
+    "status": "SUCCESS",
+    "message": "잔여 연차 일수 조회가 완료되었습니다.",
+    "data": {
+      "totalDays": 15,
+      "usedDays": 3,
+      "remainingDays": 12
+    }
+  },
+  "COM_SMS_01": {
+    "status": "SUCCESS",
+    "message": "SMS 발송이 성공적으로 완료되었습니다.",
+    "data": {
+      "messageId": "SMS-11223344",
+      "sentTime": "2026-07-04 10:00:00"
+    }
+  },
+  "COM_EML_01": {
+    "status": "SUCCESS",
+    "message": "이메일 발송이 성공적으로 완료되었습니다.",
+    "data": {
+      "emailId": "EML-998877",
+      "sentTime": "2026-07-04 10:00:00"
+    }
+  },
+  "CNTR_001": {
+    "status": "SUCCESS",
+    "message": "계약 상태 조회가 완료되었습니다.",
+    "data": {
+      "contractStatus": "ACTIVE",
+      "startDate": "2024-01-01"
+    }
+  },
+  "CNTR_002": {
+    "status": "SUCCESS",
+    "message": "계약 상세 내역 조회가 완료되었습니다.",
+    "data": {
+      "productName": "신한 라이프 스마트 연금보험",
+      "monthlyPremium": 500000
+    }
+  },
+  "CRM_001": {
+    "status": "SUCCESS",
+    "message": "고객 등급 조회가 완료되었습니다.",
+    "data": {
+      "customerGrade": "VIP",
+      "loyaltyPoints": 15000
+    }
+  },
+  "CRM_002": {
+    "status": "SUCCESS",
+    "message": "고객 상세 정보 조회가 완료되었습니다.",
+    "data": {
+      "address": "서울특별시 중구 세종대로 9",
+      "phoneNumber": "010-XXXX-XXXX"
+    }
+  }
+}

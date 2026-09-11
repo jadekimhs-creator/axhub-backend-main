@@ -1,0 +1,6 @@
+package io.shinhanlife.glow.communication.dto;
+
+public enum HeaderDefaults {
+    ITRF_ID, RCV_SVC_ID, STR_YMD, ACNT_OGNZ_NO, PSMR_ASRT_CD, SBSN_RULP_ASRT_CD, BSDU_CD, BSQU_CD,
+    INDV_CTIN_ROLE_CD, SCRN_ID, OGNZ_ASRT_CD, OGNZ_LEVE_CD, TGRM_CREA_CHNN_TYPE_CD, ENVR_TYPE_CD, DRTM_CD, USER_ID
+}

@@ -1,0 +1,10 @@
+.git
+.gradle
+.idea
+/build/
+target/
+*/target/
+bin/
+*/bin/
+out/
+*/out/
