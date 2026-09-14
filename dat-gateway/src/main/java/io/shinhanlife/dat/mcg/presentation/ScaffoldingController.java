@@ -52,6 +52,12 @@ public class ScaffoldingController {
             "google/gemma-4-31b-it:free",
             "nvidia/nemotron-3-nano-30b-a3b:free",
             "cohere/north-mini-code:free");
+    private static final Set<String> OPENROUTER_AI_MODELS = Set.of(
+            "inclusionai/ling-3.0-flash:free",
+            "openai/gpt-oss-20b:free",
+            "google/gemma-4-31b-it:free",
+            "nvidia/nemotron-3-nano-30b-a3b:free",
+            "cohere/north-mini-code:free");
 
     static final String DEFAULT_WORKSPACE = "C:\\eGovFrameDev-4.3.1-64bit\\workspace-egov\\dat-was-dasmt";
     static final String DEFAULT_NEW_POD_WORKSPACE = "C:\\Users\\09863406\\IdeaProjects";
@@ -67,6 +73,9 @@ public class ScaffoldingController {
 
     @org.springframework.beans.factory.annotation.Value("${shinhan.ai.qwen-key}")
     private String qwenKey;
+
+    @org.springframework.beans.factory.annotation.Value("${spring.ai.openai.api-key:}")
+    private String openRouterApiKey;
 
     public ScaffoldingController(ChatClient.Builder chatClientBuilder, ObjectMapper objectMapper) {
         this.chatClientBuilder = chatClientBuilder;
@@ -730,9 +739,12 @@ public class ScaffoldingController {
 
             activeChatClient = org.springframework.ai.chat.client.ChatClient.builder(dynamicChatModel).build();
             chatOptions = org.springframework.ai.openai.OpenAiChatOptions.builder().model(resolvedModel).build();
-        } else {
+        } else if (OPENROUTER_AI_MODELS.contains(resolvedModel)) {
+            requireOpenRouterApiKey();
             activeChatClient = chatClientBuilder.build();
             chatOptions = org.springframework.ai.openai.OpenAiChatOptions.builder().model(resolvedModel).build();
+        } else {
+            throw new IllegalArgumentException("지원하지 않는 AI 모델입니다.");
         }
 
         return activeChatClient.prompt()
@@ -767,6 +779,15 @@ public class ScaffoldingController {
             throw new IllegalArgumentException("지원하지 않는 AI 모델입니다.");
         }
         return model;
+    }
+
+    private void requireOpenRouterApiKey() {
+        if (openRouterApiKey == null || openRouterApiKey.isBlank()
+                || "NOT_CONFIGURED".equals(openRouterApiKey.trim())
+                || "sk-placeholder-dummy-key".equals(openRouterApiKey.trim())) {
+            throw new IllegalStateException(
+                    "OPENROUTER_API_KEY가 설정되지 않았습니다. Gateway 실행 환경에 실제 OpenRouter API 키를 설정한 뒤 재시작하세요.");
+        }
     }
 
     private String stripCodeFence(String response) {

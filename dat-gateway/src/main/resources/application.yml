@@ -11,7 +11,9 @@ spring:
   ai:
     # 기본(외부) 모델로 사용할 OpenRouter 설정입니다.
     openai:
-      api-key: ${OPENROUTER_API_KEY:}
+      # 외부 무료 모델 5개는 OpenRouter 키 하나를 공용으로 사용합니다.
+      # 키는 소스에 저장하지 말고 Gateway 실행 환경의 OPENROUTER_API_KEY로 주입합니다.
+      api-key: ${OPENROUTER_API_KEY:NOT_CONFIGURED}
       base-url: https://openrouter.ai/api/v1
       chat:
         completions-path: /chat/completions

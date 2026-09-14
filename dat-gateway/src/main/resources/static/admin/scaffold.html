@@ -1049,7 +1049,7 @@
                                             <option value="Qwen3-Coder" selected>Qwen3-Coder</option>
                                             <option value="Gemma-4-31B">Gemma-4-31B</option>
                                         </optgroup>
-                                        <optgroup label="[외부 OpenRouter 무료]">
+                                        <optgroup label="[외부 OpenRouter 무료 - OPENROUTER_API_KEY 필요]">
                                             <option value="cohere/north-mini-code:free">Cohere North Mini Code</option>
                                             <option value="inclusionai/ling-3.0-flash:free">InclusionAI Ling 3 Flash</option>
                                             <option value="openai/gpt-oss-20b:free">OpenAI GPT-OSS 20B</option>
@@ -1060,7 +1060,7 @@
                                     <button id="toolDraftButton" type="button" class="btn-action" onclick="createAiToolDraft()">AI로 Tool 채우기</button>
                                 </div>
                             </div>
-                            <div class="input-hint">잘 모르는 항목은 생략해도 됩니다. 선택한 AI가 입력 내용을 바탕으로 Tool 기본 정보와 Input/Output Fields를 채웁니다. Legacy Interface ID와 Client System Code는 실제 연계 명세를 확인해 직접 입력하세요.</div>
+                            <div class="input-hint">잘 모르는 항목은 생략해도 됩니다. 선택한 AI가 입력 내용을 바탕으로 Tool 기본 정보와 Input/Output Fields를 채웁니다. 외부 OpenRouter 무료 모델 5개는 Gateway 환경변수 OPENROUTER_API_KEY가 필요합니다. Legacy Interface ID와 Client System Code는 실제 연계 명세를 확인해 직접 입력하세요.</div>
                         </div>
                         <div class="row mb-3">
                             <div class="col-md-6">
