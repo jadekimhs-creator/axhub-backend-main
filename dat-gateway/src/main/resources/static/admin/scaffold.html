@@ -1015,10 +1015,17 @@
                             </div>
                             <div class="col-md-6 mt-3 mt-md-0">
                                 <label class="form-label">Protocol</label>
-                                    <select class="form-select" name="routingType">
-                                        <option value="MCI" selected>MCI (Legacy)</option>
-                                        <option value="HTTP">HTTP (REST)</option>
-                                    </select>
+                                <select class="form-select" name="routingType">
+                                    <option value="MCI" selected>MCI (Legacy)</option>
+                                    <option value="HTTP">HTTP (REST)</option>
+                                </select>
+                                <label class="form-label mt-3">MCI 페이징 방식</label>
+                                <select class="form-select" name="pagingMode">
+                                    <option value="NONE" selected>사용 안 함 (기존 방식)</option>
+                                    <option value="SCROLL">스크롤 페이징</option>
+                                    <option value="PAGE_NUMBER">페이지 번호 페이징</option>
+                                </select>
+                                <div class="input-hint">MCI Tool에만 적용됩니다. 선택 시 해당 방식의 페이징 Adapter 뼈대를 생성합니다.</div>
                             </div>
                         </div>
                         <div class="mb-4 p-3 rounded" style="background:#18181b; border:1px solid #3f3f46;">
@@ -1969,6 +1976,7 @@
             register: data.register === 'true',
             clientSystemCode: data.clientSystemCode,
             httpApiName: data.httpApiName || null,
+            pagingMode: data.routingType === 'MCI' ? (data.pagingMode || 'NONE') : 'NONE',
             inputFields: parseToolFields('inputFields'),
             outputFields: parseToolFields('outputFields'),
             definitionOptions: {
@@ -1977,7 +1985,8 @@
                 exampleQueries: (data.exampleQueries || '').split(/[\n,]+/).map(value => value.trim()).filter(Boolean),
                 tags: (data.tags || '').split(',').map(value => value.trim()).filter(Boolean), ownerOrg: data.ownerOrg || 'MCP_TOOL',
                 timeoutMillis: Number(data.timeoutMillis || 5000),
-                retryMaxAttempts: Number(data.retryMaxAttempts || 3)
+                retryMaxAttempts: Number(data.retryMaxAttempts || 3),
+                pagingMode: data.routingType === 'MCI' ? (data.pagingMode || 'NONE') : 'NONE'
             }
         };
     }

@@ -47,6 +47,23 @@ public class ToolScaffolder {
     private static final String BASE_PACKAGE = "io.shinhanlife.dat.mcc";
     private static final String BASE_PACKAGE_PATH = "src/main/java/io/shinhanlife/dat/mcc";
 
+    public enum PagingMode {
+        NONE,
+        SCROLL,
+        PAGE_NUMBER;
+
+        static PagingMode from(String value) {
+            if (value == null || value.isBlank()) {
+                return NONE;
+            }
+            try {
+                return PagingMode.valueOf(value.trim().toUpperCase(Locale.ROOT));
+            } catch (IllegalArgumentException ignored) {
+                return NONE;
+            }
+        }
+    }
+
     public record FieldDefinition(String name, String type, String description, List<String> examples, String pattern, boolean required,
                                   List<String> enumValues, String itemType, List<FieldDefinition> itemFields) {
         public FieldDefinition(String name, String type, String description, List<String> examples, String pattern, boolean required) {
@@ -71,13 +88,22 @@ public class ToolScaffolder {
             List<String> tags,
             String ownerOrg,
             Long timeoutMillis,
-            Integer retryMaxAttempts) {
+            Integer retryMaxAttempts,
+            String pagingMode) {
+
+        public ToolDefinitionOptions(String functionDescription, String whenToUse, String whenNotToUse,
+                                     String ioLimits, String displayDescription, List<String> exampleQueries,
+                                     List<String> tags, String ownerOrg, Long timeoutMillis,
+                                     Integer retryMaxAttempts) {
+            this(functionDescription, whenToUse, whenNotToUse, ioLimits, displayDescription, exampleQueries, tags,
+                    ownerOrg, timeoutMillis, retryMaxAttempts, null);
+        }
 
         public ToolDefinitionOptions(String functionDescription, String whenToUse, String whenNotToUse,
                                      String ioLimits, String displayDescription, List<String> exampleQueries,
                                      List<String> tags, String ownerOrg) {
             this(functionDescription, whenToUse, whenNotToUse, ioLimits, displayDescription, exampleQueries, tags,
-                    ownerOrg, null, null);
+                    ownerOrg, null, null, null);
         }
 
         public long timeoutMillisOrDefault() {
@@ -86,6 +112,10 @@ public class ToolScaffolder {
 
         public int retryMaxAttemptsOrDefault() {
             return retryMaxAttempts != null && retryMaxAttempts > 0 ? retryMaxAttempts : 3;
+        }
+
+        public PagingMode pagingModeOrNone() {
+            return PagingMode.from(pagingMode);
         }
     }
 
@@ -800,6 +830,7 @@ public class ToolScaffolder {
         definitionOptions = definitionOptions == null
                 ? new ToolDefinitionOptions(null, null, null, null, null, List.of(), List.of(), null)
                 : definitionOptions;
+        PagingMode pagingMode = isMci ? definitionOptions.pagingModeOrNone() : PagingMode.NONE;
         httpApiName = httpApiName == null || httpApiName.isBlank() ? toKebabCase(toolBaseName) : httpApiName.trim();
         String envSourceDir = System.getProperty("AXHUB_SOURCE_DIR");
         if (envSourceDir == null) {
@@ -872,8 +903,14 @@ public class ToolScaffolder {
             Files.createDirectories(legacyDtoDir);
         }
         Files.createDirectories(converterDir);
+        if (pagingMode != PagingMode.NONE) {
+            writePagingMciAdapter(rootDir, moduleName, bizPackage, baseName, pagingMode);
+        }
 
         StringBuilder log = new StringBuilder();
+        if (pagingMode != PagingMode.NONE) {
+            log.append("Generated ").append(pagingMode).append(" paging MCI adapter skeleton.\n");
+        }
 
         // Generate Request DTO
         String reqContent = """
@@ -1951,6 +1988,38 @@ public class ToolScaffolder {
         }
         writeUtf8(localConfigPath, existing);
         return localConfigPath;
+    }
+
+    private static void writePagingMciAdapter(Path rootDir, String moduleName, String bizPackage,
+                                              String baseName, PagingMode pagingMode) throws IOException {
+        String group = bizPackage.substring(bizPackage.lastIndexOf('.') + 1);
+        Path pagingDir = rootDir.resolve(Paths.get(moduleName, BASE_PACKAGE_PATH, "biz", group, "paging"));
+        Files.createDirectories(pagingDir);
+
+        String pagingInfoType = pagingMode == PagingMode.SCROLL ? "ScrollPagingInfo" : "PageNumberPagingInfo";
+        String adapterSuffix = pagingMode == PagingMode.SCROLL ? "ScrollPagingMciAdapter" : "PageNumberPagingMciAdapter";
+        String fieldGuide = pagingMode == PagingMode.SCROLL
+                ? "scrlMhdNm, scrlItva, scrSortValu, nextDataExtYn, pageDataCnt"
+                : "pageNo, pageDataCnt, totalPageCnt, totalPageDataCnt";
+        String source = """
+                package %s.paging;
+
+                import %s.dto.%sRequest;
+                import %s.dto.%sResponse;
+                import io.shinhanlife.dat.lib.paging.MciPage;
+                import io.shinhanlife.dat.lib.paging.%s;
+
+                /**
+                 * Scaffold-generated %s MCI paging adapter.
+                 * Map the actual MCI request/response paging fields: %s
+                 */
+                public interface %s {
+
+                    MciPage<%sResponse, %s> fetch(%sRequest request, %s pagingInfo);
+                }
+                """.formatted(bizPackage, bizPackage, baseName, bizPackage, baseName, pagingInfoType,
+                pagingMode, fieldGuide, baseName + adapterSuffix, baseName, pagingInfoType, baseName, pagingInfoType);
+        writeUtf8(pagingDir.resolve(baseName + adapterSuffix + ".java"), source);
     }
 
     private static void writeUtf8(Path path, String content) throws IOException {

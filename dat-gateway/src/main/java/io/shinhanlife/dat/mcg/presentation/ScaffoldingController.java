@@ -252,7 +252,8 @@ public class ScaffoldingController {
                     parseDelimited(req.get("tags")),
                     req.get("ownerOrg"),
                     positiveLongOrNull(req.get("timeoutMillis")),
-                    positiveIntOrNull(req.get("retryMaxAttempts")));
+                    positiveIntOrNull(req.get("retryMaxAttempts")),
+                    req.get("pagingMode"));
 
             String defaultWorkspace = DEFAULT_WORKSPACE;
             String workspacePath = req.getOrDefault("workspacePath", defaultWorkspace);

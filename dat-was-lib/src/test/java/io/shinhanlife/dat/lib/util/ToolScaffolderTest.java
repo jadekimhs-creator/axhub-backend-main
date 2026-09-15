@@ -19,6 +19,47 @@ import org.junit.jupiter.api.io.TempDir;
 class ToolScaffolderTest {
 
     @Test
+    void generatesScrollPagingAdapterOnlyWhenScrollPagingIsSelected() throws Exception {
+        String moduleName = root.resolve("dat-was-scroll").toString();
+        ToolScaffolder.ToolDefinitionOptions options = new ToolScaffolder.ToolDefinitionOptions(
+                null, null, null, null, null, List.of(), List.of(), null, 5000L, 3, "SCROLL");
+
+        ToolScaffolder.scaffold("contract list", "ONBCD0330", "계약 목록", "계약을 조회한다.", "sal", "MCI",
+                moduleName, "tester", "2026.09.14", false, "ONBTA2380", null, null,
+                List.of(new ToolScaffolder.FieldDefinition("customerNo", "String", "고객번호", List.of("10000001"), "", true)),
+                List.of(), null, options);
+
+        Path pagingDir = root.resolve("dat-was-scroll/src/main/java/io/shinhanlife/dat/mcc/biz/sal/paging");
+        Path adapter = Files.list(pagingDir).findFirst().orElseThrow();
+        String source = Files.readString(adapter);
+        assertTrue(adapter.getFileName().toString().endsWith("ScrollPagingMciAdapter.java"));
+        assertTrue(source.contains("ScrollPagingInfo"));
+        assertTrue(source.contains("scrlMhdNm, scrlItva, scrSortValu, nextDataExtYn, pageDataCnt"));
+    }
+
+    @Test
+    void generatesPageNumberAdapterAndKeepsDefaultGenerationUnchanged() throws Exception {
+        String pageModuleName = root.resolve("dat-was-page").toString();
+        ToolScaffolder.ToolDefinitionOptions pageOptions = new ToolScaffolder.ToolDefinitionOptions(
+                null, null, null, null, null, List.of(), List.of(), null, 5000L, 3, "PAGE_NUMBER");
+        ToolScaffolder.scaffold("contract list", "ONBCD0330", "계약 목록", "계약을 조회한다.", "sal", "MCI",
+                pageModuleName, "tester", "2026.09.14", false, "ONBTA2380", null, null, List.of(), List.of(), null, pageOptions);
+
+        Path pagePagingDir = root.resolve("dat-was-page/src/main/java/io/shinhanlife/dat/mcc/biz/sal/paging");
+        Path pageAdapter = Files.list(pagePagingDir).findFirst().orElseThrow();
+        String pageSource = Files.readString(pageAdapter);
+        assertTrue(pageAdapter.getFileName().toString().endsWith("PageNumberPagingMciAdapter.java"));
+        assertTrue(pageSource.contains("PageNumberPagingInfo"));
+        assertTrue(pageSource.contains("pageNo, pageDataCnt, totalPageCnt, totalPageDataCnt"));
+
+        String noneModuleName = root.resolve("dat-was-none").toString();
+        ToolScaffolder.scaffold("contract list", "ONBCD0330", "계약 목록", "계약을 조회한다.", "sal", "MCI",
+                noneModuleName, "tester", "2026.09.14", false, "ONBTA2380", null, null, List.of(), List.of(), null,
+                new ToolScaffolder.ToolDefinitionOptions(null, null, null, null, null, List.of(), List.of(), null));
+        assertFalse(Files.exists(root.resolve("dat-was-none/src/main/java/io/shinhanlife/dat/mcc/biz/sal/paging")));
+    }
+
+    @Test
     void exposesGroupedUseCaseScaffoldApi() {
         assertDoesNotThrow(() -> ToolScaffolder.class.getMethod(
                 "scaffoldUseCase", String.class, String.class, String.class, String.class, List.class));
