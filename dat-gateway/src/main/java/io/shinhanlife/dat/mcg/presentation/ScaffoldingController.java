@@ -45,6 +45,7 @@ public class ScaffoldingController {
     private static final Set<String> SUPPORTED_FIELD_TYPES = Set.of(
             "String", "Integer", "Long", "Double", "Boolean", "BigDecimal", "List");
     private static final Set<String> SUPPORTED_AI_MODELS = Set.of(
+            "GLM-5.3-Flash",
             "Gemma-4-31B",
             "Qwen3-Coder",
             "inclusionai/ling-3.0-flash:free",
@@ -73,6 +74,9 @@ public class ScaffoldingController {
 
     @org.springframework.beans.factory.annotation.Value("${shinhan.ai.qwen-key}")
     private String qwenKey;
+
+    @org.springframework.beans.factory.annotation.Value("${shinhan.ai.glm-key:sk-TqLYA8ZcjGNsmJP0VWr8CA}")
+    private String glmKey;
 
     @org.springframework.beans.factory.annotation.Value("${spring.ai.openai.api-key:}")
     private String openRouterApiKey;
@@ -725,9 +729,18 @@ public class ScaffoldingController {
         org.springframework.ai.chat.client.ChatClient activeChatClient;
         org.springframework.ai.chat.prompt.ChatOptions chatOptions;
 
-        if ("Qwen3-Coder".equalsIgnoreCase(resolvedModel) || "Gemma-4-31B".equalsIgnoreCase(resolvedModel)) {
+        if ("Qwen3-Coder".equalsIgnoreCase(resolvedModel)
+                || "Gemma-4-31B".equalsIgnoreCase(resolvedModel)
+                || "GLM-5.3-Flash".equalsIgnoreCase(resolvedModel)) {
             // Use liteLlmBaseUrl from application.yml
-            String apiKey = "Gemma-4-31B".equalsIgnoreCase(resolvedModel) ? gemmaKey : qwenKey;
+            String apiKey;
+            if ("GLM-5.3-Flash".equalsIgnoreCase(resolvedModel)) {
+                apiKey = glmKey;
+            } else if ("Gemma-4-31B".equalsIgnoreCase(resolvedModel)) {
+                apiKey = gemmaKey;
+            } else {
+                apiKey = qwenKey;
+            }
 
             org.springframework.ai.openai.api.OpenAiApi openAiApi = org.springframework.ai.openai.api.OpenAiApi.builder()
                     .baseUrl(liteLlmBaseUrl)

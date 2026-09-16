@@ -27,6 +27,7 @@ shinhan:
     base-url: https://dev-iam-litellm.shinhanlife.co.kr:18020
     qwen-key: sk-UJ2IRenvaMPbY3ozQdj6zw
     gemma-key: sk-EH107wYBZuu6RUTqthRl7A
+    glm-key: sk-TqLYA8ZcjGNsmJP0VWr8CA
 
 server:
   port: 8081

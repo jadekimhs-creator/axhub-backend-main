@@ -30,11 +30,26 @@ class ToolScaffolderTest {
                 List.of(), null, options);
 
         Path pagingDir = root.resolve("dat-was-scroll/src/main/java/io/shinhanlife/dat/mcc/biz/sal/paging");
-        Path adapter = Files.list(pagingDir).findFirst().orElseThrow();
+        Path adapter = Files.list(pagingDir).filter(p -> p.getFileName().toString().endsWith(".java") && !p.getFileName().toString().contains("Impl")).findFirst().orElseThrow();
         String source = Files.readString(adapter);
-        assertTrue(adapter.getFileName().toString().endsWith("ScrollPagingMciAdapter.java"));
+        assertTrue(adapter.getFileName().toString().endsWith("ScrollPaging.java"));
         assertTrue(source.contains("ScrollPagingInfo"));
-        assertTrue(source.contains("scrlMhdNm, scrlItva, scrSortValu, nextDataExtYn, pageDataCnt"));
+
+        Path reqDto = root.resolve("dat-was-scroll/src/main/java/io/shinhanlife/dat/mcc/biz/sal/dto/ContractListRequest.java");
+        String reqSource = Files.readString(reqDto);
+        assertTrue(reqSource.contains("import io.shinhanlife.glow.db.dto.ScrPageInfo;"), reqSource);
+        assertTrue(reqSource.contains("private ScrPageInfo scrPageInfo;"), reqSource);
+
+        Path resDto = root.resolve("dat-was-scroll/src/main/java/io/shinhanlife/dat/mcc/biz/sal/dto/ContractListResponse.java");
+        String resSource = Files.readString(resDto);
+        assertTrue(resSource.contains("private Boolean hasMore;"), resSource);
+
+        Path mciReqIo = root.resolve("dat-was-scroll/src/main/java/io/shinhanlife/dat/mcc/infra/itrf/mci/nbt/a/io/ONBTA2380_I.java");
+        String mciReqSource = Files.readString(mciReqIo);
+        assertTrue(mciReqSource.contains("import io.shinhanlife.glow.db.dto.ScrPageInfo;"), mciReqSource);
+        assertTrue(mciReqSource.contains("import io.shinhanlife.glow.GlowTrgmField;"), mciReqSource);
+        assertTrue(mciReqSource.contains("private ScrPageInfo scrPageInfo;"), mciReqSource);
+        assertTrue(mciReqSource.contains("@GlowTrgmField(order = 1, length = 306, description = \"스크롤 페이지 정보\")"), mciReqSource);
     }
 
     @Test
@@ -46,11 +61,26 @@ class ToolScaffolderTest {
                 pageModuleName, "tester", "2026.09.14", false, "ONBTA2380", null, null, List.of(), List.of(), null, pageOptions);
 
         Path pagePagingDir = root.resolve("dat-was-page/src/main/java/io/shinhanlife/dat/mcc/biz/sal/paging");
-        Path pageAdapter = Files.list(pagePagingDir).findFirst().orElseThrow();
+        Path pageAdapter = Files.list(pagePagingDir).filter(p -> p.getFileName().toString().endsWith(".java") && !p.getFileName().toString().contains("Impl")).findFirst().orElseThrow();
         String pageSource = Files.readString(pageAdapter);
-        assertTrue(pageAdapter.getFileName().toString().endsWith("PageNumberPagingMciAdapter.java"));
-        assertTrue(pageSource.contains("PageNumberPagingInfo"));
-        assertTrue(pageSource.contains("pageNo, pageDataCnt, totalPageCnt, totalPageDataCnt"));
+        assertTrue(pageAdapter.getFileName().toString().endsWith("PageNumberPaging.java"));
+        assertTrue(pageSource.contains("PgNumPagingInfo"));
+
+        Path pageReqDto = root.resolve("dat-was-page/src/main/java/io/shinhanlife/dat/mcc/biz/sal/dto/ContractListRequest.java");
+        String pageReqSource = Files.readString(pageReqDto);
+        assertTrue(pageReqSource.contains("import io.shinhanlife.glow.db.dto.PageInfo;"), pageReqSource);
+        assertTrue(pageReqSource.contains("private PageInfo pageInfo;"), pageReqSource);
+
+        Path pageResDto = root.resolve("dat-was-page/src/main/java/io/shinhanlife/dat/mcc/biz/sal/dto/ContractListResponse.java");
+        String pageResSource = Files.readString(pageResDto);
+        assertTrue(pageResSource.contains("private Boolean hasMore;"), pageResSource);
+
+        Path pageMciReqIo = root.resolve("dat-was-page/src/main/java/io/shinhanlife/dat/mcc/infra/itrf/mci/nbt/a/io/ONBTA2380_I.java");
+        String pageMciReqSource = Files.readString(pageMciReqIo);
+        assertTrue(pageMciReqSource.contains("import io.shinhanlife.glow.db.dto.PageInfo;"), pageMciReqSource);
+        assertTrue(pageMciReqSource.contains("import io.shinhanlife.glow.GlowTrgmField;"), pageMciReqSource);
+        assertTrue(pageMciReqSource.contains("private List<PageInfo> pageInfo;"), pageMciReqSource);
+        assertTrue(pageMciReqSource.contains("@GlowTrgmField(order = 1, description = \"페이지 정보\", type = \"gm\")"), pageMciReqSource);
 
         String noneModuleName = root.resolve("dat-was-none").toString();
         ToolScaffolder.scaffold("contract list", "ONBCD0330", "계약 목록", "계약을 조회한다.", "sal", "MCI",

@@ -25,6 +25,42 @@ glow:
           method: POST
           content-type: application/json;charset=UTF-8
           biz-pod: false
+        - name: customer-notice
+          domain: ${AXHUB_CUSTOMER_NOTICE_HTTP_DOMAIN:http://localhost:${server.port}}
+          url: ${AXHUB_CUSTOMER_NOTICE_HTTP_URL:/api/mock/http/cmm_customer_notice}
+          method: POST
+          content-type: application/json;charset=UTF-8
+          biz-pod: false
+        - name: claim-search
+          domain: ${AXHUB_CLAIM_SEARCH_HTTP_DOMAIN:http://localhost:${server.port}}
+          url: ${AXHUB_CLAIM_SEARCH_HTTP_URL:/api/mock/http/cmm_claim_search}
+          method: POST
+          content-type: application/json;charset=UTF-8
+          biz-pod: false
+        - name: employee-search
+          domain: ${AXHUB_EMPLOYEE_SEARCH_HTTP_DOMAIN:http://localhost:${server.port}}
+          url: ${AXHUB_EMPLOYEE_SEARCH_HTTP_URL:/api/mock/http/smp_employee_search}
+          method: POST
+          content-type: application/json;charset=UTF-8
+          biz-pod: false
+        - name: ga-activity-status
+          domain: ${AXHUB_GA_ACTIVITY_STATUS_HTTP_DOMAIN:http://localhost:${server.port}}
+          url: ${AXHUB_GA_ACTIVITY_STATUS_HTTP_URL:/api/mock/http/ana_ga_status}
+          method: POST
+          content-type: application/json;charset=UTF-8
+          biz-pod: false
+        - name: employee
+          domain: ${AXHUB_EMPLOYEE_HTTP_DOMAIN:http://localhost:${server.port}}
+          url: ${AXHUB_EMPLOYEE_HTTP_URL:/api/mock/http/smp_employee_search}
+          method: POST
+          content-type: application/json;charset=UTF-8
+          biz-pod: false
+        - name: initial
+          domain: ${AXHUB_INITIAL_HTTP_DOMAIN:http://localhost:${server.port}}
+          url: ${AXHUB_INITIAL_HTTP_URL:/api/mock/http/pro_initial_execute}
+          method: POST
+          content-type: application/json;charset=UTF-8
+          biz-pod: false
     mci:
       host: ${GLOW_COMMUNICATION_MCI_HOST:http://localhost}
       port: ${GLOW_COMMUNICATION_MCI_PORT:8080}

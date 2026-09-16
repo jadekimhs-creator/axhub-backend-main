@@ -35,6 +35,45 @@ class ScaffoldingControllerToolDraftTest {
     Path root;
 
     @Test
+    void returnsConfigurationErrorInsteadOfOpenRouter401WhenExternalAiKeyIsMissing() throws Exception {
+        MockMvc mockMvc = MockMvcBuilders.standaloneSetup(
+                        new ScaffoldingController(mock(ChatClient.Builder.class), new ObjectMapper()))
+                .setMessageConverters(new MappingJackson2HttpMessageConverter())
+                .build();
+
+        mockMvc.perform(post("/api/v1/scaffold/tool-draft")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"description\":\"고객 계약을 조회한다\",\"model\":\"cohere/north-mini-code:free\"}"))
+                .andExpect(status().isInternalServerError())
+                .andExpect(jsonPath("$.error").value(org.hamcrest.Matchers.containsString("OPENROUTER_API_KEY")));
+    }
+
+    @Test
+    void acceptsAllFiveOpenRouterModelsForToolDraftGeneration() {
+        ScaffoldingController controller = new ScaffoldingController(mock(ChatClient.Builder.class), new ObjectMapper());
+        List<String> models = List.of(
+                "cohere/north-mini-code:free",
+                "inclusionai/ling-3.0-flash:free",
+                "openai/gpt-oss-20b:free",
+                "google/gemma-4-31b-it:free",
+                "nvidia/nemotron-3-nano-30b-a3b:free");
+
+        for (String model : models) {
+            assertEquals(model, ReflectionTestUtils.invokeMethod(controller, "resolveModel", model));
+        }
+    }
+
+    @Test
+    void acceptsShinhanInternalAiModelsIncludingGlmFlash() {
+        ScaffoldingController controller = new ScaffoldingController(mock(ChatClient.Builder.class), new ObjectMapper());
+        List<String> internalModels = List.of("GLM-5.3-Flash", "Qwen3-Coder", "Gemma-4-31B");
+
+        for (String model : internalModels) {
+            assertEquals(model, ReflectionTestUtils.invokeMethod(controller, "resolveModel", model));
+        }
+    }
+
+    @Test
     void createsStandalonePodProjectWithoutChangingExistingPodScaffolder() throws Exception {
         createLibraryProject();
         MockMvc mockMvc = MockMvcBuilders.standaloneSetup(
@@ -128,8 +167,9 @@ class ScaffoldingControllerToolDraftTest {
     @Test
     void groupedToolRequestGeneratesOneUseCase() throws Exception {
         ChatClient.Builder builder = mock(ChatClient.Builder.class);
-        MockMvc mockMvc = MockMvcBuilders.standaloneSetup(
-                new ScaffoldingController(builder, new ObjectMapper()))
+        ScaffoldingController controller = new ScaffoldingController(builder, new ObjectMapper());
+        ReflectionTestUtils.setField(controller, "openRouterApiKey", "test-openrouter-key");
+        MockMvc mockMvc = MockMvcBuilders.standaloneSetup(controller)
                 .setMessageConverters(new MappingJackson2HttpMessageConverter())
                 .build();
         String moduleName = root.resolve("dat-was-customer").toString().replace("\\", "\\\\");
@@ -159,8 +199,9 @@ class ScaffoldingControllerToolDraftTest {
         when(responseSpec.content()).thenReturn("""
                 {"baseName":"CustomerContractStatus","title":"계약 상태 조회","description":"고객번호로 계약 상태를 조회합니다.","categoryKey":"cmm","routingType":"MCI","httpApiName":"contract-status","functionDescription":"고객 계약의 현재 상태를 조회한다.","displayDescription":"고객 계약 상태 조회","whenToUse":"고객번호로 계약 상태 확인을 요청할 때 사용한다.","whenNotToUse":"계약 변경 또는 해지를 요청할 때는 사용하지 않는다.","ioLimits":"고객번호 한 건을 입력받아 계약 상태 한 건을 반환한다.","exampleQueries":["고객 C123의 계약 상태를 알려줘","C123 계약이 정상인지 확인해줘","고객번호 C123 계약 조회해줘"],"tags":["contract","status","search"],"ownerOrg":"MCP_TOOL","inputFields":[{"name":"customerId","type":"String","description":"고객번호","examples":["C123"],"required":true}],"outputFields":[{"name":"resultCode","type":"String","description":"결과 코드","examples":["SUCCESS"],"required":true}]}
                 """);
-        MockMvc mockMvc = MockMvcBuilders.standaloneSetup(
-                new ScaffoldingController(builder, new ObjectMapper()))
+        ScaffoldingController controller = new ScaffoldingController(builder, new ObjectMapper());
+        ReflectionTestUtils.setField(controller, "openRouterApiKey", "test-openrouter-key");
+        MockMvc mockMvc = MockMvcBuilders.standaloneSetup(controller)
                 .setMessageConverters(new MappingJackson2HttpMessageConverter())
                 .build();
 
@@ -200,8 +241,9 @@ class ScaffoldingControllerToolDraftTest {
         when(responseSpec.content()).thenReturn("""
                 {"mappings":[{"ownerType":"ONBSZ0460_O","sourceName":"prafNo","targetName":"employeeNumber","include":true}]}
                 """);
-        MockMvc mockMvc = MockMvcBuilders.standaloneSetup(
-                        new ScaffoldingController(builder, new ObjectMapper()))
+        ScaffoldingController controller = new ScaffoldingController(builder, new ObjectMapper());
+        ReflectionTestUtils.setField(controller, "openRouterApiKey", "test-openrouter-key");
+        MockMvc mockMvc = MockMvcBuilders.standaloneSetup(controller)
                 .setMessageConverters(new MappingJackson2HttpMessageConverter())
                 .build();
         String source = """
@@ -313,8 +355,9 @@ class ScaffoldingControllerToolDraftTest {
         when(responseSpec.content()).thenReturn("""
                 {"mappings":[{"ownerType":"ONBSZ0460_I","sourceName":"prafNo","targetName":"employeeNumber","include":true}]}
                 """);
-        MockMvc mockMvc = MockMvcBuilders.standaloneSetup(
-                        new ScaffoldingController(builder, new ObjectMapper()))
+        ScaffoldingController controller = new ScaffoldingController(builder, new ObjectMapper());
+        ReflectionTestUtils.setField(controller, "openRouterApiKey", "test-openrouter-key");
+        MockMvc mockMvc = MockMvcBuilders.standaloneSetup(controller)
                 .setMessageConverters(new MappingJackson2HttpMessageConverter())
                 .build();
         String source = """
@@ -356,7 +399,9 @@ class ScaffoldingControllerToolDraftTest {
                         confusable-servers: [dat-was-hrd, dat-was-pay, dat-was-att]
                 """);
 
-        var response = new ScaffoldingController(builder, new ObjectMapper()).generatePodManifestDraft(java.util.Map.of(
+        ScaffoldingController controller = new ScaffoldingController(builder, new ObjectMapper());
+        ReflectionTestUtils.setField(controller, "openRouterApiKey", "test-openrouter-key");
+        var response = controller.generatePodManifestDraft(java.util.Map.of(
                 "description", "상품 업무를 처리합니다.",
                 "moduleName", "dat-was-pro",
                 "targetModules", "[\"dat-was-cus\",\"dat-was-hr\",\"dat-was-sal\",\"dat-was-pro\",\"dat-was-sys\"]"));

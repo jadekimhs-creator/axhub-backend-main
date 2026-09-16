@@ -1,0 +1,80 @@
+package io.shinhanlife.glow.db.dto;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import io.shinhanlife.glow.GlowTrgmField;
+import io.swagger.v3.oas.annotations.media.Schema;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.Setter;
+import org.apache.ibatis.session.RowBounds;
+
+import java.io.Serial;
+import java.io.Serializable;
+
+/**
+ * @package io.shinhanlife.glow.db.dto
+ * @className PageInfo
+ * @description AX HUB 시스템 처리 클래스
+ * @author 0986406
+ * @create 2026.09.01
+ * <pre>
+ * ---------- 개정이력 ----------
+ * 수정일      수정자    수정내용
+ * ---------- -------- ---------------------------
+ * 2026.09.01  0986406    최초생성
+ * 
+ * </pre>
+ */
+@Getter
+@Setter
+@JsonIgnoreProperties(ignoreUnknown = true)
+@EqualsAndHashCode(callSuper = true)
+public class PageInfo extends RowBounds implements Serializable {
+
+    @Serial
+    private static final long serialVersionUID = 1L;
+
+    /**
+     * 페이지번호 (입력값)
+     */
+    @Schema(description = "페이지번호")
+    @GlowTrgmField(order = 1, length = 5, description = "페이지번호")
+    private int pageNo;
+
+    /**
+     * 페이지 데이터 건수 (열 건수, 입력값)
+     */
+    @Schema(description = "페이지데이터건수")
+    @GlowTrgmField(order = 2, length = 5, description = "페이지데이터건수")
+    private int pageDataCc;
+
+    /**
+     * 총페이지 수 (리턴값)
+     */
+    @Schema(description = "총페이지수")
+    @GlowTrgmField(order = 3, length = 10, description = "총페이지수")
+    private int totaPageCn;
+
+    /**
+     * 총 페이지 데이터 건수 (리턴값)
+     */
+    @Schema(description = "총페이지데이터건수")
+    @GlowTrgmField(order = 4, length = 10, description = "총페이지데이터건수")
+    private int totaPageDataCc;
+
+    public PageInfo(int pageNo, int pageDataCc) {
+        super(((pageNo <= 0 ? 1 : pageNo) - 1) * pageDataCc, pageDataCc);
+        this.pageNo = pageNo;
+        this.pageDataCc = pageDataCc;
+    }
+
+    public PageInfo() {
+    }
+
+    @JsonIgnore
+    @Override
+    public int getOffset() {
+        return super.getOffset();
+    }
+}

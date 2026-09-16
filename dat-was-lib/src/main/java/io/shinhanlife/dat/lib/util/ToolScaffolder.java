@@ -252,18 +252,37 @@ public class ToolScaffolder {
         Path clientDir = sourceRoot.resolve(Paths.get("infra", "itrf", mci ? "mci" : "http", code));
         Path ioDir = clientDir.resolve("io");
         Files.createDirectories(ioDir);
+        ToolDefinitionOptions options = tool.definitionOptions() == null
+                ? new ToolDefinitionOptions(null, null, null, null, null, List.of(), List.of(), null)
+                : tool.definitionOptions();
+        PagingMode pagingMode = mci ? options.pagingModeOrNone() : PagingMode.NONE;
+        String ioPrefix = (tool.clientSystemCode() != null && !tool.clientSystemCode().isBlank()) ? tool.clientSystemCode().toUpperCase() : tool.interfaceId();
+        if (pagingMode != PagingMode.NONE) {
+            String group = bizPackage.substring(bizPackage.lastIndexOf('.') + 1);
+            Path pagingDir = moduleRoot.resolve(Paths.get(BASE_PACKAGE_PATH, "biz", group, "paging"));
+            String clientCls = (tool.clientSystemCode() != null && (tool.clientSystemCode().length() == 4 || tool.clientSystemCode().length() == 9))
+                    ? mciClientClassName(tool.clientSystemCode())
+                    : "AxhubMciComponent";
+            String targetPkg = mciTargetSystemPackage(tool.clientSystemCode());
+            String convPkg = bizPackage + ".converter" + (targetPkg != null ? "." + targetPkg : "");
+            String convName = (tool.clientSystemCode() != null && !tool.clientSystemCode().isBlank())
+                    ? tool.clientSystemCode().toUpperCase(Locale.ROOT) + "Converter"
+                    : baseName + "Converter";
+            String recSvcId = tool.clientSystemCode() != null ? tool.clientSystemCode().toUpperCase() : "";
+            writePagingComponents(pagingDir, bizPackage, baseName, pagingMode, ioPackage, ioPrefix, clientCls, convPkg, convName, tool.interfaceId(), recSvcId);
+            log.append("Generated ").append(pagingMode).append(" paging components for ").append(baseName).append(".\n");
+        }
         writeUtf8(dtoDir.resolve(baseName + "Request.java"),
-                dtoContent(bizPackage + ".dto", baseName + "Request", tool.inputFields(), "", "", true));
+                dtoContent(bizPackage + ".dto", baseName + "Request", tool.inputFields(), "", "", true, pagingMode));
         writeUtf8(dtoDir.resolve(baseName + "Response.java"),
-                dtoContent(bizPackage + ".dto", baseName + "Response", tool.outputFields(), "", "", false));
+                dtoContent(bizPackage + ".dto", baseName + "Response", tool.outputFields(), "", "", false, pagingMode));
         writeStructuredFieldTypes(dtoDir, bizPackage + ".dto", baseName + "Request", tool.inputFields());
         writeStructuredFieldTypes(dtoDir, bizPackage + ".dto", baseName + "Response", tool.outputFields());
         if (mci) {
-            String ioPrefix = (tool.clientSystemCode() != null && !tool.clientSystemCode().isBlank()) ? tool.clientSystemCode().toUpperCase() : tool.interfaceId();
             writeUtf8(ioDir.resolve(ioPrefix + "_I.java"),
-                    mciIoContent("infra.itrf.mci." + code.replace("/", "."), ioPrefix + "_I", tool.inputFields(), "", ""));
+                    mciIoContent("infra.itrf.mci." + code.replace("/", "."), ioPrefix + "_I", tool.inputFields(), "", "", pagingMode));
             writeUtf8(ioDir.resolve(ioPrefix + "_O.java"),
-                    mciIoContent("infra.itrf.mci." + code.replace("/", "."), ioPrefix + "_O", tool.outputFields(), "", ""));
+                    mciIoContent("infra.itrf.mci." + code.replace("/", "."), ioPrefix + "_O", tool.outputFields(), "", "", pagingMode));
             writeStructuredFieldTypes(ioDir, ioPackage + ".io", ioPrefix + "_I", tool.inputFields());
             writeStructuredFieldTypes(ioDir, ioPackage + ".io", ioPrefix + "_O", tool.outputFields());
             String sysCode = tool.clientSystemCode();
@@ -395,48 +414,134 @@ public class ToolScaffolder {
             boolean mci = "MCI".equalsIgnoreCase(tool.routingType());
             String toolBaseName = toPascalCase(tool.baseName());
             String baseName = mci ? abbreviatedMciSourceBaseName(toolBaseName) : toolBaseName;
-            String clientClassName;
-            String clientVariable;
-            String ioPrefix = (tool.clientSystemCode() != null && !tool.clientSystemCode().isBlank()) ? tool.clientSystemCode().toUpperCase() : tool.interfaceId();
-            if (mci) {
-                clientClassName = mciClientClassName(tool.clientSystemCode());
-                clientVariable = "mci";
+            ToolDefinitionOptions options = tool.definitionOptions() == null
+                    ? new ToolDefinitionOptions(null, null, null, null, null, List.of(), List.of(), null)
+                    : tool.definitionOptions();
+            PagingMode pagingMode = mci ? options.pagingModeOrNone() : PagingMode.NONE;
+
+            if (pagingMode != PagingMode.NONE) {
+                String pagingSuffix = pagingMode == PagingMode.SCROLL ? "ScrollPaging" : "PageNumberPaging";
+                String pagingInfoType = pagingMode == PagingMode.SCROLL ? "ScrollPagingInfo" : "PgNumPagingInfo";
+                String pagingInterface = baseName + pagingSuffix;
+                String pagingVar = Character.toLowerCase(baseName.charAt(0)) + baseName.substring(1) + pagingSuffix;
+
+                imports.append("import ").append(bizPackage).append(".dto.").append(baseName).append("Request;\n")
+                        .append("import ").append(bizPackage).append(".dto.").append(baseName).append("Response;\n")
+                        .append("import ").append(bizPackage).append(".paging.").append(pagingInterface).append(";\n")
+                        .append("import io.shinhanlife.dat.lib.paging.MciPage;\n")
+                        .append("import io.shinhanlife.dat.lib.paging.").append(pagingInfoType).append(";\n");
+
+                if (!fields.toString().contains(" " + pagingVar + ";")) {
+                    fields.append("    private final ").append(pagingInterface).append(" ").append(pagingVar).append(";\n");
+                }
+                methods.append(groupedToolPagingMethodContent(tool, baseName, pagingVar, pagingMode, pagingInfoType));
             } else {
-                clientClassName = baseName + "Client";
-                clientVariable = Character.toLowerCase(baseName.charAt(0)) + baseName.substring(1) + "Client";
+                String clientClassName;
+                String clientVariable;
+                String ioPrefix = (tool.clientSystemCode() != null && !tool.clientSystemCode().isBlank()) ? tool.clientSystemCode().toUpperCase() : tool.interfaceId();
+                if (mci) {
+                    clientClassName = mciClientClassName(tool.clientSystemCode());
+                    clientVariable = "mci";
+                } else {
+                    clientClassName = baseName + "Client";
+                    clientVariable = Character.toLowerCase(baseName.charAt(0)) + baseName.substring(1) + "Client";
+                }
+                String targetPkg = mci ? mciTargetSystemPackage(tool.clientSystemCode()) : null;
+                String converterPkg = bizPackage + ".converter" + (targetPkg != null ? "." + targetPkg : "");
+                String converterName = (mci && tool.clientSystemCode() != null && !tool.clientSystemCode().isBlank())
+                        ? tool.clientSystemCode().toUpperCase(Locale.ROOT) + "Converter"
+                        : baseName + "Converter";
+                String converterVariable = "converter";
+                String integrationPackage = BASE_PACKAGE + (mci ? ".infra.itrf.mci." + formatClientSystemCode(tool.clientSystemCode(), ".")
+                        : ".infra.itrf.http." + toPackageSegment(tool.httpApiName()));
+                imports.append("import ").append(bizPackage).append(".dto.").append(baseName).append("Request;\n")
+                        .append("import ").append(bizPackage).append(".dto.").append(baseName).append("Response;\n")
+                        .append("import ").append(converterPkg).append(".").append(converterName).append(";\n")
+                        .append("import ").append(integrationPackage).append(".").append(clientClassName).append(";\n")
+                        .append("import ").append(integrationPackage).append(".io.").append(mci ? ioPrefix + "_I;\n" : baseName + "HttpRequest;\n")
+                        .append("import ").append(integrationPackage).append(".io.").append(mci ? ioPrefix + "_O;\n" : baseName + "HttpResponse;\n");
+                if (mci) {
+                    imports.append("import io.shinhanlife.glow.communication.dto.Transfer;\n");
+                }
+                if (!fields.toString().contains(" " + clientVariable + ";")) {
+                    fields.append("    private final ").append(clientClassName).append(" ").append(clientVariable).append(";\n");
+                }
+                if (!fields.toString().contains(" " + converterVariable + ";")) {
+                    fields.append("    private final ").append(converterName).append(" ").append(converterVariable).append(";\n");
+                }
+                methods.append(groupedToolMethodContent(tool, baseName, converterVariable, clientVariable, ioPrefix, mci));
             }
-            String targetPkg = mci ? mciTargetSystemPackage(tool.clientSystemCode()) : null;
-            String converterPkg = bizPackage + ".converter" + (targetPkg != null ? "." + targetPkg : "");
-            String converterName = (mci && tool.clientSystemCode() != null && !tool.clientSystemCode().isBlank())
-                    ? tool.clientSystemCode().toUpperCase(Locale.ROOT) + "Converter"
-                    : baseName + "Converter";
-            String converterVariable = "converter";
-            String integrationPackage = BASE_PACKAGE + (mci ? ".infra.itrf.mci." + formatClientSystemCode(tool.clientSystemCode(), ".")
-                    : ".infra.itrf.http." + toPackageSegment(tool.httpApiName()));
-            imports.append("import ").append(bizPackage).append(".dto.").append(baseName).append("Request;\n")
-                    .append("import ").append(bizPackage).append(".dto.").append(baseName).append("Response;\n")
-                    .append("import ").append(converterPkg).append(".").append(converterName).append(";\n")
-                    .append("import ").append(integrationPackage).append(".").append(clientClassName).append(";\n")
-                    .append("import ").append(integrationPackage).append(".io.").append(mci ? ioPrefix + "_I;\n" : baseName + "HttpRequest;\n")
-                    .append("import ").append(integrationPackage).append(".io.").append(mci ? ioPrefix + "_O;\n" : baseName + "HttpResponse;\n");
-            if (mci) {
-                imports.append("import io.shinhanlife.glow.communication.dto.Transfer;\n");
-                imports.append("import lombok.extern.slf4j.Slf4j;\n");
-            }
-            if (!fields.toString().contains(" " + clientVariable + ";")) {
-                fields.append("    private final ").append(clientClassName).append(" ").append(clientVariable).append(";\n");
-            }
-            if (!fields.toString().contains(" " + converterVariable + ";")) {
-                fields.append("    private final ").append(converterName).append(" ").append(converterVariable).append(";\n");
-            }
-            methods.append(groupedToolMethodContent(tool, baseName, converterVariable, clientVariable, ioPrefix, mci));
         }
-        String slf4jAnno = tools.stream().anyMatch(t -> "MCI".equalsIgnoreCase(t.routingType())) ? "@Slf4j\n" : "";
+        boolean hasMciOrPaging = tools.stream().anyMatch(t -> "MCI".equalsIgnoreCase(t.routingType()));
+        String slf4jAnno = hasMciOrPaging ? "@Slf4j\n" : "";
+        if (hasMciOrPaging) {
+            imports.append("import lombok.extern.slf4j.Slf4j;\n");
+        }
         return "package " + bizPackage + ".usecase.impl;\n\n"
                 + "import " + bizPackage + ".usecase." + useCaseBaseName + "UseCase;\n"
                 + "import lombok.RequiredArgsConstructor;\nimport org.springframework.stereotype.Service;\n" + imports
                 + "\n" + slf4jAnno + "@Service\n@RequiredArgsConstructor\npublic class " + useCaseBaseName + "UseCaseImpl implements " + useCaseBaseName + "UseCase {\n\n"
                 + fields + "\n" + methods + "}\n";
+    }
+
+    private static String groupedToolPagingMethodContent(ToolMethodDefinition tool, String baseName,
+                                                         String pagingVariable, PagingMode pagingMode,
+                                                         String pagingInfoType) {
+        String snakeToolName = (tool.group() != null && !tool.group().isBlank() ? tool.group().toLowerCase(Locale.ROOT) + "_" : "")
+                + toKebabCase(baseName).toLowerCase(Locale.ROOT).replace("-", "_");
+        return """
+
+                    @Override
+                    public %sResponse %s(%sRequest req) {
+                        log.info("[MCI Tool] {} \uC694\uCCAD \uC218\uC2E0 (\uD398\uC774\uC9D5 \uBAA8\uB4DC: %s).", "%s", "%s");
+                        try {
+                            %s pagingInfo = null;
+                            %sResponse finalResponse = null;
+                            int loopCount = 0;
+                            final int MAX_PAGING_COUNT = 10;
+                            boolean hasMore = false;
+
+                            while (loopCount++ < MAX_PAGING_COUNT) {
+                                MciPage<%sResponse, %s> page = %s.fetch(req, pagingInfo);
+                                if (finalResponse == null) {
+                                    finalResponse = page.data();
+                                }
+                                if (!page.hasNext()) {
+                                    hasMore = false;
+                                    break;
+                                }
+                                hasMore = true;
+                                pagingInfo = page.pagingInfo();
+                            }
+
+                            if (finalResponse == null) {
+                                finalResponse = new %sResponse();
+                            }
+                            finalResponse.setResultCode("SUCCESS");
+                            finalResponse.setHasMore(hasMore);
+                            if (hasMore) {
+                                finalResponse.setResultMessage("MCI 기본 최대 조회 건수(10회)까지 조회되었습니다. 추가 데이터가 더 존재합니다 (hasMore=true).");
+                            } else {
+                                finalResponse.setResultMessage("MCI paging call completed.");
+                            }
+                            return finalResponse;
+                        } catch (Exception e) {
+                            log.error("[MCI Tool] \uC5F0\uB3D9 \uC911 \uC624\uB958 \uBC1C\uC0DD: {}", e.getMessage(), e);
+                            %sResponse errorResponse = new %sResponse();
+                            errorResponse.setResultCode("ERROR");
+                            errorResponse.setResultMessage("MCI paging call failed: " + e.getMessage());
+                            errorResponse.setHasMore(false);
+                            return errorResponse;
+                        }
+                    }
+                    """.formatted(
+                baseName, tool.methodName(), baseName,
+                pagingMode, snakeToolName, pagingMode,
+                pagingInfoType,
+                baseName,
+                baseName, pagingInfoType, pagingVariable,
+                baseName,
+                baseName, baseName);
     }
 
     private static String groupedToolMethodContent(ToolMethodDefinition tool, String baseName,
@@ -602,47 +707,78 @@ public class ToolScaffolder {
             String declaration = declBuilder.toString();
             useCase = insertBeforeLastBrace(useCase, declaration);
 
-            String clientClassName;
-            String clientVariable;
-            if (mci) {
-                clientClassName = mciClientClassName(tool.clientSystemCode());
-                clientVariable = "mci";
-            } else {
-                clientClassName = baseName + "Client";
-                clientVariable = Character.toLowerCase(baseName.charAt(0)) + baseName.substring(1) + "Client";
-            }
-            String targetPkg = mci ? mciTargetSystemPackage(tool.clientSystemCode()) : null;
-            String converterPkg = bizPackage + ".converter" + (targetPkg != null ? "." + targetPkg : "");
-            String converterName = (mci && tool.clientSystemCode() != null && !tool.clientSystemCode().isBlank())
-                    ? tool.clientSystemCode().toUpperCase(Locale.ROOT) + "Converter"
-                    : baseName + "Converter";
-            String converterVariable = "converter";
+            ToolDefinitionOptions options = tool.definitionOptions() == null
+                    ? new ToolDefinitionOptions(null, null, null, null, null, List.of(), List.of(), null)
+                    : tool.definitionOptions();
+            PagingMode pagingMode = mci ? options.pagingModeOrNone() : PagingMode.NONE;
 
-            implementation = addImport(implementation, "import " + bizPackage + ".dto." + requestType + ";");
-            implementation = addImport(implementation, "import " + bizPackage + ".dto." + responseType + ";");
-            implementation = addImport(implementation, "import " + converterPkg + "." + converterName + ";");
-            implementation = addImport(implementation, "import " + integrationPackage + "." + clientClassName + ";");
-            implementation = addImport(implementation, "import " + integrationPackage + ".io." + requestIo + ";");
-            implementation = addImport(implementation, "import " + integrationPackage + ".io." + responseIo + ";");
-            if (mci) {
-                implementation = addImport(implementation, "import io.shinhanlife.glow.communication.dto.Transfer;");
+            if (pagingMode != PagingMode.NONE) {
+                String pagingSuffix = pagingMode == PagingMode.SCROLL ? "ScrollPaging" : "PageNumberPaging";
+                String pagingInfoType = pagingMode == PagingMode.SCROLL ? "ScrollPagingInfo" : "PgNumPagingInfo";
+                String pagingInterface = baseName + pagingSuffix;
+                String pagingVar = Character.toLowerCase(baseName.charAt(0)) + baseName.substring(1) + pagingSuffix;
+
+                implementation = addImport(implementation, "import " + bizPackage + ".dto." + requestType + ";");
+                implementation = addImport(implementation, "import " + bizPackage + ".dto." + responseType + ";");
+                implementation = addImport(implementation, "import " + bizPackage + ".paging." + pagingInterface + ";");
+                implementation = addImport(implementation, "import io.shinhanlife.dat.lib.paging.MciPage;");
+                implementation = addImport(implementation, "import io.shinhanlife.dat.lib.paging." + pagingInfoType + ";");
                 implementation = addImport(implementation, "import lombok.extern.slf4j.Slf4j;");
                 if (!implementation.contains("@Slf4j")) {
                     implementation = implementation.replaceFirst("public class ", "@Slf4j\npublic class ");
                 }
+                implementation = addImport(implementation, "import lombok.RequiredArgsConstructor;");
+                if (!implementation.contains("@RequiredArgsConstructor")) {
+                    implementation = implementation.replaceFirst("public class ", "@RequiredArgsConstructor\npublic class ");
+                }
+                if (!implementation.contains(" " + pagingVar + ";")) {
+                    implementation = insertConstructorField(implementation, "    private final " + pagingInterface + " " + pagingVar + ";");
+                }
+                String method = groupedToolPagingMethodContent(tool, baseName, pagingVar, pagingMode, pagingInfoType);
+                implementation = insertBeforeLastBrace(implementation, method);
+            } else {
+                String clientClassName;
+                String clientVariable;
+                if (mci) {
+                    clientClassName = mciClientClassName(tool.clientSystemCode());
+                    clientVariable = "mci";
+                } else {
+                    clientClassName = baseName + "Client";
+                    clientVariable = Character.toLowerCase(baseName.charAt(0)) + baseName.substring(1) + "Client";
+                }
+                String targetPkg = mci ? mciTargetSystemPackage(tool.clientSystemCode()) : null;
+                String converterPkg = bizPackage + ".converter" + (targetPkg != null ? "." + targetPkg : "");
+                String converterName = (mci && tool.clientSystemCode() != null && !tool.clientSystemCode().isBlank())
+                        ? tool.clientSystemCode().toUpperCase(Locale.ROOT) + "Converter"
+                        : baseName + "Converter";
+                String converterVariable = "converter";
+
+                implementation = addImport(implementation, "import " + bizPackage + ".dto." + requestType + ";");
+                implementation = addImport(implementation, "import " + bizPackage + ".dto." + responseType + ";");
+                implementation = addImport(implementation, "import " + converterPkg + "." + converterName + ";");
+                implementation = addImport(implementation, "import " + integrationPackage + "." + clientClassName + ";");
+                implementation = addImport(implementation, "import " + integrationPackage + ".io." + requestIo + ";");
+                implementation = addImport(implementation, "import " + integrationPackage + ".io." + responseIo + ";");
+                if (mci) {
+                    implementation = addImport(implementation, "import io.shinhanlife.glow.communication.dto.Transfer;");
+                    implementation = addImport(implementation, "import lombok.extern.slf4j.Slf4j;");
+                    if (!implementation.contains("@Slf4j")) {
+                        implementation = implementation.replaceFirst("public class ", "@Slf4j\npublic class ");
+                    }
+                }
+                implementation = addImport(implementation, "import lombok.RequiredArgsConstructor;");
+                if (!implementation.contains("@RequiredArgsConstructor")) {
+                    implementation = implementation.replaceFirst("public class ", "@RequiredArgsConstructor\npublic class ");
+                }
+                if (!implementation.contains(" " + clientVariable + ";")) {
+                    implementation = insertConstructorField(implementation, "    private final " + clientClassName + " " + clientVariable + ";");
+                }
+                if (!implementation.contains(" " + converterVariable + ";")) {
+                    implementation = insertConstructorField(implementation, "    private final " + converterName + " " + converterVariable + ";");
+                }
+                String method = groupedToolMethodContent(tool, baseName, converterVariable, clientVariable, ioPrefix, mci);
+                implementation = insertBeforeLastBrace(implementation, method);
             }
-            implementation = addImport(implementation, "import lombok.RequiredArgsConstructor;");
-            if (!implementation.contains("@RequiredArgsConstructor")) {
-                implementation = implementation.replaceFirst("public class ", "@RequiredArgsConstructor\npublic class ");
-            }
-            if (!implementation.contains(" " + clientVariable + ";")) {
-                implementation = insertConstructorField(implementation, "    private final " + clientClassName + " " + clientVariable + ";");
-            }
-            if (!implementation.contains(" " + converterVariable + ";")) {
-                implementation = insertConstructorField(implementation, "    private final " + converterName + " " + converterVariable + ";");
-            }
-            String method = groupedToolMethodContent(tool, baseName, converterVariable, clientVariable, ioPrefix, mci);
-            implementation = insertBeforeLastBrace(implementation, method);
         }
         writeUtf8(useCaseFile, useCase);
         writeUtf8(useCaseImplFile, implementation);
@@ -903,13 +1039,13 @@ public class ToolScaffolder {
             Files.createDirectories(legacyDtoDir);
         }
         Files.createDirectories(converterDir);
-        if (pagingMode != PagingMode.NONE) {
-            writePagingMciAdapter(rootDir, moduleName, bizPackage, baseName, pagingMode);
-        }
-
         StringBuilder log = new StringBuilder();
         if (pagingMode != PagingMode.NONE) {
-            log.append("Generated ").append(pagingMode).append(" paging MCI adapter skeleton.\n");
+            Path pagingDir = rootDir.resolve(Paths.get(moduleName, BASE_PACKAGE_PATH, "biz", group.toLowerCase(Locale.ROOT), "paging"));
+            String clientCls = clientPrefixCap.isEmpty() ? "AxhubMciComponent" : "Mci" + clientPrefixCap + "Client";
+            String recSvcId = (clientSystemCode != null && !clientSystemCode.isBlank()) ? clientSystemCode.toUpperCase(Locale.ROOT) : "";
+            writePagingComponents(pagingDir, bizPackage, baseName, pagingMode, BASE_PACKAGE + "." + mciGroupPath.replace("/", "."), ioPrefix, clientCls, converterPackage, converterClassName, interfaceId, recSvcId);
+            log.append("Generated ").append(pagingMode).append(" paging components for ").append(baseName).append(".\n");
         }
 
         // Generate Request DTO
@@ -951,7 +1087,7 @@ public class ToolScaffolder {
                 .replaceAll("(?m)^\\s*-\\(\\?:[^\\r\\n]*\\R", "")
                 .replace("private String phoneNumber;", "@Schema(example = \"01012345678\")\n    private String phoneNumber;")
                 .replace("private String message;", "@Schema(example = \"테스트 메시지입니다.\")\n    private String message;");
-        reqContent = dtoContent(bizPackage + ".dto", baseName + "Request", inputFields, author, createDate, true);
+        reqContent = dtoContent(bizPackage + ".dto", baseName + "Request", inputFields, author, createDate, true, pagingMode);
         writeUtf8(dtoDir.resolve(baseName + "Request.java"), reqContent);
         writeStructuredFieldTypes(dtoDir, bizPackage + ".dto", baseName + "Request", inputFields);
 
@@ -986,7 +1122,7 @@ public class ToolScaffolder {
                 // TODO: Add response fields here. Do not include PII in the Tool response.
             }
             """.formatted(bizPackage, bizPackage, baseName, author, createDate, createDate, author, baseName);
-        resContent = dtoContent(bizPackage + ".dto", baseName + "Response", outputFields, author, createDate, false);
+        resContent = dtoContent(bizPackage + ".dto", baseName + "Response", outputFields, author, createDate, false, pagingMode);
         writeUtf8(dtoDir.resolve(baseName + "Response.java"), resContent);
         writeStructuredFieldTypes(dtoDir, bizPackage + ".dto", baseName + "Response", outputFields);
 
@@ -1079,7 +1215,121 @@ public class ToolScaffolder {
 
         String serviceImplContent;
 
-        if (isMci) {
+        if (isMci && pagingMode != PagingMode.NONE) {
+            String pagingSuffix = pagingMode == PagingMode.SCROLL ? "ScrollPaging" : "PageNumberPaging";
+            String pagingInfoType = pagingMode == PagingMode.SCROLL ? "ScrollPagingInfo" : "PgNumPagingInfo";
+            String pagingInterface = baseName + pagingSuffix;
+            serviceImplContent = """
+                package %s.usecase.impl;
+
+                import %s.dto.%sRequest;
+                import %s.dto.%sResponse;
+                import %s.usecase.%sUseCase;
+                import %s.paging.%s;
+                import io.shinhanlife.dat.lib.paging.MciPage;
+                import io.shinhanlife.dat.lib.paging.%s;
+                import io.shinhanlife.glow.BizException;
+                import org.springframework.stereotype.Service;
+                import lombok.RequiredArgsConstructor;
+                import lombok.extern.slf4j.Slf4j;
+
+                /**
+                 * @package %s.usecase.impl
+                 * @className %sUseCaseImpl
+                 * @description AX HUB \uC2DC\uC2A4\uD15C \uCC98\uB9AC \uD074\uB798\uC2A4
+                 * @author %s
+                 * @create %s
+                 * <pre>
+                 * ---------- \uAC1C\uC815\uC774\uB825 ----------
+                 * \uC218\uC815\uC77C      \uC218\uC815\uC790    \uC218\uC815\uB0B4\uC6A9
+                 * ---------- -------- ---------------------------
+                 * %s  %s    \uCD5C\uCD08\uC0DD\uC131
+                 *
+                 * </pre>
+                 */
+                @Slf4j
+                @Service
+                @RequiredArgsConstructor
+                public class %sUseCaseImpl implements %sUseCase {
+
+                    private final %s paging;
+
+                    @Override
+                    public %sResponse execute(%sRequest req) {
+                        log.info("[MCI Tool] {} \uC694\uCCAD \uC218\uC2E0 (\uD398\uC774\uC9D5 \uBAA8\uB4DC: {}).", "%s", "%s");
+                        try {
+                            %s pagingInfo = null;
+                            %sResponse finalResponse = null;
+                            int loopCount = 0;
+                            final int MAX_PAGING_COUNT = 10;
+                            boolean hasMore = false;
+
+                            while (loopCount++ < MAX_PAGING_COUNT) {
+                                MciPage<%sResponse, %s> page = paging.fetch(req, pagingInfo);
+                                if (finalResponse == null) {
+                                    finalResponse = page.data();
+                                }
+                                if (!page.hasNext()) {
+                                    hasMore = false;
+                                    break;
+                                }
+                                hasMore = true;
+                                pagingInfo = page.pagingInfo();
+                            }
+
+                            if (finalResponse == null) {
+                                finalResponse = new %sResponse();
+                            }
+                            finalResponse.setResultCode("SUCCESS");
+                            finalResponse.setHasMore(hasMore);
+                            if (hasMore) {
+                                finalResponse.setResultMessage("MCI 기본 최대 조회 건수(10회)까지 조회되었습니다. 추가 데이터가 더 존재합니다 (hasMore=true).");
+                            } else {
+                                finalResponse.setResultMessage("MCI paging call completed.");
+                            }
+                            return finalResponse;
+                        } catch (BizException e) {
+                            log.error("[MCI Tool] \uC5F0\uB3D9 \uC911 \uC624\uB958 \uBC1C\uC0DD: {}", e.getMessage(), e);
+                            %sResponse response = new %sResponse();
+                            response.setResultCode("ERROR");
+                            response.setResultMessage(e.getMessage() != null ? e.getMessage() : "Unknown error");
+                            response.setHasMore(false);
+                            return response;
+                        } catch (Exception e) {
+                            log.error("[MCI Tool] \uC5F0\uB3D9 \uC911 \uC624\uB958 \uBC1C\uC0DD: {}", e.getMessage(), e);
+                            %sResponse response = new %sResponse();
+                            response.setResultCode("ERROR");
+                            response.setResultMessage(e.getMessage() != null ? e.getMessage() : "Unknown error");
+                            response.setHasMore(false);
+                            return response;
+                        }
+                    }
+                }
+                """.formatted(
+                    bizPackage,
+                    bizPackage, baseName,
+                    bizPackage, baseName,
+                    bizPackage, baseName,
+                    bizPackage, pagingInterface,
+                    pagingInfoType,
+                    bizPackage,
+                    baseName,
+                    author,
+                    createDate,
+                    createDate, author,
+                    baseName,
+                    baseName,
+                    pagingInterface,
+                    baseName, baseName,
+                    toolName, pagingMode,
+                    pagingInfoType,
+                    baseName,
+                    baseName, pagingInfoType,
+                    baseName,
+                    baseName, baseName,
+                    baseName, baseName
+            );
+        } else if (isMci) {
             serviceImplContent = """
                 package %s.usecase.impl;
 
@@ -1302,7 +1552,7 @@ public class ToolScaffolder {
                     private String content;
                 }
                 """.formatted(BASE_PACKAGE, mciGroupPath.replace("/", "."), BASE_PACKAGE, mciGroupPath.replace("/", "."), ioPrefix, author, createDate, createDate, author, ioPrefix);
-            mciReqContent = mciIoContent(mciGroupPath.replace("/", "."), ioPrefix + "_I", inputFields, author, createDate);
+            mciReqContent = mciIoContent(mciGroupPath.replace("/", "."), ioPrefix + "_I", inputFields, author, createDate, pagingMode);
             writeUtf8(mciIoDir.resolve(ioPrefix + "_I.java"), mciReqContent);
             writeStructuredFieldTypes(mciIoDir, BASE_PACKAGE + "." + mciGroupPath.replace("/", ".") + ".io", ioPrefix + "_I", inputFields);
 
@@ -1330,7 +1580,7 @@ public class ToolScaffolder {
                     // TODO: Add response fields here
                 }
                 """.formatted(BASE_PACKAGE, mciGroupPath.replace("/", "."), BASE_PACKAGE, mciGroupPath.replace("/", "."), ioPrefix, author, createDate, createDate, author, ioPrefix);
-            mciResContent = mciIoContent(mciGroupPath.replace("/", "."), ioPrefix + "_O", outputFields, author, createDate);
+            mciResContent = mciIoContent(mciGroupPath.replace("/", "."), ioPrefix + "_O", outputFields, author, createDate, pagingMode);
             writeUtf8(mciIoDir.resolve(ioPrefix + "_O.java"), mciResContent);
             writeStructuredFieldTypes(mciIoDir, BASE_PACKAGE + "." + mciGroupPath.replace("/", ".") + ".io", ioPrefix + "_O", outputFields);
 
@@ -1990,18 +2240,25 @@ public class ToolScaffolder {
         return localConfigPath;
     }
 
-    private static void writePagingMciAdapter(Path rootDir, String moduleName, String bizPackage,
-                                              String baseName, PagingMode pagingMode) throws IOException {
-        String group = bizPackage.substring(bizPackage.lastIndexOf('.') + 1);
-        Path pagingDir = rootDir.resolve(Paths.get(moduleName, BASE_PACKAGE_PATH, "biz", group, "paging"));
+    private static void writePagingComponents(Path pagingDir, String bizPackage,
+                                              String baseName, PagingMode pagingMode,
+                                              String ioPackage, String ioPrefix,
+                                              String clientClassName, String converterPkg,
+                                              String converterName, String interfaceId,
+                                              String receiveServiceId) throws IOException {
         Files.createDirectories(pagingDir);
+        Path implDir = pagingDir.resolve("impl");
+        Files.createDirectories(implDir);
 
-        String pagingInfoType = pagingMode == PagingMode.SCROLL ? "ScrollPagingInfo" : "PageNumberPagingInfo";
-        String adapterSuffix = pagingMode == PagingMode.SCROLL ? "ScrollPagingMciAdapter" : "PageNumberPagingMciAdapter";
-        String fieldGuide = pagingMode == PagingMode.SCROLL
-                ? "scrlMhdNm, scrlItva, scrSortValu, nextDataExtYn, pageDataCnt"
-                : "pageNo, pageDataCnt, totalPageCnt, totalPageDataCnt";
-        String source = """
+        String pagingInfoType = pagingMode == PagingMode.SCROLL ? "ScrollPagingInfo" : "PgNumPagingInfo";
+        String pagingSuffix = pagingMode == PagingMode.SCROLL ? "ScrollPaging" : "PageNumberPaging";
+        String interfaceName = baseName + pagingSuffix;
+        String implName = interfaceName + "Impl";
+        String clientImport = clientClassName.equals("AxhubMciComponent")
+                ? "import io.shinhanlife.dat.lib.integration.mci.component.AxhubMciComponent;"
+                : "import " + ioPackage + "." + clientClassName + ";";
+
+        String interfaceSource = """
                 package %s.paging;
 
                 import %s.dto.%sRequest;
@@ -2010,16 +2267,246 @@ public class ToolScaffolder {
                 import io.shinhanlife.dat.lib.paging.%s;
 
                 /**
-                 * Scaffold-generated %s MCI paging adapter.
-                 * Map the actual MCI request/response paging fields: %s
+                 * @package %s.paging
+                 * @className %s
+                 * @description AX HUB 시스템 처리 클래스
+                 * @author 0986406
+                 * @create 2026.09.01
+                 * <pre>
+                 * ---------- 개정이력 ----------
+                 * 수정일      수정자    수정내용
+                 * ---------- -------- ---------------------------
+                 * 2026.09.01  0986406    최초생성
+                 * 
+                 * </pre>
                  */
                 public interface %s {
 
                     MciPage<%sResponse, %s> fetch(%sRequest request, %s pagingInfo);
                 }
                 """.formatted(bizPackage, bizPackage, baseName, bizPackage, baseName, pagingInfoType,
-                pagingMode, fieldGuide, baseName + adapterSuffix, baseName, pagingInfoType, baseName, pagingInfoType);
-        writeUtf8(pagingDir.resolve(baseName + adapterSuffix + ".java"), source);
+                bizPackage, interfaceName, interfaceName, baseName, pagingInfoType, baseName, pagingInfoType);
+        writeUtf8(pagingDir.resolve(interfaceName + ".java"), interfaceSource);
+
+        String implSource;
+        if (pagingMode == PagingMode.SCROLL) {
+            implSource = """
+                    package %s.paging.impl;
+
+                    import %s.dto.%sRequest;
+                    import %s.dto.%sResponse;
+                    import %s.paging.%s;
+                    import %s.%s;
+                    %s
+                    import %s.io.%s_I;
+                    import %s.io.%s_O;
+                    import io.shinhanlife.dat.lib.paging.MciPage;
+                    import io.shinhanlife.dat.lib.paging.ScrollPagingInfo;
+                    import io.shinhanlife.glow.db.dto.ScrPageInfo;
+                    import io.shinhanlife.glow.communication.dto.Transfer;
+                    import lombok.RequiredArgsConstructor;
+                    import lombok.extern.slf4j.Slf4j;
+                    import org.springframework.stereotype.Component;
+
+                    /**
+                     * @package %s.paging.impl
+                     * @className %s
+                     * @description AX HUB 시스템 처리 클래스
+                     * @author 0986406
+                     * @create 2026.09.01
+                     * <pre>
+                     * ---------- 개정이력 ----------
+                     * 수정일      수정자    수정내용
+                     * ---------- -------- ---------------------------
+                     * 2026.09.01  0986406    최초생성
+                     * 
+                     * </pre>
+                     */
+                    @Slf4j
+                    @Component
+                    @RequiredArgsConstructor
+                    public class %s implements %s {
+
+                        private final %s mci;
+                        private final %s converter;
+
+                        @Override
+                        public MciPage<%sResponse, ScrollPagingInfo> fetch(%sRequest request, ScrollPagingInfo pagingInfo) {
+                            if (request.getScrPageInfo() == null) {
+                                request.setScrPageInfo(new ScrPageInfo());
+                            }
+                            if (pagingInfo != null) {
+                                if (pagingInfo.getScrlmhdNm() != null) request.getScrPageInfo().setScrlmhdNm(pagingInfo.getScrlmhdNm());
+                                if (pagingInfo.getScrlItva() != null) request.getScrPageInfo().setScrlItva(pagingInfo.getScrlItva());
+                                if (pagingInfo.getScrSortValu() != null) request.getScrPageInfo().setScrSortValu(pagingInfo.getScrSortValu());
+                                if (pagingInfo.getPageDataCc() > 0) request.getScrPageInfo().setPageDataCc(pagingInfo.getPageDataCc());
+                            }
+
+                            %s_I mciReq = converter.toRequest(request);
+                            Transfer<%s_O> resTransfer = mci.callTo("%s", "%s", mciReq, %s_O.class);
+                            %s_O mciRes = resTransfer != null ? resTransfer.getBody() : null;
+
+                            %sResponse response = converter.toResponse(mciRes);
+
+                            ScrPageInfo resPageInfo = mciRes != null ? mciRes.getScrPageInfo() : null;
+                            boolean hasNext = resPageInfo != null && "Y".equalsIgnoreCase(resPageInfo.getNextDataExtYn());
+                            String nextSortValu = resPageInfo != null ? resPageInfo.getScrSortValu() : null;
+                            String nextItva = resPageInfo != null ? resPageInfo.getScrlItva() : null;
+
+                            ScrollPagingInfo nextPaging = new ScrollPagingInfo(
+                                    request.getScrPageInfo().getScrlmhdNm(),
+                                    nextItva,
+                                    nextSortValu,
+                                    hasNext,
+                                    request.getScrPageInfo().getPageDataCc()
+                            );
+
+                            return new MciPage<>(response, nextPaging);
+                        }
+                    }
+                    """.formatted(
+                    bizPackage,
+                    bizPackage, baseName,
+                    bizPackage, baseName,
+                    bizPackage, interfaceName,
+                    converterPkg, converterName,
+                    clientImport,
+                    ioPackage, ioPrefix,
+                    ioPackage, ioPrefix,
+                    bizPackage, implName,
+                    implName, interfaceName,
+                    clientClassName, converterName,
+                    baseName, baseName,
+                    ioPrefix,
+                    ioPrefix, interfaceId, receiveServiceId, ioPrefix,
+                    ioPrefix,
+                    baseName
+            );
+        } else {
+            implSource = """
+                    package %s.paging.impl;
+
+                    import %s.dto.%sRequest;
+                    import %s.dto.%sResponse;
+                    import %s.paging.%s;
+                    import %s.%s;
+                    %s
+                    import %s.io.%s_I;
+                    import %s.io.%s_O;
+                    import io.shinhanlife.dat.lib.paging.MciPage;
+                    import io.shinhanlife.dat.lib.paging.PgNumPagingInfo;
+                    import io.shinhanlife.glow.db.dto.PageInfo;
+                    import io.shinhanlife.glow.communication.dto.Transfer;
+                    import lombok.RequiredArgsConstructor;
+                    import lombok.extern.slf4j.Slf4j;
+                    import org.springframework.stereotype.Component;
+
+                    /**
+                     * @package %s.paging.impl
+                     * @className %s
+                     * @description AX HUB 시스템 처리 클래스
+                     * @author 0986406
+                     * @create 2026.09.01
+                     * <pre>
+                     * ---------- 개정이력 ----------
+                     * 수정일      수정자    수정내용
+                     * ---------- -------- ---------------------------
+                     * 2026.09.01  0986406    최초생성
+                     * 
+                     * </pre>
+                     */
+                    @Slf4j
+                    @Component
+                    @RequiredArgsConstructor
+                    public class %s implements %s {
+
+                        private final %s mci;
+                        private final %s converter;
+
+                        @Override
+                        public MciPage<%sResponse, PgNumPagingInfo> fetch(%sRequest request, PgNumPagingInfo pagingInfo) {
+                            if (request.getPageInfo() == null) {
+                                request.setPageInfo(new PageInfo());
+                            }
+                            if (pagingInfo != null) {
+                                if (pagingInfo.getPageNo() > 0) request.getPageInfo().setPageNo(pagingInfo.getPageNo());
+                                if (pagingInfo.getPageDataCc() > 0) request.getPageInfo().setPageDataCc(pagingInfo.getPageDataCc());
+                            }
+
+                            %s_I mciReq = converter.toRequest(request);
+                            if (mciReq != null) {
+                                try {
+                                    java.lang.reflect.Method setMethod = mciReq.getClass().getMethod("setPageInfo", java.util.List.class);
+                                    setMethod.invoke(mciReq, java.util.List.of(request.getPageInfo()));
+                                } catch (NoSuchMethodException e) {
+                                    try {
+                                        java.lang.reflect.Method setMethod = mciReq.getClass().getMethod("setPageInfo", PageInfo.class);
+                                        setMethod.invoke(mciReq, request.getPageInfo());
+                                    } catch (Exception ignored) {}
+                                } catch (Exception ignored) {}
+                            }
+
+                            Transfer<%s_O> resTransfer = mci.callTo("%s", "%s", mciReq, %s_O.class);
+                            %s_O mciRes = resTransfer != null ? resTransfer.getBody() : null;
+
+                            %sResponse response = converter.toResponse(mciRes);
+
+                            PageInfo resPageInfo = null;
+                            if (mciRes != null) {
+                                try {
+                                    java.lang.reflect.Method getMethod = mciRes.getClass().getMethod("getPageInfo");
+                                    Object val = getMethod.invoke(mciRes);
+                                    if (val instanceof java.util.List<?> list && !list.isEmpty()) {
+                                        if (list.get(0) instanceof PageInfo pi) resPageInfo = pi;
+                                    } else if (val instanceof PageInfo pi) {
+                                        resPageInfo = pi;
+                                    }
+                                } catch (Exception ignored) {}
+                            }
+
+                            int currentPageNo = resPageInfo != null && resPageInfo.getPageNo() > 0 ? resPageInfo.getPageNo() : (pagingInfo != null ? pagingInfo.getPageNo() : 1);
+                            int totalPageCn = resPageInfo != null ? resPageInfo.getTotaPageCn() : 0;
+                            int totalDataCc = resPageInfo != null ? resPageInfo.getTotaPageDataCc() : 0;
+                            int pageDataCc = resPageInfo != null && resPageInfo.getPageDataCc() > 0 ? resPageInfo.getPageDataCc() : (pagingInfo != null ? pagingInfo.getPageDataCc() : 20);
+
+                            boolean hasNext = false;
+                            if (totalPageCn > 0) {
+                                hasNext = currentPageNo < totalPageCn;
+                            } else if (totalDataCc > 0 && pageDataCc > 0) {
+                                hasNext = (long) currentPageNo * pageDataCc < totalDataCc;
+                            }
+
+                            PgNumPagingInfo nextPaging = new PgNumPagingInfo(
+                                    currentPageNo + 1,
+                                    pageDataCc,
+                                    totalPageCn,
+                                    totalDataCc,
+                                    hasNext
+                            );
+
+                            return new MciPage<>(response, nextPaging);
+                        }
+                    }
+                    """.formatted(
+                    bizPackage,
+                    bizPackage, baseName,
+                    bizPackage, baseName,
+                    bizPackage, interfaceName,
+                    converterPkg, converterName,
+                    clientImport,
+                    ioPackage, ioPrefix,
+                    ioPackage, ioPrefix,
+                    bizPackage, implName,
+                    implName, interfaceName,
+                    clientClassName, converterName,
+                    baseName, baseName,
+                    ioPrefix,
+                    ioPrefix, interfaceId, receiveServiceId, ioPrefix,
+                    ioPrefix,
+                    baseName
+            );
+        }
+        writeUtf8(implDir.resolve(implName + ".java"), implSource);
     }
 
     private static void writeUtf8(Path path, String content) throws IOException {
@@ -2028,42 +2515,82 @@ public class ToolScaffolder {
 
     private static String dtoContent(String packageName, String className, List<FieldDefinition> fields,
                                      String author, String createDate, boolean request) {
+        return dtoContent(packageName, className, fields, author, createDate, request, PagingMode.NONE);
+    }
+
+    private static String dtoContent(String packageName, String className, List<FieldDefinition> fields,
+                                     String author, String createDate, boolean request, PagingMode pagingMode) {
         String body = fieldLines(fields, request ? Set.of() : Set.of("resultCode", "resultMessage"), className);
         if (!request) {
-            body = "    private String resultCode;\n\n    private String resultMessage;\n" + body;
+            String hasMoreField = (pagingMode != null && pagingMode != PagingMode.NONE)
+                    ? "    @Schema(description = \"추가 데이터 존재 여부 (기본 최대 조회 건수 초과 시 true)\")\n    private Boolean hasMore;\n\n"
+                    : "";
+            body = "    private String resultCode;\n\n    private String resultMessage;\n\n" + hasMoreField + body;
         }
         String listImport = hasListField(fields) ? "import java.util.List;\n" : "";
         String patternImport = hasPatternField(fields) ? "import jakarta.validation.constraints.Pattern;\n" : "";
+        String pagingImport = "";
+        String pagingField = "";
+        if (request && pagingMode != null && pagingMode != PagingMode.NONE) {
+            boolean hasPageInfo = fields != null && fields.stream().anyMatch(f -> f != null && "pageInfo".equalsIgnoreCase(f.name()));
+            boolean hasScrPageInfo = fields != null && fields.stream().anyMatch(f -> f != null && "scrPageInfo".equalsIgnoreCase(f.name()));
+            if (pagingMode == PagingMode.PAGE_NUMBER && !hasPageInfo) {
+                pagingImport = "import io.shinhanlife.glow.db.dto.PageInfo;\n";
+                pagingField = "    @Schema(description = \"페이지 정보\")\n    private PageInfo pageInfo;\n\n";
+            } else if (pagingMode == PagingMode.SCROLL && !hasScrPageInfo) {
+                pagingImport = "import io.shinhanlife.glow.db.dto.ScrPageInfo;\n";
+                pagingField = "    @Schema(description = \"스크롤 페이지 정보\")\n    private ScrPageInfo scrPageInfo;\n\n";
+            }
+        }
         return """
                 package %s;
 
                 import com.fasterxml.jackson.annotation.JsonInclude;
                 import io.swagger.v3.oas.annotations.media.Schema;
                 import lombok.Data;
-                %s%s
-
+                %s%s%s
                 @Data
                 @JsonInclude(JsonInclude.Include.NON_NULL)
                 public class %s {
-                %s%s}
-                """.formatted(packageName, listImport, patternImport, className, body, innerObjectListClasses(fields));
+                %s%s%s}
+                """.formatted(packageName, listImport, patternImport, pagingImport, className, pagingField, body, innerObjectListClasses(fields));
     }
 
     private static String mciIoContent(String packageSuffix, String className, List<FieldDefinition> fields,
                                        String author, String createDate) {
+        return mciIoContent(packageSuffix, className, fields, author, createDate, PagingMode.NONE);
+    }
+
+    private static String mciIoContent(String packageSuffix, String className, List<FieldDefinition> fields,
+                                       String author, String createDate, PagingMode pagingMode) {
         String listImport = hasListField(fields) ? "import java.util.List;\n" : "";
         String patternImport = hasPatternField(fields) ? "import jakarta.validation.constraints.Pattern;\n" : "";
+        String pagingImport = "";
+        String pagingField = "";
+        if ((className.endsWith("_I") || className.endsWith("_O")) && pagingMode != null && pagingMode != PagingMode.NONE) {
+            boolean hasPageInfo = fields != null && fields.stream().anyMatch(f -> f != null && "pageInfo".equalsIgnoreCase(f.name()));
+            boolean hasScrPageInfo = fields != null && fields.stream().anyMatch(f -> f != null && "scrPageInfo".equalsIgnoreCase(f.name()));
+            if (pagingMode == PagingMode.PAGE_NUMBER && !hasPageInfo) {
+                pagingImport = "import io.shinhanlife.glow.GlowTrgmField;\nimport io.shinhanlife.glow.db.dto.PageInfo;\n";
+                if (!listImport.contains("List")) {
+                    pagingImport += "import java.util.List;\n";
+                }
+                pagingField = "    @Schema(description = \"페이지 정보\")\n    @GlowTrgmField(order = 1, description = \"페이지 정보\", type = \"gm\")\n    private List<PageInfo> pageInfo;\n\n";
+            } else if (pagingMode == PagingMode.SCROLL && !hasScrPageInfo) {
+                pagingImport = "import io.shinhanlife.glow.GlowTrgmField;\nimport io.shinhanlife.glow.db.dto.ScrPageInfo;\n";
+                pagingField = "    @Schema(description = \"스크롤 페이지 정보\")\n    @GlowTrgmField(order = 1, length = 306, description = \"스크롤 페이지 정보\")\n    private ScrPageInfo scrPageInfo;\n\n";
+            }
+        }
         return """
                 package %s.%s.io;
 
                 import io.swagger.v3.oas.annotations.media.Schema;
                 import lombok.Data;
-                %s%s
-
+                %s%s%s
                 @Data
                 public class %s {
-                %s%s}
-                """.formatted(BASE_PACKAGE, packageSuffix, listImport, patternImport, className, fieldLines(fields, Set.of(), className),
+                %s%s%s}
+                """.formatted(BASE_PACKAGE, packageSuffix, listImport, patternImport, pagingImport, className, pagingField, fieldLines(fields, Set.of(), className),
                 innerObjectListClasses(fields));
     }
 

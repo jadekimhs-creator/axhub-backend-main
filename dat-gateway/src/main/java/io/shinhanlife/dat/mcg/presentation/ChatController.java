@@ -54,6 +54,9 @@ public class ChatController {
     @org.springframework.beans.factory.annotation.Value("${shinhan.ai.qwen-key}")
     private String qwenKey;
 
+    @org.springframework.beans.factory.annotation.Value("${shinhan.ai.glm-key:sk-TqLYA8ZcjGNsmJP0VWr8CA}")
+    private String glmKey;
+
     @PostMapping(produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     public SseEmitter chatStream(@RequestBody Map<String, String> request,
                                  @RequestHeader(value = "X-Agent-Id", required = false) String agentId,
@@ -104,11 +107,20 @@ public class ChatController {
             ChatClient activeChatClient;
             org.springframework.ai.chat.prompt.ChatOptions chatOptions;
 
-            // 2. 모델 분기 처리: 사내 모델(Qwen3/Gemma-4) vs 기존 외부 모델(OpenRouter 등)
-            if ("Qwen3-Coder".equalsIgnoreCase(selectedModel) || "Gemma-4-31B".equalsIgnoreCase(selectedModel)) {
+            // 2. 모델 분기 처리: 사내 모델(Qwen3/Gemma-4/GLM-5.3-Flash) vs 기존 외부 모델(OpenRouter 등)
+            if ("Qwen3-Coder".equalsIgnoreCase(selectedModel)
+                    || "Gemma-4-31B".equalsIgnoreCase(selectedModel)
+                    || "GLM-5.3-Flash".equalsIgnoreCase(selectedModel)) {
                 // 사내 LiteLLM 환경 동적 ChatModel 생성
                 // Use liteLlmBaseUrl from application.yml
-                String apiKey = "Gemma-4-31B".equalsIgnoreCase(selectedModel) ? gemmaKey : qwenKey;
+                String apiKey;
+                if ("GLM-5.3-Flash".equalsIgnoreCase(selectedModel)) {
+                    apiKey = glmKey;
+                } else if ("Gemma-4-31B".equalsIgnoreCase(selectedModel)) {
+                    apiKey = gemmaKey;
+                } else {
+                    apiKey = qwenKey;
+                }
                 
                 org.springframework.ai.openai.api.OpenAiApi openAiApi = org.springframework.ai.openai.api.OpenAiApi.builder()
                         .baseUrl(liteLlmBaseUrl)
