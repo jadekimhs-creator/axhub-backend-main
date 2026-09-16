@@ -852,7 +852,7 @@
                                 <div class="input-hint">설명을 입력하면 AI가 한국어 업무 내용으로 tool-service-manifest.yml 초안을 작성합니다.</div>
                                 <div class="d-flex gap-2 align-items-center">
                                     <select id="podAiModelSelect" class="form-select" aria-label="Pod Manifest AI 모델 선택" style="width:220px;">
-                                        <optgroup label="[신한라이프 내부망]"><option value="GLM-5.3-Flash">GLM-5.3-Flash</option><option value="Qwen3-Coder" selected>Qwen3-Coder</option><option value="Gemma-4-31B">Gemma-4-31B</option></optgroup>
+                                        <optgroup label="[신한라이프 내부망]"><option value="GLM-5.3-Flash" selected>GLM-5.3-Flash</option><option value="Qwen3-Coder">Qwen3-Coder</option><option value="Gemma-4-31B">Gemma-4-31B</option></optgroup>
                                         <optgroup label="[외부 OpenRouter 무료]"><option value="cohere/north-mini-code:free">Cohere North Mini Code</option><option value="inclusionai/ling-3.0-flash:free">InclusionAI Ling 3 Flash</option><option value="openai/gpt-oss-20b:free">OpenAI GPT-OSS 20B</option><option value="google/gemma-4-31b-it:free">Google Gemma 4 31B</option><option value="nvidia/nemotron-3-nano-30b-a3b:free">NVIDIA Nemotron 3 Nano</option></optgroup>
                                     </select>
                                     <button type="button" class="btn-secondary-action" onclick="createPodManifestDraft(this)">AI로 Manifest 채우기</button>
@@ -921,7 +921,7 @@
                                 <div class="input-hint">설명을 입력하면 AI가 한국어 업무 내용으로 tool-service-manifest.yml 초안을 작성합니다.</div>
                                 <div class="d-flex gap-2 align-items-center">
                                     <select id="newPodAiModelSelect" class="form-select" aria-label="New Pod Manifest AI 모델 선택" style="width:220px;">
-                                        <optgroup label="[신한라이프 내부망]"><option value="GLM-5.3-Flash">GLM-5.3-Flash</option><option value="Qwen3-Coder" selected>Qwen3-Coder</option><option value="Gemma-4-31B">Gemma-4-31B</option></optgroup>
+                                        <optgroup label="[신한라이프 내부망]"><option value="GLM-5.3-Flash" selected>GLM-5.3-Flash</option><option value="Qwen3-Coder">Qwen3-Coder</option><option value="Gemma-4-31B">Gemma-4-31B</option></optgroup>
                                         <optgroup label="[외부 OpenRouter 무료]"><option value="cohere/north-mini-code:free">Cohere North Mini Code</option><option value="inclusionai/ling-3.0-flash:free">InclusionAI Ling 3 Flash</option><option value="openai/gpt-oss-20b:free">OpenAI GPT-OSS 20B</option><option value="google/gemma-4-31b-it:free">Google Gemma 4 31B</option><option value="nvidia/nemotron-3-nano-30b-a3b:free">NVIDIA Nemotron 3 Nano</option></optgroup>
                                     </select>
                                     <button type="button" class="btn-secondary-action" onclick="createNewPodManifestDraft(this)">AI로 Manifest 채우기</button>
@@ -1053,8 +1053,8 @@
                                 <div class="d-flex gap-2 flex-wrap">
                                     <select id="aiModelSelect" class="form-select" aria-label="AI 모델 선택">
                                         <optgroup label="[신한라이프 내부망]">
-                                            <option value="GLM-5.3-Flash">GLM-5.3-Flash</option>
-                                            <option value="Qwen3-Coder" selected>Qwen3-Coder</option>
+                                            <option value="GLM-5.3-Flash" selected>GLM-5.3-Flash</option>
+                                            <option value="Qwen3-Coder">Qwen3-Coder</option>
                                             <option value="Gemma-4-31B">Gemma-4-31B</option>
                                         </optgroup>
                                         <optgroup label="[외부 OpenRouter 무료 - OPENROUTER_API_KEY 필요]">
@@ -1240,8 +1240,8 @@
                             <label class="form-label" for="mciResponseAiModel">필드명 추천 AI</label>
                             <select id="mciResponseAiModel" class="form-select">
                                 <optgroup label="[신한라이프 내부망]">
-                                    <option value="GLM-5.3-Flash">GLM-5.3-Flash</option>
-                                    <option value="Qwen3-Coder" selected>Qwen3-Coder</option>
+                                    <option value="GLM-5.3-Flash" selected>GLM-5.3-Flash</option>
+                                    <option value="Qwen3-Coder">Qwen3-Coder</option>
                                     <option value="Gemma-4-31B">Gemma-4-31B</option>
                                 </optgroup>
                                 <optgroup label="[외부 OpenRouter 무료]">

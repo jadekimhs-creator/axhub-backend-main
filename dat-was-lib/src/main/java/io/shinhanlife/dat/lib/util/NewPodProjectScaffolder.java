@@ -15,7 +15,20 @@ import java.util.Map;
 import java.util.regex.Pattern;
 import java.util.regex.Matcher;
 
-/** Creates a standalone Tool Pod repository without changing the legacy PodScaffolder flow. */
+/**
+ * @package io.shinhanlife.dat.lib.util
+ * @className NewPodProjectScaffolder
+ * @description AX HUB 시스템 처리 클래스
+ * @author 0986406
+ * @create 2026.09.01
+ * <pre>
+ * ---------- 개정이력 ----------
+ * 수정일      수정자    수정내용
+ * ---------- -------- ---------------------------
+ * 2026.09.01  0986406    최초생성
+ * 
+ * </pre>
+ */
 public final class NewPodProjectScaffolder {
 
     private static final Pattern MODULE_NAME = Pattern.compile("^dat-was-[a-z0-9]+(?:-[a-z0-9]+)*$");
@@ -50,8 +63,8 @@ public final class NewPodProjectScaffolder {
         if (!target.getParent().equals(normalizedWorkspace)) {
             throw new IllegalArgumentException("Module path must be directly below the workspace");
         }
-        if (Files.exists(target)) {
-            throw new IllegalStateException("Project already exists: " + moduleName);
+        if (Files.exists(target) && !Files.isDirectory(target)) {
+            throw new IllegalStateException("Target path is not a directory: " + target);
         }
         Path libraryProject = normalizedWorkspace.resolve("dat-lib-datmt");
         if (!Files.isDirectory(libraryProject)) {
@@ -60,9 +73,11 @@ public final class NewPodProjectScaffolder {
 
         Path temporary = Files.createTempDirectory(normalizedWorkspace, ".new-pod-");
         try {
+            Path customerPodTemplate = resolveCustomerPodTemplate(normalizedWorkspace);
             writeProject(temporary, moduleName, port, blankToDefault(author, System.getProperty("user.name")),
-                    blankToDefault(createdDate, "unknown"), libraryProject, toolServiceManifest, targetModules);
-            moveIntoPlace(temporary, target);
+                    blankToDefault(createdDate, "unknown"), libraryProject, toolServiceManifest, targetModules,
+                    customerPodTemplate);
+            mergeMove(temporary, target);
             updateSelectedSiblingManifests(normalizedWorkspace, moduleName, targetModules);
             return "독립 Pod 프로젝트 생성 완료: " + target;
         } catch (IOException | RuntimeException error) {
@@ -80,14 +95,15 @@ public final class NewPodProjectScaffolder {
             throw new IllegalArgumentException("dat-lib-datmt project does not exist beside the Pod project: "
                     + libraryProject);
         }
-        ensureEmptyProjectRoot(projectRoot);
+        Path customerPodTemplate = resolveCustomerPodTemplate(workspace);
         Path temporary = Files.createTempDirectory(workspace, ".new-pod-");
         try {
             writeProject(temporary, moduleName, port, blankToDefault(author, System.getProperty("user.name")),
-                    blankToDefault(createdDate, "unknown"), libraryProject, toolServiceManifest, targetModules);
+                    blankToDefault(createdDate, "unknown"), libraryProject, toolServiceManifest, targetModules,
+                    customerPodTemplate);
             convertToMultiModuleProject(temporary, projectRoot.getFileName().toString(), moduleName, port,
-                    workspace.resolve("dat-was-datcu"));
-            moveContentsInto(projectRoot, temporary);
+                    customerPodTemplate);
+            mergeMove(temporary, projectRoot);
             updateSelectedSiblingManifests(projectRoot, moduleName, targetModules);
             return "Pod 프로젝트 생성 완료: " + projectRoot.resolve(moduleName);
         } catch (IOException | RuntimeException error) {
@@ -110,28 +126,6 @@ public final class NewPodProjectScaffolder {
                 && Files.isDirectory(parent.resolve("dat-lib-datmt"));
     }
 
-    private static void ensureEmptyProjectRoot(Path projectRoot) throws IOException {
-        try (var files = Files.list(projectRoot)) {
-            if (files.findAny().isPresent()) {
-                throw new IllegalStateException("Pod project directory must be empty: " + projectRoot);
-            }
-        }
-    }
-
-    private static void moveContentsInto(Path projectRoot, Path temporary) throws IOException {
-        try (var files = Files.list(temporary)) {
-            for (Path source : files.toList()) {
-                Files.move(source, projectRoot.resolve(source.getFileName()), StandardCopyOption.ATOMIC_MOVE);
-            }
-        } catch (AtomicMoveNotSupportedException ignored) {
-            try (var files = Files.list(temporary)) {
-                for (Path source : files.toList()) {
-                    Files.move(source, projectRoot.resolve(source.getFileName()));
-                }
-            }
-        }
-        Files.deleteIfExists(temporary);
-    }
 
     private static void convertToMultiModuleProject(Path projectRoot, String rootProjectName, String moduleName, int port,
                                                     Path customerPodTemplate) throws IOException {
@@ -141,6 +135,7 @@ public final class NewPodProjectScaffolder {
         Files.move(projectRoot.resolve("src"), moduleRoot.resolve("src"));
         Files.move(projectRoot.resolve("Dockerfile"), moduleRoot.resolve("Dockerfile"));
         copyCustomerGradleFormat(customerPodTemplate, projectRoot, moduleRoot, rootProjectName, moduleName);
+        copyCustomerResources(customerPodTemplate, moduleRoot, rootProjectName, moduleName, port);
         write(projectRoot.resolve("docker-compose.yml"), """
                 services:
                   %s:
@@ -165,7 +160,7 @@ public final class NewPodProjectScaffolder {
                 ```powershell
                 .\\gradlew.bat :%s:compileJava
                 ```
-                """.formatted(projectRoot.getFileName(), moduleName, moduleName));
+                """.formatted(rootProjectName, moduleName, moduleName));
     }
 
     private static void copyCustomerGradleFormat(Path templateRoot, Path projectRoot, Path moduleRoot,
@@ -183,7 +178,128 @@ public final class NewPodProjectScaffolder {
                 .replace("dat-was-cus", moduleName);
         write(projectRoot.resolve("settings.gradle"), settings);
         Files.copy(templateRootBuild, projectRoot.resolve("build.gradle"), StandardCopyOption.REPLACE_EXISTING);
-        Files.copy(templateModuleBuild, moduleRoot.resolve("build.gradle"), StandardCopyOption.REPLACE_EXISTING);
+
+        String moduleBuild = Files.readString(templateModuleBuild, StandardCharsets.UTF_8);
+        if (!moduleBuild.contains("bootJar")) {
+            moduleBuild = moduleBuild.stripTrailing() + "\n\nbootJar {\n    archiveFileName = '" + moduleName + ".jar'\n}\n";
+        } else {
+            moduleBuild = moduleBuild.replaceAll("(?m)archiveFileName\\s*=\\s*'[^']*'", "archiveFileName = '" + moduleName + ".jar'");
+        }
+        write(moduleRoot.resolve("build.gradle"), moduleBuild);
+    }
+
+    private static void copyCustomerResources(Path templateRoot, Path moduleRoot, String rootProjectName,
+                                              String moduleName, int port) throws IOException {
+        Path targetResources = moduleRoot.resolve("src/main/resources");
+        Files.createDirectories(targetResources);
+
+        String bundleId = determineBundleId(rootProjectName, moduleName);
+
+        Path templateResources = templateRoot != null ? templateRoot.resolve("dat-was-cus/src/main/resources") : null;
+        if (templateResources != null && Files.isDirectory(templateResources)) {
+            // 1. application.yml
+            Path templateAppYml = templateResources.resolve("application.yml");
+            if (Files.isRegularFile(templateAppYml)) {
+                String appYml = Files.readString(templateAppYml, StandardCharsets.UTF_8);
+                appYml = appYml.replaceAll("(?m)^(\\s*port:\\s*).*$", "$1\\${PORT:" + port + "}");
+                appYml = appYml.replaceAll("(?m)^\\s*name:\\s*dat-was-cus", "    name: " + moduleName);
+                appYml = appYml.replaceAll("(?m)^\\s*bundle-id:\\s*.*$", "    bundle-id: " + bundleId);
+                write(targetResources.resolve("application.yml"), appYml);
+            }
+
+            // 2. application-local.yml
+            Path templateLocal = templateResources.resolve("application-local.yml");
+            if (Files.isRegularFile(templateLocal)) {
+                Files.copy(templateLocal, targetResources.resolve("application-local.yml"), StandardCopyOption.REPLACE_EXISTING);
+            }
+
+            // 3. application-dev.yml
+            Path templateDev = templateResources.resolve("application-dev.yml");
+            if (Files.isRegularFile(templateDev)) {
+                String devYml = Files.readString(templateDev, StandardCharsets.UTF_8);
+                devYml = devYml.replaceAll("(?m)port:\\s*\\$\\{PORT:\\d+\\}", "port: \\${PORT:" + port + "}");
+                write(targetResources.resolve("application-dev.yml"), devYml);
+            }
+
+            // 4. application-test.yml
+            Path templateTest = templateResources.resolve("application-test.yml");
+            if (Files.isRegularFile(templateTest)) {
+                String testYml = Files.readString(templateTest, StandardCharsets.UTF_8);
+                testYml = testYml.replaceAll("(?m)port:\\s*\\$\\{PORT:\\d+\\}", "port: \\${PORT:" + port + "}");
+                write(targetResources.resolve("application-test.yml"), testYml);
+            }
+
+            // 5. application-prod.yml
+            Path templateProd = templateResources.resolve("application-prod.yml");
+            if (Files.isRegularFile(templateProd)) {
+                String prodYml = Files.readString(templateProd, StandardCharsets.UTF_8);
+                prodYml = prodYml.replaceAll("(?m)port:\\s*\\$\\{PORT:\\d+\\}", "port: \\${PORT:" + port + "}");
+                write(targetResources.resolve("application-prod.yml"), prodYml);
+            }
+
+            // 6. logback-spring.xml
+            Path templateLogback = templateResources.resolve("logback-spring.xml");
+            if (Files.isRegularFile(templateLogback)) {
+                String logback = Files.readString(templateLogback, StandardCharsets.UTF_8);
+                logback = logback.replace("dat-was-cus", moduleName);
+                write(targetResources.resolve("logback-spring.xml"), logback);
+            }
+
+            // 7. Additional application-*.xml if present
+            try (var stream = Files.list(templateResources)) {
+                for (Path resFile : stream.toList()) {
+                    String fileName = resFile.getFileName().toString();
+                    if (fileName.startsWith("application-") && fileName.endsWith(".xml")) {
+                        Files.copy(resFile, targetResources.resolve(fileName), StandardCopyOption.REPLACE_EXISTING);
+                    }
+                }
+            } catch (Exception ignored) {
+            }
+        } else {
+            Path appYmlPath = targetResources.resolve("application.yml");
+            if (Files.isRegularFile(appYmlPath)) {
+                String appYml = Files.readString(appYmlPath, StandardCharsets.UTF_8);
+                appYml = appYml.replaceAll("(?m)^\\s*bundle-id:\\s*.*$", "    bundle-id: " + bundleId);
+                write(appYmlPath, appYml);
+            }
+        }
+    }
+
+    public static String determineBundleId(String rootProjectName, String moduleName) {
+        if (rootProjectName != null && !rootProjectName.isBlank()) {
+            if (rootProjectName.startsWith("dat-was-")) {
+                return "was-" + rootProjectName.substring("dat-was-".length());
+            }
+            if (rootProjectName.startsWith("dat-")) {
+                return "was-" + rootProjectName.substring("dat-".length());
+            }
+            return "was-" + rootProjectName;
+        }
+        if (moduleName != null && !moduleName.isBlank()) {
+            if (moduleName.startsWith("dat-was-")) {
+                return "was-" + moduleName.substring("dat-was-".length());
+            }
+            return "was-" + moduleName;
+        }
+        return "was-datcu";
+    }
+
+    public static Path resolveCustomerPodTemplate(Path workspace) {
+        if (workspace != null) {
+            Path direct = workspace.resolve("dat-was-datcu");
+            if (Files.isDirectory(direct)) return direct;
+            if (workspace.getParent() != null) {
+                Path sibling = workspace.getParent().resolve("dat-was-datcu");
+                if (Files.isDirectory(sibling)) return sibling;
+            }
+        }
+        for (String candidate : List.of(
+                "C:/eGovFrameDev-4.3.1-64bit/workspace/dat-was-datcu",
+                "C:/eGovFrameDev-4.3.1-64bit/workspace-egov/dat-was-datcu")) {
+            Path p = Path.of(candidate);
+            if (Files.isDirectory(p)) return p;
+        }
+        return workspace != null ? workspace.resolve("dat-was-datcu") : Path.of("dat-was-datcu");
     }
 
     public static void validateModuleName(String moduleName) {
@@ -200,6 +316,13 @@ public final class NewPodProjectScaffolder {
 
     private static void writeProject(Path root, String moduleName, int port, String author, String createdDate,
                                      Path libraryProject, String toolServiceManifest, List<String> targetModules)
+            throws IOException {
+        writeProject(root, moduleName, port, author, createdDate, libraryProject, toolServiceManifest, targetModules, null);
+    }
+
+    private static void writeProject(Path root, String moduleName, int port, String author, String createdDate,
+                                     Path libraryProject, String toolServiceManifest, List<String> targetModules,
+                                     Path customerPodTemplate)
             throws IOException {
         String shortName = moduleName.substring("dat-was-".length());
         String packageName = shortName.replace("-", "");
@@ -236,7 +359,11 @@ public final class NewPodProjectScaffolder {
                 }
 
                 tasks.withType(Test).configureEach { useJUnitPlatform() }
-                """);
+
+                bootJar {
+                    archiveFileName = '%s.jar'
+                }
+                """.formatted(moduleName));
         copyGradleWrapper(libraryProject, root);
         write(root.resolve("src/main/java/io/shinhanlife/dat/mcc/" + packageName + "/" + className + ".java"), """
                 package io.shinhanlife.dat.mcc.%s;
@@ -254,33 +381,39 @@ public final class NewPodProjectScaffolder {
                     }
                 }
                 """.formatted(packageName, author, createdDate, className, className));
-        write(root.resolve("src/main/resources/application.yml"), """
-                server:
-                  port: ${PORT:%d}
-                spring:
-                  application:
-                    name: %s
-                  config:
-                    import: optional:classpath:tool-service-manifest.yml
-                  profiles:
-                    active: local
-                mcp:
-                  namespace: %s
-                  manifest:
-                    bundle-id: %s
-                    name-prefix: ""
-                  security:
-                    api-key: ${TOOL_SERVER_API_KEY:tool-server-key}
-                    tenant-domains:
-                      TESTER-DEV: ALL
-                """.formatted(port, moduleName, shortName, serviceName));
-        for (String profile : new String[] {"local", "dev", "test", "prod"}) {
-            write(root.resolve("src/main/resources/application-" + profile + ".yml"), """
+
+        Path templateResources = customerPodTemplate != null ? customerPodTemplate.resolve("dat-was-cus/src/main/resources") : null;
+        if (templateResources != null && Files.isDirectory(templateResources)) {
+            copyCustomerResources(customerPodTemplate, root, null, moduleName, port);
+        } else {
+            write(root.resolve("src/main/resources/application.yml"), """
+                    server:
+                      port: ${PORT:%d}
                     spring:
+                      application:
+                        name: %s
                       config:
-                        activate:
-                          on-profile: %s
-                    """.formatted(profile));
+                        import: optional:classpath:tool-service-manifest.yml
+                      profiles:
+                        active: local
+                    mcp:
+                      namespace: %s
+                      manifest:
+                        bundle-id: %s
+                        name-prefix: ""
+                      security:
+                        api-key: ${TOOL_SERVER_API_KEY:tool-server-key}
+                        tenant-domains:
+                          TESTER-DEV: ALL
+                    """.formatted(port, moduleName, shortName, determineBundleId(null, moduleName)));
+            for (String profile : new String[] {"local", "dev", "test", "prod"}) {
+                write(root.resolve("src/main/resources/application-" + profile + ".yml"), """
+                        spring:
+                          config:
+                            activate:
+                              on-profile: %s
+                        """.formatted(profile));
+            }
         }
         String manifestSource = toolServiceManifest == null || toolServiceManifest.isBlank() ? """
                 mcp:
@@ -304,7 +437,7 @@ public final class NewPodProjectScaffolder {
         write(root.resolve("Dockerfile"), """
                 FROM eclipse-temurin:21-jre-alpine
                 WORKDIR /app
-                COPY build/libs/*-SNAPSHOT.jar app.jar
+                COPY build/libs/*.jar app.jar
                 EXPOSE %d
                 ENTRYPOINT ["java", "-jar", "app.jar"]
                 """.formatted(port));
@@ -436,11 +569,32 @@ public final class NewPodProjectScaffolder {
         return matcher.replaceFirst(Matcher.quoteReplacement(replacement));
     }
 
-    private static void moveIntoPlace(Path source, Path target) throws IOException {
-        try {
-            Files.move(source, target, StandardCopyOption.ATOMIC_MOVE);
-        } catch (AtomicMoveNotSupportedException ignored) {
-            Files.move(source, target);
+    private static void mergeMove(Path source, Path target) throws IOException {
+        if (Files.isDirectory(source)) {
+            if (Files.exists(target) && !Files.isDirectory(target)) {
+                Files.delete(target);
+            }
+            if (!Files.exists(target)) {
+                Files.createDirectories(target);
+            }
+            try (var stream = Files.list(source)) {
+                for (Path child : stream.toList()) {
+                    mergeMove(child, target.resolve(child.getFileName()));
+                }
+            }
+            Files.deleteIfExists(source);
+        } else {
+            if (Files.exists(target) && Files.isDirectory(target)) {
+                deleteRecursively(target);
+            }
+            if (target.getParent() != null && !Files.exists(target.getParent())) {
+                Files.createDirectories(target.getParent());
+            }
+            try {
+                Files.move(source, target, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
+            } catch (AtomicMoveNotSupportedException ignored) {
+                Files.move(source, target, StandardCopyOption.REPLACE_EXISTING);
+            }
         }
     }
 

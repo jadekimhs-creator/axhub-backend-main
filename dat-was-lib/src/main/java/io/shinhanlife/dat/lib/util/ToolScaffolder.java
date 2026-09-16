@@ -477,6 +477,39 @@ public class ToolScaffolder {
         if (hasMciOrPaging) {
             imports.append("import lombok.extern.slf4j.Slf4j;\n");
         }
+        boolean hasPaging = tools.stream().anyMatch(t -> t.definitionOptions() != null && t.definitionOptions().pagingModeOrNone() != PagingMode.NONE);
+        if (hasPaging) {
+            methods.append("""
+
+                    private void mergeResponseData(Object target, Object src) {
+                        if (target == null || src == null) return;
+                        for (java.lang.reflect.Field field : target.getClass().getDeclaredFields()) {
+                            if (java.util.List.class.isAssignableFrom(field.getType())) {
+                                field.setAccessible(true);
+                                try {
+                                    java.util.List<?> srcList = (java.util.List<?>) field.get(src);
+                                    if (srcList != null && !srcList.isEmpty()) {
+                                        @SuppressWarnings("unchecked")
+                                        java.util.List<Object> targetList = (java.util.List<Object>) field.get(target);
+                                        if (targetList == null) {
+                                            targetList = new java.util.ArrayList<>(srcList);
+                                            field.set(target, targetList);
+                                        } else {
+                                            if (!(targetList instanceof java.util.ArrayList)) {
+                                                targetList = new java.util.ArrayList<>(targetList);
+                                                field.set(target, targetList);
+                                            }
+                                            targetList.addAll(srcList);
+                                        }
+                                    }
+                                } catch (Exception e) {
+                                    log.warn("[MCI Tool] 리스트 병합 중 예외 발생 (field: {}): {}", field.getName(), e.getMessage());
+                                }
+                            }
+                        }
+                    }
+            """);
+        }
         return "package " + bizPackage + ".usecase.impl;\n\n"
                 + "import " + bizPackage + ".usecase." + useCaseBaseName + "UseCase;\n"
                 + "import lombok.RequiredArgsConstructor;\nimport org.springframework.stereotype.Service;\n" + imports
@@ -489,59 +522,136 @@ public class ToolScaffolder {
                                                          String pagingInfoType) {
         String snakeToolName = (tool.group() != null && !tool.group().isBlank() ? tool.group().toLowerCase(Locale.ROOT) + "_" : "")
                 + toKebabCase(baseName).toLowerCase(Locale.ROOT).replace("-", "_");
-        return """
+        if (pagingMode == PagingMode.PAGE_NUMBER) {
+            return """
 
-                    @Override
-                    public %sResponse %s(%sRequest req) {
-                        log.info("[MCI Tool] {} \uC694\uCCAD \uC218\uC2E0 (\uD398\uC774\uC9D5 \uBAA8\uB4DC: %s).", "%s", "%s");
-                        try {
-                            %s pagingInfo = null;
-                            %sResponse finalResponse = null;
-                            int loopCount = 0;
-                            final int MAX_PAGING_COUNT = 10;
-                            boolean hasMore = false;
+                        @Override
+                        public %sResponse %s(%sRequest req) {
+                            log.info("[MCI Tool] {} 요청 수신 (페이징 모드: %s).", "%s", "%s");
+                            try {
+                                %s pagingInfo = null;
+                                %s pagingInfoLast = null;
+                                %sResponse finalResponse = null;
+                                int loopCount = 0;
+                                final int MAX_PAGING_COUNT = 10;
+                                boolean hasMore = false;
 
-                            while (loopCount++ < MAX_PAGING_COUNT) {
-                                MciPage<%sResponse, %s> page = %s.fetch(req, pagingInfo);
+                                while (loopCount < MAX_PAGING_COUNT) {
+                                    loopCount++;
+                                    MciPage<%sResponse, %s> page = %s.fetch(req, pagingInfo);
+                                    pagingInfoLast = page.pagingInfo();
+                                    if (finalResponse == null) {
+                                        finalResponse = page.data();
+                                    } else if (page.data() != null) {
+                                        mergeResponseData(finalResponse, page.data());
+                                    }
+                                    if (!page.hasNext()) {
+                                        hasMore = false;
+                                        break;
+                                    }
+                                    hasMore = true;
+                                    pagingInfo = page.pagingInfo();
+                                }
+
                                 if (finalResponse == null) {
-                                    finalResponse = page.data();
+                                    finalResponse = new %sResponse();
                                 }
-                                if (!page.hasNext()) {
-                                    hasMore = false;
-                                    break;
+                                finalResponse.setResultCode("SUCCESS");
+                                finalResponse.setHasMore(hasMore);
+                                if (pagingInfoLast != null) {
+                                    int lastPageNo = Math.max(1, pagingInfoLast.getPageNo() - 1);
+                                    finalResponse.setPageNo(lastPageNo);
+                                    finalResponse.setTotalPageCount(pagingInfoLast.getTotaPageCn());
+                                    finalResponse.setTotalCount(pagingInfoLast.getTotaPageDataCc());
+                                } else {
+                                    finalResponse.setPageNo(1);
+                                    finalResponse.setTotalPageCount(1);
                                 }
-                                hasMore = true;
-                                pagingInfo = page.pagingInfo();
+                                if (hasMore) {
+                                    finalResponse.setResultMessage("MCI 기본 최대 조회 건수(10회)까지 조회되었습니다. 추가 데이터가 더 존재합니다 (현재 " + finalResponse.getPageNo() + "페이지 / 총 " + finalResponse.getTotalPageCount() + "페이지, hasMore=true).");
+                                } else {
+                                    finalResponse.setResultMessage("MCI 페이징 조회가 완료되었습니다 (현재 " + finalResponse.getPageNo() + "페이지 / 총 " + finalResponse.getTotalPageCount() + "페이지).");
+                                }
+                                return finalResponse;
+                            } catch (Exception e) {
+                                log.error("[MCI Tool] 연동 중 오류 발생: {}", e.getMessage(), e);
+                                %sResponse errorResponse = new %sResponse();
+                                errorResponse.setResultCode("ERROR");
+                                errorResponse.setResultMessage("MCI paging call failed: " + e.getMessage());
+                                errorResponse.setHasMore(false);
+                                errorResponse.setPageNo(1);
+                                errorResponse.setTotalPageCount(0);
+                                errorResponse.setTotalCount(0);
+                                return errorResponse;
                             }
-
-                            if (finalResponse == null) {
-                                finalResponse = new %sResponse();
-                            }
-                            finalResponse.setResultCode("SUCCESS");
-                            finalResponse.setHasMore(hasMore);
-                            if (hasMore) {
-                                finalResponse.setResultMessage("MCI 기본 최대 조회 건수(10회)까지 조회되었습니다. 추가 데이터가 더 존재합니다 (hasMore=true).");
-                            } else {
-                                finalResponse.setResultMessage("MCI paging call completed.");
-                            }
-                            return finalResponse;
-                        } catch (Exception e) {
-                            log.error("[MCI Tool] \uC5F0\uB3D9 \uC911 \uC624\uB958 \uBC1C\uC0DD: {}", e.getMessage(), e);
-                            %sResponse errorResponse = new %sResponse();
-                            errorResponse.setResultCode("ERROR");
-                            errorResponse.setResultMessage("MCI paging call failed: " + e.getMessage());
-                            errorResponse.setHasMore(false);
-                            return errorResponse;
                         }
-                    }
-                    """.formatted(
-                baseName, tool.methodName(), baseName,
-                pagingMode, snakeToolName, pagingMode,
-                pagingInfoType,
-                baseName,
-                baseName, pagingInfoType, pagingVariable,
-                baseName,
-                baseName, baseName);
+                        """.formatted(
+                    baseName, tool.methodName(), baseName,
+                    pagingMode, snakeToolName, pagingMode,
+                    pagingInfoType,
+                    pagingInfoType,
+                    baseName,
+                    baseName, pagingInfoType, pagingVariable,
+                    baseName,
+                    baseName, baseName);
+        } else {
+            return """
+
+                        @Override
+                        public %sResponse %s(%sRequest req) {
+                            log.info("[MCI Tool] {} 요청 수신 (페이징 모드: %s).", "%s", "%s");
+                            try {
+                                %s pagingInfo = null;
+                                %sResponse finalResponse = null;
+                                int loopCount = 0;
+                                final int MAX_PAGING_COUNT = 10;
+                                boolean hasMore = false;
+
+                                while (loopCount < MAX_PAGING_COUNT) {
+                                    loopCount++;
+                                    MciPage<%sResponse, %s> page = %s.fetch(req, pagingInfo);
+                                    if (finalResponse == null) {
+                                        finalResponse = page.data();
+                                    } else if (page.data() != null) {
+                                        mergeResponseData(finalResponse, page.data());
+                                    }
+                                    if (!page.hasNext()) {
+                                        hasMore = false;
+                                        break;
+                                    }
+                                    hasMore = true;
+                                    pagingInfo = page.pagingInfo();
+                                }
+
+                                if (finalResponse == null) {
+                                    finalResponse = new %sResponse();
+                                }
+                                finalResponse.setResultCode("SUCCESS");
+                                finalResponse.setHasMore(hasMore);
+                                if (hasMore) {
+                                    finalResponse.setResultMessage("MCI 기본 최대 조회 건수(10회)까지 조회되었습니다. 추가 데이터가 더 존재합니다 (총 " + loopCount + "회 호출, hasMore=true).");
+                                } else {
+                                    finalResponse.setResultMessage("MCI 스크롤 페이징 조회가 완료되었습니다 (총 " + loopCount + "회 호출).");
+                                }
+                                return finalResponse;
+                            } catch (Exception e) {
+                                log.error("[MCI Tool] 연동 중 오류 발생: {}", e.getMessage(), e);
+                                %sResponse errorResponse = new %sResponse();
+                                errorResponse.setResultCode("ERROR");
+                                errorResponse.setResultMessage("MCI paging call failed: " + e.getMessage());
+                                errorResponse.setHasMore(false);
+                                return errorResponse;
+                            }
+                        }
+                        """.formatted(
+                    baseName, tool.methodName(), baseName,
+                    pagingMode, snakeToolName, pagingMode,
+                    pagingInfoType,
+                    baseName,
+                    baseName, pagingInfoType, pagingVariable,
+                    baseName,
+                    baseName, baseName);
+        }
     }
 
     private static String groupedToolMethodContent(ToolMethodDefinition tool, String baseName,
@@ -736,6 +846,38 @@ public class ToolScaffolder {
                 }
                 String method = groupedToolPagingMethodContent(tool, baseName, pagingVar, pagingMode, pagingInfoType);
                 implementation = insertBeforeLastBrace(implementation, method);
+                if (!implementation.contains("mergeResponseData(")) {
+                    implementation = insertBeforeLastBrace(implementation, """
+
+                    private void mergeResponseData(Object target, Object src) {
+                        if (target == null || src == null) return;
+                        for (java.lang.reflect.Field field : target.getClass().getDeclaredFields()) {
+                            if (java.util.List.class.isAssignableFrom(field.getType())) {
+                                field.setAccessible(true);
+                                try {
+                                    java.util.List<?> srcList = (java.util.List<?>) field.get(src);
+                                    if (srcList != null && !srcList.isEmpty()) {
+                                        @SuppressWarnings("unchecked")
+                                        java.util.List<Object> targetList = (java.util.List<Object>) field.get(target);
+                                        if (targetList == null) {
+                                            targetList = new java.util.ArrayList<>(srcList);
+                                            field.set(target, targetList);
+                                        } else {
+                                            if (!(targetList instanceof java.util.ArrayList)) {
+                                                targetList = new java.util.ArrayList<>(targetList);
+                                                field.set(target, targetList);
+                                            }
+                                            targetList.addAll(srcList);
+                                        }
+                                    }
+                                } catch (Exception e) {
+                                    log.warn("[MCI Tool] 리스트 병합 중 예외 발생 (field: {}): {}", field.getName(), e.getMessage());
+                                }
+                            }
+                        }
+                    }
+            """);
+                }
             } else {
                 String clientClassName;
                 String clientVariable;
@@ -1217,118 +1359,305 @@ public class ToolScaffolder {
 
         if (isMci && pagingMode != PagingMode.NONE) {
             String pagingSuffix = pagingMode == PagingMode.SCROLL ? "ScrollPaging" : "PageNumberPaging";
-            String pagingInfoType = pagingMode == PagingMode.SCROLL ? "ScrollPagingInfo" : "PgNumPagingInfo";
             String pagingInterface = baseName + pagingSuffix;
-            serviceImplContent = """
-                package %s.usecase.impl;
+            if (pagingMode == PagingMode.PAGE_NUMBER) {
+                serviceImplContent = """
+                    package %s.usecase.impl;
 
-                import %s.dto.%sRequest;
-                import %s.dto.%sResponse;
-                import %s.usecase.%sUseCase;
-                import %s.paging.%s;
-                import io.shinhanlife.dat.lib.paging.MciPage;
-                import io.shinhanlife.dat.lib.paging.%s;
-                import io.shinhanlife.glow.BizException;
-                import org.springframework.stereotype.Service;
-                import lombok.RequiredArgsConstructor;
-                import lombok.extern.slf4j.Slf4j;
+                    import %s.dto.%sRequest;
+                    import %s.dto.%sResponse;
+                    import %s.usecase.%sUseCase;
+                    import %s.paging.%s;
+                    import io.shinhanlife.dat.lib.paging.MciPage;
+                    import io.shinhanlife.dat.lib.paging.PgNumPagingInfo;
+                    import io.shinhanlife.glow.BizException;
+                    import org.springframework.stereotype.Service;
+                    import lombok.RequiredArgsConstructor;
+                    import lombok.extern.slf4j.Slf4j;
 
-                /**
-                 * @package %s.usecase.impl
-                 * @className %sUseCaseImpl
-                 * @description AX HUB \uC2DC\uC2A4\uD15C \uCC98\uB9AC \uD074\uB798\uC2A4
-                 * @author %s
-                 * @create %s
-                 * <pre>
-                 * ---------- \uAC1C\uC815\uC774\uB825 ----------
-                 * \uC218\uC815\uC77C      \uC218\uC815\uC790    \uC218\uC815\uB0B4\uC6A9
-                 * ---------- -------- ---------------------------
-                 * %s  %s    \uCD5C\uCD08\uC0DD\uC131
-                 *
-                 * </pre>
-                 */
-                @Slf4j
-                @Service
-                @RequiredArgsConstructor
-                public class %sUseCaseImpl implements %sUseCase {
+                    /**
+                     * @package %s.usecase.impl
+                     * @className %sUseCaseImpl
+                     * @description AX HUB 시스템 처리 클래스
+                     * @author %s
+                     * @create %s
+                     * <pre>
+                     * ---------- 개정이력 ----------
+                     * 수정일      수정자    수정내용
+                     * ---------- -------- ---------------------------
+                     * %s  %s    최초생성
+                     *
+                     * </pre>
+                     */
+                    @Slf4j
+                    @Service
+                    @RequiredArgsConstructor
+                    public class %sUseCaseImpl implements %sUseCase {
 
-                    private final %s paging;
+                        private final %s paging;
 
-                    @Override
-                    public %sResponse execute(%sRequest req) {
-                        log.info("[MCI Tool] {} \uC694\uCCAD \uC218\uC2E0 (\uD398\uC774\uC9D5 \uBAA8\uB4DC: {}).", "%s", "%s");
-                        try {
-                            %s pagingInfo = null;
-                            %sResponse finalResponse = null;
-                            int loopCount = 0;
-                            final int MAX_PAGING_COUNT = 10;
-                            boolean hasMore = false;
+                        @Override
+                        public %sResponse execute(%sRequest req) {
+                            log.info("[MCI Tool] {} 요청 수신 (페이징 모드: {}).", "%s", "%s");
+                            try {
+                                PgNumPagingInfo pagingInfo = null;
+                                PgNumPagingInfo pagingInfoLast = null;
+                                %sResponse finalResponse = null;
+                                int loopCount = 0;
+                                final int MAX_PAGING_COUNT = 10;
+                                boolean hasMore = false;
 
-                            while (loopCount++ < MAX_PAGING_COUNT) {
-                                MciPage<%sResponse, %s> page = paging.fetch(req, pagingInfo);
+                                while (loopCount < MAX_PAGING_COUNT) {
+                                    loopCount++;
+                                    MciPage<%sResponse, PgNumPagingInfo> page = paging.fetch(req, pagingInfo);
+                                    pagingInfoLast = page.pagingInfo();
+                                    if (finalResponse == null) {
+                                        finalResponse = page.data();
+                                    } else if (page.data() != null) {
+                                        mergeResponseData(finalResponse, page.data());
+                                    }
+                                    if (!page.hasNext()) {
+                                        hasMore = false;
+                                        break;
+                                    }
+                                    hasMore = true;
+                                    pagingInfo = page.pagingInfo();
+                                }
+
                                 if (finalResponse == null) {
-                                    finalResponse = page.data();
+                                    finalResponse = new %sResponse();
                                 }
-                                if (!page.hasNext()) {
-                                    hasMore = false;
-                                    break;
+                                finalResponse.setResultCode("SUCCESS");
+                                finalResponse.setHasMore(hasMore);
+                                if (pagingInfoLast != null) {
+                                    int lastPageNo = Math.max(1, pagingInfoLast.getPageNo() - 1);
+                                    finalResponse.setPageNo(lastPageNo);
+                                    finalResponse.setTotalPageCount(pagingInfoLast.getTotaPageCn());
+                                    finalResponse.setTotalCount(pagingInfoLast.getTotaPageDataCc());
+                                } else {
+                                    finalResponse.setPageNo(1);
+                                    finalResponse.setTotalPageCount(1);
                                 }
-                                hasMore = true;
-                                pagingInfo = page.pagingInfo();
+                                if (hasMore) {
+                                    finalResponse.setResultMessage("MCI 기본 최대 조회 건수(10회)까지 조회되었습니다. 추가 데이터가 더 존재합니다 (현재 " + finalResponse.getPageNo() + "페이지 / 총 " + finalResponse.getTotalPageCount() + "페이지, hasMore=true).");
+                                } else {
+                                    finalResponse.setResultMessage("MCI 페이징 조회가 완료되었습니다 (현재 " + finalResponse.getPageNo() + "페이지 / 총 " + finalResponse.getTotalPageCount() + "페이지).");
+                                }
+                                return finalResponse;
+                            } catch (BizException e) {
+                                log.error("[MCI Tool] 연동 중 오류 발생: {}", e.getMessage(), e);
+                                %sResponse response = new %sResponse();
+                                response.setResultCode("ERROR");
+                                response.setResultMessage(e.getMessage() != null ? e.getMessage() : "Unknown error");
+                                response.setHasMore(false);
+                                response.setPageNo(1);
+                                response.setTotalPageCount(0);
+                                response.setTotalCount(0);
+                                return response;
+                            } catch (Exception e) {
+                                log.error("[MCI Tool] 연동 중 오류 발생: {}", e.getMessage(), e);
+                                %sResponse response = new %sResponse();
+                                response.setResultCode("ERROR");
+                                response.setResultMessage(e.getMessage() != null ? e.getMessage() : "Unknown error");
+                                response.setHasMore(false);
+                                response.setPageNo(1);
+                                response.setTotalPageCount(0);
+                                response.setTotalCount(0);
+                                return response;
                             }
+                        }
 
-                            if (finalResponse == null) {
-                                finalResponse = new %sResponse();
+                        private void mergeResponseData(%sResponse target, %sResponse src) {
+                            if (target == null || src == null) return;
+                            for (java.lang.reflect.Field field : target.getClass().getDeclaredFields()) {
+                                if (java.util.List.class.isAssignableFrom(field.getType())) {
+                                    field.setAccessible(true);
+                                    try {
+                                        java.util.List<?> srcList = (java.util.List<?>) field.get(src);
+                                        if (srcList != null && !srcList.isEmpty()) {
+                                            @SuppressWarnings("unchecked")
+                                            java.util.List<Object> targetList = (java.util.List<Object>) field.get(target);
+                                            if (targetList == null) {
+                                                targetList = new java.util.ArrayList<>(srcList);
+                                                field.set(target, targetList);
+                                            } else {
+                                                if (!(targetList instanceof java.util.ArrayList)) {
+                                                    targetList = new java.util.ArrayList<>(targetList);
+                                                    field.set(target, targetList);
+                                                }
+                                                targetList.addAll(srcList);
+                                            }
+                                        }
+                                    } catch (Exception e) {
+                                        log.warn("[MCI Tool] 리스트 병합 중 예외 발생 (field: {}): {}", field.getName(), e.getMessage());
+                                    }
+                                }
                             }
-                            finalResponse.setResultCode("SUCCESS");
-                            finalResponse.setHasMore(hasMore);
-                            if (hasMore) {
-                                finalResponse.setResultMessage("MCI 기본 최대 조회 건수(10회)까지 조회되었습니다. 추가 데이터가 더 존재합니다 (hasMore=true).");
-                            } else {
-                                finalResponse.setResultMessage("MCI paging call completed.");
-                            }
-                            return finalResponse;
-                        } catch (BizException e) {
-                            log.error("[MCI Tool] \uC5F0\uB3D9 \uC911 \uC624\uB958 \uBC1C\uC0DD: {}", e.getMessage(), e);
-                            %sResponse response = new %sResponse();
-                            response.setResultCode("ERROR");
-                            response.setResultMessage(e.getMessage() != null ? e.getMessage() : "Unknown error");
-                            response.setHasMore(false);
-                            return response;
-                        } catch (Exception e) {
-                            log.error("[MCI Tool] \uC5F0\uB3D9 \uC911 \uC624\uB958 \uBC1C\uC0DD: {}", e.getMessage(), e);
-                            %sResponse response = new %sResponse();
-                            response.setResultCode("ERROR");
-                            response.setResultMessage(e.getMessage() != null ? e.getMessage() : "Unknown error");
-                            response.setHasMore(false);
-                            return response;
                         }
                     }
-                }
-                """.formatted(
-                    bizPackage,
-                    bizPackage, baseName,
-                    bizPackage, baseName,
-                    bizPackage, baseName,
-                    bizPackage, pagingInterface,
-                    pagingInfoType,
-                    bizPackage,
-                    baseName,
-                    author,
-                    createDate,
-                    createDate, author,
-                    baseName,
-                    baseName,
-                    pagingInterface,
-                    baseName, baseName,
-                    toolName, pagingMode,
-                    pagingInfoType,
-                    baseName,
-                    baseName, pagingInfoType,
-                    baseName,
-                    baseName, baseName,
-                    baseName, baseName
-            );
+                    """.formatted(
+                        bizPackage,
+                        bizPackage, baseName,
+                        bizPackage, baseName,
+                        bizPackage, baseName,
+                        bizPackage, pagingInterface,
+                        bizPackage,
+                        baseName,
+                        author,
+                        createDate,
+                        createDate, author,
+                        baseName, baseName,
+                        pagingInterface,
+                        baseName, baseName,
+                        toolName, pagingMode,
+                        baseName,
+                        baseName,
+                        baseName,
+                        baseName, baseName,
+                        baseName, baseName,
+                        baseName, baseName
+                );
+            } else {
+                serviceImplContent = """
+                    package %s.usecase.impl;
+
+                    import %s.dto.%sRequest;
+                    import %s.dto.%sResponse;
+                    import %s.usecase.%sUseCase;
+                    import %s.paging.%s;
+                    import io.shinhanlife.dat.lib.paging.MciPage;
+                    import io.shinhanlife.dat.lib.paging.ScrollPagingInfo;
+                    import io.shinhanlife.glow.BizException;
+                    import org.springframework.stereotype.Service;
+                    import lombok.RequiredArgsConstructor;
+                    import lombok.extern.slf4j.Slf4j;
+
+                    /**
+                     * @package %s.usecase.impl
+                     * @className %sUseCaseImpl
+                     * @description AX HUB 시스템 처리 클래스
+                     * @author %s
+                     * @create %s
+                     * <pre>
+                     * ---------- 개정이력 ----------
+                     * 수정일      수정자    수정내용
+                     * ---------- -------- ---------------------------
+                     * %s  %s    최초생성
+                     *
+                     * </pre>
+                     */
+                    @Slf4j
+                    @Service
+                    @RequiredArgsConstructor
+                    public class %sUseCaseImpl implements %sUseCase {
+
+                        private final %s paging;
+
+                        @Override
+                        public %sResponse execute(%sRequest req) {
+                            log.info("[MCI Tool] {} 요청 수신 (페이징 모드: {}).", "%s", "%s");
+                            try {
+                                ScrollPagingInfo pagingInfo = null;
+                                %sResponse finalResponse = null;
+                                int loopCount = 0;
+                                final int MAX_PAGING_COUNT = 10;
+                                boolean hasMore = false;
+
+                                while (loopCount < MAX_PAGING_COUNT) {
+                                    loopCount++;
+                                    MciPage<%sResponse, ScrollPagingInfo> page = paging.fetch(req, pagingInfo);
+                                    if (finalResponse == null) {
+                                        finalResponse = page.data();
+                                    } else if (page.data() != null) {
+                                        mergeResponseData(finalResponse, page.data());
+                                    }
+                                    if (!page.hasNext()) {
+                                        hasMore = false;
+                                        break;
+                                    }
+                                    hasMore = true;
+                                    pagingInfo = page.pagingInfo();
+                                }
+
+                                if (finalResponse == null) {
+                                    finalResponse = new %sResponse();
+                                }
+                                finalResponse.setResultCode("SUCCESS");
+                                finalResponse.setHasMore(hasMore);
+                                if (hasMore) {
+                                    finalResponse.setResultMessage("MCI 기본 최대 조회 건수(10회)까지 조회되었습니다. 추가 데이터가 더 존재합니다 (총 " + loopCount + "회 호출, hasMore=true).");
+                                } else {
+                                    finalResponse.setResultMessage("MCI 스크롤 페이징 조회가 완료되었습니다 (총 " + loopCount + "회 호출).");
+                                }
+                                return finalResponse;
+                            } catch (BizException e) {
+                                log.error("[MCI Tool] 연동 중 오류 발생: {}", e.getMessage(), e);
+                                %sResponse response = new %sResponse();
+                                response.setResultCode("ERROR");
+                                response.setResultMessage(e.getMessage() != null ? e.getMessage() : "Unknown error");
+                                response.setHasMore(false);
+                                return response;
+                            } catch (Exception e) {
+                                log.error("[MCI Tool] 연동 중 오류 발생: {}", e.getMessage(), e);
+                                %sResponse response = new %sResponse();
+                                response.setResultCode("ERROR");
+                                response.setResultMessage(e.getMessage() != null ? e.getMessage() : "Unknown error");
+                                response.setHasMore(false);
+                                return response;
+                            }
+                        }
+
+                        private void mergeResponseData(%sResponse target, %sResponse src) {
+                            if (target == null || src == null) return;
+                            for (java.lang.reflect.Field field : target.getClass().getDeclaredFields()) {
+                                if (java.util.List.class.isAssignableFrom(field.getType())) {
+                                    field.setAccessible(true);
+                                    try {
+                                        java.util.List<?> srcList = (java.util.List<?>) field.get(src);
+                                        if (srcList != null && !srcList.isEmpty()) {
+                                            @SuppressWarnings("unchecked")
+                                            java.util.List<Object> targetList = (java.util.List<Object>) field.get(target);
+                                            if (targetList == null) {
+                                                targetList = new java.util.ArrayList<>(srcList);
+                                                field.set(target, targetList);
+                                            } else {
+                                                if (!(targetList instanceof java.util.ArrayList)) {
+                                                    targetList = new java.util.ArrayList<>(targetList);
+                                                    field.set(target, targetList);
+                                                }
+                                                targetList.addAll(srcList);
+                                            }
+                                        }
+                                    } catch (Exception e) {
+                                        log.warn("[MCI Tool] 리스트 병합 중 예외 발생 (field: {}): {}", field.getName(), e.getMessage());
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    """.formatted(
+                        bizPackage,
+                        bizPackage, baseName,
+                        bizPackage, baseName,
+                        bizPackage, baseName,
+                        bizPackage, pagingInterface,
+                        bizPackage,
+                        baseName,
+                        author,
+                        createDate,
+                        createDate, author,
+                        baseName, baseName,
+                        pagingInterface,
+                        baseName, baseName,
+                        toolName, pagingMode,
+                        baseName,
+                        baseName,
+                        baseName,
+                        baseName, baseName,
+                        baseName, baseName,
+                        baseName, baseName
+                );
+            }
         } else if (isMci) {
             serviceImplContent = """
                 package %s.usecase.impl;
@@ -2342,16 +2671,44 @@ public class ToolScaffolder {
                                 if (pagingInfo.getPageDataCc() > 0) request.getScrPageInfo().setPageDataCc(pagingInfo.getPageDataCc());
                             }
 
-                            %s_I mciReq = converter.toRequest(request);
+                            %s_I mciReq = converter.toLegacyRequest(request);
+                            if (mciReq != null && request.getScrPageInfo() != null) {
+                                try {
+                                    java.lang.reflect.Method setMethod = mciReq.getClass().getMethod("setScrPageInfo", java.util.List.class);
+                                    setMethod.invoke(mciReq, java.util.List.of(request.getScrPageInfo()));
+                                } catch (NoSuchMethodException e) {
+                                    try {
+                                        java.lang.reflect.Method setMethod = mciReq.getClass().getMethod("setScrPageInfo", ScrPageInfo.class);
+                                        setMethod.invoke(mciReq, request.getScrPageInfo());
+                                    } catch (Exception ignored) {}
+                                } catch (Exception ignored) {}
+                            }
+
                             Transfer<%s_O> resTransfer = mci.callTo("%s", "%s", mciReq, %s_O.class);
                             %s_O mciRes = resTransfer != null ? resTransfer.getBody() : null;
 
                             %sResponse response = converter.toResponse(mciRes);
 
-                            ScrPageInfo resPageInfo = mciRes != null ? mciRes.getScrPageInfo() : null;
+                            ScrPageInfo resPageInfo = null;
+                            if (mciRes != null) {
+                                try {
+                                    java.lang.reflect.Method getMethod = mciRes.getClass().getMethod("getScrPageInfo");
+                                    Object val = getMethod.invoke(mciRes);
+                                    if (val instanceof java.util.List<?> list && !list.isEmpty()) {
+                                        if (list.get(0) instanceof ScrPageInfo pi) resPageInfo = pi;
+                                    } else if (val instanceof ScrPageInfo pi) {
+                                        resPageInfo = pi;
+                                    }
+                                } catch (Exception ignored) {}
+                            }
+
                             boolean hasNext = resPageInfo != null && "Y".equalsIgnoreCase(resPageInfo.getNextDataExtYn());
                             String nextSortValu = resPageInfo != null ? resPageInfo.getScrSortValu() : null;
                             String nextItva = resPageInfo != null ? resPageInfo.getScrlItva() : null;
+
+                            if (response != null) {
+                                response.setHasMore(hasNext);
+                            }
 
                             ScrollPagingInfo nextPaging = new ScrollPagingInfo(
                                     request.getScrPageInfo().getScrlmhdNm(),
@@ -2433,7 +2790,7 @@ public class ToolScaffolder {
                                 if (pagingInfo.getPageDataCc() > 0) request.getPageInfo().setPageDataCc(pagingInfo.getPageDataCc());
                             }
 
-                            %s_I mciReq = converter.toRequest(request);
+                            %s_I mciReq = converter.toLegacyRequest(request);
                             if (mciReq != null) {
                                 try {
                                     java.lang.reflect.Method setMethod = mciReq.getClass().getMethod("setPageInfo", java.util.List.class);
@@ -2474,6 +2831,13 @@ public class ToolScaffolder {
                                 hasNext = currentPageNo < totalPageCn;
                             } else if (totalDataCc > 0 && pageDataCc > 0) {
                                 hasNext = (long) currentPageNo * pageDataCc < totalDataCc;
+                            }
+
+                            if (response != null) {
+                                response.setPageNo(currentPageNo);
+                                response.setTotalPageCount(totalPageCn);
+                                response.setTotalCount(totalDataCc);
+                                response.setHasMore(hasNext);
                             }
 
                             PgNumPagingInfo nextPaging = new PgNumPagingInfo(
@@ -2520,24 +2884,60 @@ public class ToolScaffolder {
 
     private static String dtoContent(String packageName, String className, List<FieldDefinition> fields,
                                      String author, String createDate, boolean request, PagingMode pagingMode) {
-        String body = fieldLines(fields, request ? Set.of() : Set.of("resultCode", "resultMessage"), className);
+        Set<String> excludedFields;
+        if (request) {
+            if (pagingMode == PagingMode.PAGE_NUMBER) {
+                excludedFields = Set.of("pageInfo");
+            } else if (pagingMode == PagingMode.SCROLL) {
+                excludedFields = Set.of("scrPageInfo");
+            } else {
+                excludedFields = Set.of();
+            }
+        } else {
+            if (pagingMode == PagingMode.PAGE_NUMBER) {
+                excludedFields = Set.of("resultCode", "resultMessage", "pageNo", "totalPageCount", "totalCount", "hasMore");
+            } else if (pagingMode == PagingMode.SCROLL) {
+                excludedFields = Set.of("resultCode", "resultMessage", "hasMore");
+            } else {
+                excludedFields = Set.of("resultCode", "resultMessage");
+            }
+        }
+        String body = fieldLines(fields, excludedFields, className);
         if (!request) {
-            String hasMoreField = (pagingMode != null && pagingMode != PagingMode.NONE)
-                    ? "    @Schema(description = \"추가 데이터 존재 여부 (기본 최대 조회 건수 초과 시 true)\")\n    private Boolean hasMore;\n\n"
-                    : "";
-            body = "    private String resultCode;\n\n    private String resultMessage;\n\n" + hasMoreField + body;
+            String pagingResponseFields = "";
+            if (pagingMode == PagingMode.PAGE_NUMBER) {
+                pagingResponseFields = """
+                        @Schema(description = "현재 페이지 번호")
+                        private Integer pageNo;
+
+                        @Schema(description = "총 페이지 수")
+                        private Integer totalPageCount;
+
+                        @Schema(description = "총 데이터 건수")
+                        private Integer totalCount;
+
+                        @Schema(description = "추가 데이터 존재 여부 (기본 최대 조회 건수 초과 시 true)")
+                        private Boolean hasMore;
+
+                """;
+            } else if (pagingMode == PagingMode.SCROLL) {
+                pagingResponseFields = """
+                        @Schema(description = "추가 데이터 존재 여부 (기본 최대 조회 건수 초과 시 true)")
+                        private Boolean hasMore;
+
+                """;
+            }
+            body = "    private String resultCode;\n\n    private String resultMessage;\n\n" + pagingResponseFields + body;
         }
         String listImport = hasListField(fields) ? "import java.util.List;\n" : "";
         String patternImport = hasPatternField(fields) ? "import jakarta.validation.constraints.Pattern;\n" : "";
         String pagingImport = "";
         String pagingField = "";
         if (request && pagingMode != null && pagingMode != PagingMode.NONE) {
-            boolean hasPageInfo = fields != null && fields.stream().anyMatch(f -> f != null && "pageInfo".equalsIgnoreCase(f.name()));
-            boolean hasScrPageInfo = fields != null && fields.stream().anyMatch(f -> f != null && "scrPageInfo".equalsIgnoreCase(f.name()));
-            if (pagingMode == PagingMode.PAGE_NUMBER && !hasPageInfo) {
+            if (pagingMode == PagingMode.PAGE_NUMBER) {
                 pagingImport = "import io.shinhanlife.glow.db.dto.PageInfo;\n";
                 pagingField = "    @Schema(description = \"페이지 정보\")\n    private PageInfo pageInfo;\n\n";
-            } else if (pagingMode == PagingMode.SCROLL && !hasScrPageInfo) {
+            } else if (pagingMode == PagingMode.SCROLL) {
                 pagingImport = "import io.shinhanlife.glow.db.dto.ScrPageInfo;\n";
                 pagingField = "    @Schema(description = \"스크롤 페이지 정보\")\n    private ScrPageInfo scrPageInfo;\n\n";
             }
@@ -2567,18 +2967,25 @@ public class ToolScaffolder {
         String patternImport = hasPatternField(fields) ? "import jakarta.validation.constraints.Pattern;\n" : "";
         String pagingImport = "";
         String pagingField = "";
+        Set<String> excluded = Set.of();
         if ((className.endsWith("_I") || className.endsWith("_O")) && pagingMode != null && pagingMode != PagingMode.NONE) {
             boolean hasPageInfo = fields != null && fields.stream().anyMatch(f -> f != null && "pageInfo".equalsIgnoreCase(f.name()));
             boolean hasScrPageInfo = fields != null && fields.stream().anyMatch(f -> f != null && "scrPageInfo".equalsIgnoreCase(f.name()));
-            if (pagingMode == PagingMode.PAGE_NUMBER && !hasPageInfo) {
-                pagingImport = "import io.shinhanlife.glow.GlowTrgmField;\nimport io.shinhanlife.glow.db.dto.PageInfo;\n";
-                if (!listImport.contains("List")) {
-                    pagingImport += "import java.util.List;\n";
+            if (pagingMode == PagingMode.PAGE_NUMBER) {
+                excluded = Set.of("pageInfo");
+                if (!hasPageInfo) {
+                    pagingImport = "import io.shinhanlife.glow.GlowTrgmField;\nimport io.shinhanlife.glow.db.dto.PageInfo;\n";
+                    if (!listImport.contains("List")) {
+                        pagingImport += "import java.util.List;\n";
+                    }
+                    pagingField = "    @Schema(description = \"페이지 정보\")\n    @GlowTrgmField(order = 1, description = \"페이지 정보\", type = \"gm\")\n    private List<PageInfo> pageInfo;\n\n";
                 }
-                pagingField = "    @Schema(description = \"페이지 정보\")\n    @GlowTrgmField(order = 1, description = \"페이지 정보\", type = \"gm\")\n    private List<PageInfo> pageInfo;\n\n";
-            } else if (pagingMode == PagingMode.SCROLL && !hasScrPageInfo) {
-                pagingImport = "import io.shinhanlife.glow.GlowTrgmField;\nimport io.shinhanlife.glow.db.dto.ScrPageInfo;\n";
-                pagingField = "    @Schema(description = \"스크롤 페이지 정보\")\n    @GlowTrgmField(order = 1, length = 306, description = \"스크롤 페이지 정보\")\n    private ScrPageInfo scrPageInfo;\n\n";
+            } else if (pagingMode == PagingMode.SCROLL) {
+                excluded = Set.of("scrPageInfo");
+                if (!hasScrPageInfo) {
+                    pagingImport = "import io.shinhanlife.glow.GlowTrgmField;\nimport io.shinhanlife.glow.db.dto.ScrPageInfo;\n";
+                    pagingField = "    @Schema(description = \"스크롤 페이지 정보\")\n    @GlowTrgmField(order = 1, length = 306, description = \"스크롤 페이지 정보\")\n    private ScrPageInfo scrPageInfo;\n\n";
+                }
             }
         }
         return """
@@ -2590,7 +2997,7 @@ public class ToolScaffolder {
                 @Data
                 public class %s {
                 %s%s%s}
-                """.formatted(BASE_PACKAGE, packageSuffix, listImport, patternImport, pagingImport, className, pagingField, fieldLines(fields, Set.of(), className),
+                """.formatted(BASE_PACKAGE, packageSuffix, listImport, patternImport, pagingImport, className, pagingField, fieldLines(fields, excluded, className),
                 innerObjectListClasses(fields));
     }
 
@@ -2821,12 +3228,15 @@ public class ToolScaffolder {
                     // Field names differ? Add mappings like this before the method.
                     // @Mapping(source = "sourceField", target = "targetField")
                     %s_I toLegacyRequest(%sRequest request);
+                    default %s_I toRequest(%sRequest request) {
+                        return toLegacyRequest(request);
+                    }
                     %sRequest toRequest(%s_I mciRequest);
                     %sResponse toResponse(%s_O mciRes);
                 }
                 """.formatted(converterPackage, bizPackage, baseName, bizPackage, baseName,
                 BASE_PACKAGE, mciPackage, interfaceId, BASE_PACKAGE, mciPackage, interfaceId,
-                converterClassName, interfaceId, baseName, baseName, interfaceId, baseName, interfaceId);
+                converterClassName, interfaceId, baseName, interfaceId, baseName, baseName, interfaceId, baseName, interfaceId);
     }
 
     private static String mciTargetSystemPackage(String clientSystemCode) {

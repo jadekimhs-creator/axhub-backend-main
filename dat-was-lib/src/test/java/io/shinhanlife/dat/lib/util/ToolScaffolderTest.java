@@ -44,6 +44,11 @@ class ToolScaffolderTest {
         String resSource = Files.readString(resDto);
         assertTrue(resSource.contains("private Boolean hasMore;"), resSource);
 
+        Path scrollUseCaseImpl = root.resolve("dat-was-scroll/src/main/java/io/shinhanlife/dat/mcc/biz/sal/usecase/impl/ContractListUseCaseImpl.java");
+        String scrollUseCaseSource = Files.readString(scrollUseCaseImpl);
+        assertTrue(scrollUseCaseSource.contains("mergeResponseData("), scrollUseCaseSource);
+        assertTrue(scrollUseCaseSource.contains("finalResponse.setHasMore(hasMore);"), scrollUseCaseSource);
+
         Path mciReqIo = root.resolve("dat-was-scroll/src/main/java/io/shinhanlife/dat/mcc/infra/itrf/mci/nbt/a/io/ONBTA2380_I.java");
         String mciReqSource = Files.readString(mciReqIo);
         assertTrue(mciReqSource.contains("import io.shinhanlife.glow.db.dto.ScrPageInfo;"), mciReqSource);
@@ -73,7 +78,16 @@ class ToolScaffolderTest {
 
         Path pageResDto = root.resolve("dat-was-page/src/main/java/io/shinhanlife/dat/mcc/biz/sal/dto/ContractListResponse.java");
         String pageResSource = Files.readString(pageResDto);
+        assertTrue(pageResSource.contains("private Integer pageNo;"), pageResSource);
+        assertTrue(pageResSource.contains("private Integer totalPageCount;"), pageResSource);
+        assertTrue(pageResSource.contains("private Integer totalCount;"), pageResSource);
         assertTrue(pageResSource.contains("private Boolean hasMore;"), pageResSource);
+
+        Path pageUseCaseImpl = root.resolve("dat-was-page/src/main/java/io/shinhanlife/dat/mcc/biz/sal/usecase/impl/ContractListUseCaseImpl.java");
+        String pageUseCaseSource = Files.readString(pageUseCaseImpl);
+        assertTrue(pageUseCaseSource.contains("finalResponse.setPageNo("), pageUseCaseSource);
+        assertTrue(pageUseCaseSource.contains("finalResponse.setTotalPageCount("), pageUseCaseSource);
+        assertTrue(pageUseCaseSource.contains("mergeResponseData("), pageUseCaseSource);
 
         Path pageMciReqIo = root.resolve("dat-was-page/src/main/java/io/shinhanlife/dat/mcc/infra/itrf/mci/nbt/a/io/ONBTA2380_I.java");
         String pageMciReqSource = Files.readString(pageMciReqIo);
