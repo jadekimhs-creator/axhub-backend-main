@@ -1066,6 +1066,7 @@
                                         </optgroup>
                                     </select>
                                     <button id="toolDraftButton" type="button" class="btn-action" onclick="createAiToolDraft()">AI로 Tool 채우기</button>
+                                    <button id="toolOptimizeButton" type="button" class="btn-action" style="background:#2563eb; margin-left:8px;" onclick="optimizeAiToolDraft()">V17 스키마 재적용 (최적화)</button>
                                 </div>
                             </div>
                             <div class="input-hint">잘 모르는 항목은 생략해도 됩니다. 선택한 AI가 입력 내용을 바탕으로 Tool 기본 정보와 Input/Output Fields를 채웁니다. 외부 OpenRouter 무료 모델 5개는 Gateway 환경변수 OPENROUTER_API_KEY가 필요합니다. Legacy Interface ID와 Client System Code는 실제 연계 명세를 확인해 직접 입력하세요.</div>
@@ -1095,7 +1096,10 @@
                         </div>
 
                         <div class="mb-3 p-3 rounded" style="background:#18181b; border:1px solid #3f3f46;">
-                            <div class="form-label mb-2">Tool Schema V17 Metadata</div>
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <div class="form-label mb-0">Tool Schema V17 Metadata</div>
+                                <button type="button" class="btn btn-sm btn-outline-info" style="font-size:12px; padding:2px 10px;" onclick="optimizeAiToolDraft()">V17 최적화 재적용</button>
+                            </div>
                             <div class="input-hint mb-3">LLM이 Tool을 올바르게 선택하도록 기능·사용 조건·제외 조건·입출력 제한을 분리해 입력합니다.</div>
                             <div class="row g-3">
                                 <div class="col-md-6">
@@ -2603,6 +2607,123 @@
         } finally {
             button.textContent = originalLabel;
             button.disabled = false;
+        }
+    }
+
+    async function optimizeAiToolDraft() {
+        const form = document.getElementById('toolForm');
+        const baseName = form.elements.baseName ? form.elements.baseName.value.trim() : '';
+        const title = form.elements.title ? form.elements.title.value.trim() : '';
+        const description = form.elements.description ? form.elements.description.value.trim() : '';
+        const categoryKey = form.elements.categoryKey ? form.elements.categoryKey.value.trim() : '';
+        const routingType = form.elements.routingType ? form.elements.routingType.value.trim() : 'MCI';
+        const httpApiName = form.elements.httpApiName ? form.elements.httpApiName.value.trim() : '';
+        const functionDescription = form.elements.functionDescription ? form.elements.functionDescription.value.trim() : '';
+        const displayDescription = form.elements.displayDescription ? form.elements.displayDescription.value.trim() : '';
+        const whenToUse = form.elements.whenToUse ? form.elements.whenToUse.value.trim() : '';
+        const whenNotToUse = form.elements.whenNotToUse ? form.elements.whenNotToUse.value.trim() : '';
+        const ioLimits = form.elements.ioLimits ? form.elements.ioLimits.value.trim() : '';
+        const exampleQueries = form.elements.exampleQueries ? form.elements.exampleQueries.value.trim() : '';
+        const tags = form.elements.tags ? form.elements.tags.value.trim() : '';
+        const ownerOrg = form.elements.ownerOrg ? form.elements.ownerOrg.value.trim() : 'MCP_TOOL';
+
+        let inputFields = [];
+        let outputFields = [];
+        try {
+            const inVal = document.getElementById('inputFields').value.trim();
+            if (inVal) inputFields = JSON.parse(inVal);
+        } catch (e) {
+            console.warn('inputFields JSON parsing error', e);
+        }
+        try {
+            const outVal = document.getElementById('outputFields').value.trim();
+            if (outVal) outputFields = JSON.parse(outVal);
+        } catch (e) {
+            console.warn('outputFields JSON parsing error', e);
+        }
+
+        if (!title && !description && !baseName && !displayDescription) {
+            alert('최적화할 Tool 정보(제목, 설명 등)가 폼에 입력되어 있지 않습니다. 먼저 내용을 입력하거나 [AI로 Tool 채우기]를 실행해주세요.');
+            return;
+        }
+
+        const button = document.getElementById('toolOptimizeButton');
+        const originalLabel = button ? button.textContent : '';
+        if (button) {
+            button.textContent = 'V17 최적화 중...';
+            button.disabled = true;
+        }
+
+        try {
+            const payload = {
+                baseName,
+                title,
+                description,
+                categoryKey,
+                routingType,
+                httpApiName,
+                functionDescription,
+                displayDescription,
+                whenToUse,
+                whenNotToUse,
+                ioLimits,
+                exampleQueries,
+                tags,
+                ownerOrg,
+                inputFields,
+                outputFields,
+                model: selectedAiModel()
+            };
+
+            const response = await fetch('/api/v1/scaffold/tool-draft/optimize', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            const result = await response.json();
+            if (!response.ok) throw new Error(result.error || 'V17 스키마 최적화에 실패했습니다.');
+
+            if (result.baseName) form.elements.baseName.value = result.baseName;
+            if (result.title) form.elements.title.value = result.title;
+            if (result.description) form.elements.description.value = result.description;
+            if (result.categoryKey) {
+                form.elements.categoryKey.value = result.categoryKey;
+                if (typeof loadUseCasesForSelection === 'function') loadUseCasesForSelection();
+            }
+            if (result.routingType) {
+                const rt = String(result.routingType).trim().toUpperCase();
+                form.elements.routingType.value = rt === 'HTTP' ? 'HTTP' : 'MCI';
+            }
+            if (result.httpApiName) form.elements.httpApiName.value = result.httpApiName;
+            if (result.functionDescription) form.elements.functionDescription.value = result.functionDescription;
+            if (result.displayDescription) form.elements.displayDescription.value = result.displayDescription;
+            if (result.whenToUse) form.elements.whenToUse.value = result.whenToUse;
+            if (result.whenNotToUse) form.elements.whenNotToUse.value = result.whenNotToUse;
+            if (result.ioLimits) form.elements.ioLimits.value = result.ioLimits;
+            if (result.exampleQueries) {
+                form.elements.exampleQueries.value = Array.isArray(result.exampleQueries)
+                    ? result.exampleQueries.join('\n') : result.exampleQueries;
+            }
+            if (result.tags) {
+                form.elements.tags.value = Array.isArray(result.tags)
+                    ? result.tags.join(', ') : result.tags;
+            }
+            if (result.ownerOrg) form.elements.ownerOrg.value = result.ownerOrg;
+            if (result.inputFields && result.inputFields.length > 0) {
+                document.getElementById('inputFields').value = JSON.stringify(result.inputFields, null, 2);
+            }
+            if (result.outputFields && result.outputFields.length > 0) {
+                document.getElementById('outputFields').value = JSON.stringify(result.outputFields, null, 2);
+            }
+
+            alert('V17 스키마 기준(3단 네이밍, 3중 태그, Ground Truth 불변, 화면명 기반 질의 등)으로 최적화하여 폼에 반영했습니다.');
+        } catch (error) {
+            alert(`V17 스키마 최적화 실패: ${error.message}`);
+        } finally {
+            if (button) {
+                button.textContent = originalLabel;
+                button.disabled = false;
+            }
         }
     }
 

@@ -329,7 +329,7 @@ public class ToolScaffolder {
                     ? tool.clientSystemCode().toUpperCase(Locale.ROOT) + "Converter"
                     : baseName + "Converter";
             writeUtf8(targetConverterDir.resolve(converterName + ".java"),
-                    groupedMciConverterContent(converterPkg, bizPackage, baseName, ioPackage, ioPrefix, converterName));
+                    groupedMciConverterContent(converterPkg, bizPackage, baseName, ioPackage, ioPrefix, converterName, pagingMode));
         } else {
             writeUtf8(ioDir.resolve(baseName + "HttpRequest.java"),
                     dtoContent(ioPackage + ".io", baseName + "HttpRequest", tool.inputFields(), "", "", true));
@@ -429,7 +429,8 @@ public class ToolScaffolder {
                         .append("import ").append(bizPackage).append(".dto.").append(baseName).append("Response;\n")
                         .append("import ").append(bizPackage).append(".paging.").append(pagingInterface).append(";\n")
                         .append("import io.shinhanlife.dat.lib.paging.MciPage;\n")
-                        .append("import io.shinhanlife.dat.lib.paging.").append(pagingInfoType).append(";\n");
+                        .append("import io.shinhanlife.dat.lib.paging.").append(pagingInfoType).append(";\n")
+                        .append("import io.shinhanlife.dat.lib.paging.MciPagingUtils;\n");
 
                 if (!fields.toString().contains(" " + pagingVar + ";")) {
                     fields.append("    private final ").append(pagingInterface).append(" ").append(pagingVar).append(";\n");
@@ -477,39 +478,7 @@ public class ToolScaffolder {
         if (hasMciOrPaging) {
             imports.append("import lombok.extern.slf4j.Slf4j;\n");
         }
-        boolean hasPaging = tools.stream().anyMatch(t -> t.definitionOptions() != null && t.definitionOptions().pagingModeOrNone() != PagingMode.NONE);
-        if (hasPaging) {
-            methods.append("""
 
-                    private void mergeResponseData(Object target, Object src) {
-                        if (target == null || src == null) return;
-                        for (java.lang.reflect.Field field : target.getClass().getDeclaredFields()) {
-                            if (java.util.List.class.isAssignableFrom(field.getType())) {
-                                field.setAccessible(true);
-                                try {
-                                    java.util.List<?> srcList = (java.util.List<?>) field.get(src);
-                                    if (srcList != null && !srcList.isEmpty()) {
-                                        @SuppressWarnings("unchecked")
-                                        java.util.List<Object> targetList = (java.util.List<Object>) field.get(target);
-                                        if (targetList == null) {
-                                            targetList = new java.util.ArrayList<>(srcList);
-                                            field.set(target, targetList);
-                                        } else {
-                                            if (!(targetList instanceof java.util.ArrayList)) {
-                                                targetList = new java.util.ArrayList<>(targetList);
-                                                field.set(target, targetList);
-                                            }
-                                            targetList.addAll(srcList);
-                                        }
-                                    }
-                                } catch (Exception e) {
-                                    log.warn("[MCI Tool] 리스트 병합 중 예외 발생 (field: {}): {}", field.getName(), e.getMessage());
-                                }
-                            }
-                        }
-                    }
-            """);
-        }
         return "package " + bizPackage + ".usecase.impl;\n\n"
                 + "import " + bizPackage + ".usecase." + useCaseBaseName + "UseCase;\n"
                 + "import lombok.RequiredArgsConstructor;\nimport org.springframework.stereotype.Service;\n" + imports
@@ -527,7 +496,7 @@ public class ToolScaffolder {
 
                         @Override
                         public %sResponse %s(%sRequest req) {
-                            log.info("[MCI Tool] {} 요청 수신 (페이징 모드: %s).", "%s", "%s");
+                            log.info("[MCI Tool] {} 요청 수신 (페이징 모드: {}).", "%s", "%s");
                             try {
                                 %s pagingInfo = null;
                                 %s pagingInfoLast = null;
@@ -543,7 +512,7 @@ public class ToolScaffolder {
                                     if (finalResponse == null) {
                                         finalResponse = page.data();
                                     } else if (page.data() != null) {
-                                        mergeResponseData(finalResponse, page.data());
+                                        MciPagingUtils.mergeResponseData(finalResponse, page.data());
                                     }
                                     if (!page.hasNext()) {
                                         hasMore = false;
@@ -555,8 +524,18 @@ public class ToolScaffolder {
 
                                 if (finalResponse == null) {
                                     finalResponse = new %sResponse();
+                                    finalResponse.setResultCode("FAIL");
+                                    finalResponse.setResultMessage("MCI 응답 데이터가 존재하지 않습니다.");
+                                    finalResponse.setHasMore(false);
+                                    finalResponse.setPageNo(1);
+                                    finalResponse.setTotalPageCount(0);
+                                    finalResponse.setTotalCount(0);
+                                    return finalResponse;
                                 }
-                                finalResponse.setResultCode("SUCCESS");
+
+                                if (finalResponse.getResultCode() == null || finalResponse.getResultCode().isBlank()) {
+                                    finalResponse.setResultCode("SUCCESS");
+                                }
                                 finalResponse.setHasMore(hasMore);
                                 if (pagingInfoLast != null) {
                                     int lastPageNo = Math.max(1, pagingInfoLast.getPageNo() - 1);
@@ -587,7 +566,7 @@ public class ToolScaffolder {
                         }
                         """.formatted(
                     baseName, tool.methodName(), baseName,
-                    pagingMode, snakeToolName, pagingMode,
+                    snakeToolName, pagingMode,
                     pagingInfoType,
                     pagingInfoType,
                     baseName,
@@ -599,7 +578,7 @@ public class ToolScaffolder {
 
                         @Override
                         public %sResponse %s(%sRequest req) {
-                            log.info("[MCI Tool] {} 요청 수신 (페이징 모드: %s).", "%s", "%s");
+                            log.info("[MCI Tool] {} 요청 수신 (페이징 모드: {}).", "%s", "%s");
                             try {
                                 %s pagingInfo = null;
                                 %sResponse finalResponse = null;
@@ -613,7 +592,7 @@ public class ToolScaffolder {
                                     if (finalResponse == null) {
                                         finalResponse = page.data();
                                     } else if (page.data() != null) {
-                                        mergeResponseData(finalResponse, page.data());
+                                        MciPagingUtils.mergeResponseData(finalResponse, page.data());
                                     }
                                     if (!page.hasNext()) {
                                         hasMore = false;
@@ -625,8 +604,15 @@ public class ToolScaffolder {
 
                                 if (finalResponse == null) {
                                     finalResponse = new %sResponse();
+                                    finalResponse.setResultCode("FAIL");
+                                    finalResponse.setResultMessage("MCI 응답 데이터가 존재하지 않습니다.");
+                                    finalResponse.setHasMore(false);
+                                    return finalResponse;
                                 }
-                                finalResponse.setResultCode("SUCCESS");
+
+                                if (finalResponse.getResultCode() == null || finalResponse.getResultCode().isBlank()) {
+                                    finalResponse.setResultCode("SUCCESS");
+                                }
                                 finalResponse.setHasMore(hasMore);
                                 if (hasMore) {
                                     finalResponse.setResultMessage("MCI 기본 최대 조회 건수(10회)까지 조회되었습니다. 추가 데이터가 더 존재합니다 (총 " + loopCount + "회 호출, hasMore=true).");
@@ -645,7 +631,7 @@ public class ToolScaffolder {
                         }
                         """.formatted(
                     baseName, tool.methodName(), baseName,
-                    pagingMode, snakeToolName, pagingMode,
+                    snakeToolName, pagingMode,
                     pagingInfoType,
                     baseName,
                     baseName, pagingInfoType, pagingVariable,
@@ -718,16 +704,26 @@ public class ToolScaffolder {
                 + "public interface " + useCaseBaseName + "Converter {\n}\n";
     }
 
-    private static String groupedMciConverterContent(String converterPackage, String bizPackage, String baseName, String ioPackage, String interfaceId, String converterName) {
+    private static String groupedMciConverterContent(String converterPackage, String bizPackage, String baseName, String ioPackage, String interfaceId, String converterName, PagingMode pagingMode) {
+        String pageIgnore = "";
+        if (pagingMode == PagingMode.PAGE_NUMBER) {
+            pageIgnore = "    @Mapping(target = \"pageInfo\", ignore = true)\n";
+        } else if (pagingMode == PagingMode.SCROLL) {
+            pageIgnore = "    @Mapping(target = \"scrPageInfo\", ignore = true)\n";
+        }
         return "package " + converterPackage + ";\n\n"
                 + "import " + bizPackage + ".dto." + baseName + "Request;\n"
                 + "import " + bizPackage + ".dto." + baseName + "Response;\n"
                 + "import " + ioPackage + ".io." + interfaceId + "_I;\n"
                 + "import " + ioPackage + ".io." + interfaceId + "_O;\n"
-                + "import org.mapstruct.Mapper;\nimport org.mapstruct.ReportingPolicy;\n\n"
+                + "import org.mapstruct.Mapper;\nimport org.mapstruct.Mapping;\nimport org.mapstruct.ReportingPolicy;\n\n"
                 + "@Mapper(componentModel = \"spring\", unmappedTargetPolicy = ReportingPolicy.IGNORE)\n"
                 + "public interface " + converterName + " {\n"
-                + "    " + interfaceId + "_I toRequest(" + baseName + "Request request);\n"
+                + pageIgnore
+                + "    " + interfaceId + "_I toRequest(" + baseName + "Request request);\n\n"
+                + "    default " + interfaceId + "_I toLegacyRequest(" + baseName + "Request request) {\n"
+                + "        return toRequest(request);\n"
+                + "    }\n\n"
                 + "    " + baseName + "Response toResponse(" + interfaceId + "_O response);\n}\n";
     }
 
@@ -833,6 +829,7 @@ public class ToolScaffolder {
                 implementation = addImport(implementation, "import " + bizPackage + ".paging." + pagingInterface + ";");
                 implementation = addImport(implementation, "import io.shinhanlife.dat.lib.paging.MciPage;");
                 implementation = addImport(implementation, "import io.shinhanlife.dat.lib.paging." + pagingInfoType + ";");
+                implementation = addImport(implementation, "import io.shinhanlife.dat.lib.paging.MciPagingUtils;");
                 implementation = addImport(implementation, "import lombok.extern.slf4j.Slf4j;");
                 if (!implementation.contains("@Slf4j")) {
                     implementation = implementation.replaceFirst("public class ", "@Slf4j\npublic class ");
@@ -846,38 +843,6 @@ public class ToolScaffolder {
                 }
                 String method = groupedToolPagingMethodContent(tool, baseName, pagingVar, pagingMode, pagingInfoType);
                 implementation = insertBeforeLastBrace(implementation, method);
-                if (!implementation.contains("mergeResponseData(")) {
-                    implementation = insertBeforeLastBrace(implementation, """
-
-                    private void mergeResponseData(Object target, Object src) {
-                        if (target == null || src == null) return;
-                        for (java.lang.reflect.Field field : target.getClass().getDeclaredFields()) {
-                            if (java.util.List.class.isAssignableFrom(field.getType())) {
-                                field.setAccessible(true);
-                                try {
-                                    java.util.List<?> srcList = (java.util.List<?>) field.get(src);
-                                    if (srcList != null && !srcList.isEmpty()) {
-                                        @SuppressWarnings("unchecked")
-                                        java.util.List<Object> targetList = (java.util.List<Object>) field.get(target);
-                                        if (targetList == null) {
-                                            targetList = new java.util.ArrayList<>(srcList);
-                                            field.set(target, targetList);
-                                        } else {
-                                            if (!(targetList instanceof java.util.ArrayList)) {
-                                                targetList = new java.util.ArrayList<>(targetList);
-                                                field.set(target, targetList);
-                                            }
-                                            targetList.addAll(srcList);
-                                        }
-                                    }
-                                } catch (Exception e) {
-                                    log.warn("[MCI Tool] 리스트 병합 중 예외 발생 (field: {}): {}", field.getName(), e.getMessage());
-                                }
-                            }
-                        }
-                    }
-            """);
-                }
             } else {
                 String clientClassName;
                 String clientVariable;
@@ -1370,6 +1335,7 @@ public class ToolScaffolder {
                     import %s.paging.%s;
                     import io.shinhanlife.dat.lib.paging.MciPage;
                     import io.shinhanlife.dat.lib.paging.PgNumPagingInfo;
+                    import io.shinhanlife.dat.lib.paging.MciPagingUtils;
                     import io.shinhanlife.glow.BizException;
                     import org.springframework.stereotype.Service;
                     import lombok.RequiredArgsConstructor;
@@ -1414,7 +1380,7 @@ public class ToolScaffolder {
                                     if (finalResponse == null) {
                                         finalResponse = page.data();
                                     } else if (page.data() != null) {
-                                        mergeResponseData(finalResponse, page.data());
+                                        MciPagingUtils.mergeResponseData(finalResponse, page.data());
                                     }
                                     if (!page.hasNext()) {
                                         hasMore = false;
@@ -1466,34 +1432,6 @@ public class ToolScaffolder {
                                 return response;
                             }
                         }
-
-                        private void mergeResponseData(%sResponse target, %sResponse src) {
-                            if (target == null || src == null) return;
-                            for (java.lang.reflect.Field field : target.getClass().getDeclaredFields()) {
-                                if (java.util.List.class.isAssignableFrom(field.getType())) {
-                                    field.setAccessible(true);
-                                    try {
-                                        java.util.List<?> srcList = (java.util.List<?>) field.get(src);
-                                        if (srcList != null && !srcList.isEmpty()) {
-                                            @SuppressWarnings("unchecked")
-                                            java.util.List<Object> targetList = (java.util.List<Object>) field.get(target);
-                                            if (targetList == null) {
-                                                targetList = new java.util.ArrayList<>(srcList);
-                                                field.set(target, targetList);
-                                            } else {
-                                                if (!(targetList instanceof java.util.ArrayList)) {
-                                                    targetList = new java.util.ArrayList<>(targetList);
-                                                    field.set(target, targetList);
-                                                }
-                                                targetList.addAll(srcList);
-                                            }
-                                        }
-                                    } catch (Exception e) {
-                                        log.warn("[MCI Tool] 리스트 병합 중 예외 발생 (field: {}): {}", field.getName(), e.getMessage());
-                                    }
-                                }
-                            }
-                        }
                     }
                     """.formatted(
                         bizPackage,
@@ -1514,7 +1452,6 @@ public class ToolScaffolder {
                         baseName,
                         baseName,
                         baseName, baseName,
-                        baseName, baseName,
                         baseName, baseName
                 );
             } else {
@@ -1527,6 +1464,7 @@ public class ToolScaffolder {
                     import %s.paging.%s;
                     import io.shinhanlife.dat.lib.paging.MciPage;
                     import io.shinhanlife.dat.lib.paging.ScrollPagingInfo;
+                    import io.shinhanlife.dat.lib.paging.MciPagingUtils;
                     import io.shinhanlife.glow.BizException;
                     import org.springframework.stereotype.Service;
                     import lombok.RequiredArgsConstructor;
@@ -1569,7 +1507,7 @@ public class ToolScaffolder {
                                     if (finalResponse == null) {
                                         finalResponse = page.data();
                                     } else if (page.data() != null) {
-                                        mergeResponseData(finalResponse, page.data());
+                                        MciPagingUtils.mergeResponseData(finalResponse, page.data());
                                     }
                                     if (!page.hasNext()) {
                                         hasMore = false;
@@ -1606,34 +1544,6 @@ public class ToolScaffolder {
                                 return response;
                             }
                         }
-
-                        private void mergeResponseData(%sResponse target, %sResponse src) {
-                            if (target == null || src == null) return;
-                            for (java.lang.reflect.Field field : target.getClass().getDeclaredFields()) {
-                                if (java.util.List.class.isAssignableFrom(field.getType())) {
-                                    field.setAccessible(true);
-                                    try {
-                                        java.util.List<?> srcList = (java.util.List<?>) field.get(src);
-                                        if (srcList != null && !srcList.isEmpty()) {
-                                            @SuppressWarnings("unchecked")
-                                            java.util.List<Object> targetList = (java.util.List<Object>) field.get(target);
-                                            if (targetList == null) {
-                                                targetList = new java.util.ArrayList<>(srcList);
-                                                field.set(target, targetList);
-                                            } else {
-                                                if (!(targetList instanceof java.util.ArrayList)) {
-                                                    targetList = new java.util.ArrayList<>(targetList);
-                                                    field.set(target, targetList);
-                                                }
-                                                targetList.addAll(srcList);
-                                            }
-                                        }
-                                    } catch (Exception e) {
-                                        log.warn("[MCI Tool] 리스트 병합 중 예외 발생 (field: {}): {}", field.getName(), e.getMessage());
-                                    }
-                                }
-                            }
-                        }
                     }
                     """.formatted(
                         bizPackage,
@@ -1653,7 +1563,6 @@ public class ToolScaffolder {
                         baseName,
                         baseName,
                         baseName,
-                        baseName, baseName,
                         baseName, baseName,
                         baseName, baseName
                 );
@@ -2633,6 +2542,8 @@ public class ToolScaffolder {
                     import io.shinhanlife.dat.lib.paging.ScrollPagingInfo;
                     import io.shinhanlife.glow.db.dto.ScrPageInfo;
                     import io.shinhanlife.glow.communication.dto.Transfer;
+                    import java.lang.reflect.Method;
+                    import java.util.List;
                     import lombok.RequiredArgsConstructor;
                     import lombok.extern.slf4j.Slf4j;
                     import org.springframework.stereotype.Component;
@@ -2664,6 +2575,9 @@ public class ToolScaffolder {
                             if (request.getScrPageInfo() == null) {
                                 request.setScrPageInfo(new ScrPageInfo());
                             }
+                            if (request.getScrPageInfo().getPageDataCc() <= 0) {
+                                request.getScrPageInfo().setPageDataCc(20);
+                            }
                             if (pagingInfo != null) {
                                 if (pagingInfo.getScrlmhdNm() != null) request.getScrPageInfo().setScrlmhdNm(pagingInfo.getScrlmhdNm());
                                 if (pagingInfo.getScrlItva() != null) request.getScrPageInfo().setScrlItva(pagingInfo.getScrlItva());
@@ -2671,14 +2585,14 @@ public class ToolScaffolder {
                                 if (pagingInfo.getPageDataCc() > 0) request.getScrPageInfo().setPageDataCc(pagingInfo.getPageDataCc());
                             }
 
-                            %s_I mciReq = converter.toLegacyRequest(request);
+                            %s_I mciReq = converter.toRequest(request);
                             if (mciReq != null && request.getScrPageInfo() != null) {
                                 try {
-                                    java.lang.reflect.Method setMethod = mciReq.getClass().getMethod("setScrPageInfo", java.util.List.class);
-                                    setMethod.invoke(mciReq, java.util.List.of(request.getScrPageInfo()));
+                                    Method setMethod = mciReq.getClass().getMethod("setScrPageInfo", List.class);
+                                    setMethod.invoke(mciReq, List.of(request.getScrPageInfo()));
                                 } catch (NoSuchMethodException e) {
                                     try {
-                                        java.lang.reflect.Method setMethod = mciReq.getClass().getMethod("setScrPageInfo", ScrPageInfo.class);
+                                        Method setMethod = mciReq.getClass().getMethod("setScrPageInfo", ScrPageInfo.class);
                                         setMethod.invoke(mciReq, request.getScrPageInfo());
                                     } catch (Exception ignored) {}
                                 } catch (Exception ignored) {}
@@ -2692,9 +2606,9 @@ public class ToolScaffolder {
                             ScrPageInfo resPageInfo = null;
                             if (mciRes != null) {
                                 try {
-                                    java.lang.reflect.Method getMethod = mciRes.getClass().getMethod("getScrPageInfo");
+                                    Method getMethod = mciRes.getClass().getMethod("getScrPageInfo");
                                     Object val = getMethod.invoke(mciRes);
-                                    if (val instanceof java.util.List<?> list && !list.isEmpty()) {
+                                    if (val instanceof List<?> list && !list.isEmpty()) {
                                         if (list.get(0) instanceof ScrPageInfo pi) resPageInfo = pi;
                                     } else if (val instanceof ScrPageInfo pi) {
                                         resPageInfo = pi;
@@ -2754,6 +2668,8 @@ public class ToolScaffolder {
                     import io.shinhanlife.dat.lib.paging.PgNumPagingInfo;
                     import io.shinhanlife.glow.db.dto.PageInfo;
                     import io.shinhanlife.glow.communication.dto.Transfer;
+                    import java.lang.reflect.Method;
+                    import java.util.List;
                     import lombok.RequiredArgsConstructor;
                     import lombok.extern.slf4j.Slf4j;
                     import org.springframework.stereotype.Component;
@@ -2785,19 +2701,25 @@ public class ToolScaffolder {
                             if (request.getPageInfo() == null) {
                                 request.setPageInfo(new PageInfo());
                             }
+                            if (request.getPageInfo().getPageNo() <= 0) {
+                                request.getPageInfo().setPageNo(1);
+                            }
+                            if (request.getPageInfo().getPageDataCc() <= 0) {
+                                request.getPageInfo().setPageDataCc(20);
+                            }
                             if (pagingInfo != null) {
                                 if (pagingInfo.getPageNo() > 0) request.getPageInfo().setPageNo(pagingInfo.getPageNo());
                                 if (pagingInfo.getPageDataCc() > 0) request.getPageInfo().setPageDataCc(pagingInfo.getPageDataCc());
                             }
 
-                            %s_I mciReq = converter.toLegacyRequest(request);
+                            %s_I mciReq = converter.toRequest(request);
                             if (mciReq != null) {
                                 try {
-                                    java.lang.reflect.Method setMethod = mciReq.getClass().getMethod("setPageInfo", java.util.List.class);
-                                    setMethod.invoke(mciReq, java.util.List.of(request.getPageInfo()));
+                                    Method setMethod = mciReq.getClass().getMethod("setPageInfo", List.class);
+                                    setMethod.invoke(mciReq, List.of(request.getPageInfo()));
                                 } catch (NoSuchMethodException e) {
                                     try {
-                                        java.lang.reflect.Method setMethod = mciReq.getClass().getMethod("setPageInfo", PageInfo.class);
+                                        Method setMethod = mciReq.getClass().getMethod("setPageInfo", PageInfo.class);
                                         setMethod.invoke(mciReq, request.getPageInfo());
                                     } catch (Exception ignored) {}
                                 } catch (Exception ignored) {}
@@ -2811,9 +2733,9 @@ public class ToolScaffolder {
                             PageInfo resPageInfo = null;
                             if (mciRes != null) {
                                 try {
-                                    java.lang.reflect.Method getMethod = mciRes.getClass().getMethod("getPageInfo");
+                                    Method getMethod = mciRes.getClass().getMethod("getPageInfo");
                                     Object val = getMethod.invoke(mciRes);
-                                    if (val instanceof java.util.List<?> list && !list.isEmpty()) {
+                                    if (val instanceof List<?> list && !list.isEmpty()) {
                                         if (list.get(0) instanceof PageInfo pi) resPageInfo = pi;
                                     } else if (val instanceof PageInfo pi) {
                                         resPageInfo = pi;
@@ -3227,6 +3149,8 @@ public class ToolScaffolder {
                 public interface %s {
                     // Field names differ? Add mappings like this before the method.
                     // @Mapping(source = "sourceField", target = "targetField")
+                    @Mapping(target = "pageInfo", ignore = true)
+                    @Mapping(target = "scrPageInfo", ignore = true)
                     %s_I toLegacyRequest(%sRequest request);
                     default %s_I toRequest(%sRequest request) {
                         return toLegacyRequest(request);

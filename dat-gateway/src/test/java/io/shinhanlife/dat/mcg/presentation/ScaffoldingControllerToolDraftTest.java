@@ -228,6 +228,69 @@ class ScaffoldingControllerToolDraftTest {
     }
 
     @Test
+    void toolDraftOptimizeEndpointEnforcesV17RulesAndKeepsImmutableFields() throws Exception {
+        ChatClient.Builder builder = mock(ChatClient.Builder.class);
+        ChatClient chatClient = mock(ChatClient.class);
+        ChatClient.ChatClientRequestSpec requestSpec = mock(ChatClient.ChatClientRequestSpec.class);
+        ChatClient.CallResponseSpec responseSpec = mock(ChatClient.CallResponseSpec.class);
+        when(builder.build()).thenReturn(chatClient);
+        when(chatClient.prompt()).thenReturn(requestSpec);
+        when(requestSpec.user(anyString())).thenReturn(requestSpec);
+        when(requestSpec.options(any(ChatOptions.class))).thenReturn(requestSpec);
+        when(requestSpec.call()).thenReturn(responseSpec);
+        when(responseSpec.content()).thenReturn("""
+                {"baseName":"pro_inquiry_variable","title":"AI가 바꾼 제목","description":"[pro] 변액보험 펀드 가이드 정보를 조회합니다. 계약번호를 모를 경우 계약조회 툴을 먼저 호출해야 합니다. 기준일자 미입력시 당일로 처리됩니다.","categoryKey":"pro","routingType":"MCI","httpApiName":"variable-fund","functionDescription":"[pro] 변액보험 펀드 가이드 조회","displayDescription":"AI가 바꾼 화면명","whenToUse":"고객이 변액보험 펀드 가이드 및 상품유형별 투자 가이드 조회를 요청할 때 사용한다.","whenNotToUse":"변액보험 펀드 변경이나 신청 등의 변경 업무에는 사용하지 않는다.","ioLimits":"상품유형코드 한 건을 입력받아 가이드 목록을 반환한다. 미입력시 기본 1년치 조회.","exampleQueries":["[NSAK0060] 펀드가이드 상품유형별 투자 가이드를 보여줘","변액보험 펀드 투자 가이드 조회해줘","상품유형별 펀드가이드 확인"],"tags":["pro","펀드가이드","투자가이드","variable","fundGuide"],"ownerOrg":"MCP_TOOL","inputFields":[{"name":"productTypeCode","type":"String","description":"상품유형코드","examples":["A01"],"required":true}],"outputFields":[{"name":"resultCode","type":"String","description":"결과 코드","examples":["SUCCESS"],"required":true}]}
+                """);
+        ScaffoldingController controller = new ScaffoldingController(builder, new ObjectMapper());
+        ReflectionTestUtils.setField(controller, "openRouterApiKey", "test-openrouter-key");
+        MockMvc mockMvc = MockMvcBuilders.standaloneSetup(controller)
+                .setMessageConverters(new MappingJackson2HttpMessageConverter())
+                .build();
+
+        String originalTitle = "펀드가이드 상품유형별 투자이드 관리";
+        String originalDisplayDesc = "[NSAK0060]펀드가이드 상품유형별 투자이드 관리";
+
+        String requestBody = """
+                {
+                  "baseName": "pro_inquiry_variable",
+                  "title": "%s",
+                  "description": "변액 펀드 조회",
+                  "categoryKey": "pro",
+                  "displayDescription": "%s"
+                }
+                """.formatted(originalTitle, originalDisplayDesc);
+
+        mockMvc.perform(post("/api/v1/scaffold/tool-draft/optimize")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(requestBody))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.baseName").value("ProInquiryVariable"))
+                .andExpect(jsonPath("$.title").value(originalTitle))
+                .andExpect(jsonPath("$.displayDescription").value(originalDisplayDesc))
+                .andExpect(jsonPath("$.categoryKey").value("pro"))
+                .andExpect(jsonPath("$.description", org.hamcrest.Matchers.containsString("[pro]")))
+                .andExpect(jsonPath("$.exampleQueries[0]", org.hamcrest.Matchers.containsString("NSAK0060")))
+                .andExpect(jsonPath("$.tags[0]").value("pro"))
+                .andExpect(jsonPath("$.inputFields[0].name").value("productTypeCode"));
+
+        org.mockito.ArgumentCaptor<String> promptCaptor = org.mockito.ArgumentCaptor.forClass(String.class);
+        verify(requestSpec).user(promptCaptor.capture());
+        assertTrue(promptCaptor.getValue().contains("CRITICAL V17 OPTIMIZATION RULES"));
+        assertTrue(promptCaptor.getValue().contains("3-Part Naming Convention"));
+        assertTrue(promptCaptor.getValue().contains(originalDisplayDesc));
+    }
+
+    @Test
+    void scaffoldPageContainsV17OptimizationButtonsAndScript() throws Exception {
+        try (var pageStream = getClass().getResourceAsStream("/static/admin/scaffold.html")) {
+            String page = new String(java.util.Objects.requireNonNull(pageStream).readAllBytes(), StandardCharsets.UTF_8);
+            assertTrue(page.contains("id=\"toolOptimizeButton\""));
+            assertTrue(page.contains("optimizeAiToolDraft()"));
+            assertTrue(page.contains("/api/v1/scaffold/tool-draft/optimize"));
+        }
+    }
+
+    @Test
     void mciResponseAnalyzeKeepsGlowDescriptionAndUsesAiForTheLlmFieldName() throws Exception {
         ChatClient.Builder builder = mock(ChatClient.Builder.class);
         ChatClient chatClient = mock(ChatClient.class);

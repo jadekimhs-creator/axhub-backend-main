@@ -24,6 +24,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
@@ -127,6 +128,10 @@ public class ScaffoldingController {
             }
             String workspacePath = request.workspacePath() == null || request.workspacePath().isBlank()
                     ? DEFAULT_NEW_POD_WORKSPACE : request.workspacePath().trim();
+            Path targetDir = Path.of(workspacePath).resolve(request.moduleName().trim());
+            if (Files.exists(targetDir)) {
+                return ResponseEntity.badRequest().body(Map.of("error", "Target module already exists: " + request.moduleName().trim()));
+            }
             String author = request.author() == null || request.author().isBlank()
                     ? System.getProperty("user.name") : request.author().trim();
             String date = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy.MM.dd"));
@@ -378,18 +383,24 @@ public class ScaffoldingController {
 
         try {
             String prompt = """
-                    Generate an MCP Tool scaffold from the user request.
+                    Generate an MCP Tool scaffold from the user request according to ShinhanLife V17 Tool Schema prerequisites and rules.
                     Return JSON only. Do not add Markdown, explanations, or code fences.
                     The response must have this exact shape:
-                    {"baseName":"PascalCaseName","title":"short Korean title","description":"clear Korean LLM tool guidance","categoryKey":"cmm","routingType":"MCI","httpApiName":"simple-api-name","functionDescription":"core business function","displayDescription":"short portal description","whenToUse":"specific user requests that should select this tool","whenNotToUse":"requests or conditions that must not select this tool","ioLimits":"allowed input and output scope and limits","exampleQueries":["query 1","query 2","query 3"],"tags":["domain","action"],"ownerOrg":"MCP_TOOL","inputFields":[{"name":"camelCaseName","type":"String","description":"short description","examples":["example1","example2"],"pattern":"^regex$","required":true,"enumValues":[],"itemType":null,"itemFields":[]}],"outputFields":[{"name":"resultCode","type":"String","description":"result code","examples":["SUCCESS"],"pattern":"","required":true,"enumValues":[],"itemType":null,"itemFields":[]}]}
-                    categoryKey must be exactly three lowercase letters or digits.
-                    routingType must be either MCI or HTTP. Default to MCI. Use HTTP only when the user explicitly requests a REST or HTTP integration. httpApiName can contain only letters, digits, hyphens, and underscores.
-                    Write every V17 metadata field for its distinct purpose; do not copy the same sentence into all fields.
-                    Generate 3 to 10 realistic exampleQueries and concise search tags. Use MCP_TOOL for ownerOrg unless the user names an owner.
-                    Allowed field type values: String, Integer, Long, Double, Boolean, BigDecimal, List. Finite values should be enforced by populating enumValues. List must include itemType and object lists include itemFields.
-                    If applicable, provide a regex for pattern.
-                    Keep all field names valid Java camelCase identifiers. Generate at most 10 fields per list.
-                    Do not generate interfaceId or clientSystemCode; those must come from a real integration contract.
+                    {"baseName":"PascalCase3PartName","title":"short Korean title","description":"clear Korean LLM tool guidance","categoryKey":"cmm","routingType":"MCI","httpApiName":"simple-api-name","functionDescription":"core business function","displayDescription":"short portal description","whenToUse":"specific user requests that should select this tool","whenNotToUse":"requests or conditions that must not select this tool","ioLimits":"allowed input and output scope and limits","exampleQueries":["query 1","query 2","query 3"],"tags":["categoryKey","한국어태그1","한국어태그2","engTag1","engTag2"],"ownerOrg":"MCP_TOOL","inputFields":[{"name":"camelCaseName","type":"String","description":"short description","examples":["example1","example2"],"pattern":"^regex$","required":true,"enumValues":[],"itemType":null,"itemFields":[]}],"outputFields":[{"name":"resultCode","type":"String","description":"result code","examples":["SUCCESS"],"pattern":"","required":true,"enumValues":[],"itemType":null,"itemFields":[]}]}
+                    [V17 RULES]
+                    - Read-only & idempotent (destructive=false, idempotent=true).
+                    - 3-part naming for baseName: {categoryKey}_{action}_{target} in PascalCase (e.g. ProInquiryFund, CusDetailContract).
+                      categoryKey must be exactly 3 lowercase letters (e.g. pro, cus, sal, cmm).
+                      Action must be one of: inquiry, detail, history, consulting, converter, return, balance, unclaimed. No abbreviations, no synonym mixing.
+                      Target is a complete English entity word.
+                    - description & functionDescription must state owning system in brackets (e.g. '[pro] ...'), hint on prerequisite input inquiries, and clarify system default value/period handling.
+                    - displayDescription: Linked legacy screen name and function if known, or concise Korean function description.
+                    - exampleQueries: 3 to 10 realistic Korean query patterns matching the screen/business function.
+                    - tags: 3-tier structure (1: categoryKey, 2: 2-4 Korean primary query keywords, 3: 2-4 English secondary keywords, total 5-8 tags).
+                    - routingType must be either MCI or HTTP. Default to MCI. Use HTTP only when the user explicitly requests a REST or HTTP integration. httpApiName can contain only letters, digits, hyphens, and underscores.
+                    - Allowed field type values: String, Integer, Long, Double, Boolean, BigDecimal, List. Finite values should be enforced by populating enumValues. List must include itemType and object lists include itemFields.
+                    - If applicable, provide a regex for pattern. Keep all field names valid Java camelCase identifiers. Generate at most 10 fields per list.
+                    - Do not generate interfaceId or clientSystemCode; those must come from a real integration contract.
                     User request: %s
                     """.formatted(description);
 
@@ -399,6 +410,170 @@ public class ScaffoldingController {
             return ResponseEntity.ok(validatedDraft);
         } catch (Exception e) {
             return ResponseEntity.internalServerError().body(Map.of("error", "AI Tool 초안 생성 실패: " + safeMessage(e)));
+        }
+    }
+
+    @PostMapping("/tool-draft/optimize")
+    public ResponseEntity<?> optimizeToolDraft(@RequestBody Map<String, Object> req) {
+        String baseName = req.getOrDefault("baseName", "").toString().trim();
+        String title = req.getOrDefault("title", "").toString().trim();
+        String description = req.getOrDefault("description", "").toString().trim();
+        String categoryKey = req.getOrDefault("categoryKey", "").toString().trim();
+        String routingType = req.getOrDefault("routingType", "MCI").toString().trim();
+        String httpApiName = req.getOrDefault("httpApiName", "").toString().trim();
+        String functionDescription = req.getOrDefault("functionDescription", "").toString().trim();
+        String displayDescription = req.getOrDefault("displayDescription", "").toString().trim();
+        String whenToUse = req.getOrDefault("whenToUse", "").toString().trim();
+        String whenNotToUse = req.getOrDefault("whenNotToUse", "").toString().trim();
+        String ioLimits = req.getOrDefault("ioLimits", "").toString().trim();
+        Object rawExampleQueries = req.get("exampleQueries");
+        Object rawTags = req.get("tags");
+        String ownerOrg = req.getOrDefault("ownerOrg", "MCP_TOOL").toString().trim();
+        Object rawInputFields = req.get("inputFields");
+        Object rawOutputFields = req.get("outputFields");
+        String model = req.get("model") != null ? req.get("model").toString() : null;
+
+        if (title.isBlank() && description.isBlank() && baseName.isBlank() && displayDescription.isBlank()) {
+            return ResponseEntity.badRequest().body(Map.of("error", "최적화할 Tool 정보를 입력해주세요."));
+        }
+
+        try {
+            String inputFieldsJson = rawInputFields != null ? objectMapper.writeValueAsString(rawInputFields) : "[]";
+            String outputFieldsJson = rawOutputFields != null ? objectMapper.writeValueAsString(rawOutputFields) : "[]";
+            String exampleQueriesJson = rawExampleQueries != null ? objectMapper.writeValueAsString(rawExampleQueries) : "[]";
+            String tagsJson = rawTags != null ? objectMapper.writeValueAsString(rawTags) : "[]";
+            String effectiveCatKey = categoryKey.isBlank() ? "cmm" : categoryKey;
+            String effectiveDisplayDesc = displayDescription.isBlank() ? title : displayDescription;
+
+            String prompt = """
+                    Optimize and re-evaluate this MCP Tool schema according to strict ShinhanLife V17 Tool Schema prerequisites and rules.
+                    Return JSON only. Do not add Markdown, explanations, or code fences.
+                    Response must follow this exact shape:
+                    {"baseName":"PascalCase3PartName","title":%s,"description":"...","categoryKey":"%s","routingType":"%s","httpApiName":"%s","functionDescription":"...","displayDescription":%s,"whenToUse":"...","whenNotToUse":"...","ioLimits":"...","exampleQueries":["query1","query2","query3"],"tags":["%s","한국어태그1","한국어태그2","engTag1","engTag2"],"ownerOrg":"%s","inputFields":%s,"outputFields":%s}
+
+                    [CRITICAL V17 OPTIMIZATION RULES]
+                    1. Read-Only & Agent LLM Single Responsibility:
+                       - All tools are purely inquiry tools (destructive=false, idempotent=true).
+                       - Tool selection, calling condition, and calling order are solely the responsibility of the Agent LLM.
+                    2. Ground Truth & Immutable Fields (DO NOT CHANGE):
+                       - title: MUST be kept EXACTLY as %s (User-entered title, immutable).
+                       - displayDescription: MUST be kept EXACTLY as %s (Linked screen name e.g. [NSAK0060]..., immutable).
+                    3. 3-Part Naming Convention ({category}_{action}_{target} -> PascalCase baseName):
+                       - 1st part: categoryKey (3 lowercase letters, e.g. pro, cus, sal, cmm).
+                       - 2nd part: Action MUST be ONLY one of the standard inquiry action words:
+                         'inquiry' (list or basic info query by condition),
+                         'detail' (comprehensive detail query of a specific target),
+                         'history' (historical changes or transaction logs),
+                         'consulting' (analysis guide or consulting),
+                         'converter' (code or status conversion or determination),
+                         'return' or 'balance' (balance, return rate, accumulation, valuation),
+                         'unclaimed' (dormant or unclaimed amount check).
+                         NO abbreviations (no chg, amt, no, etc. Use complete words).
+                         NO synonym mixing (inquiry/query, detail/info mixing strictly forbidden).
+                       - 3rd part: Target entity full English word (e.g. Variable, Fund, Contract, Fee, Disclosure).
+                       - baseName MUST be PascalCase combination of these 3 parts (e.g. ProInquiryFund, CusDetailContract).
+                    4. description & functionDescription:
+                       - Preserve core business intent (Ground Truth).
+                       - Explicitly specify owning system/business unit in brackets, e.g. '[%s] ...'.
+                       - Hint on prerequisite inputs: clearly state that preceding inquiry tools might be required if user does not know specific IDs (e.g. contract number, customer ID).
+                       - Clarify system (Converter) default values and default query period handling (e.g. default to today if date omitted, default 1 year).
+                    5. exampleQueries (3 to 10 queries):
+                       - MUST heavily reference the screen name and functional terminology in displayDescription (%s).
+                       - Generate 3 to 10 realistic, practical Korean user queries actual users would execute on that screen.
+                    6. tags (3-Tier Structure, 5 to 8 tags total):
+                       - Tier 1: categoryKey (e.g. '%s')
+                       - Tier 2: 2 to 4 Korean primary keywords directly matching user queries
+                       - Tier 3: 2 to 4 English secondary keywords assisting semantic search
+                       - Total count MUST be between 5 and 8 tags. Keep high semantic density without noise.
+                    7. whenToUse & whenNotToUse:
+                       - whenToUse: Specific user request conditions requiring this tool.
+                       - whenNotToUse: Clear boundaries distinguishing similar tools (different domain tools, list vs detail, exclusions of update/cancel/terminate).
+                    8. ioLimits:
+                       - Specify allowed input range, returned output scope, count limits, and default value/period handling.
+                    9. inputFields & outputFields:
+                       - Keep valid fields, refine descriptions, types, examples, and regex patterns. Maximum 10 fields per list.
+
+                    [CURRENT TOOL DRAFT DATA TO OPTIMIZE]
+                    BaseName: %s
+                    Title: %s
+                    Description: %s
+                    CategoryKey: %s
+                    RoutingType: %s
+                    HttpApiName: %s
+                    FunctionDescription: %s
+                    DisplayDescription: %s
+                    WhenToUse: %s
+                    WhenNotToUse: %s
+                    IoLimits: %s
+                    ExampleQueries: %s
+                    Tags: %s
+                    OwnerOrg: %s
+                    InputFields: %s
+                    OutputFields: %s
+                    """.formatted(
+                    objectMapper.writeValueAsString(title),
+                    effectiveCatKey,
+                    routingType.isBlank() ? "MCI" : routingType,
+                    httpApiName.isBlank() ? "http-api" : httpApiName,
+                    objectMapper.writeValueAsString(effectiveDisplayDesc),
+                    effectiveCatKey,
+                    ownerOrg.isBlank() ? "MCP_TOOL" : ownerOrg,
+                    inputFieldsJson,
+                    outputFieldsJson,
+                    objectMapper.writeValueAsString(title),
+                    objectMapper.writeValueAsString(effectiveDisplayDesc),
+                    effectiveCatKey,
+                    objectMapper.writeValueAsString(effectiveDisplayDesc),
+                    effectiveCatKey,
+                    baseName,
+                    title,
+                    description,
+                    categoryKey,
+                    routingType,
+                    httpApiName,
+                    functionDescription,
+                    displayDescription,
+                    whenToUse,
+                    whenNotToUse,
+                    ioLimits,
+                    exampleQueriesJson,
+                    tagsJson,
+                    ownerOrg,
+                    inputFieldsJson,
+                    outputFieldsJson
+            );
+
+            String response = generateAiContent(prompt, model);
+            ToolDraft draft = objectMapper.readValue(stripCodeFence(response), ToolDraft.class);
+
+            // Guarantee Rule 2: Ground Truth & Immutable fields
+            String finalTitle = !title.isBlank() ? title : draft.title();
+            String finalDisplayDesc = !displayDescription.isBlank() ? displayDescription : draft.displayDescription();
+            String finalBaseName = normalizeBaseName(draft.baseName());
+
+            ToolDraft finalDraft = new ToolDraft(
+                    finalBaseName,
+                    finalTitle,
+                    draft.description(),
+                    draft.categoryKey(),
+                    draft.routingType(),
+                    draft.httpApiName(),
+                    draft.functionDescription(),
+                    finalDisplayDesc,
+                    draft.whenToUse(),
+                    draft.whenNotToUse(),
+                    draft.ioLimits(),
+                    draft.exampleQueries(),
+                    draft.tags(),
+                    draft.ownerOrg(),
+                    draft.inputFields(),
+                    draft.outputFields()
+            );
+
+            ToolDraft validatedDraft = validateToolDraft(finalDraft);
+            return ResponseEntity.ok(validatedDraft);
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().body(Map.of("error", "AI Tool V17 스키마 최적화 실패: " + safeMessage(e)));
         }
     }
 
@@ -574,7 +749,14 @@ public class ScaffoldingController {
     }
 
     private List<ToolScaffolder.FieldDefinition> validateFields(List<ToolScaffolder.FieldDefinition> source) {
+        return validateFields(source, false);
+    }
+
+    private List<ToolScaffolder.FieldDefinition> validateFields(List<ToolScaffolder.FieldDefinition> source, boolean allowEmpty) {
         if (source == null || source.isEmpty()) {
+            if (allowEmpty) {
+                return List.of();
+            }
             throw new IllegalArgumentException("AI가 필드를 생성하지 않았습니다.");
         }
         Set<String> names = new LinkedHashSet<>();
@@ -615,9 +797,35 @@ public class ScaffoldingController {
         }
     }
 
+    private String normalizeBaseName(String name) {
+        if (name == null || name.isBlank()) return "";
+        String trimmed = name.trim();
+        if (trimmed.contains("_") || trimmed.contains("-")) {
+            String[] parts = trimmed.split("[_-]+");
+            StringBuilder sb = new StringBuilder();
+            for (String part : parts) {
+                if (!part.isEmpty()) {
+                    sb.append(Character.toUpperCase(part.charAt(0)));
+                    if (part.length() > 1) {
+                        sb.append(part.substring(1));
+                    }
+                }
+            }
+            return sb.toString();
+        }
+        if (Character.isLowerCase(trimmed.charAt(0))) {
+            return Character.toUpperCase(trimmed.charAt(0)) + (trimmed.length() > 1 ? trimmed.substring(1) : "");
+        }
+        return trimmed;
+    }
+
     private ToolDraft validateToolDraft(ToolDraft draft) {
-        if (draft == null || draft.baseName() == null || !draft.baseName().trim().matches("^[A-Z][A-Za-z0-9]*$")) {
-            throw new IllegalArgumentException("AI가 올바르지 않은 Base Name을 생성했습니다.");
+        if (draft == null) {
+            throw new IllegalArgumentException("AI가 Tool 초안을 생성하지 않았습니다.");
+        }
+        String baseName = normalizeBaseName(draft.baseName());
+        if (baseName.isBlank() || !baseName.matches("^[A-Z][A-Za-z0-9]*$")) {
+            throw new IllegalArgumentException("AI가 올바르지 않은 Base Name을 생성했습니다: " + draft.baseName());
         }
         String categoryKey = draft.categoryKey() == null ? "" : draft.categoryKey().trim().toLowerCase(Locale.ROOT);
         if (!categoryKey.matches("^[a-z0-9]{3}$")) {
@@ -645,10 +853,10 @@ public class ScaffoldingController {
                 title + " 해줘", title + " 정보를 알려줘", title + " 결과를 확인해줘"));
         List<String> tags = normalizedDraftList(draft.tags(), List.of(categoryKey));
         String ownerOrg = textOrDefault(draft.ownerOrg(), "MCP_TOOL");
-        return new ToolDraft(draft.baseName().trim(), title, description, categoryKey, routingType, httpApiName,
+        return new ToolDraft(baseName, title, description, categoryKey, routingType, httpApiName,
                 functionDescription, displayDescription, whenToUse, whenNotToUse, ioLimits,
                 exampleQueries, tags, ownerOrg,
-                validateFields(draft.inputFields()), validateFields(draft.outputFields()));
+                validateFields(draft.inputFields(), true), validateFields(draft.outputFields(), true));
     }
 
     private String textOrDefault(String value, String fallback) {
