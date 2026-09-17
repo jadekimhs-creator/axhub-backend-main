@@ -388,7 +388,7 @@ public class ScaffoldingController {
                     The response must have this exact shape:
                     {"baseName":"PascalCase3PartName","title":"short Korean title","description":"clear Korean LLM tool guidance","categoryKey":"cmm","routingType":"MCI","httpApiName":"simple-api-name","functionDescription":"core business function","displayDescription":"short portal description","whenToUse":"specific user requests that should select this tool","whenNotToUse":"requests or conditions that must not select this tool","ioLimits":"allowed input and output scope and limits","exampleQueries":["query 1","query 2","query 3"],"tags":["categoryKey","한국어태그1","한국어태그2","engTag1","engTag2"],"ownerOrg":"MCP_TOOL","inputFields":[{"name":"camelCaseName","type":"String","description":"short description","examples":["example1","example2"],"pattern":"^regex$","required":true,"enumValues":[],"itemType":null,"itemFields":[]}],"outputFields":[{"name":"resultCode","type":"String","description":"result code","examples":["SUCCESS"],"pattern":"","required":true,"enumValues":[],"itemType":null,"itemFields":[]}]}
                     [V17 RULES]
-                    - Read-only & idempotent (destructive=false, idempotent=true).
+                    - Read-only & idempotent (destructive=false, idempotent=true for MCI; destructive=false, idempotent=false for HTTP).
                     - 3-part naming for baseName: {categoryKey}_{action}_{target} in PascalCase (e.g. ProInquiryFund, CusDetailContract).
                       categoryKey must be exactly 3 lowercase letters (e.g. pro, cus, sal, cmm).
                       Action must be one of: inquiry, detail, history, consulting, converter, return, balance, unclaimed. No abbreviations, no synonym mixing.
@@ -397,7 +397,7 @@ public class ScaffoldingController {
                     - displayDescription: Linked legacy screen name and function if known, or concise Korean function description.
                     - exampleQueries: 3 to 10 realistic Korean query patterns matching the screen/business function.
                     - tags: 3-tier structure (1: categoryKey, 2: 2-4 Korean primary query keywords, 3: 2-4 English secondary keywords, total 5-8 tags).
-                    - routingType must be either MCI or HTTP. Default to MCI. Use HTTP only when the user explicitly requests a REST or HTTP integration. httpApiName can contain only letters, digits, hyphens, and underscores.
+                    - routingType must be either MCI or HTTP. Default to MCI. Use HTTP only when the user explicitly requests a REST or HTTP integration. For HTTP, httpApiName must be a concise abbreviation in 'xxx-xxxx' format under 10 characters (e.g. cst-inq, emp-srch).
                     - Allowed field type values: String, Integer, Long, Double, Boolean, BigDecimal, List. Finite values should be enforced by populating enumValues. List must include itemType and object lists include itemFields.
                     - If applicable, provide a regex for pattern. Keep all field names valid Java camelCase identifiers. Generate at most 10 fields per list.
                     - Do not generate interfaceId or clientSystemCode; those must come from a real integration contract.
@@ -453,7 +453,7 @@ public class ScaffoldingController {
 
                     [CRITICAL V17 OPTIMIZATION RULES]
                     1. Read-Only & Agent LLM Single Responsibility:
-                       - All tools are purely inquiry tools (destructive=false, idempotent=true).
+                       - All tools are purely inquiry tools (destructive=false, idempotent=true for MCI; destructive=false, idempotent=false for HTTP).
                        - Tool selection, calling condition, and calling order are solely the responsibility of the Agent LLM.
                     2. Ground Truth & Immutable Fields (DO NOT CHANGE):
                        - title: MUST be kept EXACTLY as %s (User-entered title, immutable).
@@ -472,6 +472,7 @@ public class ScaffoldingController {
                          NO synonym mixing (inquiry/query, detail/info mixing strictly forbidden).
                        - 3rd part: Target entity full English word (e.g. Variable, Fund, Contract, Fee, Disclosure).
                        - baseName MUST be PascalCase combination of these 3 parts (e.g. ProInquiryFund, CusDetailContract).
+                       - When routingType is HTTP, httpApiName MUST be a concise abbreviation in 'xxx-xxxx' format under 10 characters (e.g. cst-inq, emp-srch).
                     4. description & functionDescription:
                        - Preserve core business intent (Ground Truth).
                        - Explicitly specify owning system/business unit in brackets, e.g. '[%s] ...'.
@@ -835,9 +836,18 @@ public class ScaffoldingController {
         if (!Set.of("HTTP", "MCI").contains(routingType)) {
             throw new IllegalArgumentException("AI가 지원하지 않는 Protocol을 생성했습니다.");
         }
-        String httpApiName = draft.httpApiName() == null ? "http-api" : draft.httpApiName().trim();
-        if (!httpApiName.matches("^[A-Za-z0-9_-]+$")) {
-            throw new IllegalArgumentException("AI가 올바르지 않은 HTTP API Name을 생성했습니다.");
+        String httpApiName = draft.httpApiName() == null ? "" : draft.httpApiName().trim();
+        if ("HTTP".equals(routingType)) {
+            if (httpApiName.isBlank() || !httpApiName.matches("^[a-z0-9]+-[a-z0-9]+$") || httpApiName.length() >= 10) {
+                httpApiName = ToolScaffolder.toAbbreviatedHttpApiName(baseName);
+            }
+            baseName = ToolScaffolder.toPascalCase(httpApiName);
+        } else {
+            if (httpApiName.isBlank()) {
+                httpApiName = "http-api";
+            } else if (!httpApiName.matches("^[A-Za-z0-9_-]+$")) {
+                throw new IllegalArgumentException("AI가 올바르지 않은 HTTP API Name을 생성했습니다.");
+            }
         }
         String title = draft.title() == null ? "" : draft.title().trim();
         String description = draft.description() == null ? "" : draft.description().trim();
@@ -1068,7 +1078,7 @@ public class ScaffoldingController {
     private record AiMciFieldMapping(String ownerType, String sourceName, String targetName, Boolean include) {
     }
 
-    private record ToolDraft(String baseName, String title, String description, String categoryKey, String routingType,
+    public record ToolDraft(String baseName, String title, String description, String categoryKey, String routingType,
                              String httpApiName, String functionDescription, String displayDescription,
                              String whenToUse, String whenNotToUse, String ioLimits,
                              List<String> exampleQueries, List<String> tags, String ownerOrg,

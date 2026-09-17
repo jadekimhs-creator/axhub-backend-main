@@ -481,4 +481,17 @@ class ScaffoldingControllerToolDraftTest {
         assertFalse(manifest.contains("dat-was-pay"), manifest);
         assertFalse(manifest.contains("dat-was-att"), manifest);
     }
+
+    @Test
+    void validatesHttpToolDraftWithAbbreviatedHttpApiNameAndBaseName() {
+        ScaffoldingController controller = new ScaffoldingController(mock(ChatClient.Builder.class), new ObjectMapper());
+        ScaffoldingController.ToolDraft draft = new ScaffoldingController.ToolDraft(
+                "EmployeeSearchDetail", "직원 조회", "직원 정보를 조회한다", "cmm", "HTTP", "employee-search-detail",
+                null, null, null, null, null, List.of(), List.of(), null, List.of(), List.of());
+
+        ScaffoldingController.ToolDraft validated = ReflectionTestUtils.invokeMethod(controller, "validateToolDraft", draft);
+        assertEquals("emp-dtl", validated.httpApiName());
+        assertEquals("EmpDtl", validated.baseName());
+        assertTrue(validated.httpApiName().length() < 10);
+    }
 }

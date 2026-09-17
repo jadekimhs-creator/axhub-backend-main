@@ -1188,8 +1188,8 @@
                         <div class="row mb-4">
                             <div class="col-md-6">
                                 <label class="form-label">HTTP API Name (Glow api-list)</label>
-                                <input type="text" class="form-control" name="httpApiName" pattern="^[a-zA-Z0-9_-]+$" placeholder="비우면 Tool 이름으로 자동 생성">
-                                <div class="input-hint">HTTP only. Must match glow.communication.http.api-list[].name; URL and method are read from Glow YAML.</div>
+                                <input type="text" class="form-control" name="httpApiName" pattern="^[a-zA-Z0-9_-]+$" maxlength="9" placeholder="e.g. xxx-xxxx (10자 미만)">
+                                <div class="input-hint">HTTP 전용. 10자 미만 약어 권장(xxx-xxxx). Glow YAML의 api-list[].name과 매핑됩니다.</div>
                             </div>
                             <div class="col-md-6 mt-3 mt-md-0">
                                 <label class="form-label">Target System Code (MCI Only)</label>
@@ -1791,12 +1791,61 @@
 </script>
 <div id="docgenToast" class="docgen-toast"></div>
 <script>
+    function toPascalCase(str) {
+        if (!str) return '';
+        return str.replace(/[-_ ]+([a-zA-Z0-9])/g, (_, c) => c.toUpperCase())
+                  .replace(/^[a-z]/, c => c.toUpperCase());
+    }
+
+    function toAbbreviatedHttpApiName(name) {
+        if (!name) return 'api-call';
+        const dict = {
+            'customer': 'cst', 'contract': 'cntr', 'employee': 'emp', 'search': 'srch',
+            'inquiry': 'inq', 'query': 'inq', 'detail': 'dtl', 'history': 'hist',
+            'status': 'stat', 'claim': 'clm', 'insurance': 'ins', 'account': 'acnt',
+            'payment': 'pay', 'notice': 'ntc', 'common': 'cmm', 'consult': 'cnsl',
+            'consulting': 'cnsl', 'convert': 'cnvr', 'converter': 'cnvr', 'individual': 'ind',
+            'manage': 'mgt', 'management': 'mgt', 'product': 'prd', 'process': 'prc',
+            'processor': 'prc', 'variable': 'var', 'refund': 'rfnd', 'balance': 'bal',
+            'return': 'retn'
+        };
+        const rawWords = name.replace(/([a-z0-9])([A-Z])/g, '$1 $2').replace(/[_-]+/g, ' ').trim().toLowerCase().split(/\s+/).filter(Boolean);
+        if (rawWords.length === 0) return 'api-call';
+        const abbrToken = (w, minL, maxL) => {
+            if (dict[w]) return dict[w];
+            return w.length <= maxL ? w : w.substring(0, maxL);
+        };
+        let w1 = rawWords[0];
+        let w2 = rawWords.length > 1 ? rawWords[rawWords.length - 1] : 'call';
+        let p1 = abbrToken(w1, 3, 4);
+        let p2 = abbrToken(w2, 3, 4);
+        let res = (p1 + '-' + p2).toLowerCase();
+        if (res.length >= 10) {
+            p1 = p1.substring(0, Math.min(p1.length, 3));
+            p2 = p2.substring(0, Math.min(p2.length, 4));
+            res = (p1 + '-' + p2).toLowerCase();
+        }
+        if (res.length >= 10) res = res.substring(0, 9);
+        return res;
+    }
+
     function handleFormSubmit(formId, apiUrl) {
         document.getElementById(formId).addEventListener('submit', function(e) {
             e.preventDefault();
             const formData = new FormData(this);
             const data = Object.fromEntries(formData.entries());
-            if (formId === 'podForm') {
+            if (formId === 'toolForm') {
+                if (data.routingType === 'HTTP') {
+                    if (!data.httpApiName) {
+                        data.httpApiName = toAbbreviatedHttpApiName(data.baseName);
+                    } else {
+                        data.httpApiName = toAbbreviatedHttpApiName(data.httpApiName);
+                    }
+                    data.baseName = toPascalCase(data.httpApiName);
+                    if (this.elements.httpApiName) this.elements.httpApiName.value = data.httpApiName;
+                    if (this.elements.baseName) this.elements.baseName.value = data.baseName;
+                }
+            } else if (formId === 'podForm') {
                 data.targetModules = JSON.stringify(currentTargetModules());
             } else if (formId === 'newPodForm') {
                 data.targetModules = JSON.stringify(currentNewPodTargetModules());
@@ -1858,10 +1907,23 @@
         };
         loadModules();
         const wsInputs = document.querySelectorAll('input[name="workspacePath"]');
-          wsInputs.forEach(wsInput => {
-              wsInput.addEventListener('change', loadModules);
-              wsInput.addEventListener('blur', loadModules);
-          });
+        wsInputs.forEach(wsInput => {
+            wsInput.addEventListener('change', loadModules);
+            wsInput.addEventListener('blur', loadModules);
+        });
+
+        const routingSelect = document.querySelector('#toolForm select[name="routingType"]');
+        const httpApiInput = document.querySelector('#toolForm input[name="httpApiName"]');
+        const baseNameInput = document.querySelector('#toolForm input[name="baseName"]');
+        if (routingSelect && httpApiInput) {
+            routingSelect.addEventListener('change', () => {
+                if (routingSelect.value === 'HTTP') {
+                    if ((!httpApiInput.value.trim() || httpApiInput.value === 'http-api') && baseNameInput && baseNameInput.value.trim()) {
+                        httpApiInput.value = toAbbreviatedHttpApiName(baseNameInput.value.trim());
+                    }
+                }
+            });
+        }
     });
 
     handleFormSubmit('podForm', '/api/v1/scaffold/pod');
@@ -1965,8 +2027,15 @@
         if (data.routingType === 'MCI' && (!data.interfaceId || !data.clientSystemCode)) {
             throw new Error('MCI Tool은 Legacy Interface ID와 Target System Code를 입력해야 합니다.');
         }
-        if (data.routingType === 'HTTP' && !data.httpApiName) {
-            throw new Error('HTTP Tool은 HTTP API Name을 입력해야 합니다.');
+        if (data.routingType === 'HTTP') {
+            if (!data.httpApiName) {
+                data.httpApiName = toAbbreviatedHttpApiName(data.baseName);
+            } else {
+                data.httpApiName = toAbbreviatedHttpApiName(data.httpApiName);
+            }
+            data.baseName = toPascalCase(data.httpApiName);
+            if (form.elements.httpApiName) form.elements.httpApiName.value = data.httpApiName;
+            if (form.elements.baseName) form.elements.baseName.value = data.baseName;
         }
         if (!['MCI', 'HTTP'].includes(data.routingType)) {
             throw new Error('여러 Tool UseCase는 MCI 또는 HTTP 프로토콜만 지원합니다.');

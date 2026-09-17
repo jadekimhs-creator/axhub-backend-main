@@ -34,12 +34,12 @@ public class ScrollPagingInfo implements PagingInfo<ScrollPagingInfo>, Serializa
     /**
      * 스크롤항목명 (입력값)
      */
-    private String scrlmhdNm;
+    private String scrImhdNm;
 
     /**
      * 스크롤항목값 (입력값)
      */
-    private String scrlItva;
+    private String scrItva;
 
     /**
      * 스크롤정렬값 (리턴/입력값)
@@ -56,24 +56,24 @@ public class ScrollPagingInfo implements PagingInfo<ScrollPagingInfo>, Serializa
      */
     private int pageDataCc;
 
-    public ScrollPagingInfo(String scrlmhdNm, String scrlItva, String scrSortValu, boolean hasNext, int pageDataCc) {
-        this.scrlmhdNm = scrlmhdNm;
-        this.scrlItva = scrlItva;
+    public ScrollPagingInfo(String scrImhdNm, String scrItva, String scrSortValu, boolean hasNext, int pageDataCc) {
+        this.scrImhdNm = scrImhdNm;
+        this.scrItva = scrItva;
         this.scrSortValu = scrSortValu;
         this.nextDataExtYn = hasNext ? "Y" : "N";
         this.pageDataCc = pageDataCc;
     }
 
-    public static ScrollPagingInfo firstPage(String scrlMhdNm, int pageDataCnt) {
-        return new ScrollPagingInfo(scrlMhdNm, "", "", "N", pageDataCnt);
+    public static ScrollPagingInfo firstPage(String scrImhdNm, int pageDataCnt) {
+        return new ScrollPagingInfo(scrImhdNm, "", "", "N", pageDataCnt);
     }
 
-    public String scrlMhdNm() {
-        return scrlmhdNm;
+    public String scrImhdNm() {
+        return scrImhdNm;
     }
 
-    public String scrlItva() {
-        return scrlItva;
+    public String scrItva() {
+        return scrItva;
     }
 
     public String scrSortValu() {
@@ -104,5 +104,26 @@ public class ScrollPagingInfo implements PagingInfo<ScrollPagingInfo>, Serializa
     @Override
     public ScrollPagingInfo nextPageRequest() {
         return this;
+    }
+
+    // 하위 호환성 별칭 메서드 (기존 scrlmhdNm, scrlItva 오타 호환)
+    public String getScrlmhdNm() {
+        return scrImhdNm;
+    }
+
+    public void setScrlmhdNm(String scrlmhdNm) {
+        this.scrImhdNm = scrlmhdNm;
+    }
+
+    public String getScrlItva() {
+        return scrItva;
+    }
+
+    public void setScrlItva(String scrlItva) {
+        this.scrItva = scrlItva;
+    }
+
+    public String scrlMhdNm() {
+        return scrImhdNm;
     }
 }

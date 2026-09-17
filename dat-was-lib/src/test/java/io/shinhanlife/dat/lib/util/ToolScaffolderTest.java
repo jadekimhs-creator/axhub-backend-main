@@ -147,9 +147,11 @@ class ToolScaffolderTest {
                         List.of(new ToolScaffolder.FieldDefinition("employeeNo", "String", "Employee number", List.of("10001"), "", true)),
                         List.of(new ToolScaffolder.FieldDefinition("employeeName", "String", "Employee name", List.of("Hong"), "", false)), null)));
 
-        Path glowConfig = root.resolve("dat-was-http/src/main/resources/glow/application-glow-local.yml");
-        assertTrue(Files.exists(glowConfig));
-        assertTrue(Files.readString(glowConfig).contains("- name: employee-search"));
+        for (String env : List.of("local", "dev", "test", "prod")) {
+            Path config = root.resolve("dat-was-http/src/main/resources/application_" + env + ".yml");
+            assertTrue(Files.exists(config), config + " should exist");
+            assertTrue(Files.readString(config).contains("- name: emp-srch"), config + " content");
+        }
     }
 
     @Test
@@ -521,7 +523,7 @@ class ToolScaffolderTest {
     @Test
     void addsHttpApiEntryOnItsOwnYamlLineBeforeMciConfiguration() throws Exception {
         String moduleName = root.resolve("dat-was-http-yaml").toString();
-        Path localConfig = root.resolve("src/main/resources/glow/application-glow-local.yml");
+        Path localConfig = root.resolve("dat-was-http-yaml/src/main/resources/application_local.yml");
         Files.createDirectories(localConfig.getParent());
         Files.writeString(localConfig, """
                 glow:
@@ -539,8 +541,8 @@ class ToolScaffolderTest {
 
         String yaml = Files.readString(localConfig);
         assertFalse(yaml.contains("biz-pod: false        - name"), yaml);
-        assertTrue(yaml.contains("      - name: insurance"), yaml);
-        assertTrue(yaml.indexOf("      - name: insurance") < yaml.indexOf("    mci:"), yaml);
+        assertTrue(yaml.contains("      - name: ins-prc"), yaml);
+        assertTrue(yaml.indexOf("      - name: ins-prc") < yaml.indexOf("    mci:"), yaml);
     }
 
     @Test
@@ -680,5 +682,46 @@ class ToolScaffolderTest {
         assertTrue(implementationSource.contains("import io.shinhanlife.dat.mcc.biz.pro.converter.nbt.a.ONBTA2380Converter;"), implementationSource);
         assertTrue(implementationSource.contains("private final ONBTA2380Converter converter;"), implementationSource);
         assertTrue(useCaseSource.contains("name = \"pro_individual_inquiry\""), useCaseSource);
+    }
+
+    @Test
+    void httpToolGeneratesAbbreviatedNamesAndMciStandardResponseAndIdempotentFalse() throws Exception {
+        String moduleName = root.resolve("dat-was-http-abbrev").toString();
+        List<ToolScaffolder.FieldDefinition> inputFields = List.of(
+                new ToolScaffolder.FieldDefinition("employeeId", "String", "직원번호", List.of("10001"), "", true));
+        List<ToolScaffolder.FieldDefinition> outputFields = List.of(
+                new ToolScaffolder.FieldDefinition("employeeName", "String", "직원명", List.of("홍길동"), "", true));
+
+        ToolScaffolder.scaffold("EmployeeSearchDetail", "HR_EMP_SEARCH", "직원 상세 조회", "직원 상세 정보를 조회합니다.",
+                "smp", "HTTP", moduleName, "tester", "2026.09.17", false, null, null, null,
+                inputFields, outputFields, null);
+
+        Path bizDir = root.resolve("dat-was-http-abbrev/src/main/java/io/shinhanlife/dat/mcc/biz/smp");
+        Path itrfDir = root.resolve("dat-was-http-abbrev/src/main/java/io/shinhanlife/dat/mcc/infra/itrf/http");
+
+        assertTrue(Files.exists(bizDir.resolve("dto/EmpDtlRequest.java")));
+        assertTrue(Files.exists(bizDir.resolve("dto/EmpDtlResponse.java")));
+        assertTrue(Files.exists(bizDir.resolve("usecase/EmpDtlUseCase.java")));
+        assertTrue(Files.exists(bizDir.resolve("usecase/impl/EmpDtlUseCaseImpl.java")));
+        assertTrue(Files.exists(itrfDir.resolve("emp_dtl/EmpDtlClient.java")));
+        assertTrue(Files.exists(itrfDir.resolve("emp_dtl/io/EmpDtlHttpRequest.java")));
+        assertTrue(Files.exists(itrfDir.resolve("emp_dtl/io/EmpDtlHttpResponse.java")));
+
+        String useCaseSource = Files.readString(bizDir.resolve("usecase/EmpDtlUseCase.java"), StandardCharsets.UTF_8);
+        assertTrue(useCaseSource.contains("idempotent = false"), useCaseSource);
+
+        String implSource = Files.readString(bizDir.resolve("usecase/impl/EmpDtlUseCaseImpl.java"), StandardCharsets.UTF_8);
+        assertTrue(implSource.contains("@Slf4j"), implSource);
+        assertTrue(implSource.contains("log.info(\"[HTTP Tool] {} 요청 수신.\", \"smp_employee_detail\");"), implSource);
+        assertTrue(implSource.contains("try {"), implSource);
+        assertTrue(implSource.contains("catch (Exception e) {"), implSource);
+        assertTrue(implSource.contains("log.error(\"[HTTP Tool] 연동 중 오류 발생: {}\", e.getMessage(), e);"), implSource);
+        assertTrue(implSource.contains("errorResponse.setResultCode(\"ERROR\");"), implSource);
+        assertTrue(implSource.contains("response.setResultCode(\"SUCCESS\");"), implSource);
+
+        Path localConfig = root.resolve("dat-was-http-abbrev/src/main/resources/application_local.yml");
+        assertTrue(Files.exists(localConfig));
+        String configYaml = Files.readString(localConfig, StandardCharsets.UTF_8);
+        assertTrue(configYaml.contains("- name: emp-dtl"), configYaml);
     }
 }

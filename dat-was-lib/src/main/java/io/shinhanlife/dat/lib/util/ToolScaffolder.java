@@ -176,9 +176,16 @@ public class ToolScaffolder {
         for (ToolMethodDefinition tool : tools) {
             writeGroupedToolFiles(moduleRoot, sourceRoot, dtoDir, definitionDir, bizPackage, tool, moduleName, log);
             if ("HTTP".equalsIgnoreCase(tool.routingType())) {
-                Path glowConfig = ensureLocalHttpApiConfiguration(moduleRoot, tool.httpApiName(),
-                        toToolName(moduleName, tool.group(), toPascalCase(tool.baseName())));
-                log.append("[HTTP Config] ").append(glowConfig).append("\n");
+                String httpApiName = tool.httpApiName();
+                if (httpApiName == null || httpApiName.isBlank() || httpApiName.length() >= 10 || !httpApiName.contains("-")) {
+                    httpApiName = toAbbreviatedHttpApiName(tool.baseName());
+                }
+                String baseName = toPascalCase(httpApiName);
+                List<Path> httpConfigs = ensureHttpApiConfigurations(moduleRoot, httpApiName,
+                        toToolName(moduleName, tool.group(), baseName));
+                for (Path config : httpConfigs) {
+                    log.append("[HTTP Config] ").append(config).append("\n");
+                }
             }
         }
         if (!hasMci) {
@@ -246,8 +253,16 @@ public class ToolScaffolder {
                                               String moduleName, StringBuilder log) throws IOException {
         boolean mci = "MCI".equalsIgnoreCase(tool.routingType());
         String toolBaseName = toPascalCase(tool.baseName());
-        String baseName = mci ? abbreviatedMciSourceBaseName(toolBaseName) : toolBaseName;
-        String code = mci ? formatClientSystemCode(tool.clientSystemCode(), "/") : toPackageSegment(tool.httpApiName());
+        String httpApiName = tool.httpApiName();
+        if (!mci) {
+            if (httpApiName == null || httpApiName.isBlank() || httpApiName.length() >= 10 || !httpApiName.contains("-")) {
+                httpApiName = toAbbreviatedHttpApiName(toolBaseName);
+            } else {
+                httpApiName = httpApiName.trim();
+            }
+        }
+        String baseName = mci ? abbreviatedMciSourceBaseName(toolBaseName) : toPascalCase(httpApiName);
+        String code = mci ? formatClientSystemCode(tool.clientSystemCode(), "/") : toPackageSegment(httpApiName);
         String ioPackage = BASE_PACKAGE + (mci ? ".infra.itrf.mci." : ".infra.itrf.http.") + code.replace("/", ".");
         Path clientDir = sourceRoot.resolve(Paths.get("infra", "itrf", mci ? "mci" : "http", code));
         Path ioDir = clientDir.resolve("io");
@@ -352,9 +367,18 @@ public class ToolScaffolder {
         StringBuilder imports = new StringBuilder();
         StringBuilder methods = new StringBuilder();
         for (ToolMethodDefinition tool : tools) {
-            boolean mci = "MCI".equalsIgnoreCase(tool.routingType());
+            boolean isHttp = "HTTP".equalsIgnoreCase(tool.routingType());
+            boolean mci = !isHttp;
             String toolBaseName = toPascalCase(tool.baseName());
-            String baseName = mci ? abbreviatedMciSourceBaseName(toolBaseName) : toolBaseName;
+            String httpApiName = tool.httpApiName();
+            if (isHttp) {
+                if (httpApiName == null || httpApiName.isBlank() || httpApiName.length() >= 10 || !httpApiName.contains("-")) {
+                    httpApiName = toAbbreviatedHttpApiName(toolBaseName);
+                } else {
+                    httpApiName = httpApiName.trim();
+                }
+            }
+            String baseName = mci ? abbreviatedMciSourceBaseName(toolBaseName) : toPascalCase(httpApiName);
             imports.append("import ").append(bizPackage).append(".dto.").append(baseName).append("Request;\n")
                     .append("import ").append(bizPackage).append(".dto.").append(baseName).append("Response;\n");
             boolean isMutation = isMutationTool(baseName);
@@ -381,11 +405,13 @@ public class ToolScaffolder {
             if (examples == null || examples.isEmpty()) {
                 examples = List.of(option(tool.title(), baseName) + " 정보를 보여줘", option(tool.title(), baseName) + " 확인해줘", "현재 " + option(tool.title(), baseName) + " 알려줘");
             }
+            boolean isHttpTool = "HTTP".equalsIgnoreCase(tool.routingType());
+            boolean idempotentVal = isHttpTool ? false : !isMutation;
             methods.append("        exampleQueries = {")
                     .append(examples.stream().map(q -> "\"" + javaText(q) + "\"").collect(Collectors.joining(", ")))
                     .append("},\n")
                     .append("        destructive = ").append(isMutation).append(",\n")
-                    .append("        idempotent = ").append(!isMutation).append(",\n");
+                    .append("        idempotent = ").append(idempotentVal).append(",\n");
                     
             List<String> tags = opts.tags();
             if (tags == null || tags.isEmpty()) {
@@ -411,9 +437,18 @@ public class ToolScaffolder {
         StringBuilder fields = new StringBuilder();
         StringBuilder methods = new StringBuilder();
         for (ToolMethodDefinition tool : tools) {
-            boolean mci = "MCI".equalsIgnoreCase(tool.routingType());
+            boolean isHttp = "HTTP".equalsIgnoreCase(tool.routingType());
+            boolean mci = !isHttp;
             String toolBaseName = toPascalCase(tool.baseName());
-            String baseName = mci ? abbreviatedMciSourceBaseName(toolBaseName) : toolBaseName;
+            String httpApiName = tool.httpApiName();
+            if (isHttp) {
+                if (httpApiName == null || httpApiName.isBlank() || httpApiName.length() >= 10 || !httpApiName.contains("-")) {
+                    httpApiName = toAbbreviatedHttpApiName(toolBaseName);
+                } else {
+                    httpApiName = httpApiName.trim();
+                }
+            }
+            String baseName = mci ? abbreviatedMciSourceBaseName(toolBaseName) : toPascalCase(httpApiName);
             ToolDefinitionOptions options = tool.definitionOptions() == null
                     ? new ToolDefinitionOptions(null, null, null, null, null, List.of(), List.of(), null)
                     : tool.definitionOptions();
@@ -473,9 +508,9 @@ public class ToolScaffolder {
                 methods.append(groupedToolMethodContent(tool, baseName, converterVariable, clientVariable, ioPrefix, mci));
             }
         }
-        boolean hasMciOrPaging = tools.stream().anyMatch(t -> "MCI".equalsIgnoreCase(t.routingType()));
-        String slf4jAnno = hasMciOrPaging ? "@Slf4j\n" : "";
-        if (hasMciOrPaging) {
+        boolean hasMciOrHttp = !tools.isEmpty();
+        String slf4jAnno = hasMciOrHttp ? "@Slf4j\n" : "";
+        if (hasMciOrHttp) {
             imports.append("import lombok.extern.slf4j.Slf4j;\n");
         }
 
@@ -683,19 +718,45 @@ public class ToolScaffolder {
                     converterVariable,
                     baseName, baseName);
         }
+        String snakeToolName = (tool.group() != null && !tool.group().isBlank() ? tool.group().toLowerCase(Locale.ROOT) + "_" : "")
+                + toKebabCase(baseName).toLowerCase(Locale.ROOT).replace("-", "_");
         return """
 
                 @Override
                 public %sResponse %s(%sRequest req) {
-                    %sHttpRequest request = %s.toRequest(req);
-                    %sHttpResponse response = %s.call(request, %sHttpResponse.class);
-                    %sResponse toolResponse = %s.toResponse(response);
-                    if (toolResponse == null) toolResponse = new %sResponse();
-                    toolResponse.setResultCode("SUCCESS");
-                    return toolResponse;
+                    log.info("[HTTP Tool] {} 요청 수신.", "%s");
+                    try {
+                        // MapStruct를 이용한 자동 매핑 (AI DTO -> HTTP DTO)
+                        %sHttpRequest request = %s.toRequest(req);
+
+                        %sHttpResponse httpResponse = %s.call(request, %sHttpResponse.class);
+                        %sResponse response = new %sResponse();
+                        if (httpResponse != null) {
+                            response = %s.toResponse(httpResponse);
+                        }
+                        if (response == null) {
+                            response = new %sResponse();
+                        }
+                        response.setResultCode("SUCCESS");
+                        response.setResultMessage(httpResponse != null
+                                ? "HTTP call completed."
+                                : "HTTP call completed without a response body.");
+                        return response;
+                    } catch (Exception e) {
+                        log.error("[HTTP Tool] 연동 중 오류 발생: {}", e.getMessage(), e);
+                        %sResponse errorResponse = new %sResponse();
+                        errorResponse.setResultCode("ERROR");
+                        errorResponse.setResultMessage("HTTP call failed: " + (e.getMessage() != null ? e.getMessage() : "Unknown error"));
+                        return errorResponse;
+                    }
                 }
-                """.formatted(baseName, tool.methodName(), baseName, baseName, converterVariable, baseName,
-                clientVariable, baseName, baseName, converterVariable, baseName);
+                """.formatted(baseName, tool.methodName(), baseName, snakeToolName,
+                baseName, converterVariable,
+                baseName, clientVariable, baseName,
+                baseName, baseName,
+                converterVariable,
+                baseName,
+                baseName, baseName);
     }
 
     private static String groupedConverterContent(String bizPackage, String useCaseBaseName,
@@ -749,9 +810,18 @@ public class ToolScaffolder {
         String useCase = Files.readString(useCaseFile, StandardCharsets.UTF_8);
         String implementation = Files.readString(useCaseImplFile, StandardCharsets.UTF_8);
         for (ToolMethodDefinition tool : tools) {
-            boolean mci = "MCI".equalsIgnoreCase(tool.routingType());
+            boolean isHttp = "HTTP".equalsIgnoreCase(tool.routingType());
+            boolean mci = !isHttp;
             String toolBaseName = toPascalCase(tool.baseName());
-            String baseName = mci ? abbreviatedMciSourceBaseName(toolBaseName) : toolBaseName;
+            String httpApiName = tool.httpApiName();
+            if (isHttp) {
+                if (httpApiName == null || httpApiName.isBlank() || httpApiName.length() >= 10 || !httpApiName.contains("-")) {
+                    httpApiName = toAbbreviatedHttpApiName(toolBaseName);
+                } else {
+                    httpApiName = httpApiName.trim();
+                }
+            }
+            String baseName = mci ? abbreviatedMciSourceBaseName(toolBaseName) : toPascalCase(httpApiName);
             String methodName = tool.methodName();
             String toolName = toToolName(moduleName, tool.group(), toolBaseName);
             if (useCase.matches("(?s).*\\b" + java.util.regex.Pattern.quote(methodName) + "\\s*\\(.*")
@@ -793,11 +863,13 @@ public class ToolScaffolder {
             if (examples == null || examples.isEmpty()) {
                 examples = List.of(option(tool.title(), baseName) + " 정보를 보여줘", option(tool.title(), baseName) + " 확인해줘", "현재 " + option(tool.title(), baseName) + " 알려줘");
             }
+            boolean isHttpTool = "HTTP".equalsIgnoreCase(tool.routingType());
+            boolean idempotentVal = isHttpTool ? false : !isMutation;
             declBuilder.append("        exampleQueries = {")
                     .append(examples.stream().map(q -> "\"" + javaText(q) + "\"").collect(Collectors.joining(", ")))
                     .append("},\n")
                     .append("        destructive = ").append(isMutation).append(",\n")
-                    .append("        idempotent = ").append(!isMutation).append(",\n");
+                    .append("        idempotent = ").append(idempotentVal).append(",\n");
                     
             List<String> tags = opts.tags();
             if (tags == null || tags.isEmpty()) {
@@ -1067,14 +1139,24 @@ public class ToolScaffolder {
             throw new IllegalArgumentException("Unsupported routing type: " + routingType + ". Only MCI and HTTP are supported.");
         }
         String toolBaseName = toPascalCase(baseName);
-        baseName = isMci ? abbreviatedMciSourceBaseName(toolBaseName) : toolBaseName;
+        if (isHttp) {
+            if (httpApiName == null || httpApiName.isBlank() || httpApiName.length() >= 10 || !httpApiName.contains("-")) {
+                httpApiName = toAbbreviatedHttpApiName(toolBaseName);
+            } else {
+                httpApiName = httpApiName.trim();
+            }
+            baseName = toPascalCase(httpApiName);
+        } else if (isMci) {
+            baseName = abbreviatedMciSourceBaseName(toolBaseName);
+        } else {
+            baseName = toolBaseName;
+        }
         title = title == null || title.isBlank() ? toolBaseName : title.trim();
         description = description == null ? "" : description.trim();
         definitionOptions = definitionOptions == null
                 ? new ToolDefinitionOptions(null, null, null, null, null, List.of(), List.of(), null)
                 : definitionOptions;
         PagingMode pagingMode = isMci ? definitionOptions.pagingModeOrNone() : PagingMode.NONE;
-        httpApiName = httpApiName == null || httpApiName.isBlank() ? toKebabCase(toolBaseName) : httpApiName.trim();
         String envSourceDir = System.getProperty("AXHUB_SOURCE_DIR");
         if (envSourceDir == null) {
             envSourceDir = System.getenv("AXHUB_SOURCE_DIR");
@@ -1262,8 +1344,9 @@ public class ToolScaffolder {
           .append(examples.stream().map(q -> "\"" + javaText(q) + "\"").collect(Collectors.joining(", ")))
           .append("},\n");
           
+        boolean idempotentVal = isHttp ? false : !isMutation;
         sb.append("        destructive = ").append(isMutation).append(",\n");
-        sb.append("        idempotent = ").append(!isMutation).append(",\n");
+        sb.append("        idempotent = ").append(idempotentVal).append(",\n");
         
         List<String> tags = definitionOptions.tags();
         if (tags == null || tags.isEmpty()) {
@@ -1684,7 +1767,7 @@ public class ToolScaffolder {
             );
         } else {
             serviceImplContent = isHttp
-                    ? httpUseCaseImplContent(bizPackage, baseName, httpGroupPath.replace("/", "."), httpApiClass, author, createDate)
+                    ? httpUseCaseImplContent(bizPackage, baseName, httpGroupPath.replace("/", "."), httpApiClass, author, createDate, toolName)
                     : """
                 package %s.usecase.impl;
 
@@ -2139,9 +2222,10 @@ public class ToolScaffolder {
         // Response JSON mock files are intentionally not generated. Runtime response contracts are represented by DTOs.
         if (isHttp) {
             Path moduleRoot = rootDir.resolve(moduleName).toAbsolutePath().normalize();
-            Path projectRoot = moduleRoot.getParent();
-            Path glowConfig = ensureLocalHttpApiConfiguration(projectRoot, httpApiName, toolName);
-            log.append("[HTTP Config] ").append(glowConfig).append("\n");
+            List<Path> httpConfigs = ensureHttpApiConfigurations(moduleRoot, httpApiName, toolName);
+            for (Path config : httpConfigs) {
+                log.append("[HTTP Config] ").append(config).append("\n");
+            }
         }
 
         Path generatedTestDir = rootDir.resolve(Paths.get(moduleName, "src/test/java/io/shinhanlife/dat/mcc/biz", group.toLowerCase(), "usecase"));
@@ -2352,132 +2436,153 @@ public class ToolScaffolder {
                 .toLowerCase(Locale.ROOT);
     }
 
-    private static Path findGlowLocalConfigPath(Path startPath) {
-        String sourceDir = System.getProperty("AXHUB_SOURCE_DIR");
-        if (sourceDir == null) {
-            sourceDir = System.getenv("AXHUB_SOURCE_DIR");
-        }
+    private static final List<String> HTTP_ENV_PROFILES = List.of("local", "dev", "test", "prod");
 
-        List<Path> baseDirs = new ArrayList<>();
-        if (startPath != null) {
-            baseDirs.add(startPath);
-            if (startPath.getParent() != null) {
-                baseDirs.add(startPath.getParent());
+    private static List<Path> ensureHttpApiConfigurations(Path moduleRoot, String httpApiName, String toolName) throws IOException {
+        Path resourcesDir = moduleRoot.resolve("src/main/resources");
+        Files.createDirectories(resourcesDir);
+
+        List<Path> updatedFiles = new ArrayList<>();
+        String environmentKey = toPackageSegment(httpApiName).toUpperCase(Locale.ROOT).replace('-', '_');
+
+        for (String env : HTTP_ENV_PROFILES) {
+            Path configPath = resolveEnvConfigPath(resourcesDir, env);
+            Files.createDirectories(configPath.getParent());
+
+            String existing = Files.exists(configPath) ? Files.readString(configPath, StandardCharsets.UTF_8) : "";
+            if (java.util.regex.Pattern.compile("(?m)^\\s*-\\s+name:\\s*"
+                    + java.util.regex.Pattern.quote(httpApiName) + "\\s*$").matcher(existing).find()) {
+                updatedFiles.add(configPath);
+                continue;
             }
-        }
-        if (sourceDir != null && !sourceDir.isBlank()) {
-            baseDirs.add(Paths.get(sourceDir.trim()));
-        }
-        baseDirs.add(Paths.get("."));
 
-        String[] subPaths = {
-            "dat-was-lib/src/main/resources/glow",
-            "src/main/resources/glow"
-        };
-        String[] fileNames = {
-            "application-glow-local.yml",
-            "application-glow-local.yaml",
-            "application-glow-local.xml"
-        };
+            String apiEntry = """
+                            - name: %s
+                              domain: ${AXHUB_%s_HTTP_DOMAIN:http://localhost:${server.port}}
+                              url: ${AXHUB_%s_HTTP_URL:/api/mock/http/%s}
+                              method: POST
+                              content-type: application/json;charset=UTF-8
+                              biz-pod: false
+                      """.formatted(httpApiName, environmentKey, environmentKey, toolName).stripTrailing() + "\n";
 
-        // 1. 이미 존재하는 파일 우선 탐색 (dat-was-lib 우선)
-        for (Path base : baseDirs) {
-            for (String sub : subPaths) {
-                for (String name : fileNames) {
-                    Path candidate = base.resolve(sub).resolve(name).normalize();
-                    if (Files.exists(candidate)) {
-                        return candidate;
+            boolean isCrlf = existing.contains("\r\n");
+            String formattedApiEntry = isCrlf ? apiEntry.replace("\n", "\r\n") : apiEntry;
+
+            if (existing.isBlank()) {
+                existing = """
+                        spring:
+                          config:
+                            activate:
+                              on-profile: %s
+
+                        glow:
+                          communication:
+                            http:
+                              api-list:
+                        """.formatted(env) + apiEntry;
+                if (isCrlf) {
+                    existing = existing.replace("\n", "\r\n");
+                }
+            } else if (existing.contains("api-list: []")) {
+                existing = existing.replace("api-list: []", "api-list:\n" + formattedApiEntry);
+                if (isCrlf) {
+                    existing = existing.replace("\n", "\r\n");
+                }
+            } else if (existing.contains("\r\n    mci:")) {
+                existing = existing.replace("\r\n    mci:", "\r\n" + formattedApiEntry + "    mci:");
+            } else if (existing.contains("\n    mci:")) {
+                existing = existing.replace("\n    mci:", "\n" + formattedApiEntry + "    mci:");
+            } else if (existing.contains("\r\n  mci:")) {
+                existing = existing.replace("\r\n  mci:", "\r\n" + formattedApiEntry + "  mci:");
+            } else if (existing.contains("\n  mci:")) {
+                existing = existing.replace("\n  mci:", "\n" + formattedApiEntry + "  mci:");
+            } else if (existing.contains("\r\naxhub:")) {
+                existing = existing.replace("\r\naxhub:", "\r\n" + formattedApiEntry + "axhub:");
+            } else if (existing.contains("\naxhub:")) {
+                existing = existing.replace("\naxhub:", "\n" + formattedApiEntry + "axhub:");
+            } else if (existing.contains("api-list:")) {
+                existing += formattedApiEntry;
+            } else {
+                String glowBlock = """
+
+                        glow:
+                          communication:
+                            http:
+                              api-list:
+                        """ + apiEntry;
+                existing += isCrlf ? glowBlock.replace("\n", "\r\n") : glowBlock;
+            }
+
+            if ("local".equals(env) || "test".equals(env)) {
+                if (!existing.contains("mock:\n    http:\n      enabled: true")
+                        && !existing.contains("mock:\r\n    http:\r\n      enabled: true")
+                        && !existing.contains("mock:\n      http:\n        enabled: true")
+                        && !existing.contains("mock:\r\n      http:\r\n        enabled: true")) {
+                    if (!existing.contains("mock:")) {
+                        if (existing.contains("\r\naxhub:") || existing.contains("\naxhub:")) {
+                            String mockUnderAxhub = isCrlf
+                                    ? "\r\n  mock:\r\n    http:\r\n      enabled: true"
+                                    : "\n  mock:\n    http:\n      enabled: true";
+                            existing = existing.replaceFirst("(?m)^axhub:\\s*$", "axhub:" + mockUnderAxhub);
+                        } else {
+                            String mockConfig = """
+
+                                    axhub:
+                                      mock:
+                                        http:
+                                          enabled: true
+                                    """;
+                            existing += isCrlf ? mockConfig.replace("\n", "\r\n") : mockConfig;
+                        }
                     }
                 }
             }
+
+            writeUtf8(configPath, existing);
+            updatedFiles.add(configPath);
         }
 
-        // 2. dat-was-lib 디렉토리가 존재하는 디렉토리 찾기
-        for (Path base : baseDirs) {
-            Path libDir = base.resolve("dat-was-lib");
-            if (Files.isDirectory(libDir)) {
-                return libDir.resolve("src/main/resources/glow/application-glow-local.yml").normalize();
-            }
-        }
-
-        // 3. startPath 형제(sibling)로 dat-was-lib 찾기
-        if (startPath != null) {
-            Path libSibling = startPath.resolveSibling("dat-was-lib");
-            if (Files.isDirectory(libSibling)) {
-                return libSibling.resolve("src/main/resources/glow/application-glow-local.yml").normalize();
-            }
-        }
-
-        // 4. Fallback
-        if (sourceDir != null && !sourceDir.isBlank()) {
-            return Paths.get(sourceDir.trim()).resolve("dat-was-lib/src/main/resources/glow/application-glow-local.yml").normalize();
-        }
-        return Paths.get("dat-was-lib/src/main/resources/glow/application-glow-local.yml").normalize();
+        return updatedFiles;
     }
 
-    private static Path ensureLocalHttpApiConfiguration(Path projectRoot, String httpApiName, String toolName) throws IOException {
-        Path localConfigPath = findGlowLocalConfigPath(projectRoot);
-        Files.createDirectories(localConfigPath.getParent());
-        String existing = Files.exists(localConfigPath) ? Files.readString(localConfigPath, StandardCharsets.UTF_8) : "";
-        if (java.util.regex.Pattern.compile("(?m)^\\s*-\\s+name:\\s*"
-                + java.util.regex.Pattern.quote(httpApiName) + "\\s*$").matcher(existing).find()) {
-            return localConfigPath;
+    private static Path resolveEnvConfigPath(Path resourcesDir, String env) {
+        Path underscore = resourcesDir.resolve("application_" + env + ".yml");
+        if (Files.exists(underscore)) {
+            return underscore;
         }
-        String environmentKey = toPackageSegment(httpApiName).toUpperCase(Locale.ROOT).replace('-', '_');
-        String apiEntry = """
-                        - name: %s
-                          domain: ${AXHUB_%s_HTTP_DOMAIN:http://localhost:${server.port}}
-                          url: ${AXHUB_%s_HTTP_URL:/api/mock/http/%s}
-                          method: POST
-                          content-type: application/json;charset=UTF-8
-                          biz-pod: false
-                """.formatted(httpApiName, environmentKey, environmentKey, toolName).stripTrailing() + "\n";
-        boolean isCrlf = existing.contains("\r\n");
-        String formattedApiEntry = isCrlf ? apiEntry.replace("\n", "\r\n") : apiEntry;
-
-        if (existing.isBlank()) {
-            existing = """
-                    spring:
-                      config:
-                        activate:
-                          on-profile: local
-
-                    glow:
-                      communication:
-                        http:
-                          api-list:
-                    """ + apiEntry;
-            if (isCrlf) {
-                existing = existing.replace("\n", "\r\n");
+        Path hyphen = resourcesDir.resolve("application-" + env + ".yml");
+        if (Files.exists(hyphen)) {
+            return hyphen;
+        }
+        Path underscoreYaml = resourcesDir.resolve("application_" + env + ".yaml");
+        if (Files.exists(underscoreYaml)) {
+            return underscoreYaml;
+        }
+        Path hyphenYaml = resourcesDir.resolve("application-" + env + ".yaml");
+        if (Files.exists(hyphenYaml)) {
+            return hyphenYaml;
+        }
+        Path glowProfile = resourcesDir.resolve("glow/application-glow-" + env + ".yml");
+        if (Files.exists(glowProfile)) {
+            return glowProfile;
+        }
+        try {
+            if (Files.isDirectory(resourcesDir)) {
+                boolean hasHyphen = Files.list(resourcesDir)
+                        .anyMatch(p -> p.getFileName().toString().startsWith("application-"));
+                if (hasHyphen) {
+                    return hyphen;
+                }
             }
-        } else if (existing.contains("\r\n    mci:")) {
-            existing = existing.replace("\r\n    mci:", "\r\n" + formattedApiEntry + "    mci:");
-        } else if (existing.contains("\n    mci:")) {
-            existing = existing.replace("\n    mci:", "\n" + formattedApiEntry + "    mci:");
-        } else if (existing.contains("\r\naxhub:")) {
-            existing = existing.replace("\r\naxhub:", "\r\n" + formattedApiEntry + "axhub:");
-        } else if (existing.contains("\naxhub:")) {
-            existing = existing.replace("\naxhub:", "\n" + formattedApiEntry + "axhub:");
-        } else if (existing.contains("api-list:")) {
-            existing += formattedApiEntry;
-        } else {
-            throw new IllegalStateException("application-glow-local.yml must define glow.communication.http.api-list");
-        }
-        if (!existing.contains("axhub:\n  mock:\n    http:\n      enabled: true")
-                && !existing.contains("axhub:\r\n  mock:\r\n    http:\r\n      enabled: true")) {
-            String mockConfig = """
+        } catch (IOException ignored) {}
 
-                    axhub:
-                      mock:
-                        http:
-                          enabled: true
-                    """;
-            existing += isCrlf ? mockConfig.replace("\n", "\r\n") : mockConfig;
-        }
-        writeUtf8(localConfigPath, existing);
-        return localConfigPath;
+        return underscore;
     }
 
+    private static Path ensureLocalHttpApiConfiguration(Path moduleRoot, String httpApiName, String toolName) throws IOException {
+        List<Path> configs = ensureHttpApiConfigurations(moduleRoot, httpApiName, toolName);
+        return configs.isEmpty() ? null : configs.get(0);
+    }
     private static void writePagingComponents(Path pagingDir, String bizPackage,
                                               String baseName, PagingMode pagingMode,
                                               String ioPackage, String ioPrefix,
@@ -2579,8 +2684,8 @@ public class ToolScaffolder {
                                 request.getScrPageInfo().setPageDataCc(20);
                             }
                             if (pagingInfo != null) {
-                                if (pagingInfo.getScrlmhdNm() != null) request.getScrPageInfo().setScrlmhdNm(pagingInfo.getScrlmhdNm());
-                                if (pagingInfo.getScrlItva() != null) request.getScrPageInfo().setScrlItva(pagingInfo.getScrlItva());
+                                if (pagingInfo.getScrImhdNm() != null) request.getScrPageInfo().setScrImhdNm(pagingInfo.getScrImhdNm());
+                                if (pagingInfo.getScrItva() != null) request.getScrPageInfo().setScrItva(pagingInfo.getScrItva());
                                 if (pagingInfo.getScrSortValu() != null) request.getScrPageInfo().setScrSortValu(pagingInfo.getScrSortValu());
                                 if (pagingInfo.getPageDataCc() > 0) request.getScrPageInfo().setPageDataCc(pagingInfo.getPageDataCc());
                             }
@@ -2618,14 +2723,14 @@ public class ToolScaffolder {
 
                             boolean hasNext = resPageInfo != null && "Y".equalsIgnoreCase(resPageInfo.getNextDataExtYn());
                             String nextSortValu = resPageInfo != null ? resPageInfo.getScrSortValu() : null;
-                            String nextItva = resPageInfo != null ? resPageInfo.getScrlItva() : null;
+                            String nextItva = resPageInfo != null ? resPageInfo.getScrItva() : null;
 
                             if (response != null) {
                                 response.setHasMore(hasNext);
                             }
 
                             ScrollPagingInfo nextPaging = new ScrollPagingInfo(
-                                    request.getScrPageInfo().getScrlmhdNm(),
+                                    request.getScrPageInfo().getScrImhdNm(),
                                     nextItva,
                                     nextSortValu,
                                     hasNext,
@@ -3023,7 +3128,7 @@ public class ToolScaffolder {
     }
 
     private static String httpUseCaseImplContent(String bizPackage, String baseName, String httpPackage,
-                                                 String httpApiClass, String author, String createDate) {
+                                                 String httpApiClass, String author, String createDate, String toolName) {
         String httpRequestClass = baseName + "HttpRequest";
         String httpResponseClass = baseName + "HttpResponse";
         String httpClientClass = httpApiClass + "Client";
@@ -3040,8 +3145,24 @@ public class ToolScaffolder {
                 import %s.%s.io.%s;
                 import %s.usecase.%sUseCase;
                 import lombok.RequiredArgsConstructor;
+                import lombok.extern.slf4j.Slf4j;
                 import org.springframework.stereotype.Service;
 
+                /**
+                 * @package %s.usecase.impl
+                 * @className %sUseCaseImpl
+                 * @description AX HUB 시스템 처리 클래스
+                 * @author %s
+                 * @create %s
+                 * <pre>
+                 * ---------- 개정이력 ----------
+                 * 수정일      수정자    수정내용
+                 * ---------- -------- ---------------------------
+                 * %s  %s    최초생성
+                 * 
+                 * </pre>
+                 */
+                @Slf4j
                 @Service
                 @RequiredArgsConstructor
                 public class %sUseCaseImpl implements %sUseCase {
@@ -3051,13 +3172,31 @@ public class ToolScaffolder {
 
                     @Override
                     public %sResponse execute(%sRequest req) {
-                        %s httpRequest = converter.toHttpRequest(req);
-                        %s httpResponse = %s.call(httpRequest, %s.class);
+                        log.info("[HTTP Tool] {} 요청 수신.", "%s");
+                        try {
+                            // MapStruct를 이용한 자동 매핑 (AI DTO -> HTTP DTO)
+                            %s httpRequest = converter.toHttpRequest(req);
 
-                        %sResponse response = converter.toResponse(httpResponse);
-                        response.setResultCode("SUCCESS");
-                        response.setResultMessage("HTTP API call completed.");
-                        return response;
+                            %s httpResponse = %s.call(httpRequest, %s.class);
+                            %sResponse response = new %sResponse();
+                            if (httpResponse != null) {
+                                response = converter.toResponse(httpResponse);
+                            }
+                            if (response == null) {
+                                response = new %sResponse();
+                            }
+                            response.setResultCode("SUCCESS");
+                            response.setResultMessage(httpResponse != null
+                                    ? "HTTP call completed."
+                                    : "HTTP call completed without a response body.");
+                            return response;
+                        } catch (Exception e) {
+                            log.error("[HTTP Tool] 연동 중 오류 발생: {}", e.getMessage(), e);
+                            %sResponse errorResponse = new %sResponse();
+                            errorResponse.setResultCode("ERROR");
+                            errorResponse.setResultMessage("HTTP call failed: " + (e.getMessage() != null ? e.getMessage() : "Unknown error"));
+                            return errorResponse;
+                        }
                     }
                 }
                 """.formatted(
@@ -3069,11 +3208,20 @@ public class ToolScaffolder {
                 BASE_PACKAGE, httpPackage, httpRequestClass,
                 BASE_PACKAGE, httpPackage, httpResponseClass,
                 bizPackage, baseName,
+                bizPackage,
+                baseName,
+                author,
+                createDate,
+                createDate, author,
                 baseName, baseName,
                 baseName, httpClientClass, clientVariable,
                 baseName, baseName,
-                httpRequestClass, httpResponseClass, clientVariable, httpResponseClass,
-                baseName);
+                toolName,
+                httpRequestClass,
+                httpResponseClass, clientVariable, httpResponseClass,
+                baseName, baseName,
+                baseName,
+                baseName, baseName);
         return result.replace("execute(", methodName + "(");
     }
 
@@ -3383,7 +3531,7 @@ public class ToolScaffolder {
         return toPascalCase(word.substring(0, length).toLowerCase(Locale.ROOT));
     }
 
-    private static String toPascalCase(String str) {
+    public static String toPascalCase(String str) {
         if (str == null || str.isEmpty()) {
             return str;
         }
@@ -3403,5 +3551,77 @@ public class ToolScaffolder {
             result.setCharAt(0, Character.toUpperCase(result.charAt(0)));
         }
         return result.toString();
+    }
+    public static String toAbbreviatedHttpApiName(String name) {
+        if (name == null || name.isBlank()) {
+            return "api-call";
+        }
+        String[] rawWords = name.trim().split("(?<=[a-z0-9])(?=[A-Z])|(?<=[A-Z])(?=[A-Z][a-z])|[-_\\s]+");
+        List<String> words = new ArrayList<>();
+        for (String w : rawWords) {
+            String cleaned = w.replaceAll("[^a-zA-Z0-9]", "").toLowerCase(Locale.ROOT);
+            if (!cleaned.isBlank()) {
+                words.add(cleaned);
+            }
+        }
+        if (words.isEmpty()) {
+            return "api-call";
+        }
+
+        String w1 = words.get(0);
+        String w2 = words.size() > 1 ? words.get(words.size() - 1) : "call";
+        if (words.size() >= 3) {
+            w1 = words.get(0);
+            w2 = words.get(words.size() - 1);
+        }
+
+        String p1 = abbreviateToken(w1, 3, 4);
+        String p2 = abbreviateToken(w2, 3, 4);
+
+        String result = p1 + "-" + p2;
+        if (result.length() >= 10) {
+            p1 = p1.substring(0, Math.min(p1.length(), 3));
+            p2 = p2.substring(0, Math.min(p2.length(), 4));
+            result = p1 + "-" + p2;
+        }
+        if (result.length() >= 10) {
+            result = result.substring(0, 9);
+        }
+        return result;
+    }
+
+    private static String abbreviateToken(String word, int minLen, int maxLen) {
+        if (word == null || word.isBlank()) return "call";
+        String lower = word.toLowerCase(Locale.ROOT);
+        return switch (lower) {
+            case "customer" -> "cst";
+            case "contract" -> "cntr";
+            case "employee" -> "emp";
+            case "search" -> "srch";
+            case "inquiry", "query" -> "inq";
+            case "detail" -> "dtl";
+            case "history" -> "hist";
+            case "status" -> "stat";
+            case "claim" -> "clm";
+            case "insurance" -> "ins";
+            case "account" -> "acnt";
+            case "payment" -> "pay";
+            case "notice" -> "ntc";
+            case "common" -> "cmm";
+            case "consult", "consulting" -> "cnsl";
+            case "convert", "converter" -> "cnvr";
+            case "individual" -> "ind";
+            case "manage", "management" -> "mgt";
+            case "product" -> "prd";
+            case "process", "processor" -> "prc";
+            case "variable" -> "var";
+            case "refund" -> "rfnd";
+            case "balance" -> "bal";
+            case "return" -> "retn";
+            default -> {
+                int len = Math.min(lower.length(), maxLen);
+                yield lower.substring(0, len);
+            }
+        };
     }
 }
