@@ -106,24 +106,5 @@ public class ScrollPagingInfo implements PagingInfo<ScrollPagingInfo>, Serializa
         return this;
     }
 
-    // 하위 호환성 별칭 메서드 (기존 scrlmhdNm, scrlItva 오타 호환)
-    public String getScrlmhdNm() {
-        return scrImhdNm;
-    }
 
-    public void setScrlmhdNm(String scrlmhdNm) {
-        this.scrImhdNm = scrlmhdNm;
-    }
-
-    public String getScrlItva() {
-        return scrItva;
-    }
-
-    public void setScrlItva(String scrlItva) {
-        this.scrItva = scrlItva;
-    }
-
-    public String scrlMhdNm() {
-        return scrImhdNm;
-    }
 }

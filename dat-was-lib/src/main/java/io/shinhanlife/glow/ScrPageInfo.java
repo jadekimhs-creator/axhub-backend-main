@@ -25,7 +25,7 @@ public class ScrPageInfo extends io.shinhanlife.glow.db.dto.ScrPageInfo {
         super();
     }
 
-    public ScrPageInfo(String scrlmhdNm, String scrlItva, String scrSortValu, String nextDataExtYn, int pageDataCc) {
-        super(scrlmhdNm, scrlItva, scrSortValu, nextDataExtYn, pageDataCc);
+    public ScrPageInfo(String scrImhdNm, String scrItva, String scrSortValu, String nextDataExtYn, int pageDataCc) {
+        super(scrImhdNm, scrItva, scrSortValu, nextDataExtYn, pageDataCc);
     }
 }
