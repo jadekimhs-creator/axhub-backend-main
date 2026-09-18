@@ -239,7 +239,7 @@ class ScaffoldingControllerToolDraftTest {
         when(requestSpec.options(any(ChatOptions.class))).thenReturn(requestSpec);
         when(requestSpec.call()).thenReturn(responseSpec);
         when(responseSpec.content()).thenReturn("""
-                {"baseName":"pro_inquiry_variable","title":"AI가 바꾼 제목","description":"[pro] 변액보험 펀드 가이드 정보를 조회합니다. 계약번호를 모를 경우 계약조회 툴을 먼저 호출해야 합니다. 기준일자 미입력시 당일로 처리됩니다.","categoryKey":"pro","routingType":"MCI","httpApiName":"variable-fund","functionDescription":"[pro] 변액보험 펀드 가이드 조회","displayDescription":"AI가 바꾼 화면명","whenToUse":"고객이 변액보험 펀드 가이드 및 상품유형별 투자 가이드 조회를 요청할 때 사용한다.","whenNotToUse":"변액보험 펀드 변경이나 신청 등의 변경 업무에는 사용하지 않는다.","ioLimits":"상품유형코드 한 건을 입력받아 가이드 목록을 반환한다. 미입력시 기본 1년치 조회.","exampleQueries":["[NSAK0060] 펀드가이드 상품유형별 투자 가이드를 보여줘","변액보험 펀드 투자 가이드 조회해줘","상품유형별 펀드가이드 확인"],"tags":["pro","펀드가이드","투자가이드","variable","fundGuide"],"ownerOrg":"MCP_TOOL","inputFields":[{"name":"productTypeCode","type":"String","description":"상품유형코드","examples":["A01"],"required":true}],"outputFields":[{"name":"resultCode","type":"String","description":"결과 코드","examples":["SUCCESS"],"required":true}]}
+                {"baseName":"pro_search_variable","title":"AI가 바꾼 제목","description":"[pro] 변액보험 펀드 가이드 정보를 조회합니다. 계약번호를 모를 경우 계약조회 툴을 먼저 호출해야 합니다. 기준일자 미입력시 당일로 처리됩니다.","categoryKey":"pro","routingType":"MCI","httpApiName":"variable-fund","functionDescription":"[pro] 변액보험 펀드 가이드 조회","displayDescription":"AI가 바꾼 화면명","whenToUse":"고객이 변액보험 펀드 가이드 및 상품유형별 투자 가이드 조회를 요청할 때 사용한다.","whenNotToUse":"변액보험 펀드 변경이나 신청 등의 변경 업무에는 사용하지 않는다.","ioLimits":"상품유형코드 한 건을 입력받아 가이드 목록을 반환한다. 미입력시 기본 1년치 조회.","exampleQueries":["[NSAK0060] 펀드가이드 상품유형별 투자 가이드를 보여줘","변액보험 펀드 투자 가이드 조회해줘","상품유형별 펀드가이드 확인"],"tags":["pro","펀드가이드","투자가이드","variable","fundGuide"],"ownerOrg":"MCP_TOOL","inputFields":[{"name":"productTypeCode","type":"String","description":"상품유형코드","examples":["A01"],"required":true},{"name":"scrPageInfo","type":"String","description":"","examples":[],"required":true}],"outputFields":[{"name":"resultCode","type":"String","description":"결과 코드","examples":["SUCCESS"],"required":true}]}
                 """);
         ScaffoldingController controller = new ScaffoldingController(builder, new ObjectMapper());
         ReflectionTestUtils.setField(controller, "openRouterApiKey", "test-openrouter-key");
@@ -252,7 +252,7 @@ class ScaffoldingControllerToolDraftTest {
 
         String requestBody = """
                 {
-                  "baseName": "pro_inquiry_variable",
+                  "baseName": "pro_search_variable",
                   "title": "%s",
                   "description": "변액 펀드 조회",
                   "categoryKey": "pro",
@@ -264,19 +264,23 @@ class ScaffoldingControllerToolDraftTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(requestBody))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.baseName").value("ProInquiryVariable"))
+                .andExpect(jsonPath("$.baseName").value("ProSearchVariable"))
                 .andExpect(jsonPath("$.title").value(originalTitle))
                 .andExpect(jsonPath("$.displayDescription").value(originalDisplayDesc))
                 .andExpect(jsonPath("$.categoryKey").value("pro"))
                 .andExpect(jsonPath("$.description", org.hamcrest.Matchers.containsString("[pro]")))
                 .andExpect(jsonPath("$.exampleQueries[0]", org.hamcrest.Matchers.containsString("NSAK0060")))
                 .andExpect(jsonPath("$.tags[0]").value("pro"))
-                .andExpect(jsonPath("$.inputFields[0].name").value("productTypeCode"));
+                .andExpect(jsonPath("$.inputFields[0].name").value("productTypeCode"))
+                .andExpect(jsonPath("$.inputFields[1].name").value("scrPageInfo"))
+                .andExpect(jsonPath("$.inputFields[1].required").value(false))
+                .andExpect(jsonPath("$.inputFields[1].description").value("페이징 처리 객체 (생략 시 시스템 기본값 적용)"));
 
         org.mockito.ArgumentCaptor<String> promptCaptor = org.mockito.ArgumentCaptor.forClass(String.class);
         verify(requestSpec).user(promptCaptor.capture());
-        assertTrue(promptCaptor.getValue().contains("CRITICAL V17 OPTIMIZATION RULES"));
-        assertTrue(promptCaptor.getValue().contains("3-Part Naming Convention"));
+        assertTrue(promptCaptor.getValue().contains("CRITICAL V17 OPTIMIZATION RULES - 6 GUIDELINE PRINCIPLES"));
+        assertTrue(promptCaptor.getValue().contains("3단 구조"));
+        assertTrue(promptCaptor.getValue().contains("search"));
         assertTrue(promptCaptor.getValue().contains(originalDisplayDesc));
     }
 
@@ -442,6 +446,53 @@ class ScaffoldingControllerToolDraftTest {
     }
 
     @Test
+    void mciAnalyzePreservesScrPageInfoAndPageInfoEvenIfAiSuggestsDifferentName() throws Exception {
+        ChatClient.Builder builder = mock(ChatClient.Builder.class);
+        ChatClient chatClient = mock(ChatClient.class);
+        ChatClient.ChatClientRequestSpec requestSpec = mock(ChatClient.ChatClientRequestSpec.class);
+        ChatClient.CallResponseSpec responseSpec = mock(ChatClient.CallResponseSpec.class);
+        when(builder.build()).thenReturn(chatClient);
+        when(chatClient.prompt()).thenReturn(requestSpec);
+        when(requestSpec.user(anyString())).thenReturn(requestSpec);
+        when(requestSpec.options(any(ChatOptions.class))).thenReturn(requestSpec);
+        when(requestSpec.call()).thenReturn(responseSpec);
+        // Simulate AI trying to rename scrPageInfo and pageInfo
+        when(responseSpec.content()).thenReturn("""
+                {"mappings":[
+                    {"ownerType":"ONBSZ0460_O","sourceName":"scrPageInfo","targetName":"scrollPagingInfo","include":true},
+                    {"ownerType":"ONBSZ0460_O","sourceName":"pageInfo","targetName":"pagingDetails","include":true}
+                ]}
+                """);
+        ScaffoldingController controller = new ScaffoldingController(builder, new ObjectMapper());
+        ReflectionTestUtils.setField(controller, "openRouterApiKey", "test-openrouter-key");
+        MockMvc mockMvc = MockMvcBuilders.standaloneSetup(controller)
+                .setMessageConverters(new MappingJackson2HttpMessageConverter())
+                .build();
+        String source = """
+                package io.shinhanlife.dat.mcc.infra.itrf.mci.onbsz.io;
+                import io.shinhanlife.glow.db.dto.PageInfo;
+                import io.shinhanlife.glow.db.dto.ScrPageInfo;
+                public class ONBSZ0460_O {
+                    @GlowTrgmField(order = 1, length = 20, description = "페이지정보")
+                    private PageInfo pageInfo;
+                    @GlowTrgmField(order = 2, length = 20, description = "스크롤페이지정보")
+                    private ScrPageInfo scrPageInfo;
+                }
+                """;
+
+        mockMvc.perform(post("/api/v1/scaffold/mci-response/analyze")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(new ObjectMapper().writeValueAsString(java.util.Map.of(
+                                "source", source,
+                                "model", "cohere/north-mini-code:free"))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.mappings[0].sourceName").value("pageInfo"))
+                .andExpect(jsonPath("$.mappings[0].targetName").value("pageInfo"))
+                .andExpect(jsonPath("$.mappings[1].sourceName").value("scrPageInfo"))
+                .andExpect(jsonPath("$.mappings[1].targetName").value("scrPageInfo"));
+    }
+
+    @Test
     void podDraftUsesTheCurrentTargetModuleOptionsForConfusableServers() {
         ChatClient.Builder builder = mock(ChatClient.Builder.class);
         ChatClient chatClient = mock(ChatClient.class);
@@ -493,5 +544,142 @@ class ScaffoldingControllerToolDraftTest {
         assertEquals("emp-dtl", validated.httpApiName());
         assertEquals("EmpDtl", validated.baseName());
         assertTrue(validated.httpApiName().length() < 10);
+    }
+
+    @Test
+    void defaultsInterfaceIdForHttpScaffoldWhenOmitted() throws Exception {
+        createLibraryProject();
+        ScaffoldingController controller = new ScaffoldingController(mock(ChatClient.Builder.class), new ObjectMapper());
+        String workspacePath = root.toString().replace("\\", "/");
+
+        java.util.Map<String, String> req = new java.util.HashMap<>();
+        req.put("baseName", "CustomerNotice");
+        req.put("title", "고객 공지 조회");
+        req.put("description", "공지사항을 조회한다");
+        req.put("categoryKey", "cmm");
+        req.put("routingType", "HTTP");
+        req.put("moduleName", "dat-was-cmm");
+        req.put("workspacePath", workspacePath);
+        // interfaceId explicitly omitted
+
+        String result = controller.scaffoldTool(req);
+        assertTrue(result.contains("UseCase"), "Expected success message with UseCase, but got: " + result);
+        Path usecaseInterface = Files.walk(root)
+                .filter(p -> p.toString().endsWith("UseCase.java") && !p.toString().endsWith("UseCaseImpl.java"))
+                .findFirst()
+                .orElseThrow();
+        String usecaseContent = Files.readString(usecaseInterface);
+        assertTrue(usecaseContent.contains("mappingId = \"HTTP0000001\""), usecaseContent);
+    }
+
+    @Test
+    void defaultsInterfaceIdForGroupedHttpToolWhenOmitted() throws Exception {
+        createLibraryProject();
+        ScaffoldingController controller = new ScaffoldingController(mock(ChatClient.Builder.class), new ObjectMapper());
+        String workspacePath = root.toString().replace("\\", "/");
+        MockMvc mockMvc = MockMvcBuilders.standaloneSetup(controller)
+                .setMessageConverters(new MappingJackson2HttpMessageConverter())
+                .build();
+
+        String payload = """
+                {
+                  "useCaseName": "NoticeGroup",
+                  "moduleName": "dat-was-cmm",
+                  "author": "tester",
+                  "date": "2026.09.18",
+                  "workspacePath": "%s",
+                  "tools": [
+                    {
+                      "baseName": "NoticeItem",
+                      "methodName": "searchNotice",
+                      "title": "Notice item",
+                      "description": "Search notice",
+                      "group": "cmm",
+                      "routingType": "HTTP",
+                      "httpApiName": "not-item"
+                    }
+                  ]
+                }
+                """.formatted(workspacePath);
+
+        mockMvc.perform(post("/api/v1/scaffold/tool-group")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(payload))
+                .andExpect(status().isOk())
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("Multi Tool Scaffolding Complete")));
+
+        Path usecaseInterface = Files.walk(root)
+                .filter(p -> p.toString().endsWith("NoticeGroupUseCase.java"))
+                .findFirst()
+                .orElseThrow();
+        String usecaseContent = Files.readString(usecaseInterface);
+        assertTrue(usecaseContent.contains("mappingId = \"HTTP0000001\""), usecaseContent);
+    }
+
+    @Test
+    void abbreviatesHttpUseCaseAndOmitsRedundantConverterAndEnsuresYamlMci() throws Exception {
+        createLibraryProject();
+        ScaffoldingController controller = new ScaffoldingController(mock(ChatClient.Builder.class), new ObjectMapper());
+        String workspacePath = root.toString().replace("\\", "/");
+        MockMvc mockMvc = MockMvcBuilders.standaloneSetup(controller)
+                .setMessageConverters(new MappingJackson2HttpMessageConverter())
+                .build();
+
+        String payload = """
+                {
+                  "useCaseName": "CusInquiryContractStatus",
+                  "moduleName": "dat-was-cus",
+                  "author": "tester",
+                  "date": "2026.09.18",
+                  "workspacePath": "%s",
+                  "tools": [
+                    {
+                      "baseName": "CusInquiryContractStatus",
+                      "methodName": "inquireContractStatus",
+                      "title": "Inquire Contract Status",
+                      "description": "Inquire contract status",
+                      "group": "cus",
+                      "routingType": "HTTP",
+                      "httpApiName": "cus-con"
+                    }
+                  ]
+                }
+                """.formatted(workspacePath);
+
+        mockMvc.perform(post("/api/v1/scaffold/tool-group")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(payload))
+                .andExpect(status().isOk())
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("Multi Tool Scaffolding Complete")));
+
+        // Verify UseCase and UseCaseImpl are abbreviated to CusCon
+        boolean hasAbbrevUseCase = Files.walk(root)
+                .anyMatch(p -> p.toString().endsWith("CusConUseCase.java"));
+        assertTrue(hasAbbrevUseCase, "CusConUseCase.java should exist");
+
+        boolean hasAbbrevUseCaseImpl = Files.walk(root)
+                .anyMatch(p -> p.toString().endsWith("CusConUseCaseImpl.java"));
+        assertTrue(hasAbbrevUseCaseImpl, "CusConUseCaseImpl.java should exist");
+
+        // Verify unwanted CusInquiryContractStatusConverter was NOT created
+        boolean hasUnwantedConverter = Files.walk(root)
+                .anyMatch(p -> p.toString().endsWith("CusInquiryContractStatusConverter.java"));
+        assertFalse(hasUnwantedConverter, "CusInquiryContractStatusConverter.java should not be created");
+
+        // Verify valid CusConConverter WAS created
+        boolean hasValidConverter = Files.walk(root)
+                .anyMatch(p -> p.toString().endsWith("CusConConverter.java"));
+        assertTrue(hasValidConverter, "CusConConverter.java should exist");
+
+        // Verify application_local.yml was generated with both http api-list and mci
+        Path localYml = Files.walk(root)
+                .filter(p -> p.toString().endsWith("application_local.yml"))
+                .findFirst()
+                .orElseThrow();
+        String ymlContent = Files.readString(localYml, StandardCharsets.UTF_8);
+        assertTrue(ymlContent.contains("api-list:"), ymlContent);
+        assertTrue(ymlContent.contains("- name: cus-con"), ymlContent);
+        assertTrue(ymlContent.contains("mci:"), ymlContent);
+        assertTrue(ymlContent.contains("host: ${GLOW_COMMUNICATION_MCI_HOST:http://localhost}"), ymlContent);
     }
 }

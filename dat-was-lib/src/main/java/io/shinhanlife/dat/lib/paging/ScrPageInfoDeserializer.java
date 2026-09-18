@@ -31,6 +31,23 @@ public class ScrPageInfoDeserializer extends JsonDeserializer<ScrPageInfo> {
             return null;
         }
 
+        // 빈 문자열("")로 넘어온 경우
+        if (node.isTextual() && node.asText().isBlank()) {
+            return null;
+        }
+
+        // MCI 전문 응답처럼 배열([ { ... } ]) 형태로 넘어온 경우 첫 번째 객체 꺼내기
+        if (node.isArray()) {
+            if (node.isEmpty()) {
+                return null;
+            }
+            node = node.get(0);
+        }
+
+        if (node == null || node.isNull()) {
+            return null;
+        }
+
         ScrPageInfo info = new ScrPageInfo();
 
         if (node.hasNonNull("scrImhdNm")) {

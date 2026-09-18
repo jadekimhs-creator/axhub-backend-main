@@ -1,6 +1,7 @@
 package io.shinhanlife.dat.lib.util;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.List;
@@ -99,14 +100,14 @@ class MciResponseScaffolderTest {
                 "IndividualCustomerDetailInquiryRequestConverter",
                 mappings);
 
-        assertTrue(generated.requestSource().contains("@Schema(description = \"인사번호\")"));
+        assertTrue(generated.requestSource().contains("description = \"인사번호\""));
         assertTrue(generated.requestSource().contains("private String employeeNumber;"));
         assertTrue(generated.converterSource().contains(
                 "@Mapping(source = \"employeeNumber\", target = \"prafNo\")"));
         assertTrue(generated.converterSource().contains(
-                "ONBSZ0460_I toLegacyRequest(IndividualCustomerDetailInquiryRequest source);"));
+                "ONBSZ0460_I toRequest(IndividualCustomerDetailInquiryRequest source);"));
         assertTrue(generated.converterSource().contains(
-                "ONBSZ0460_I.CmnnPrafIfinOutDto toLegacyCmnnPrafIfinOutDto("));
+                "ONBSZ0460_I.CmnnPrafIfinOutDto toCmnnPrafIfinOutDto("));
     }
 
     @Test
@@ -124,5 +125,50 @@ class MciResponseScaffolderTest {
             return;
         }
         throw new AssertionError("Duplicate target names must be rejected");
+    }
+
+    @Test
+    void preservesScrPageInfoAndPageInfoWithoutRenaming() {
+        String sourceWithPaging = """
+                package io.shinhanlife.dat.mcc.infra.itrf.mci.onbsz.io;
+
+                import io.shinhanlife.glow.communication.annotation.GlowTrgmField;
+                import io.shinhanlife.glow.db.dto.PageInfo;
+                import io.shinhanlife.glow.db.dto.ScrPageInfo;
+                import lombok.Data;
+
+                @Data
+                public class ONBSZ0460_O {
+                    @GlowTrgmField(order = 1, length = 20, description = "페이지정보")
+                    private PageInfo pageInfo;
+
+                    @GlowTrgmField(order = 2, length = 20, description = "스크롤페이지정보")
+                    private ScrPageInfo scrPageInfo;
+                }
+                """;
+        MciResponseScaffolder.ParsedSource parsed = MciResponseScaffolder.parse(sourceWithPaging);
+        List<MciResponseScaffolder.FieldMapping> mappings = List.of(
+                new MciResponseScaffolder.FieldMapping("ONBSZ0460_O", "pageInfo", "customPaging", true),
+                new MciResponseScaffolder.FieldMapping("ONBSZ0460_O", "scrPageInfo", "scrollPagingInfo", true));
+
+        MciResponseScaffolder.GeneratedSources generated = MciResponseScaffolder.generate(
+                parsed,
+                "io.shinhanlife.dat.mcc.biz.pro.dto",
+                "CustomerResponse",
+                "io.shinhanlife.dat.mcc.biz.pro.converter",
+                "CustomerConverter",
+                mappings);
+
+        // pageInfo and scrPageInfo must be preserved without renaming
+        assertTrue(generated.responseSource().contains("private PageInfo pageInfo;"));
+        assertTrue(generated.responseSource().contains("private ScrPageInfo scrPageInfo;"));
+        assertTrue(generated.responseSource().contains("@JsonDeserialize(using = ScrPageInfoDeserializer.class)"));
+        assertTrue(generated.responseSource().contains("import io.shinhanlife.glow.db.dto.PageInfo;"));
+        assertTrue(generated.responseSource().contains("import io.shinhanlife.glow.db.dto.ScrPageInfo;"));
+        assertTrue(generated.responseSource().contains("import io.shinhanlife.dat.lib.paging.ScrPageInfoDeserializer;"));
+
+        // Converter should not have unnecessary @Mapping renaming since names match
+        assertFalse(generated.converterSource().contains("@Mapping(source = \"pageInfo\", target = \"customPaging\")"));
+        assertFalse(generated.converterSource().contains("@Mapping(source = \"scrPageInfo\", target = \"scrollPagingInfo\")"));
     }
 }

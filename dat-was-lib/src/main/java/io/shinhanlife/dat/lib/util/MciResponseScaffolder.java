@@ -290,13 +290,26 @@ public final class MciResponseScaffolder {
         if (mappings != null) {
             for (FieldMapping mapping : mappings) {
                 if (mapping == null || mapping.ownerType() == null || mapping.sourceName() == null) continue;
-                normalized.put(key(mapping.ownerType(), mapping.sourceName()), mapping);
+                String target = mapping.targetName();
+                if ("scrPageInfo".equalsIgnoreCase(mapping.sourceName())) {
+                    target = "scrPageInfo";
+                } else if ("pageInfo".equalsIgnoreCase(mapping.sourceName())) {
+                    target = "pageInfo";
+                }
+                normalized.put(key(mapping.ownerType(), mapping.sourceName()),
+                        new FieldMapping(mapping.ownerType(), mapping.sourceName(), target, mapping.include()));
             }
         }
         for (ParsedType type : parsed.types()) {
             for (ParsedField field : type.fields()) {
+                String target = field.name();
+                if ("scrPageInfo".equalsIgnoreCase(field.name())) {
+                    target = "scrPageInfo";
+                } else if ("pageInfo".equalsIgnoreCase(field.name())) {
+                    target = "pageInfo";
+                }
                 normalized.putIfAbsent(key(type.name(), field.name()),
-                        new FieldMapping(type.name(), field.name(), field.name(), true));
+                        new FieldMapping(type.name(), field.name(), target, true));
             }
         }
         return normalized;
@@ -330,12 +343,22 @@ public final class MciResponseScaffolder {
                 .anyMatch(field -> field.type().contains("List<"));
         boolean usesBigDecimal = parsed.types().stream().flatMap(type -> type.fields().stream())
                 .anyMatch(field -> field.type().contains("BigDecimal"));
+        boolean usesPageInfo = parsed.types().stream().flatMap(type -> type.fields().stream())
+                .anyMatch(field -> field.type().contains("PageInfo") && !field.type().contains("ScrPageInfo"));
+        boolean usesScrPageInfo = parsed.types().stream().flatMap(type -> type.fields().stream())
+                .anyMatch(field -> field.type().contains("ScrPageInfo") || "scrPageInfo".equalsIgnoreCase(field.name()));
         StringBuilder source = new StringBuilder("package ").append(responsePackage).append(";\n\n")
                 .append("import com.fasterxml.jackson.annotation.JsonInclude;\n")
                 .append("import io.swagger.v3.oas.annotations.media.Schema;\n")
                 .append("import lombok.Data;\n");
         if (usesBigDecimal) source.append("import java.math.BigDecimal;\n");
         if (usesList) source.append("import java.util.List;\n");
+        if (usesPageInfo) source.append("import io.shinhanlife.glow.db.dto.PageInfo;\n");
+        if (usesScrPageInfo) {
+            source.append("import com.fasterxml.jackson.databind.annotation.JsonDeserialize;\n")
+                    .append("import io.shinhanlife.dat.lib.paging.ScrPageInfoDeserializer;\n")
+                    .append("import io.shinhanlife.glow.db.dto.ScrPageInfo;\n");
+        }
         source.append("\n@Data\n@JsonInclude(JsonInclude.Include.NON_NULL)\n")
                 .append("public class ").append(responseClassName).append(" {\n\n")
                 .append(responseFields(parsed.types().getFirst(), mappings, "    ", isRequest));
@@ -369,6 +392,9 @@ public final class MciResponseScaffolder {
             } else {
                 source.append(indent).append("@Schema(description = \"")
                         .append(escapeJava(field.description())).append("\")\n");
+            }
+            if ("scrPageInfo".equalsIgnoreCase(field.name()) || field.type().contains("ScrPageInfo")) {
+                source.append(indent).append("@JsonDeserialize(using = ScrPageInfoDeserializer.class)\n");
             }
             source.append(indent).append("private ").append(field.type()).append(' ')
                     .append(mapping.targetName().trim()).append(";\n\n");

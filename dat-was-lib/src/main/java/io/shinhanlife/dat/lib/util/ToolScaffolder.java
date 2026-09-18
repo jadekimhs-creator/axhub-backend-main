@@ -14,6 +14,8 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Set;
 import java.util.Scanner;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 /**
@@ -124,10 +126,25 @@ public class ToolScaffolder {
         if (tools == null || tools.isEmpty()) {
             throw new IllegalArgumentException("At least one Tool method is required.");
         }
+        List<ToolMethodDefinition> normalizedTools = tools.stream().map(tool -> {
+            if (tool != null && "HTTP".equalsIgnoreCase(tool.routingType())) {
+                String itrfId = (tool.interfaceId() == null || tool.interfaceId().isBlank())
+                        ? "HTTP0000001" : tool.interfaceId().trim();
+                return new ToolMethodDefinition(
+                        tool.baseName(), tool.methodName(), itrfId, tool.title(),
+                        tool.description(), tool.group(), tool.routingType(),
+                        tool.register(), tool.clientSystemCode(), tool.httpApiName(),
+                        tool.inputFields(), tool.outputFields(), tool.definitionOptions());
+            }
+            return tool;
+        }).toList();
+        tools = normalizedTools;
         boolean hasMci = tools.stream().anyMatch(t -> "MCI".equalsIgnoreCase(t.routingType()));
         String useCaseBaseName = toPascalCase(useCaseName);
         if (hasMci) {
             useCaseBaseName = abbreviatedMciSourceBaseName(useCaseBaseName);
+        } else {
+            useCaseBaseName = abbreviatedHttpUseCaseBaseName(useCaseBaseName, tools);
         }
         String group = tools.getFirst().group().toLowerCase(Locale.ROOT);
         validateToolMethods(tools, group);
@@ -154,17 +171,13 @@ public class ToolScaffolder {
         String bizPackage = BASE_PACKAGE + ".biz." + group;
         Path useCaseFile = useCaseDir.resolve(useCaseBaseName + "UseCase.java");
         Path useCaseImplFile = implDir.resolve(useCaseBaseName + "UseCaseImpl.java");
-        Path converterFile = converterDir.resolve(useCaseBaseName + "Converter.java");
         boolean existingUseCase = Files.exists(useCaseFile);
         if (existingUseCase) {
-            appendGroupedUseCaseSources(useCaseFile, useCaseImplFile, converterFile, bizPackage, useCaseBaseName,
+            appendGroupedUseCaseSources(useCaseFile, useCaseImplFile, bizPackage, useCaseBaseName,
                     moduleName, tools);
         } else {
             writeUtf8(useCaseFile, groupedUseCaseContent(bizPackage, useCaseBaseName, moduleName, tools));
             writeUtf8(useCaseImplFile, groupedUseCaseImplContent(bizPackage, useCaseBaseName, tools));
-            if (!hasMci) {
-                writeUtf8(converterFile, groupedConverterContent(bizPackage, useCaseBaseName, tools));
-            }
         }
 
         StringBuilder log = new StringBuilder("\n=========================================\n")
@@ -187,9 +200,6 @@ public class ToolScaffolder {
                     log.append("[HTTP Config] ").append(config).append("\n");
                 }
             }
-        }
-        if (!hasMci) {
-            log.append("[Converter] ").append(converterFile).append("\n");
         }
         return log.toString();
     }
@@ -801,7 +811,7 @@ public class ToolScaffolder {
                 + "    " + baseName + "Response toResponse(" + baseName + "HttpResponse response);\n}\n";
     }
 
-    private static void appendGroupedUseCaseSources(Path useCaseFile, Path useCaseImplFile, Path converterFile,
+    private static void appendGroupedUseCaseSources(Path useCaseFile, Path useCaseImplFile,
                                                     String bizPackage, String useCaseBaseName, String moduleName,
                                                     List<ToolMethodDefinition> tools) throws IOException {
         if (!Files.exists(useCaseImplFile)) {
@@ -961,10 +971,6 @@ public class ToolScaffolder {
         }
         writeUtf8(useCaseFile, useCase);
         writeUtf8(useCaseImplFile, implementation);
-        boolean hasMci = tools.stream().anyMatch(t -> "MCI".equalsIgnoreCase(t.routingType()));
-        if (!hasMci && !Files.exists(converterFile)) {
-            writeUtf8(converterFile, groupedConverterContent(bizPackage, useCaseBaseName, tools));
-        }
     }
 
     private static String addImport(String content, String importLine) {
@@ -1140,6 +1146,9 @@ public class ToolScaffolder {
         }
         String toolBaseName = toPascalCase(baseName);
         if (isHttp) {
+            if (interfaceId == null || interfaceId.isBlank()) {
+                interfaceId = "HTTP0000001";
+            }
             if (httpApiName == null || httpApiName.isBlank() || httpApiName.length() >= 10 || !httpApiName.contains("-")) {
                 httpApiName = toAbbreviatedHttpApiName(toolBaseName);
             } else {
@@ -2466,10 +2475,33 @@ public class ToolScaffolder {
                       """.formatted(httpApiName, environmentKey, environmentKey, toolName).stripTrailing() + "\n";
 
             boolean isCrlf = existing.contains("\r\n");
+            String nl = isCrlf ? "\r\n" : "\n";
+            String envType = "prod".equals(env) ? "P" : ("test".equals(env) ? "T" : "D");
+
+            String mciHost;
+            String mciPort;
+            if ("dev".equals(env)) {
+                mciHost = "${GLOW_COMMUNICATION_MCI_HOST:https://dev-ichmci.shinhanlife.co.kr}";
+                mciPort = "${GLOW_COMMUNICATION_MCI_PORT:26160}";
+            } else if ("local".equals(env)) {
+                mciHost = "${GLOW_COMMUNICATION_MCI_HOST:http://localhost}";
+                mciPort = "${GLOW_COMMUNICATION_MCI_PORT:8080}";
+            } else {
+                mciHost = "${GLOW_COMMUNICATION_MCI_HOST}";
+                mciPort = "${GLOW_COMMUNICATION_MCI_PORT}";
+            }
+
+            String mciSection = ("""
+                    mci:
+                      host: %s
+                      port: %s
+                """).formatted(mciHost, mciPort).stripTrailing() + "\n";
+
             String formattedApiEntry = isCrlf ? apiEntry.replace("\n", "\r\n") : apiEntry;
+            String formattedMciSection = isCrlf ? mciSection.replace("\n", "\r\n") : mciSection;
 
             if (existing.isBlank()) {
-                existing = """
+                existing = ("""
                         spring:
                           config:
                             activate:
@@ -2477,40 +2509,103 @@ public class ToolScaffolder {
 
                         glow:
                           communication:
+                            common:
+                              env-type: %s
                             http:
+                              connection-timeout: 5
+                              read-timeout: 5
                               api-list:
-                        """.formatted(env) + apiEntry;
+                        """).formatted(env, envType) + apiEntry + mciSection;
                 if (isCrlf) {
                     existing = existing.replace("\n", "\r\n");
                 }
-            } else if (existing.contains("api-list: []")) {
-                existing = existing.replace("api-list: []", "api-list:\n" + formattedApiEntry);
-                if (isCrlf) {
-                    existing = existing.replace("\n", "\r\n");
-                }
-            } else if (existing.contains("\r\n    mci:")) {
-                existing = existing.replace("\r\n    mci:", "\r\n" + formattedApiEntry + "    mci:");
-            } else if (existing.contains("\n    mci:")) {
-                existing = existing.replace("\n    mci:", "\n" + formattedApiEntry + "    mci:");
-            } else if (existing.contains("\r\n  mci:")) {
-                existing = existing.replace("\r\n  mci:", "\r\n" + formattedApiEntry + "  mci:");
-            } else if (existing.contains("\n  mci:")) {
-                existing = existing.replace("\n  mci:", "\n" + formattedApiEntry + "  mci:");
-            } else if (existing.contains("\r\naxhub:")) {
-                existing = existing.replace("\r\naxhub:", "\r\n" + formattedApiEntry + "axhub:");
-            } else if (existing.contains("\naxhub:")) {
-                existing = existing.replace("\naxhub:", "\n" + formattedApiEntry + "axhub:");
-            } else if (existing.contains("api-list:")) {
-                existing += formattedApiEntry;
             } else {
-                String glowBlock = """
+                boolean hasMci = Pattern.compile("(?m)^[ ]{2,4}mci:\\s*$").matcher(existing).find();
+                boolean hasApiList = Pattern.compile("(?m)^[ ]*api-list:").matcher(existing).find();
+                boolean hasCommunication = Pattern.compile("(?m)^[ ]*communication:\\s*$").matcher(existing).find();
+                boolean hasGlow = Pattern.compile("(?m)^glow:\\s*$").matcher(existing).find();
 
-                        glow:
-                          communication:
-                            http:
-                              api-list:
-                        """ + apiEntry;
-                existing += isCrlf ? glowBlock.replace("\n", "\r\n") : glowBlock;
+                if (hasApiList) {
+                    if (existing.contains("api-list: []")) {
+                        existing = existing.replace("api-list: []", "api-list:" + nl + formattedApiEntry.stripTrailing());
+                        if (!hasMci) {
+                            existing = insertOrAppendMci(existing, formattedMciSection, nl);
+                        }
+                    } else if (hasMci) {
+                        Matcher mciMatcher = Pattern.compile("(?m)^[ ]{2,4}mci:\\s*$").matcher(existing);
+                        if (mciMatcher.find()) {
+                            int idx = mciMatcher.start();
+                            existing = existing.substring(0, idx) + formattedApiEntry + existing.substring(idx);
+                        } else {
+                            existing = existing.stripTrailing() + nl + formattedApiEntry;
+                        }
+                    } else {
+                        existing = appendToApiListAndAddMci(existing, formattedApiEntry, formattedMciSection, nl);
+                    }
+                } else if (hasMci) {
+                    Matcher mciMatcher = Pattern.compile("(?m)^([ ]{2,4})mci:\\s*$").matcher(existing);
+                    if (mciMatcher.find()) {
+                        String indent = mciMatcher.group(1);
+                        String httpBlock = indent + "http:" + nl
+                                + indent + "  connection-timeout: 5" + nl
+                                + indent + "  read-timeout: 5" + nl
+                                + indent + "  api-list:" + nl
+                                + formattedApiEntry;
+                        int idx = mciMatcher.start();
+                        existing = existing.substring(0, idx) + httpBlock + existing.substring(idx);
+                    }
+                } else if (hasCommunication) {
+                    Matcher commMatcher = Pattern.compile("(?m)^([ ]*)communication:\\s*$").matcher(existing);
+                    if (commMatcher.find()) {
+                        String commIndent = commMatcher.group(1);
+                        String childIndent = commIndent + "  ";
+                        String newBlock = childIndent + "http:" + nl
+                                + childIndent + "  connection-timeout: 5" + nl
+                                + childIndent + "  read-timeout: 5" + nl
+                                + childIndent + "  api-list:" + nl
+                                + formattedApiEntry
+                                + formattedMciSection;
+                        int insertPos = commMatcher.end();
+                        if (insertPos < existing.length() && existing.charAt(insertPos) == '\r') insertPos++;
+                        if (insertPos < existing.length() && existing.charAt(insertPos) == '\n') insertPos++;
+                        existing = existing.substring(0, insertPos) + newBlock + existing.substring(insertPos);
+                    }
+                } else if (hasGlow) {
+                    Matcher glowMatcher = Pattern.compile("(?m)^glow:\\s*$").matcher(existing);
+                    if (glowMatcher.find()) {
+                        String commBlock = "  communication:" + nl
+                                + "    common:" + nl
+                                + "      env-type: " + envType + nl
+                                + "    http:" + nl
+                                + "      connection-timeout: 5" + nl
+                                + "      read-timeout: 5" + nl
+                                + "      api-list:" + nl
+                                + formattedApiEntry
+                                + formattedMciSection;
+                        int insertPos = glowMatcher.end();
+                        if (insertPos < existing.length() && existing.charAt(insertPos) == '\r') insertPos++;
+                        if (insertPos < existing.length() && existing.charAt(insertPos) == '\n') insertPos++;
+                        existing = existing.substring(0, insertPos) + commBlock + existing.substring(insertPos);
+                    }
+                } else {
+                    String fullGlowBlock = nl + "glow:" + nl
+                            + "  communication:" + nl
+                            + "    common:" + nl
+                            + "      env-type: " + envType + nl
+                            + "    http:" + nl
+                            + "      connection-timeout: 5" + nl
+                            + "      read-timeout: 5" + nl
+                            + "      api-list:" + nl
+                            + formattedApiEntry
+                            + formattedMciSection;
+                    Matcher axhubMatcher = Pattern.compile("(?m)^axhub:\\s*$").matcher(existing);
+                    if (axhubMatcher.find()) {
+                        int idx = axhubMatcher.start();
+                        existing = existing.substring(0, idx) + fullGlowBlock.stripLeading() + nl + existing.substring(idx);
+                    } else {
+                        existing = existing.stripTrailing() + fullGlowBlock;
+                    }
+                }
             }
 
             if ("local".equals(env) || "test".equals(env)) {
@@ -2543,6 +2638,44 @@ public class ToolScaffolder {
         }
 
         return updatedFiles;
+    }
+
+    private static String appendToApiListAndAddMci(String existing, String apiEntry, String mciSection, String nl) {
+        Matcher apiListMatcher = Pattern.compile("(?m)^[ ]*api-list:\\s*$").matcher(existing);
+        if (!apiListMatcher.find()) {
+            return existing.stripTrailing() + nl + apiEntry + mciSection;
+        }
+        int searchFrom = apiListMatcher.end();
+        String afterApiList = existing.substring(searchFrom);
+        String[] lines = afterApiList.split("\r?\n", -1);
+        int currentOffset = searchFrom;
+        int insertPos = existing.length();
+        boolean foundBoundary = false;
+
+        for (String line : lines) {
+            String trimmed = line.trim();
+            if (!trimmed.isEmpty() && !line.startsWith("      ") && !line.startsWith("\t")) {
+                insertPos = currentOffset;
+                foundBoundary = true;
+                break;
+            }
+            currentOffset += line.length() + (existing.contains("\r\n") ? 2 : 1);
+        }
+
+        if (foundBoundary) {
+            return existing.substring(0, insertPos) + apiEntry + mciSection + existing.substring(insertPos);
+        } else {
+            return existing.stripTrailing() + nl + apiEntry + mciSection;
+        }
+    }
+
+    private static String insertOrAppendMci(String existing, String mciSection, String nl) {
+        Matcher axhubMatcher = Pattern.compile("(?m)^axhub:\\s*$").matcher(existing);
+        if (axhubMatcher.find()) {
+            int idx = axhubMatcher.start();
+            return existing.substring(0, idx) + mciSection + existing.substring(idx);
+        }
+        return existing.stripTrailing() + nl + mciSection;
     }
 
     private static Path resolveEnvConfigPath(Path resourcesDir, String env) {
@@ -2804,7 +2937,7 @@ public class ToolScaffolder {
                         @Override
                         public MciPage<%sResponse, PgNumPagingInfo> fetch(%sRequest request, PgNumPagingInfo pagingInfo) {
                             if (request.getPageInfo() == null) {
-                                request.setPageInfo(new PageInfo());
+                                request.setPageInfo(new PageInfo(1, 20));
                             }
                             if (request.getPageInfo().getPageNo() <= 0) {
                                 request.getPageInfo().setPageNo(1);
@@ -2965,8 +3098,8 @@ public class ToolScaffolder {
                 pagingImport = "import io.shinhanlife.glow.db.dto.PageInfo;\n";
                 pagingField = "    @Schema(description = \"페이지 정보\")\n    private PageInfo pageInfo;\n\n";
             } else if (pagingMode == PagingMode.SCROLL) {
-                pagingImport = "import io.shinhanlife.glow.db.dto.ScrPageInfo;\n";
-                pagingField = "    @Schema(description = \"스크롤 페이지 정보\")\n    private ScrPageInfo scrPageInfo;\n\n";
+                pagingImport = "import io.shinhanlife.glow.db.dto.ScrPageInfo;\nimport com.fasterxml.jackson.databind.annotation.JsonDeserialize;\nimport io.shinhanlife.dat.lib.paging.ScrPageInfoDeserializer;\n";
+                pagingField = "    @Schema(description = \"스크롤 페이지 정보\")\n    @JsonDeserialize(using = ScrPageInfoDeserializer.class)\n    private ScrPageInfo scrPageInfo;\n\n";
             }
         }
         return """
@@ -3000,19 +3133,15 @@ public class ToolScaffolder {
             boolean hasScrPageInfo = fields != null && fields.stream().anyMatch(f -> f != null && "scrPageInfo".equalsIgnoreCase(f.name()));
             if (pagingMode == PagingMode.PAGE_NUMBER) {
                 excluded = Set.of("pageInfo");
-                if (!hasPageInfo) {
-                    pagingImport = "import io.shinhanlife.glow.GlowTrgmField;\nimport io.shinhanlife.glow.db.dto.PageInfo;\n";
-                    if (!listImport.contains("List")) {
-                        pagingImport += "import java.util.List;\n";
-                    }
-                    pagingField = "    @Schema(description = \"페이지 정보\")\n    @GlowTrgmField(order = 1, description = \"페이지 정보\", type = \"gm\")\n    private List<PageInfo> pageInfo;\n\n";
+                pagingImport = "import io.shinhanlife.glow.GlowTrgmField;\nimport io.shinhanlife.glow.db.dto.PageInfo;\n";
+                if (!listImport.contains("List")) {
+                    pagingImport += "import java.util.List;\n";
                 }
+                pagingField = "    @Schema(description = \"페이지 정보\")\n    @GlowTrgmField(order = 1, description = \"페이지 정보\", type = \"gm\")\n    private List<PageInfo> pageInfo;\n\n";
             } else if (pagingMode == PagingMode.SCROLL) {
                 excluded = Set.of("scrPageInfo");
-                if (!hasScrPageInfo) {
-                    pagingImport = "import io.shinhanlife.glow.GlowTrgmField;\nimport io.shinhanlife.glow.db.dto.ScrPageInfo;\nimport com.fasterxml.jackson.databind.annotation.JsonDeserialize;\nimport io.shinhanlife.dat.lib.paging.ScrPageInfoDeserializer;\n";
-                    pagingField = "    @Schema(description = \"스크롤 페이지 정보\")\n    @GlowTrgmField(order = 1, length = 306, description = \"스크롤 페이지 정보\")\n    @JsonDeserialize(using = ScrPageInfoDeserializer.class)\n    private ScrPageInfo scrPageInfo;\n\n";
-                }
+                pagingImport = "import io.shinhanlife.glow.GlowTrgmField;\nimport io.shinhanlife.glow.db.dto.ScrPageInfo;\nimport com.fasterxml.jackson.databind.annotation.JsonDeserialize;\nimport io.shinhanlife.dat.lib.paging.ScrPageInfoDeserializer;\n";
+                pagingField = "    @Schema(description = \"스크롤 페이지 정보\")\n    @GlowTrgmField(order = 1, length = 306, description = \"스크롤 페이지 정보\")\n    @JsonDeserialize(using = ScrPageInfoDeserializer.class)\n    private ScrPageInfo scrPageInfo;\n\n";
             }
         }
         return """
@@ -3529,6 +3658,26 @@ public class ToolScaffolder {
     private static String abbreviatedWord(String word, int maximumLength) {
         int length = Math.min(word.length(), maximumLength);
         return toPascalCase(word.substring(0, length).toLowerCase(Locale.ROOT));
+    }
+
+    private static String abbreviatedHttpUseCaseBaseName(String useCaseBaseName, List<ToolMethodDefinition> tools) {
+        if (tools != null && tools.size() == 1) {
+            ToolMethodDefinition singleTool = tools.getFirst();
+            String singleHttpApi = singleTool.httpApiName();
+            if (singleHttpApi == null || singleHttpApi.isBlank() || singleHttpApi.length() >= 10 || !singleHttpApi.contains("-")) {
+                singleHttpApi = toAbbreviatedHttpApiName(toPascalCase(singleTool.baseName()));
+            }
+            if (useCaseBaseName.equalsIgnoreCase(toPascalCase(singleTool.baseName()))
+                    || useCaseBaseName.equalsIgnoreCase(singleTool.baseName())) {
+                return toPascalCase(singleHttpApi);
+            }
+        }
+        String[] words = useCaseBaseName.split("(?<=[a-z])(?=[A-Z])|(?<=[A-Z])(?=[A-Z][a-z])");
+        if (words.length < 3) {
+            return useCaseBaseName;
+        }
+        String apiName = toAbbreviatedHttpApiName(useCaseBaseName);
+        return toPascalCase(apiName);
     }
 
     public static String toPascalCase(String str) {

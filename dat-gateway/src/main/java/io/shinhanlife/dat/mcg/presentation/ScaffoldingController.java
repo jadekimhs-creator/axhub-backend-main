@@ -236,6 +236,11 @@ public class ScaffoldingController {
             String description = req.get("description");
             String group = req.getOrDefault("categoryKey", req.getOrDefault("group", "COMMON"));
             String routingType = req.getOrDefault("routingType", "MCI");
+            if ("HTTP".equalsIgnoreCase(routingType)) {
+                if (interfaceId == null || interfaceId.isBlank()) {
+                    interfaceId = "HTTP0000001";
+                }
+            }
             String moduleName = req.getOrDefault("moduleName", "dat-was-cus");
             String author = req.get("author");
             if (author == null || author.trim().isEmpty()) author = System.getProperty("user.name");
@@ -295,8 +300,21 @@ public class ScaffoldingController {
             String workspacePath = request.workspacePath() != null && !request.workspacePath().isBlank()
                     ? request.workspacePath().trim() : DEFAULT_WORKSPACE;
             System.setProperty("AXHUB_SOURCE_DIR", workspacePath);
+            List<ToolScaffolder.ToolMethodDefinition> normalizedTools = (request.tools() == null ? List.<ToolScaffolder.ToolMethodDefinition>of() : request.tools()).stream()
+                    .map(tool -> {
+                        if (tool != null && "HTTP".equalsIgnoreCase(tool.routingType())) {
+                            String itrfId = (tool.interfaceId() == null || tool.interfaceId().isBlank())
+                                    ? "HTTP0000001" : tool.interfaceId().trim();
+                            return new ToolScaffolder.ToolMethodDefinition(
+                                    tool.baseName(), tool.methodName(), itrfId, tool.title(),
+                                    tool.description(), tool.group(), tool.routingType(),
+                                    tool.register(), tool.clientSystemCode(), tool.httpApiName(),
+                                    tool.inputFields(), tool.outputFields(), tool.definitionOptions());
+                        }
+                        return tool;
+                    }).toList();
             return ToolScaffolder.scaffoldUseCase(request.useCaseName().trim(), moduleName, author, date,
-                    request.tools() == null ? List.of() : request.tools());
+                    normalizedTools);
         } catch (Exception e) {
             return "Error: " + safeMessage(e);
         }
@@ -383,23 +401,25 @@ public class ScaffoldingController {
 
         try {
             String prompt = """
-                    Generate an MCP Tool scaffold from the user request according to ShinhanLife V17 Tool Schema prerequisites and rules.
+                    Generate an MCP Tool scaffold from the user request according to ShinhanLife V17 Tool Schema prerequisites and rules based on the 6 guidelines.
                     Return JSON only. Do not add Markdown, explanations, or code fences.
                     The response must have this exact shape:
                     {"baseName":"PascalCase3PartName","title":"short Korean title","description":"clear Korean LLM tool guidance","categoryKey":"cmm","routingType":"MCI","httpApiName":"simple-api-name","functionDescription":"core business function","displayDescription":"short portal description","whenToUse":"specific user requests that should select this tool","whenNotToUse":"requests or conditions that must not select this tool","ioLimits":"allowed input and output scope and limits","exampleQueries":["query 1","query 2","query 3"],"tags":["categoryKey","한국어태그1","한국어태그2","engTag1","engTag2"],"ownerOrg":"MCP_TOOL","inputFields":[{"name":"camelCaseName","type":"String","description":"short description","examples":["example1","example2"],"pattern":"^regex$","required":true,"enumValues":[],"itemType":null,"itemFields":[]}],"outputFields":[{"name":"resultCode","type":"String","description":"result code","examples":["SUCCESS"],"pattern":"","required":true,"enumValues":[],"itemType":null,"itemFields":[]}]}
                     [V17 RULES]
-                    - Read-only & idempotent (destructive=false, idempotent=true for MCI; destructive=false, idempotent=false for HTTP).
-                    - 3-part naming for baseName: {categoryKey}_{action}_{target} in PascalCase (e.g. ProInquiryFund, CusDetailContract).
+                    - Read-only & idempotent (destructive=false, idempotent=true for MCI; destructive=false, idempotent=false for HTTP). All tools are strictly read-only inquiry tools.
+                    - 3-part naming for baseName: {categoryKey}_{action}_{target} in PascalCase (e.g. ProSearchFund, CusDetailContract, ProSearchFundHistory).
                       categoryKey must be exactly 3 lowercase letters (e.g. pro, cus, sal, cmm).
-                      Action must be one of: inquiry, detail, history, consulting, converter, return, balance, unclaimed. No abbreviations, no synonym mixing.
-                      Target is a complete English entity word.
-                    - description & functionDescription must state owning system in brackets (e.g. '[pro] ...'), hint on prerequisite input inquiries, and clarify system default value/period handling.
+                      Action must be strictly one of: 'search' (multi-row / list / condition inquiry) or 'detail' (single-row / comprehensive detail inquiry).
+                      Do not use 'inquiry', 'query', 'asst', or other arbitrary verbs. Target domains (history, consulting, return, balance, unclaimed, fund, contract) belong to target.
+                      Target is a complete English entity word without abbreviations.
+                    - description & functionDescription must state owning system in brackets (e.g. '[pro] ...'), hint on prerequisite input inquiries if IDs are required, and clarify system (Converter) default value and query period handling when omitted.
                     - displayDescription: Linked legacy screen name and function if known, or concise Korean function description.
-                    - exampleQueries: 3 to 10 realistic Korean query patterns matching the screen/business function.
+                    - exampleQueries: 3 to 10 realistic Korean query patterns referencing the screen name and sub-function terms.
                     - tags: 3-tier structure (1: categoryKey, 2: 2-4 Korean primary query keywords, 3: 2-4 English secondary keywords, total 5-8 tags).
                     - routingType must be either MCI or HTTP. Default to MCI. Use HTTP only when the user explicitly requests a REST or HTTP integration. For HTTP, httpApiName must be a concise abbreviation in 'xxx-xxxx' format under 10 characters (e.g. cst-inq, emp-srch).
                     - Allowed field type values: String, Integer, Long, Double, Boolean, BigDecimal, List. Finite values should be enforced by populating enumValues. List must include itemType and object lists include itemFields.
                     - If applicable, provide a regex for pattern. Keep all field names valid Java camelCase identifiers. Generate at most 10 fields per list.
+                    - If a field name is 'scrPageInfo' or 'pageInfo' (case-insensitive), DO NOT rename or convert it; keep the exact field name 'scrPageInfo' or 'pageInfo' and set required=false (system handles pagination).
                     - Do not generate interfaceId or clientSystemCode; those must come from a real integration contract.
                     User request: %s
                     """.formatted(description);
@@ -446,53 +466,55 @@ public class ScaffoldingController {
             String effectiveDisplayDesc = displayDescription.isBlank() ? title : displayDescription;
 
             String prompt = """
-                    Optimize and re-evaluate this MCP Tool schema according to strict ShinhanLife V17 Tool Schema prerequisites and rules.
+                    Optimize and re-evaluate this MCP Tool schema according to strict ShinhanLife V17 Tool Schema prerequisites and rules based on the 6 guidelines.
                     Return JSON only. Do not add Markdown, explanations, or code fences.
                     Response must follow this exact shape:
                     {"baseName":"PascalCase3PartName","title":%s,"description":"...","categoryKey":"%s","routingType":"%s","httpApiName":"%s","functionDescription":"...","displayDescription":%s,"whenToUse":"...","whenNotToUse":"...","ioLimits":"...","exampleQueries":["query1","query2","query3"],"tags":["%s","한국어태그1","한국어태그2","engTag1","engTag2"],"ownerOrg":"%s","inputFields":%s,"outputFields":%s}
 
-                    [CRITICAL V17 OPTIMIZATION RULES]
-                    1. Read-Only & Agent LLM Single Responsibility:
-                       - All tools are purely inquiry tools (destructive=false, idempotent=true for MCI; destructive=false, idempotent=false for HTTP).
-                       - Tool selection, calling condition, and calling order are solely the responsibility of the Agent LLM.
-                    2. Ground Truth & Immutable Fields (DO NOT CHANGE):
-                       - title: MUST be kept EXACTLY as %s (User-entered title, immutable).
-                       - displayDescription: MUST be kept EXACTLY as %s (Linked screen name e.g. [NSAK0060]..., immutable).
-                    3. 3-Part Naming Convention ({category}_{action}_{target} -> PascalCase baseName):
-                       - 1st part: categoryKey (3 lowercase letters, e.g. pro, cus, sal, cmm).
-                       - 2nd part: Action MUST be ONLY one of the standard inquiry action words:
-                         'inquiry' (list or basic info query by condition),
-                         'detail' (comprehensive detail query of a specific target),
-                         'history' (historical changes or transaction logs),
-                         'consulting' (analysis guide or consulting),
-                         'converter' (code or status conversion or determination),
-                         'return' or 'balance' (balance, return rate, accumulation, valuation),
-                         'unclaimed' (dormant or unclaimed amount check).
-                         NO abbreviations (no chg, amt, no, etc. Use complete words).
-                         NO synonym mixing (inquiry/query, detail/info mixing strictly forbidden).
-                       - 3rd part: Target entity full English word (e.g. Variable, Fund, Contract, Fee, Disclosure).
-                       - baseName MUST be PascalCase combination of these 3 parts (e.g. ProInquiryFund, CusDetailContract).
-                       - When routingType is HTTP, httpApiName MUST be a concise abbreviation in 'xxx-xxxx' format under 10 characters (e.g. cst-inq, emp-srch).
-                    4. description & functionDescription:
-                       - Preserve core business intent (Ground Truth).
-                       - Explicitly specify owning system/business unit in brackets, e.g. '[%s] ...'.
-                       - Hint on prerequisite inputs: clearly state that preceding inquiry tools might be required if user does not know specific IDs (e.g. contract number, customer ID).
-                       - Clarify system (Converter) default values and default query period handling (e.g. default to today if date omitted, default 1 year).
-                    5. exampleQueries (3 to 10 queries):
-                       - MUST heavily reference the screen name and functional terminology in displayDescription (%s).
-                       - Generate 3 to 10 realistic, practical Korean user queries actual users would execute on that screen.
-                    6. tags (3-Tier Structure, 5 to 8 tags total):
-                       - Tier 1: categoryKey (e.g. '%s')
-                       - Tier 2: 2 to 4 Korean primary keywords directly matching user queries
-                       - Tier 3: 2 to 4 English secondary keywords assisting semantic search
-                       - Total count MUST be between 5 and 8 tags. Keep high semantic density without noise.
-                    7. whenToUse & whenNotToUse:
-                       - whenToUse: Specific user request conditions requiring this tool.
-                       - whenNotToUse: Clear boundaries distinguishing similar tools (different domain tools, list vs detail, exclusions of update/cancel/terminate).
-                    8. ioLimits:
-                       - Specify allowed input range, returned output scope, count limits, and default value/period handling.
-                    9. inputFields & outputFields:
-                       - Keep valid fields, refine descriptions, types, examples, and regex patterns. Maximum 10 fields per list.
+                    [CRITICAL V17 OPTIMIZATION RULES - 6 GUIDELINE PRINCIPLES]
+                    1. 궁극적 목적 (Ultimate Purpose) & Agent LLM 단독 수행:
+                       - 툴 호출 판단(툴 선택, 호출 여부, 호출 순서)은 오직 Agent Builder의 LLM이 단독으로 수행한다. 시스템(Converter 포함)은 LLM의 툴 호출 판단에 관여하지 않는다.
+                       - 시스템(Converter)의 역할은 LLM이 호출을 결정한 이후 파라미터 기본값, 기본 기간 세팅 등 기술적인 처리에만 한정된다.
+                    2. 최상위 제약 - Read-Only 원칙:
+                       - 모든 툴은 순수 조회용이다 (destructive=false, idempotent=true for MCI; destructive=false, idempotent=false for HTTP).
+                       - 등록, 수정, 삭제, 변경을 수행하거나 지시하는 코드는 절대 포함하지 않는다.
+                    3. 스케일 고려 (다중 MCP 등록, MCP당 툴 50개 이하 전제):
+                       - LLM이 수십 개 툴 중에서 시맨틱 검색으로 정확히 탐색할 수 있도록 tags, exampleQueries 품질을 극대화한다.
+                       - 업무단위 접두사(categoryKey: pro, cus, sal, cmm 등)가 1차 네임스페이스 역할을 수행한다.
+                       - 유사한 툴 간의 명확한 경계 구분은 whenNotToUse를 적극 활용하여 기술한다.
+                    4. Ground Truth & Immutable Fields (화면 기능의 실체화 - 절대 수정 불가):
+                       - title: 사용자가 입력한 타이틀 그대로 100%% 유지 (절대 임의 변경 금지: %s).
+                       - displayDescription: 연계 화면명 (고정값, 예: [NSAK0060]...) 그대로 100%% 유지 (절대 임의 변경 금지: %s).
+                    5. 네이밍 규칙 2-12 ({업무단위}_{기능}_{대상} 3단 구조 -> PascalCase baseName):
+                       - 1단 (업무단위): categoryKey (소문자 3자, e.g. pro, cus, sal, cmm).
+                       - 2단 (기능/작업): 조회성 툴은 오직 'search' (다건/목록 조회) 또는 'detail' (단건/상세 조회) 2가지만 사용!
+                         'inquiry', 'query', 'asst' 등 임의의 기능어 혼용 절대 금지.
+                       - 3단 (대상/영역): 다루는 대상(컨설팅, 이력, 수익률, 펀드 등)은 모두 3단에 배치! (e.g. Variable, Fund, Contract, Fee, Disclosure, History, Consulting, Return, Balance, Unclaimed).
+                         완전한 영어 단어 사용 (축약어 금지).
+                       - baseName은 이 3단을 PascalCase로 결합 (예: ProSearchFund, CusDetailContract, ProSearchFundHistory, ProDetailContractReturn).
+                       - routingType이 HTTP일 경우, httpApiName은 10자 미만 'xxx-xxxx' 형식의 축약 영문 소문자.
+                    6. description & functionDescription 작성 지침:
+                       - 연계 화면 기능의 본래 의도(Ground Truth) 유지.
+                       - 소속 시스템/채널을 대괄호로 명시 (예: '[%s] ...').
+                       - 선행 조회 힌트: 필수 식별값(계약번호, 고객ID, 변경신청ID 등)을 모를 경우 선행 조회 툴을 먼저 호출해야 함을 명시.
+                       - 시스템(Converter) 기본값/기간 위임 명시: 파라미터가 없거나 빈 값으로 호출 시 시스템(Converter)에서 기본값 및 기본 기간(예: 당일, 최근 1년 등)을 세팅한다는 내용을 명시.
+                    7. exampleQueries 설계 (3 to 10개):
+                       - 연계 화면명(displayDescription: %s)의 기능 용어(하위 기능명)를 반드시 참조하여 설계.
+                       - 화면명에 포함된 핵심 키워드를 반드시 활용하여 사용자가 실제 업무에서 물어볼 법한 3~10개의 현실적인 질문 패턴 작성.
+                    8. tags 3중 구조 (5 to 8개 태그 유지):
+                       - 1단: 업무단위 (categoryKey: '%s')
+                       - 2단: 한글 주 태그 (2~4개, 사용자가 질문할 만한 핵심 한국어 키워드)
+                       - 3단: 영문 보조 태그 (2~4개, 시맨틱 검색을 보조할 영문 키워드)
+                       - 총 5~8개 태그 유지. 노이즈 방지.
+                    9. whenToUse & whenNotToUse:
+                       - whenToUse: LLM이 이 툴을 선택해야 하는 구체적인 사용자 질문/상황 명시.
+                       - whenNotToUse: 유사 툴(목록 vs 상세, 타 업무 도메인)과의 경계 및 수정/신청/해지 등 CUD 작업 요청 시 호출 불가 조건 명시.
+                    10. ioLimits:
+                       - 허용되는 입력 범위, 반환 DTO 범위, 건수 제한, 기본값/기본기간 처리 방식 명시.
+                    11. inputFields & outputFields:
+                       - 필드는 최대 10개 이내로 관리.
+                       - 시스템 위임 및 페이징: 'scrPageInfo' 및 'pageInfo' (대소문자 무관)는 절대 자연어로 변환하거나 필드명을 변경하지 말고 원형 유지.
+                       - 페이징 객체는 LLM의 필수 입력값이 아니라 시스템에 위임하는 객체이므로 required: false로 설정하고 기본값 처리 안내.
 
                     [CURRENT TOOL DRAFT DATA TO OPTIMIZE]
                     BaseName: %s
@@ -723,7 +745,11 @@ public class ScaffoldingController {
                 AiMciFieldMapping suggestion = suggestions.get(type.name() + "#" + field.name());
                 String targetName = suggestion == null ? field.name() : suggestion.targetName();
                 targetName = targetName == null ? "" : targetName.trim();
-                if (!targetName.matches("^[a-z][A-Za-z0-9]*$") || used.contains(targetName)) {
+                if ("scrPageInfo".equalsIgnoreCase(field.name())) {
+                    targetName = "scrPageInfo";
+                } else if ("pageInfo".equalsIgnoreCase(field.name())) {
+                    targetName = "pageInfo";
+                } else if (!targetName.matches("^[a-z][A-Za-z0-9]*$") || used.contains(targetName)) {
                     targetName = field.name();
                 }
                 if (!targetName.matches("^[a-z][A-Za-z0-9]*$") || !used.add(targetName)) {
@@ -764,16 +790,25 @@ public class ScaffoldingController {
         return source.stream()
                 .limit(10)
                 .filter(field -> field != null && field.name() != null && !field.name().isBlank())
-                .map(field -> new ToolScaffolder.FieldDefinition(
-                        field.name().trim(),
-                        field.type() == null ? "String" : field.type().trim(),
-                        field.description() == null ? "" : field.description().trim(),
-                        field.examples() == null ? List.of() : field.examples().stream().map(String::trim).toList(),
-                        field.pattern() == null ? "" : field.pattern().trim(),
-                        field.required(),
-                        field.enumValues() == null ? List.of() : field.enumValues(),
-                        field.itemType(),
-                        field.itemFields() == null ? List.of() : field.itemFields()))
+                .map(field -> {
+                    String name = field.name().trim();
+                    boolean isPaging = "scrPageInfo".equalsIgnoreCase(name) || "pageInfo".equalsIgnoreCase(name);
+                    String desc = field.description() == null ? "" : field.description().trim();
+                    if (isPaging && desc.isBlank()) {
+                        desc = "페이징 처리 객체 (생략 시 시스템 기본값 적용)";
+                    }
+                    boolean required = isPaging ? false : field.required();
+                    return new ToolScaffolder.FieldDefinition(
+                            name,
+                            field.type() == null ? "String" : field.type().trim(),
+                            desc,
+                            field.examples() == null ? List.of() : field.examples().stream().map(String::trim).toList(),
+                            field.pattern() == null ? "" : field.pattern().trim(),
+                            required,
+                            field.enumValues() == null ? List.of() : field.enumValues(),
+                            field.itemType(),
+                            field.itemFields() == null ? List.of() : field.itemFields());
+                })
                 .peek(field -> {
                     if (!field.name().matches("^[A-Za-z_$][A-Za-z0-9_$]*$")) {
                         throw new IllegalArgumentException("AI가 올바르지 않은 필드명을 생성했습니다: " + field.name());
@@ -912,6 +947,7 @@ public class ScaffoldingController {
                 "- Return a mapping for EVERY field in the input list, including List-type, reserved, and filler fields.\n" +
                 "- targetName must be a concise, descriptive English Java camelCase identifier (e.g. 'employeeNumber', 'reservedField01').\n" +
                 "- Derive the business meaning primarily from description; use sourceName only as supporting metadata.\n" +
+                "- If sourceName is 'scrPageInfo' or 'pageInfo' (case-insensitive), DO NOT rename or convert it; targetName MUST remain exactly 'scrPageInfo' or 'pageInfo' respectively.\n" +
                 "- For reserved/dummy/filler fields (e.g. reserved01, filler, spare), use a clean camelCase form like 'reserved01', 'filler01' as targetName and set include=true.\n" +
                 "- Set include=false ONLY for fields that are explicitly obsolete or harmful to expose.\n\n" +
                 "Source fields:\n" +

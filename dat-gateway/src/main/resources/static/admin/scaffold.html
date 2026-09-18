@@ -1078,8 +1078,9 @@
                                 <div class="input-hint">Used for class generation (ExchangeRateService).</div>
                             </div>
                             <div class="col-md-6 mt-3 mt-md-0">
-                                <label class="form-label">Legacy Interface ID</label>
-                                <input type="text" class="form-control" name="interfaceId" placeholder="e.g. EXCH_001" required>
+                                <label class="form-label">Legacy Interface ID <span id="interfaceIdRequiredBadge" class="text-danger">*</span></label>
+                                <input type="text" class="form-control" name="interfaceId" placeholder="e.g. EXCH_001">
+                                <div class="input-hint" id="interfaceIdHint">MCI 필수. HTTP 연동 시에는 선택사항(미입력 시 HTTP0000001 기본값)입니다.</div>
                             </div>
                         </div>
                         <div class="row mb-3">
@@ -1835,6 +1836,10 @@
             const formData = new FormData(this);
             const data = Object.fromEntries(formData.entries());
             if (formId === 'toolForm') {
+                if (data.routingType === 'MCI' && (!data.interfaceId || !data.interfaceId.trim())) {
+                    alert('MCI Tool은 Legacy Interface ID를 입력해야 합니다.');
+                    return;
+                }
                 if (data.routingType === 'HTTP') {
                     if (!data.httpApiName) {
                         data.httpApiName = toAbbreviatedHttpApiName(data.baseName);
@@ -1844,6 +1849,10 @@
                     data.baseName = toPascalCase(data.httpApiName);
                     if (this.elements.httpApiName) this.elements.httpApiName.value = data.httpApiName;
                     if (this.elements.baseName) this.elements.baseName.value = data.baseName;
+                    if (!data.interfaceId || !data.interfaceId.trim()) {
+                        data.interfaceId = 'HTTP0000001';
+                        if (this.elements.interfaceId) this.elements.interfaceId.value = 'HTTP0000001';
+                    }
                 }
             } else if (formId === 'podForm') {
                 data.targetModules = JSON.stringify(currentTargetModules());
@@ -1915,14 +1924,33 @@
         const routingSelect = document.querySelector('#toolForm select[name="routingType"]');
         const httpApiInput = document.querySelector('#toolForm input[name="httpApiName"]');
         const baseNameInput = document.querySelector('#toolForm input[name="baseName"]');
-        if (routingSelect && httpApiInput) {
-            routingSelect.addEventListener('change', () => {
-                if (routingSelect.value === 'HTTP') {
-                    if ((!httpApiInput.value.trim() || httpApiInput.value === 'http-api') && baseNameInput && baseNameInput.value.trim()) {
-                        httpApiInput.value = toAbbreviatedHttpApiName(baseNameInput.value.trim());
-                    }
-                }
-            });
+        const interfaceIdInput = document.querySelector('#toolForm input[name="interfaceId"]');
+        const badge = document.getElementById('interfaceIdRequiredBadge');
+        const hint = document.getElementById('interfaceIdHint');
+
+        window.syncRoutingTypeUI = function() {
+            if (!routingSelect) return;
+            const isHttp = routingSelect.value === 'HTTP';
+            if (interfaceIdInput) {
+                interfaceIdInput.required = !isHttp;
+                interfaceIdInput.placeholder = isHttp ? 'e.g. HTTP0000001 (선택, 기본: HTTP0000001)' : 'e.g. EXCH_001';
+            }
+            if (badge) {
+                badge.style.display = isHttp ? 'none' : 'inline';
+            }
+            if (hint) {
+                hint.textContent = isHttp
+                    ? 'HTTP 연동 시 선택사항입니다 (미입력 시 HTTP0000001로 기본 설정됩니다).'
+                    : 'MCI 연동 시 필수 입력 항목입니다.';
+            }
+            if (isHttp && httpApiInput && baseNameInput && baseNameInput.value.trim() && (!httpApiInput.value.trim() || httpApiInput.value === 'http-api')) {
+                httpApiInput.value = toAbbreviatedHttpApiName(baseNameInput.value.trim());
+            }
+        };
+
+        if (routingSelect) {
+            routingSelect.addEventListener('change', window.syncRoutingTypeUI);
+            window.syncRoutingTypeUI();
         }
     });
 
@@ -2036,6 +2064,9 @@
             data.baseName = toPascalCase(data.httpApiName);
             if (form.elements.httpApiName) form.elements.httpApiName.value = data.httpApiName;
             if (form.elements.baseName) form.elements.baseName.value = data.baseName;
+            if (!data.interfaceId || !data.interfaceId.trim()) {
+                data.interfaceId = 'HTTP0000001';
+            }
         }
         if (!['MCI', 'HTTP'].includes(data.routingType)) {
             throw new Error('여러 Tool UseCase는 MCI 또는 HTTP 프로토콜만 지원합니다.');
@@ -2651,6 +2682,7 @@
             }
             const routingType = String(result.routingType || 'MCI').trim().toUpperCase();
             form.elements.routingType.value = routingType === 'HTTP' ? 'HTTP' : 'MCI';
+            if (typeof window.syncRoutingTypeUI === 'function') window.syncRoutingTypeUI();
             const useCaseSelect = document.getElementById('toolGroupUseCaseSelect');
             const useCaseNameInput = document.getElementById('toolGroupUseCaseName');
             if (useCaseSelect.value === '' && !useCaseNameInput.value.trim() && result.baseName) {
@@ -2670,7 +2702,9 @@
             form.elements.ownerOrg.value = result.ownerOrg || 'MCP_TOOL';
             document.getElementById('inputFields').value = JSON.stringify(result.inputFields || [], null, 2);
             document.getElementById('outputFields').value = JSON.stringify(result.outputFields || [], null, 2);
-            alert('Tool 초안을 채웠습니다. Legacy Interface ID와 Client System Code는 실제 연계 명세를 확인해 입력해주세요.');
+            alert(routingType === 'HTTP'
+                ? 'Tool 초안을 채웠습니다. HTTP 연동 시 Legacy Interface ID는 선택사항이며 미입력 시 기본값(HTTP0000001)이 적용됩니다.'
+                : 'Tool 초안을 채웠습니다. Legacy Interface ID와 Client System Code는 실제 연계 명세를 확인해 입력해주세요.');
         } catch (error) {
             alert(`AI Tool 초안 생성 실패: ${error.message}`);
         } finally {
@@ -2762,6 +2796,7 @@
             if (result.routingType) {
                 const rt = String(result.routingType).trim().toUpperCase();
                 form.elements.routingType.value = rt === 'HTTP' ? 'HTTP' : 'MCI';
+                if (typeof window.syncRoutingTypeUI === 'function') window.syncRoutingTypeUI();
             }
             if (result.httpApiName) form.elements.httpApiName.value = result.httpApiName;
             if (result.functionDescription) form.elements.functionDescription.value = result.functionDescription;
@@ -3068,6 +3103,11 @@ function renderMciResponseMappings(parsed, mappings) {
                 targetName: field.name,
                 include: true
             };
+            if (field.name && field.name.toLowerCase() === 'scrpageinfo') {
+                mapping.targetName = 'scrPageInfo';
+            } else if (field.name && field.name.toLowerCase() === 'pageinfo') {
+                mapping.targetName = 'pageInfo';
+            }
             tbody.appendChild(createMciResponseMappingRow(type, field, mapping));
         });
     });
@@ -3156,6 +3196,14 @@ function collectMciResponseMappings() {
         let targetName = targetInput.value.trim();
         let include = includeChk.checked;
         const owner = row.dataset.ownerType;
+        const sourceName = row.dataset.sourceName;
+        if (sourceName && sourceName.toLowerCase() === 'scrpageinfo') {
+            targetName = 'scrPageInfo';
+            targetInput.value = 'scrPageInfo';
+        } else if (sourceName && sourceName.toLowerCase() === 'pageinfo') {
+            targetName = 'pageInfo';
+            targetInput.value = 'pageInfo';
+        }
         const used = usedByOwner.get(owner) || new Set();
         // targetName이 camelCase 패턴에 맞지 않거나 중복이면 자동으로 sourceName으로 fallback
         if (include && (!/^[a-z][A-Za-z0-9]*$/.test(targetName) || used.has(targetName))) {
