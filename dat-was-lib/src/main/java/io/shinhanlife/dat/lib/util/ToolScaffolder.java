@@ -3010,8 +3010,8 @@ public class ToolScaffolder {
             } else if (pagingMode == PagingMode.SCROLL) {
                 excluded = Set.of("scrPageInfo");
                 if (!hasScrPageInfo) {
-                    pagingImport = "import io.shinhanlife.glow.GlowTrgmField;\nimport io.shinhanlife.glow.db.dto.ScrPageInfo;\n";
-                    pagingField = "    @Schema(description = \"스크롤 페이지 정보\")\n    @GlowTrgmField(order = 1, length = 306, description = \"스크롤 페이지 정보\")\n    private ScrPageInfo scrPageInfo;\n\n";
+                    pagingImport = "import io.shinhanlife.glow.GlowTrgmField;\nimport io.shinhanlife.glow.db.dto.ScrPageInfo;\nimport com.fasterxml.jackson.databind.annotation.JsonDeserialize;\nimport io.shinhanlife.dat.lib.paging.ScrPageInfoDeserializer;\n";
+                    pagingField = "    @Schema(description = \"스크롤 페이지 정보\")\n    @GlowTrgmField(order = 1, length = 306, description = \"스크롤 페이지 정보\")\n    @JsonDeserialize(using = ScrPageInfoDeserializer.class)\n    private ScrPageInfo scrPageInfo;\n\n";
                 }
             }
         }

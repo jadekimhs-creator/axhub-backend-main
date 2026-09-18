@@ -40,14 +40,14 @@ public class ScrPageInfo implements Serializable {
      */
     @Schema(description = "스크롤항목명", example = "inonNo")
     @GlowTrgmField(order = 1, length = 100, description = "스크롤항목명")
-    private String scrlmhdNm;
+    private String scrImhdNm;
 
     /**
      * 스크롤항목값 (입력값)
      */
     @Schema(description = "스크롤항목값", example = "10")
     @GlowTrgmField(order = 2, length = 100, description = "스크롤항목값")
-    private String scrlItva;
+    private String scrItva;
 
     /**
      * 스크롤정렬값 (리턴/입력값)
