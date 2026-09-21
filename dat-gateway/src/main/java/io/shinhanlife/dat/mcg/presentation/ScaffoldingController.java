@@ -16,6 +16,7 @@ package io.shinhanlife.dat.mcg.presentation;
  * </pre>
  */
 import io.shinhanlife.dat.lib.util.NewPodProjectScaffolder;
+import io.shinhanlife.dat.lib.metadata.V17ToolSchemaPolicy;
 import io.shinhanlife.dat.lib.util.PodScaffolder;
 import io.shinhanlife.dat.lib.util.MciResponseScaffolder;
 import io.shinhanlife.dat.lib.util.ToolScaffolder;
@@ -404,10 +405,10 @@ public class ScaffoldingController {
                     Generate an MCP Tool scaffold from the user request according to ShinhanLife V17 Tool Schema prerequisites and rules based on the 6 guidelines.
                     Return JSON only. Do not add Markdown, explanations, or code fences.
                     The response must have this exact shape:
-                    {"baseName":"PascalCase3PartName","title":"short Korean title","description":"clear Korean LLM tool guidance","categoryKey":"cmm","routingType":"MCI","httpApiName":"simple-api-name","functionDescription":"core business function","displayDescription":"short portal description","whenToUse":"specific user requests that should select this tool","whenNotToUse":"requests or conditions that must not select this tool","ioLimits":"allowed input and output scope and limits","exampleQueries":["query 1","query 2","query 3"],"tags":["categoryKey","한국어태그1","한국어태그2","engTag1","engTag2"],"ownerOrg":"MCP_TOOL","inputFields":[{"name":"camelCaseName","type":"String","description":"short description","examples":["example1","example2"],"pattern":"^regex$","required":true,"enumValues":[],"itemType":null,"itemFields":[]}],"outputFields":[{"name":"resultCode","type":"String","description":"result code","examples":["SUCCESS"],"pattern":"","required":true,"enumValues":[],"itemType":null,"itemFields":[]}]}
+                    {"baseName":"PascalCaseReadActionAndTarget","title":"short Korean title","description":"clear Korean LLM tool guidance","categoryKey":"cmm","routingType":"MCI","httpApiName":"simple-api-name","functionDescription":"core business function","displayDescription":"short portal description","whenToUse":"specific user requests that should select this tool","whenNotToUse":"requests or conditions that must not select this tool","ioLimits":"allowed input and output scope and limits","exampleQueries":["query 1","query 2","query 3"],"tags":["categoryKey","한국어태그1","한국어태그2","engTag1","engTag2"],"ownerOrg":"MCP_TOOL","inputFields":[{"name":"camelCaseName","type":"String","description":"short description","examples":["example1","example2"],"pattern":"^regex$","required":true,"enumValues":[],"itemType":null,"itemFields":[]}],"outputFields":[{"name":"resultCode","type":"String","description":"result code","examples":["SUCCESS"],"pattern":"","required":true,"enumValues":[],"itemType":null,"itemFields":[]}]}
                     [V17 RULES]
-                    - Read-only & idempotent (destructive=false, idempotent=true for MCI; destructive=false, idempotent=false for HTTP). All tools are strictly read-only inquiry tools.
-                    - 3-part naming for baseName: {categoryKey}_{action}_{target} in PascalCase (e.g. ProSearchFund, CusDetailContract, ProSearchFundHistory).
+                    - Every currently generated tool is strictly read-only: destructive=false, idempotent=true. Do not generate CUD behavior or wording.
+                    - Public tool names use {categoryKey}_{action}_{target}; Java baseName excludes categoryKey and contains only {action}_{target} in PascalCase (e.g. SearchFund, DetailContract, SearchFundHistory).
                       categoryKey must be exactly 3 lowercase letters (e.g. pro, cus, sal, cmm).
                       Action must be strictly one of: 'search' (multi-row / list / condition inquiry) or 'detail' (single-row / comprehensive detail inquiry).
                       Do not use 'inquiry', 'query', 'asst', or other arbitrary verbs. Target domains (history, consulting, return, balance, unclaimed, fund, contract) belong to target.
@@ -476,7 +477,7 @@ public class ScaffoldingController {
                        - 툴 호출 판단(툴 선택, 호출 여부, 호출 순서)은 오직 Agent Builder의 LLM이 단독으로 수행한다. 시스템(Converter 포함)은 LLM의 툴 호출 판단에 관여하지 않는다.
                        - 시스템(Converter)의 역할은 LLM이 호출을 결정한 이후 파라미터 기본값, 기본 기간 세팅 등 기술적인 처리에만 한정된다.
                     2. 최상위 제약 - Read-Only 원칙:
-                       - 모든 툴은 순수 조회용이다 (destructive=false, idempotent=true for MCI; destructive=false, idempotent=false for HTTP).
+                       - 모든 툴은 순수 조회용이다 (destructive=false, idempotent=true). HTTP 여부와 무관하게 동일하다.
                        - 등록, 수정, 삭제, 변경을 수행하거나 지시하는 코드는 절대 포함하지 않는다.
                     3. 스케일 고려 (다중 MCP 등록, MCP당 툴 50개 이하 전제):
                        - LLM이 수십 개 툴 중에서 시맨틱 검색으로 정확히 탐색할 수 있도록 tags, exampleQueries 품질을 극대화한다.
@@ -485,13 +486,14 @@ public class ScaffoldingController {
                     4. Ground Truth & Immutable Fields (화면 기능의 실체화 - 절대 수정 불가):
                        - title: 사용자가 입력한 타이틀 그대로 100%% 유지 (절대 임의 변경 금지: %s).
                        - displayDescription: 연계 화면명 (고정값, 예: [NSAK0060]...) 그대로 100%% 유지 (절대 임의 변경 금지: %s).
-                    5. 네이밍 규칙 2-12 ({업무단위}_{기능}_{대상} 3단 구조 -> PascalCase baseName):
+                    5. 네이밍 규칙 2-12 ({업무단위}_{기능}_{대상} 공개 이름 / Java Base Name 분리):
                        - 1단 (업무단위): categoryKey (소문자 3자, e.g. pro, cus, sal, cmm).
                        - 2단 (기능/작업): 조회성 툴은 오직 'search' (다건/목록 조회) 또는 'detail' (단건/상세 조회) 2가지만 사용!
                          'inquiry', 'query', 'asst' 등 임의의 기능어 혼용 절대 금지.
                        - 3단 (대상/영역): 다루는 대상(컨설팅, 이력, 수익률, 펀드 등)은 모두 3단에 배치! (e.g. Variable, Fund, Contract, Fee, Disclosure, History, Consulting, Return, Balance, Unclaimed).
                          완전한 영어 단어 사용 (축약어 금지).
-                       - baseName은 이 3단을 PascalCase로 결합 (예: ProSearchFund, CusDetailContract, ProSearchFundHistory, ProDetailContractReturn).
+                       - 공개 Tool 이름은 {categoryKey}_{action}_{target} 형식이다 (예: pro_search_fund, cus_detail_contract).
+                       - Java Base Name excludes categoryKey; action+target만 PascalCase로 결합한다 (예: SearchFund, DetailContract, SearchFundHistory).
                        - routingType이 HTTP일 경우, httpApiName은 10자 미만 'xxx-xxxx' 형식의 축약 영문 소문자.
                     6. description & functionDescription 작성 지침:
                        - 연계 화면 기능의 본래 의도(Ground Truth) 유지.
@@ -572,13 +574,14 @@ public class ScaffoldingController {
             // Guarantee Rule 2: Ground Truth & Immutable fields
             String finalTitle = !title.isBlank() ? title : draft.title();
             String finalDisplayDesc = !displayDescription.isBlank() ? displayDescription : draft.displayDescription();
-            String finalBaseName = normalizeBaseName(draft.baseName());
+            String finalCategoryKey = categoryKey.isBlank() ? draft.categoryKey() : categoryKey;
+            String finalBaseName = V17ToolSchemaPolicy.normalizeJavaBaseName(draft.baseName(), finalCategoryKey);
 
             ToolDraft finalDraft = new ToolDraft(
                     finalBaseName,
                     finalTitle,
                     draft.description(),
-                    draft.categoryKey(),
+                    finalCategoryKey,
                     draft.routingType(),
                     draft.httpApiName(),
                     draft.functionDescription(),
@@ -859,14 +862,11 @@ public class ScaffoldingController {
         if (draft == null) {
             throw new IllegalArgumentException("AI가 Tool 초안을 생성하지 않았습니다.");
         }
-        String baseName = normalizeBaseName(draft.baseName());
-        if (baseName.isBlank() || !baseName.matches("^[A-Z][A-Za-z0-9]*$")) {
-            throw new IllegalArgumentException("AI가 올바르지 않은 Base Name을 생성했습니다: " + draft.baseName());
-        }
         String categoryKey = draft.categoryKey() == null ? "" : draft.categoryKey().trim().toLowerCase(Locale.ROOT);
         if (!categoryKey.matches("^[a-z0-9]{3}$")) {
             throw new IllegalArgumentException("AI가 올바르지 않은 Category Key를 생성했습니다.");
         }
+        String baseName = V17ToolSchemaPolicy.normalizeJavaBaseName(draft.baseName(), categoryKey);
         String routingType = draft.routingType() == null ? "" : draft.routingType().trim().toUpperCase(Locale.ROOT);
         if (!Set.of("HTTP", "MCI").contains(routingType)) {
             throw new IllegalArgumentException("AI가 지원하지 않는 Protocol을 생성했습니다.");
@@ -894,14 +894,16 @@ public class ScaffoldingController {
         String whenToUse = textOrDefault(draft.whenToUse(), description + " 요청을 처리할 때 사용한다.");
         String whenNotToUse = textOrDefault(draft.whenNotToUse(), "필수 입력값이 없거나 다른 업무 요청에는 사용하지 않는다.");
         String ioLimits = textOrDefault(draft.ioLimits(), "정의된 입력 필드만 허용하며 정의된 응답 DTO 범위만 반환한다.");
-        List<String> exampleQueries = normalizedDraftList(draft.exampleQueries(), List.of(
-                title + " 해줘", title + " 정보를 알려줘", title + " 결과를 확인해줘"));
-        List<String> tags = normalizedDraftList(draft.tags(), List.of(categoryKey));
+        List<String> exampleQueries = V17ToolSchemaPolicy.validateExamples(normalizedDraftList(draft.exampleQueries(), List.of(
+                title + " 해줘", title + " 정보를 알려줘", title + " 결과를 확인해줘")));
+        List<String> tags = V17ToolSchemaPolicy.validateTags(normalizedDraftList(draft.tags(), List.of(
+                categoryKey, "조회", "상세", "업무조회", "search", "detail")), categoryKey);
         String ownerOrg = textOrDefault(draft.ownerOrg(), "MCP_TOOL");
         return new ToolDraft(baseName, title, description, categoryKey, routingType, httpApiName,
                 functionDescription, displayDescription, whenToUse, whenNotToUse, ioLimits,
                 exampleQueries, tags, ownerOrg,
-                validateFields(draft.inputFields(), true), validateFields(draft.outputFields(), true));
+                V17ToolSchemaPolicy.normalizePagingFields(validateFields(draft.inputFields(), true)),
+                V17ToolSchemaPolicy.normalizePagingFields(validateFields(draft.outputFields(), true)));
     }
 
     private String textOrDefault(String value, String fallback) {

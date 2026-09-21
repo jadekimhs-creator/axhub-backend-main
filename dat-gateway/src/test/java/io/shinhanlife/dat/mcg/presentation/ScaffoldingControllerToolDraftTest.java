@@ -19,6 +19,7 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.verify;
@@ -197,7 +198,7 @@ class ScaffoldingControllerToolDraftTest {
         when(requestSpec.options(any(ChatOptions.class))).thenReturn(requestSpec);
         when(requestSpec.call()).thenReturn(responseSpec);
         when(responseSpec.content()).thenReturn("""
-                {"baseName":"CustomerContractStatus","title":"계약 상태 조회","description":"고객번호로 계약 상태를 조회합니다.","categoryKey":"cmm","routingType":"MCI","httpApiName":"contract-status","functionDescription":"고객 계약의 현재 상태를 조회한다.","displayDescription":"고객 계약 상태 조회","whenToUse":"고객번호로 계약 상태 확인을 요청할 때 사용한다.","whenNotToUse":"계약 변경 또는 해지를 요청할 때는 사용하지 않는다.","ioLimits":"고객번호 한 건을 입력받아 계약 상태 한 건을 반환한다.","exampleQueries":["고객 C123의 계약 상태를 알려줘","C123 계약이 정상인지 확인해줘","고객번호 C123 계약 조회해줘"],"tags":["contract","status","search"],"ownerOrg":"MCP_TOOL","inputFields":[{"name":"customerId","type":"String","description":"고객번호","examples":["C123"],"required":true}],"outputFields":[{"name":"resultCode","type":"String","description":"결과 코드","examples":["SUCCESS"],"required":true}]}
+                {"baseName":"DetailContractStatus","title":"계약 상태 조회","description":"고객번호로 계약 상태를 조회합니다.","categoryKey":"cmm","routingType":"MCI","httpApiName":"contract-status","functionDescription":"고객 계약의 현재 상태를 조회한다.","displayDescription":"고객 계약 상태 조회","whenToUse":"고객번호로 계약 상태 확인을 요청할 때 사용한다.","whenNotToUse":"계약 변경 또는 해지를 요청할 때는 사용하지 않는다.","ioLimits":"고객번호 한 건을 입력받아 계약 상태 한 건을 반환한다.","exampleQueries":["고객 C123의 계약 상태를 알려줘","C123 계약이 정상인지 확인해줘","고객번호 C123 계약 조회해줘"],"tags":["cmm","계약","상태","계약조회","contract","status"],"ownerOrg":"MCP_TOOL","inputFields":[{"name":"customerId","type":"String","description":"고객번호","examples":["C123"],"required":true}],"outputFields":[{"name":"resultCode","type":"String","description":"결과 코드","examples":["SUCCESS"],"required":true}]}
                 """);
         ScaffoldingController controller = new ScaffoldingController(builder, new ObjectMapper());
         ReflectionTestUtils.setField(controller, "openRouterApiKey", "test-openrouter-key");
@@ -209,7 +210,7 @@ class ScaffoldingControllerToolDraftTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"description\":\"고객번호로 계약 상태를 조회\"}"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.baseName").value("CustomerContractStatus"))
+                .andExpect(jsonPath("$.baseName").value("DetailContractStatus"))
                 .andExpect(jsonPath("$.routingType").value("MCI"))
                 .andExpect(jsonPath("$.functionDescription").value("고객 계약의 현재 상태를 조회한다."))
                 .andExpect(jsonPath("$.displayDescription").value("고객 계약 상태 조회"))
@@ -217,7 +218,7 @@ class ScaffoldingControllerToolDraftTest {
                 .andExpect(jsonPath("$.whenNotToUse").value("계약 변경 또는 해지를 요청할 때는 사용하지 않는다."))
                 .andExpect(jsonPath("$.ioLimits").value("고객번호 한 건을 입력받아 계약 상태 한 건을 반환한다."))
                 .andExpect(jsonPath("$.exampleQueries[0]").value("고객 C123의 계약 상태를 알려줘"))
-                .andExpect(jsonPath("$.tags[0]").value("contract"))
+                .andExpect(jsonPath("$.tags[0]").value("cmm"))
                 .andExpect(jsonPath("$.ownerOrg").value("MCP_TOOL"))
                 .andExpect(jsonPath("$.inputFields[0].name").value("customerId"));
 
@@ -264,7 +265,7 @@ class ScaffoldingControllerToolDraftTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(requestBody))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.baseName").value("ProSearchVariable"))
+                .andExpect(jsonPath("$.baseName").value("SearchVariable"))
                 .andExpect(jsonPath("$.title").value(originalTitle))
                 .andExpect(jsonPath("$.displayDescription").value(originalDisplayDesc))
                 .andExpect(jsonPath("$.categoryKey").value("pro"))
@@ -279,9 +280,33 @@ class ScaffoldingControllerToolDraftTest {
         org.mockito.ArgumentCaptor<String> promptCaptor = org.mockito.ArgumentCaptor.forClass(String.class);
         verify(requestSpec).user(promptCaptor.capture());
         assertTrue(promptCaptor.getValue().contains("CRITICAL V17 OPTIMIZATION RULES - 6 GUIDELINE PRINCIPLES"));
-        assertTrue(promptCaptor.getValue().contains("3단 구조"));
+        assertTrue(promptCaptor.getValue().contains("공개 이름 / Java Base Name 분리"));
         assertTrue(promptCaptor.getValue().contains("search"));
         assertTrue(promptCaptor.getValue().contains(originalDisplayDesc));
+        assertTrue(promptCaptor.getValue().contains("idempotent=true"));
+        assertTrue(promptCaptor.getValue().contains("Java Base Name excludes categoryKey"));
+    }
+
+    @Test
+    void rejectsToolDraftsThatViolateV17NamingAndMetadataCardinality() {
+        ScaffoldingController controller = new ScaffoldingController(mock(ChatClient.Builder.class), new ObjectMapper());
+
+        assertThrows(IllegalArgumentException.class, () -> ReflectionTestUtils.invokeMethod(controller,
+                "validateToolDraft", validToolDraft("ProInquiryFund", List.of("질문 하나", "질문 둘", "질문 셋"),
+                        List.of("pro", "펀드", "조회", "fund", "search"))));
+        assertThrows(IllegalArgumentException.class, () -> ReflectionTestUtils.invokeMethod(controller,
+                "validateToolDraft", validToolDraft("ProSearchFund", List.of("질문 하나", "질문 둘"),
+                        List.of("pro", "펀드", "조회", "fund", "search"))));
+        assertThrows(IllegalArgumentException.class, () -> ReflectionTestUtils.invokeMethod(controller,
+                "validateToolDraft", validToolDraft("ProSearchFund", List.of("질문 하나", "질문 둘", "질문 셋"),
+                        List.of("pro", "펀드"))));
+    }
+
+    private ScaffoldingController.ToolDraft validToolDraft(String baseName, List<String> exampleQueries, List<String> tags) {
+        return new ScaffoldingController.ToolDraft(baseName, "펀드 조회", "[pro] 펀드를 조회한다.", "pro", "MCI",
+                "", "[pro] 펀드 조회", "[NSAK0060] 펀드 조회", "펀드를 조회할 때 사용한다.",
+                "변경 요청에는 사용하지 않는다.", "정의된 입력만 허용한다.", exampleQueries, tags,
+                "MCP_TOOL", List.of(), List.of());
     }
 
     @Test
@@ -537,12 +562,12 @@ class ScaffoldingControllerToolDraftTest {
     void validatesHttpToolDraftWithAbbreviatedHttpApiNameAndBaseName() {
         ScaffoldingController controller = new ScaffoldingController(mock(ChatClient.Builder.class), new ObjectMapper());
         ScaffoldingController.ToolDraft draft = new ScaffoldingController.ToolDraft(
-                "EmployeeSearchDetail", "직원 조회", "직원 정보를 조회한다", "cmm", "HTTP", "employee-search-detail",
+                "SearchEmployee", "직원 조회", "직원 정보를 조회한다", "cmm", "HTTP", "employee-search-detail",
                 null, null, null, null, null, List.of(), List.of(), null, List.of(), List.of());
 
         ScaffoldingController.ToolDraft validated = ReflectionTestUtils.invokeMethod(controller, "validateToolDraft", draft);
-        assertEquals("emp-dtl", validated.httpApiName());
-        assertEquals("EmpDtl", validated.baseName());
+        assertEquals("srch-emp", validated.httpApiName());
+        assertEquals("SrchEmp", validated.baseName());
         assertTrue(validated.httpApiName().length() < 10);
     }
 
