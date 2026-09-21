@@ -2811,9 +2811,15 @@ public class ToolScaffolder {
 
                         private final ScrollPagingSupport scrollPagingSupport = new ScrollPagingSupport();
 
+                        // MCI 전문별 스크롤 항목명/정렬값은 이 Pod에서 설정합니다.
+                        private static final String DEFAULT_SCR_IMHD_NM = "";
+                        private static final String DEFAULT_SCR_SORT_VALU = "";
+
                         @Override
                         public MciPage<%sResponse, ScrollPagingInfo> fetch(%sRequest request, ScrollPagingInfo pagingInfo) {
-                            return scrollPagingSupport.execute(request, pagingInfo, new ScrollPagingAdapter<>() {
+                            return scrollPagingSupport.execute(request, pagingInfo,
+                                    DEFAULT_SCR_IMHD_NM, DEFAULT_SCR_SORT_VALU,
+                                    new ScrollPagingAdapter<>() {
                                 @Override
                                 public ScrPageInfo getRequestPageInfo(%sRequest source) {
                                     return source.getScrPageInfo();
