@@ -2777,11 +2777,12 @@ public class ToolScaffolder {
                     import %s.io.%s_I;
                     import %s.io.%s_O;
                     import io.shinhanlife.dat.lib.paging.MciPage;
+                    import io.shinhanlife.dat.lib.paging.ScrollPagingAdapter;
                     import io.shinhanlife.dat.lib.paging.ScrollPagingInfo;
+                    import io.shinhanlife.dat.lib.paging.ScrollPagingResult;
+                    import io.shinhanlife.dat.lib.paging.ScrollPagingSupport;
                     import io.shinhanlife.glow.db.dto.ScrPageInfo;
                     import io.shinhanlife.glow.communication.dto.Transfer;
-                    import java.lang.reflect.Method;
-                    import java.util.List;
                     import lombok.RequiredArgsConstructor;
                     import lombok.extern.slf4j.Slf4j;
                     import org.springframework.stereotype.Component;
@@ -2808,69 +2809,36 @@ public class ToolScaffolder {
                         private final %s mci;
                         private final %s converter;
 
+                        private final ScrollPagingSupport scrollPagingSupport = new ScrollPagingSupport();
+
                         @Override
                         public MciPage<%sResponse, ScrollPagingInfo> fetch(%sRequest request, ScrollPagingInfo pagingInfo) {
-                            if (request.getScrPageInfo() == null) {
-                                request.setScrPageInfo(new ScrPageInfo());
-                            }
-                            if (request.getScrPageInfo().getPageDataCc() <= 0) {
-                                request.getScrPageInfo().setPageDataCc(20);
-                            }
-                            if (pagingInfo != null) {
-                                if (pagingInfo.getScrImhdNm() != null) request.getScrPageInfo().setScrImhdNm(pagingInfo.getScrImhdNm());
-                                if (pagingInfo.getScrItva() != null) request.getScrPageInfo().setScrItva(pagingInfo.getScrItva());
-                                if (pagingInfo.getScrSortValu() != null) request.getScrPageInfo().setScrSortValu(pagingInfo.getScrSortValu());
-                                if (pagingInfo.getPageDataCc() > 0) request.getScrPageInfo().setPageDataCc(pagingInfo.getPageDataCc());
-                            }
+                            return scrollPagingSupport.execute(request, pagingInfo, new ScrollPagingAdapter<>() {
+                                @Override
+                                public ScrPageInfo getRequestPageInfo(%sRequest source) {
+                                    return source.getScrPageInfo();
+                                }
 
-                            %s_I mciReq = converter.toRequest(request);
-                            if (mciReq != null && request.getScrPageInfo() != null) {
-                                try {
-                                    Method setMethod = mciReq.getClass().getMethod("setScrPageInfo", List.class);
-                                    setMethod.invoke(mciReq, List.of(request.getScrPageInfo()));
-                                } catch (NoSuchMethodException e) {
-                                    try {
-                                        Method setMethod = mciReq.getClass().getMethod("setScrPageInfo", ScrPageInfo.class);
-                                        setMethod.invoke(mciReq, request.getScrPageInfo());
-                                    } catch (Exception ignored) {}
-                                } catch (Exception ignored) {}
-                            }
+                                @Override
+                                public void setRequestPageInfo(%sRequest source, ScrPageInfo pageInfo) {
+                                    source.setScrPageInfo(pageInfo);
+                                }
 
-                            Transfer<%s_O> resTransfer = mci.callTo("%s", "%s", mciReq, %s_O.class);
-                            %s_O mciRes = resTransfer != null ? resTransfer.getBody() : null;
+                                @Override
+                                public ScrollPagingResult<%sResponse> invoke(%sRequest source, ScrPageInfo pageInfo) {
+                                    %s_I mciRequest = converter.toRequest(source);
+                                    mciRequest.setScrPageInfo(pageInfo);
+                                    Transfer<%s_O> transfer = mci.callTo("%s", "%s", mciRequest, %s_O.class);
+                                    %s_O mciResponse = transfer == null ? null : transfer.getBody();
+                                    return new ScrollPagingResult<>(converter.toResponse(mciResponse),
+                                            mciResponse == null ? null : mciResponse.getScrPageInfo());
+                                }
 
-                            %sResponse response = converter.toResponse(mciRes);
-
-                            ScrPageInfo resPageInfo = null;
-                            if (mciRes != null) {
-                                try {
-                                    Method getMethod = mciRes.getClass().getMethod("getScrPageInfo");
-                                    Object val = getMethod.invoke(mciRes);
-                                    if (val instanceof List<?> list && !list.isEmpty()) {
-                                        if (list.get(0) instanceof ScrPageInfo pi) resPageInfo = pi;
-                                    } else if (val instanceof ScrPageInfo pi) {
-                                        resPageInfo = pi;
-                                    }
-                                } catch (Exception ignored) {}
-                            }
-
-                            boolean hasNext = resPageInfo != null && "Y".equalsIgnoreCase(resPageInfo.getNextDataExtYn());
-                            String nextSortValu = resPageInfo != null ? resPageInfo.getScrSortValu() : null;
-                            String nextItva = resPageInfo != null ? resPageInfo.getScrItva() : null;
-
-                            if (response != null) {
-                                response.setHasMore(hasNext);
-                            }
-
-                            ScrollPagingInfo nextPaging = new ScrollPagingInfo(
-                                    request.getScrPageInfo().getScrImhdNm(),
-                                    nextItva,
-                                    nextSortValu,
-                                    hasNext,
-                                    request.getScrPageInfo().getPageDataCc()
-                            );
-
-                            return new MciPage<>(response, nextPaging);
+                                @Override
+                                public void setHasMore(%sResponse response, boolean hasMore) {
+                                    response.setHasMore(hasMore);
+                                }
+                            });
                         }
                     }
                     """.formatted(
@@ -2885,6 +2853,9 @@ public class ToolScaffolder {
                     bizPackage, implName,
                     implName, interfaceName,
                     clientClassName, converterName,
+                    baseName, baseName,
+                    baseName,
+                    baseName,
                     baseName, baseName,
                     ioPrefix,
                     ioPrefix, interfaceId, receiveServiceId, ioPrefix,

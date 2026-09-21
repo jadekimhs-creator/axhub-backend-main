@@ -35,6 +35,15 @@ class ToolScaffolderTest {
         assertTrue(adapter.getFileName().toString().endsWith("ScrollPaging.java"));
         assertTrue(source.contains("ScrollPagingInfo"));
 
+        Path pagingImpl = pagingDir.resolve("impl/ContractListScrollPagingImpl.java");
+        String pagingImplSource = Files.readString(pagingImpl);
+        assertTrue(pagingImplSource.contains("import io.shinhanlife.dat.lib.paging.ScrollPagingSupport;"), pagingImplSource);
+        assertTrue(pagingImplSource.contains("import io.shinhanlife.dat.lib.paging.ScrollPagingAdapter;"), pagingImplSource);
+        assertTrue(pagingImplSource.contains("import io.shinhanlife.dat.lib.paging.ScrollPagingResult;"), pagingImplSource);
+        assertTrue(pagingImplSource.contains("scrollPagingSupport.execute(request, pagingInfo"), pagingImplSource);
+        assertFalse(pagingImplSource.contains("java.lang.reflect.Method"), pagingImplSource);
+        assertFalse(pagingImplSource.contains("catch (Exception ignored)"), pagingImplSource);
+
         Path reqDto = root.resolve("dat-was-scroll/src/main/java/io/shinhanlife/dat/mcc/biz/sal/dto/ContractListRequest.java");
         String reqSource = Files.readString(reqDto);
         assertTrue(reqSource.contains("import io.shinhanlife.glow.db.dto.ScrPageInfo;"), reqSource);
