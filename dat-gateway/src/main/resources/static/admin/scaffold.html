@@ -1101,14 +1101,14 @@
                                 <div class="form-label mb-0">Tool Schema V17 Metadata</div>
                                 <button type="button" class="btn btn-sm btn-outline-info" style="font-size:12px; padding:2px 10px;" onclick="optimizeAiToolDraft()">V17 최적화 재적용</button>
                             </div>
-                            <div class="input-hint mb-3">LLM이 Tool을 올바르게 선택하도록 기능·사용 조건·제외 조건·입출력 제한을 분리해 입력합니다.</div>
+                            <div class="input-hint mb-3">조회 Tool은 V17 기준으로 생성됩니다: 변경 불가·승인 불필요·재시도 안전. Java Base Name은 <code>SearchFund</code>처럼 카테고리를 제외하고, 공개 Tool 이름은 <code>pro_search_fund</code>처럼 카테고리를 포함합니다.</div>
                             <div class="row g-3">
                                 <div class="col-md-6">
                                     <label class="form-label">Function Description</label>
                                     <textarea class="form-control" name="functionDescription" rows="2" placeholder="이 Tool이 수행하는 핵심 기능"></textarea>
                                 </div>
                                 <div class="col-md-6">
-                                    <label class="form-label">Display Description</label>
+                                    <label class="form-label">Display Description <span class="text-info">(Ground Truth · AI가 변경하지 않음)</span></label>
                                     <textarea class="form-control" name="displayDescription" rows="2" placeholder="Portal에 보여줄 짧은 설명"></textarea>
                                 </div>
                                 <div class="col-md-6">
@@ -1125,11 +1125,12 @@
                                 </div>
                                 <div class="col-md-8">
                                     <label class="form-label">Example Queries (3~10)</label>
-                                    <textarea class="form-control" name="exampleQueries" rows="3" placeholder="한 줄에 하나씩 입력\n예: 사번 10001 직원 정보를 조회해줘"></textarea>
+                                    <textarea class="form-control" name="exampleQueries" rows="3" placeholder="한 줄에 하나씩 입력 · 화면/업무 기능 용어를 포함\n예: 사번 10001 직원 정보를 조회해줘"></textarea>
                                 </div>
                                 <div class="col-md-4">
-                                    <label class="form-label">Tags</label>
-                                    <input type="text" class="form-control" name="tags" placeholder="employee, search">
+                                    <label class="form-label">Tags (5~8)</label>
+                                    <input type="text" class="form-control" name="tags" placeholder="pro, 펀드, 투자, 상품유형, fund, investment">
+                                    <div class="input-hint">첫 번째는 Category Key, 이후에는 한글 업무 키워드와 영문 보조 키워드를 입력합니다.</div>
                                     <label class="form-label mt-3">Owner Organization</label>
                                     <input type="text" class="form-control" name="ownerOrg" value="MCP_TOOL">
                                 </div>
@@ -2820,7 +2821,7 @@
                 document.getElementById('outputFields').value = JSON.stringify(result.outputFields, null, 2);
             }
 
-            alert('V17 스키마 기준(3단 네이밍, 3중 태그, Ground Truth 불변, 화면명 기반 질의 등)으로 최적화하여 폼에 반영했습니다.');
+            alert('V17 기준으로 최적화했습니다. 제목·화면명(Ground Truth)은 유지되고, 조회 Tool은 변경 불가·승인 불필요·재시도 안전 메타데이터로 생성됩니다.');
         } catch (error) {
             alert(`V17 스키마 최적화 실패: ${error.message}`);
         } finally {
