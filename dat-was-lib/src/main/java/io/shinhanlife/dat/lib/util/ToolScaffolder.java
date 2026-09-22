@@ -1,5 +1,7 @@
 package io.shinhanlife.dat.lib.util;
 
+import io.shinhanlife.dat.lib.metadata.V17ToolSchemaPolicy;
+
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -415,8 +417,10 @@ public class ToolScaffolder {
             if (examples == null || examples.isEmpty()) {
                 examples = List.of(option(tool.title(), baseName) + " 정보를 보여줘", option(tool.title(), baseName) + " 확인해줘", "현재 " + option(tool.title(), baseName) + " 알려줘");
             }
-            boolean isHttpTool = "HTTP".equalsIgnoreCase(tool.routingType());
-            boolean idempotentVal = isHttpTool ? false : !isMutation;
+            if (!isMutation) {
+                examples = v17ExampleQueries(opts, option(tool.title(), baseName));
+            }
+            boolean idempotentVal = !isMutation;
             methods.append("        exampleQueries = {")
                     .append(examples.stream().map(q -> "\"" + javaText(q) + "\"").collect(Collectors.joining(", ")))
                     .append("},\n")
@@ -426,6 +430,9 @@ public class ToolScaffolder {
             List<String> tags = opts.tags();
             if (tags == null || tags.isEmpty()) {
                 tags = List.of(tool.group().toLowerCase(Locale.ROOT), isMutation ? "처리" : "조회");
+            }
+            if (!isMutation) {
+                tags = v17Tags(opts, tool.group());
             }
             methods.append("        tags = {")
                     .append(tags.stream().map(t -> "\"" + javaText(t) + "\"").collect(Collectors.joining(", ")))
@@ -873,8 +880,10 @@ public class ToolScaffolder {
             if (examples == null || examples.isEmpty()) {
                 examples = List.of(option(tool.title(), baseName) + " 정보를 보여줘", option(tool.title(), baseName) + " 확인해줘", "현재 " + option(tool.title(), baseName) + " 알려줘");
             }
-            boolean isHttpTool = "HTTP".equalsIgnoreCase(tool.routingType());
-            boolean idempotentVal = isHttpTool ? false : !isMutation;
+            if (!isMutation) {
+                examples = v17ExampleQueries(opts, option(tool.title(), baseName));
+            }
+            boolean idempotentVal = !isMutation;
             declBuilder.append("        exampleQueries = {")
                     .append(examples.stream().map(q -> "\"" + javaText(q) + "\"").collect(Collectors.joining(", ")))
                     .append("},\n")
@@ -884,6 +893,9 @@ public class ToolScaffolder {
             List<String> tags = opts.tags();
             if (tags == null || tags.isEmpty()) {
                 tags = List.of(tool.group().toLowerCase(Locale.ROOT), isMutation ? "처리" : "조회");
+            }
+            if (!isMutation) {
+                tags = v17Tags(opts, tool.group());
             }
             declBuilder.append("        tags = {")
                     .append(tags.stream().map(t -> "\"" + javaText(t) + "\"").collect(Collectors.joining(", ")))
@@ -1349,17 +1361,23 @@ public class ToolScaffolder {
         if (examples == null || examples.isEmpty()) {
             examples = List.of(title + " 정보를 보여줘", title + " 확인해줘", "현재 " + title + " 알려줘");
         }
+        if (!isMutation) {
+            examples = v17ExampleQueries(definitionOptions, title);
+        }
         sb.append("        exampleQueries = {")
           .append(examples.stream().map(q -> "\"" + javaText(q) + "\"").collect(Collectors.joining(", ")))
           .append("},\n");
           
-        boolean idempotentVal = isHttp ? false : !isMutation;
+        boolean idempotentVal = !isMutation;
         sb.append("        destructive = ").append(isMutation).append(",\n");
         sb.append("        idempotent = ").append(idempotentVal).append(",\n");
         
         List<String> tags = definitionOptions.tags();
         if (tags == null || tags.isEmpty()) {
             tags = List.of(group.toLowerCase(Locale.ROOT), isMutation ? "처리" : "조회");
+        }
+        if (!isMutation) {
+            tags = v17Tags(definitionOptions, group);
         }
         sb.append("        tags = {")
           .append(tags.stream().map(t -> "\"" + javaText(t) + "\"").collect(Collectors.joining(", ")))
@@ -2392,6 +2410,49 @@ public class ToolScaffolder {
                 .distinct()
                 .toList();
         return normalized.isEmpty() ? fallback : normalized;
+    }
+
+    /**
+     * Applies V17's minimum three example-query contract only to inquiry tools.
+     * Write tools retain their existing review and metadata behavior.
+     */
+    private static List<String> v17ExampleQueries(ToolDefinitionOptions options, String title) {
+        List<String> examples = new ArrayList<>(normalizedList(
+                options == null ? null : options.exampleQueries(), List.of()));
+        for (String fallback : List.of(
+                title + " 정보를 보여줘", title + " 확인해줘", "현재 " + title + " 알려줘")) {
+            if (examples.size() >= 3) {
+                break;
+            }
+            if (!examples.contains(fallback)) {
+                examples.add(fallback);
+            }
+        }
+        return V17ToolSchemaPolicy.validateExamples(examples);
+    }
+
+    /**
+     * Starts V17 inquiry tags with the category namespace and fills missing
+     * semantic-search hints without replacing tags explicitly supplied by a user.
+     */
+    private static List<String> v17Tags(ToolDefinitionOptions options, String categoryKey) {
+        String category = categoryKey == null ? "" : categoryKey.trim().toLowerCase(Locale.ROOT);
+        LinkedHashSet<String> tags = new LinkedHashSet<>();
+        tags.add(category);
+        if (options != null && options.tags() != null) {
+            options.tags().stream()
+                    .filter(value -> value != null && !value.isBlank())
+                    .map(String::trim)
+                    .filter(value -> !category.equalsIgnoreCase(value))
+                    .forEach(tags::add);
+        }
+        for (String fallback : List.of("조회", "상세", "업무조회", "search", "detail")) {
+            if (tags.size() >= 5) {
+                break;
+            }
+            tags.add(fallback);
+        }
+        return V17ToolSchemaPolicy.validateTags(List.copyOf(tags), category);
     }
 
     private static boolean isMutationTool(String baseName) {
