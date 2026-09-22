@@ -2885,6 +2885,9 @@ public class ToolScaffolder {
 
                         private final ScrollPagingSupport scrollPagingSupport = new ScrollPagingSupport();
 
+                        // MCI 전문별 허용 조회 건수는 이 Pod에서 설정합니다.
+                        private static final int DEFAULT_PAGE_DATA_COUNT = 20;
+
                         // MCI 전문별 스크롤 항목명/정렬값은 이 Pod에서 설정합니다.
                         private static final String DEFAULT_SCR_IMHD_NM = "";
                         private static final String DEFAULT_SCR_SORT_VALU = "";
@@ -2892,7 +2895,7 @@ public class ToolScaffolder {
                         @Override
                         public MciPage<%sResponse, ScrollPagingInfo> fetch(%sRequest request, ScrollPagingInfo pagingInfo) {
                             return scrollPagingSupport.execute(request, pagingInfo,
-                                    DEFAULT_SCR_IMHD_NM, DEFAULT_SCR_SORT_VALU,
+                                    DEFAULT_PAGE_DATA_COUNT, DEFAULT_SCR_IMHD_NM, DEFAULT_SCR_SORT_VALU,
                                     new ScrollPagingAdapter<>() {
                                 @Override
                                 public ScrPageInfo getRequestPageInfo(%sRequest source) {
@@ -2988,9 +2991,12 @@ public class ToolScaffolder {
 
                         private final PageNumberPagingSupport pageNumberPagingSupport = new PageNumberPagingSupport();
 
+                        // MCI 전문별 허용 조회 건수는 이 Pod에서 설정합니다.
+                        private static final int DEFAULT_PAGE_DATA_COUNT = 20;
+
                         @Override
                         public MciPage<%sResponse, PgNumPagingInfo> fetch(%sRequest request, PgNumPagingInfo pagingInfo) {
-                            return pageNumberPagingSupport.execute(request, pagingInfo, new PageNumberPagingAdapter<>() {
+                            return pageNumberPagingSupport.execute(request, pagingInfo, DEFAULT_PAGE_DATA_COUNT, new PageNumberPagingAdapter<>() {
                                 @Override
                                 public PageInfo getRequestPageInfo(%sRequest source) {
                                     return source.getPageInfo();
@@ -3661,15 +3667,11 @@ public class ToolScaffolder {
 
     private static String abbreviatedMciSourceBaseName(String baseName) {
         String[] words = baseName.split("(?<=[a-z])(?=[A-Z])|(?<=[A-Z])(?=[A-Z][a-z])");
-        if (words.length < 3) {
-            return baseName;
+        StringBuilder abbreviated = new StringBuilder();
+        for (String word : words) {
+            abbreviated.append(toPascalCase(abbreviateToken(word, 3, 5)));
         }
-        return abbreviatedWord(words[0], 4) + abbreviatedWord(words[1], 6);
-    }
-
-    private static String abbreviatedWord(String word, int maximumLength) {
-        int length = Math.min(word.length(), maximumLength);
-        return toPascalCase(word.substring(0, length).toLowerCase(Locale.ROOT));
+        return abbreviated.isEmpty() ? baseName : abbreviated.toString();
     }
 
     private static String abbreviatedHttpUseCaseBaseName(String useCaseBaseName, List<ToolMethodDefinition> tools) {

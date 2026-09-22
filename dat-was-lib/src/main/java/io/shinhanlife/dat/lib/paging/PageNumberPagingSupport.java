@@ -8,17 +8,29 @@ import java.util.List;
 public final class PageNumberPagingSupport {
 
     public static final int DEFAULT_PAGE_NO = 1;
-    public static final int DEFAULT_PAGE_DATA_COUNT = 20;
 
     public <REQUEST, RESPONSE> MciPage<RESPONSE, PgNumPagingInfo> execute(
             REQUEST request, PgNumPagingInfo pagingInfo, PageNumberPagingAdapter<REQUEST, RESPONSE> adapter) {
+        if (request == null || adapter == null) {
+            return execute(request, pagingInfo, 0, adapter);
+        }
+        PageInfo pageInfo = adapter.getRequestPageInfo(request);
+        return execute(request, pagingInfo, pageInfo == null ? 0 : pageInfo.getPageDataCc(), adapter);
+    }
+
+    public <REQUEST, RESPONSE> MciPage<RESPONSE, PgNumPagingInfo> execute(
+            REQUEST request, PgNumPagingInfo pagingInfo, int defaultPageDataCount,
+            PageNumberPagingAdapter<REQUEST, RESPONSE> adapter) {
         if (request == null) throw new IllegalArgumentException("request is required");
         if (adapter == null) throw new IllegalArgumentException("adapter is required");
+        if (defaultPageDataCount <= 0) {
+            throw new IllegalArgumentException("defaultPageDataCount must be greater than zero");
+        }
 
         PageInfo requestPageInfo = adapter.getRequestPageInfo(request);
-        if (requestPageInfo == null) requestPageInfo = new PageInfo(DEFAULT_PAGE_NO, DEFAULT_PAGE_DATA_COUNT);
+        if (requestPageInfo == null) requestPageInfo = new PageInfo(DEFAULT_PAGE_NO, defaultPageDataCount);
         if (requestPageInfo.getPageNo() <= 0) requestPageInfo.setPageNo(DEFAULT_PAGE_NO);
-        if (requestPageInfo.getPageDataCc() <= 0) requestPageInfo.setPageDataCc(DEFAULT_PAGE_DATA_COUNT);
+        if (requestPageInfo.getPageDataCc() <= 0) requestPageInfo.setPageDataCc(defaultPageDataCount);
         if (pagingInfo != null) {
             if (pagingInfo.getPageNo() > 0) requestPageInfo.setPageNo(pagingInfo.getPageNo());
             if (pagingInfo.getPageDataCc() > 0) requestPageInfo.setPageDataCc(pagingInfo.getPageDataCc());
