@@ -20,7 +20,7 @@ class ToolScaffolderV17SchemaTest {
                 null, null, null, null, null,
                 List.of("직원 정보를 보여줘"), List.of("employee", "search"), "MCP_TOOL");
 
-        ToolScaffolder.scaffold("employee search", "HR_EMPLOYEE_SEARCH", "직원 조회", "직원을 조회한다.",
+        ToolScaffolder.scaffold("search employee", "HR_EMPLOYEE_SEARCH", "직원 조회", "직원을 조회한다.",
                 "smp", "HTTP", moduleName, "tester", "2026.09.21", true, null, null, null,
                 List.of(new ToolScaffolder.FieldDefinition("ScrPageInfo", "String", "", List.of(), "", true)),
                 List.of(), "employee", options);

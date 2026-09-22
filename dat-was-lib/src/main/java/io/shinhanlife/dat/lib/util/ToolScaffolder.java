@@ -2470,7 +2470,7 @@ public class ToolScaffolder {
             return false;
         }
         String value = toPascalCase(baseName).toLowerCase(Locale.ROOT);
-        return value.matches("^(search|detail).+") || value.matches(".+(search|detail)$");
+        return value.matches("^(search|detail).+");
     }
 
     private static String jsonSchemaType(String javaType) {
