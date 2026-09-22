@@ -295,6 +295,9 @@ class ScaffoldingControllerToolDraftTest {
                 "validateToolDraft", validToolDraft("ProInquiryFund", List.of("질문 하나", "질문 둘", "질문 셋"),
                         List.of("pro", "펀드", "조회", "fund", "search"))));
         assertThrows(IllegalArgumentException.class, () -> ReflectionTestUtils.invokeMethod(controller,
+                "validateToolDraft", validToolDraft("UpdateFund", List.of("질문 하나", "질문 둘", "질문 셋"),
+                        List.of("pro", "펀드", "조회", "fund", "search"))));
+        assertThrows(IllegalArgumentException.class, () -> ReflectionTestUtils.invokeMethod(controller,
                 "validateToolDraft", validToolDraft("ProSearchFund", List.of("질문 하나", "질문 둘"),
                         List.of("pro", "펀드", "조회", "fund", "search"))));
         assertThrows(IllegalArgumentException.class, () -> ReflectionTestUtils.invokeMethod(controller,

@@ -393,7 +393,7 @@ public class ToolScaffolder {
             String baseName = mci ? abbreviatedMciSourceBaseName(toolBaseName) : toPascalCase(httpApiName);
             imports.append("import ").append(bizPackage).append(".dto.").append(baseName).append("Request;\n")
                     .append("import ").append(bizPackage).append(".dto.").append(baseName).append("Response;\n");
-            boolean isMutation = isMutationTool(baseName);
+            boolean isMutation = !isV17ReadOnlyTool(toolBaseName);
             ToolDefinitionOptions opts = tool.definitionOptions() == null ? new ToolDefinitionOptions(null, null, null, null, null, null, null, null) : tool.definitionOptions();
             
             methods.append("    @McpTool(name = \"").append(toToolName(moduleName, tool.group(), toolBaseName))
@@ -855,7 +855,7 @@ public class ToolScaffolder {
 
             useCase = addImport(useCase, "import " + bizPackage + ".dto." + requestType + ";") ;
             useCase = addImport(useCase, "import " + bizPackage + ".dto." + responseType + ";") ;
-            boolean isMutation = isMutationTool(baseName);
+            boolean isMutation = !isV17ReadOnlyTool(toolBaseName);
             ToolDefinitionOptions opts = tool.definitionOptions() == null ? new ToolDefinitionOptions(null, null, null, null, null, null, null, null) : tool.definitionOptions();
             
             StringBuilder declBuilder = new StringBuilder("\n    @McpTool(name = \"").append(toolName)
@@ -1338,7 +1338,7 @@ public class ToolScaffolder {
 
         String toolName = toToolName(moduleName, group, toolBaseName);
 
-        boolean isMutation = isMutationTool(toolBaseName);
+        boolean isMutation = !isV17ReadOnlyTool(toolBaseName);
         StringBuilder sb = new StringBuilder("    @GrowToolHint(\n");
         if (useSchemaResource) {
             sb.append("        inputSchemaResource = \"").append(inputSchemaClasspath).append("\",\n");
@@ -2457,7 +2457,20 @@ public class ToolScaffolder {
 
     private static boolean isMutationTool(String baseName) {
         String value = baseName.toLowerCase(Locale.ROOT);
-        return value.matches(".*(create|add|update|delete|remove|send|process|approve|reject|register|issue).*");
+        return value.matches(".*(create|add|update|delete|remove|send|process|approve|reject|register|issue|cancel|change|withdraw|terminate|close|modify|submit).*");
+    }
+
+    /**
+     * V17's inquiry policy is intentionally fail-closed. A name is read-only
+     * only when it uses the supported search/detail action and contains no
+     * write-operation term; all other names retain approval controls.
+     */
+    private static boolean isV17ReadOnlyTool(String baseName) {
+        if (baseName == null || baseName.isBlank() || isMutationTool(baseName)) {
+            return false;
+        }
+        String value = toPascalCase(baseName).toLowerCase(Locale.ROOT);
+        return value.matches("^(search|detail).+") || value.matches(".+(search|detail)$");
     }
 
     private static String jsonSchemaType(String javaType) {

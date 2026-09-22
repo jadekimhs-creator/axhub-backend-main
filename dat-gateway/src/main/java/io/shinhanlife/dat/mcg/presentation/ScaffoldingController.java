@@ -429,6 +429,8 @@ public class ScaffoldingController {
             ToolDraft draft = objectMapper.readValue(stripCodeFence(response), ToolDraft.class);
             ToolDraft validatedDraft = validateToolDraft(draft);
             return ResponseEntity.ok(validatedDraft);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(Map.of("error", "V17 Tool Function은 조회(search/detail) Tool만 지원합니다: " + safeMessage(e)));
         } catch (Exception e) {
             return ResponseEntity.internalServerError().body(Map.of("error", "AI Tool 초안 생성 실패: " + safeMessage(e)));
         }
@@ -598,6 +600,8 @@ public class ScaffoldingController {
 
             ToolDraft validatedDraft = validateToolDraft(finalDraft);
             return ResponseEntity.ok(validatedDraft);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(Map.of("error", "V17 Tool Function은 조회(search/detail) Tool만 지원합니다: " + safeMessage(e)));
         } catch (Exception e) {
             return ResponseEntity.internalServerError().body(Map.of("error", "AI Tool V17 스키마 최적화 실패: " + safeMessage(e)));
         }

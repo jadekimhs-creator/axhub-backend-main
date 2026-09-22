@@ -43,7 +43,7 @@ class ToolScaffolderV17SchemaTest {
     @Test
     void keepsApprovalForExistingWriteToolNames() throws Exception {
         String moduleName = root.resolve("dat-was-write").toString();
-        ToolScaffolder.scaffold("employee update", "HR_EMPLOYEE_UPDATE", "직원 변경", "직원 정보를 변경한다.",
+        ToolScaffolder.scaffold("cancel contract", "CONTRACT_CANCEL", "계약 취소", "계약을 취소한다.",
                 "smp", "MCI", moduleName, "tester", "2026.09.21", true, "ONB", null, null,
                 List.of(), List.of(), "employee", null);
 
