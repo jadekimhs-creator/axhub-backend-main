@@ -2954,11 +2954,12 @@ public class ToolScaffolder {
                     import %s.io.%s_I;
                     import %s.io.%s_O;
                     import io.shinhanlife.dat.lib.paging.MciPage;
+                    import io.shinhanlife.dat.lib.paging.PageNumberPagingAdapter;
+                    import io.shinhanlife.dat.lib.paging.PageNumberPagingResult;
+                    import io.shinhanlife.dat.lib.paging.PageNumberPagingSupport;
                     import io.shinhanlife.dat.lib.paging.PgNumPagingInfo;
                     import io.shinhanlife.glow.db.dto.PageInfo;
                     import io.shinhanlife.glow.communication.dto.Transfer;
-                    import java.lang.reflect.Method;
-                    import java.util.List;
                     import lombok.RequiredArgsConstructor;
                     import lombok.extern.slf4j.Slf4j;
                     import org.springframework.stereotype.Component;
@@ -2985,81 +2986,39 @@ public class ToolScaffolder {
                         private final %s mci;
                         private final %s converter;
 
+                        private final PageNumberPagingSupport pageNumberPagingSupport = new PageNumberPagingSupport();
+
                         @Override
                         public MciPage<%sResponse, PgNumPagingInfo> fetch(%sRequest request, PgNumPagingInfo pagingInfo) {
-                            if (request.getPageInfo() == null) {
-                                request.setPageInfo(new PageInfo(1, 20));
-                            }
-                            if (request.getPageInfo().getPageNo() <= 0) {
-                                request.getPageInfo().setPageNo(1);
-                            }
-                            if (request.getPageInfo().getPageDataCc() <= 0) {
-                                request.getPageInfo().setPageDataCc(20);
-                            }
-                            if (pagingInfo != null) {
-                                if (pagingInfo.getPageNo() > 0) request.getPageInfo().setPageNo(pagingInfo.getPageNo());
-                                if (pagingInfo.getPageDataCc() > 0) request.getPageInfo().setPageDataCc(pagingInfo.getPageDataCc());
-                            }
+                            return pageNumberPagingSupport.execute(request, pagingInfo, new PageNumberPagingAdapter<>() {
+                                @Override
+                                public PageInfo getRequestPageInfo(%sRequest source) {
+                                    return source.getPageInfo();
+                                }
 
-                            %s_I mciReq = converter.toRequest(request);
-                            if (mciReq != null) {
-                                try {
-                                    Method setMethod = mciReq.getClass().getMethod("setPageInfo", List.class);
-                                    setMethod.invoke(mciReq, List.of(request.getPageInfo()));
-                                } catch (NoSuchMethodException e) {
-                                    try {
-                                        Method setMethod = mciReq.getClass().getMethod("setPageInfo", PageInfo.class);
-                                        setMethod.invoke(mciReq, request.getPageInfo());
-                                    } catch (Exception ignored) {}
-                                } catch (Exception ignored) {}
-                            }
+                                @Override
+                                public void setRequestPageInfo(%sRequest source, PageInfo pageInfo) {
+                                    source.setPageInfo(pageInfo);
+                                }
 
-                            Transfer<%s_O> resTransfer = mci.callTo("%s", "%s", mciReq, %s_O.class);
-                            %s_O mciRes = resTransfer != null ? resTransfer.getBody() : null;
+                                @Override
+                                public PageNumberPagingResult<%sResponse> invoke(%sRequest source, PageInfo pageInfo) {
+                                    %s_I mciRequest = converter.toRequest(source);
+                                    PageNumberPagingSupport.setMciPageInfo(mciRequest, pageInfo);
+                                    Transfer<%s_O> transfer = mci.callTo("%s", "%s", mciRequest, %s_O.class);
+                                    %s_O mciResponse = transfer == null ? null : transfer.getBody();
+                                    return new PageNumberPagingResult<>(converter.toResponse(mciResponse),
+                                            PageNumberPagingSupport.getMciPageInfo(mciResponse));
+                                }
 
-                            %sResponse response = converter.toResponse(mciRes);
-
-                            PageInfo resPageInfo = null;
-                            if (mciRes != null) {
-                                try {
-                                    Method getMethod = mciRes.getClass().getMethod("getPageInfo");
-                                    Object val = getMethod.invoke(mciRes);
-                                    if (val instanceof List<?> list && !list.isEmpty()) {
-                                        if (list.get(0) instanceof PageInfo pi) resPageInfo = pi;
-                                    } else if (val instanceof PageInfo pi) {
-                                        resPageInfo = pi;
-                                    }
-                                } catch (Exception ignored) {}
-                            }
-
-                            int currentPageNo = resPageInfo != null && resPageInfo.getPageNo() > 0 ? resPageInfo.getPageNo() : (pagingInfo != null ? pagingInfo.getPageNo() : 1);
-                            int totalPageCn = resPageInfo != null ? resPageInfo.getTotaPageCn() : 0;
-                            int totalDataCc = resPageInfo != null ? resPageInfo.getTotaPageDataCc() : 0;
-                            int pageDataCc = resPageInfo != null && resPageInfo.getPageDataCc() > 0 ? resPageInfo.getPageDataCc() : (pagingInfo != null ? pagingInfo.getPageDataCc() : 20);
-
-                            boolean hasNext = false;
-                            if (totalPageCn > 0) {
-                                hasNext = currentPageNo < totalPageCn;
-                            } else if (totalDataCc > 0 && pageDataCc > 0) {
-                                hasNext = (long) currentPageNo * pageDataCc < totalDataCc;
-                            }
-
-                            if (response != null) {
-                                response.setPageNo(currentPageNo);
-                                response.setTotalPageCount(totalPageCn);
-                                response.setTotalCount(totalDataCc);
-                                response.setHasMore(hasNext);
-                            }
-
-                            PgNumPagingInfo nextPaging = new PgNumPagingInfo(
-                                    currentPageNo + 1,
-                                    pageDataCc,
-                                    totalPageCn,
-                                    totalDataCc,
-                                    hasNext
-                            );
-
-                            return new MciPage<>(response, nextPaging);
+                                @Override
+                                public void setPagingResult(%sResponse response, PgNumPagingInfo result) {
+                                    response.setPageNo(result.getPageNo() - 1);
+                                    response.setTotalPageCount(result.getTotaPageCn());
+                                    response.setTotalCount(result.getTotaPageDataCc());
+                                    response.setHasMore(result.isHasNext());
+                                }
+                            });
                         }
                     }
                     """.formatted(
@@ -3074,6 +3033,8 @@ public class ToolScaffolder {
                     bizPackage, implName,
                     implName, interfaceName,
                     clientClassName, converterName,
+                    baseName, baseName,
+                    baseName, baseName,
                     baseName, baseName,
                     ioPrefix,
                     ioPrefix, interfaceId, receiveServiceId, ioPrefix,
