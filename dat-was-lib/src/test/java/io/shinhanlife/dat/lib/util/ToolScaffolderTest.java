@@ -35,25 +35,29 @@ class ToolScaffolderTest {
         assertTrue(adapter.getFileName().toString().endsWith("ScrollPaging.java"));
         assertTrue(source.contains("ScrollPagingInfo"));
 
-        Path pagingImpl = pagingDir.resolve("impl/ContractListScrollPagingImpl.java");
+        Path pagingImpl = pagingDir.resolve("impl/CntrListScrollPagingImpl.java");
         String pagingImplSource = Files.readString(pagingImpl);
         assertTrue(pagingImplSource.contains("import io.shinhanlife.dat.lib.paging.ScrollPagingSupport;"), pagingImplSource);
         assertTrue(pagingImplSource.contains("import io.shinhanlife.dat.lib.paging.ScrollPagingAdapter;"), pagingImplSource);
         assertTrue(pagingImplSource.contains("import io.shinhanlife.dat.lib.paging.ScrollPagingResult;"), pagingImplSource);
         assertTrue(pagingImplSource.contains("scrollPagingSupport.execute(request, pagingInfo"), pagingImplSource);
+        assertTrue(pagingImplSource.contains("private static final String DEFAULT_SCR_IMHD_NM = \"\";"), pagingImplSource);
+        assertTrue(pagingImplSource.contains("private static final String DEFAULT_SCR_SORT_VALU = \"\";"), pagingImplSource);
+        assertTrue(pagingImplSource.contains("private static final int DEFAULT_PAGE_DATA_COUNT = 20;"), pagingImplSource);
+        assertTrue(pagingImplSource.contains("DEFAULT_PAGE_DATA_COUNT, DEFAULT_SCR_IMHD_NM, DEFAULT_SCR_SORT_VALU,"), pagingImplSource);
         assertFalse(pagingImplSource.contains("java.lang.reflect.Method"), pagingImplSource);
         assertFalse(pagingImplSource.contains("catch (Exception ignored)"), pagingImplSource);
 
-        Path reqDto = root.resolve("dat-was-scroll/src/main/java/io/shinhanlife/dat/mcc/biz/sal/dto/ContractListRequest.java");
+        Path reqDto = root.resolve("dat-was-scroll/src/main/java/io/shinhanlife/dat/mcc/biz/sal/dto/CntrListRequest.java");
         String reqSource = Files.readString(reqDto);
         assertTrue(reqSource.contains("import io.shinhanlife.glow.db.dto.ScrPageInfo;"), reqSource);
         assertTrue(reqSource.contains("private ScrPageInfo scrPageInfo;"), reqSource);
 
-        Path resDto = root.resolve("dat-was-scroll/src/main/java/io/shinhanlife/dat/mcc/biz/sal/dto/ContractListResponse.java");
+        Path resDto = root.resolve("dat-was-scroll/src/main/java/io/shinhanlife/dat/mcc/biz/sal/dto/CntrListResponse.java");
         String resSource = Files.readString(resDto);
         assertTrue(resSource.contains("private Boolean hasMore;"), resSource);
 
-        Path scrollUseCaseImpl = root.resolve("dat-was-scroll/src/main/java/io/shinhanlife/dat/mcc/biz/sal/usecase/impl/ContractListUseCaseImpl.java");
+        Path scrollUseCaseImpl = root.resolve("dat-was-scroll/src/main/java/io/shinhanlife/dat/mcc/biz/sal/usecase/impl/CntrListUseCaseImpl.java");
         String scrollUseCaseSource = Files.readString(scrollUseCaseImpl);
         assertTrue(scrollUseCaseSource.contains("mergeResponseData("), scrollUseCaseSource);
         assertTrue(scrollUseCaseSource.contains("finalResponse.setHasMore(hasMore);"), scrollUseCaseSource);
@@ -80,19 +84,19 @@ class ToolScaffolderTest {
         assertTrue(pageAdapter.getFileName().toString().endsWith("PageNumberPaging.java"));
         assertTrue(pageSource.contains("PgNumPagingInfo"));
 
-        Path pageReqDto = root.resolve("dat-was-page/src/main/java/io/shinhanlife/dat/mcc/biz/sal/dto/ContractListRequest.java");
+        Path pageReqDto = root.resolve("dat-was-page/src/main/java/io/shinhanlife/dat/mcc/biz/sal/dto/CntrListRequest.java");
         String pageReqSource = Files.readString(pageReqDto);
         assertTrue(pageReqSource.contains("import io.shinhanlife.glow.db.dto.PageInfo;"), pageReqSource);
         assertTrue(pageReqSource.contains("private PageInfo pageInfo;"), pageReqSource);
 
-        Path pageResDto = root.resolve("dat-was-page/src/main/java/io/shinhanlife/dat/mcc/biz/sal/dto/ContractListResponse.java");
+        Path pageResDto = root.resolve("dat-was-page/src/main/java/io/shinhanlife/dat/mcc/biz/sal/dto/CntrListResponse.java");
         String pageResSource = Files.readString(pageResDto);
         assertTrue(pageResSource.contains("private Integer pageNo;"), pageResSource);
         assertTrue(pageResSource.contains("private Integer totalPageCount;"), pageResSource);
         assertTrue(pageResSource.contains("private Integer totalCount;"), pageResSource);
         assertTrue(pageResSource.contains("private Boolean hasMore;"), pageResSource);
 
-        Path pageUseCaseImpl = root.resolve("dat-was-page/src/main/java/io/shinhanlife/dat/mcc/biz/sal/usecase/impl/ContractListUseCaseImpl.java");
+        Path pageUseCaseImpl = root.resolve("dat-was-page/src/main/java/io/shinhanlife/dat/mcc/biz/sal/usecase/impl/CntrListUseCaseImpl.java");
         String pageUseCaseSource = Files.readString(pageUseCaseImpl);
         assertTrue(pageUseCaseSource.contains("finalResponse.setPageNo("), pageUseCaseSource);
         assertTrue(pageUseCaseSource.contains("finalResponse.setTotalPageCount("), pageUseCaseSource);

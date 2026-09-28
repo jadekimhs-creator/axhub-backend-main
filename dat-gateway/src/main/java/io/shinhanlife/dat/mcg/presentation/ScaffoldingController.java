@@ -19,6 +19,7 @@ import io.shinhanlife.dat.lib.util.NewPodProjectScaffolder;
 import io.shinhanlife.dat.lib.metadata.V17ToolSchemaPolicy;
 import io.shinhanlife.dat.lib.util.PodScaffolder;
 import io.shinhanlife.dat.lib.util.MciResponseScaffolder;
+import io.shinhanlife.dat.lib.util.OrganizationPreQueryScaffolder;
 import io.shinhanlife.dat.lib.util.ToolScaffolder;
 import io.shinhanlife.dat.lib.util.ToolSourceUpdater;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -282,6 +283,31 @@ public class ScaffoldingController {
                     outputSchemaResource, inputFields, outputFields, httpApiName, definitionOptions);
         } catch (Exception e) {
             return "오류 발생: " + e.getMessage();
+        }
+    }
+
+    /** Generates a Pod-local internal MCI adapter; it is not exposed as an MCP Tool. */
+    @PostMapping("/pre-query/organization")
+    public ResponseEntity<?> scaffoldOrganizationPreQuery(@RequestBody OrganizationPreQueryRequest request) {
+        try {
+            if (request == null || request.moduleName() == null
+                    || !request.moduleName().matches("^dat-was-[a-z0-9-]+$")) {
+                throw new IllegalArgumentException("Invalid target module.");
+            }
+            String workspacePath = request.workspacePath() == null || request.workspacePath().isBlank()
+                    ? DEFAULT_WORKSPACE : request.workspacePath().trim();
+            System.setProperty("AXHUB_SOURCE_DIR", workspacePath);
+
+            String result = OrganizationPreQueryScaffolder.scaffold(
+                    new OrganizationPreQueryScaffolder.Definition(
+                            request.moduleName().trim(), request.adapterName(), request.interfaceId(),
+                            request.mciIoPrefix(), request.clientSystemCode(), request.requestFieldName(),
+                            request.responseOrganizationNoFieldName(), request.responseOrganizationNameFieldName()));
+            return ResponseEntity.ok(result);
+        } catch (IllegalArgumentException exception) {
+            return ResponseEntity.badRequest().body(Map.of("error", safeMessage(exception)));
+        } catch (Exception exception) {
+            return ResponseEntity.internalServerError().body(Map.of("error", safeMessage(exception)));
         }
     }
 
@@ -1134,5 +1160,17 @@ public class ScaffoldingController {
 
     private record NewPodProjectRequest(String moduleName, Integer port, String author, String workspacePath,
                                         String toolServiceManifest, String targetModules) {
+    }
+
+    public record OrganizationPreQueryRequest(
+            String workspacePath,
+            String moduleName,
+            String adapterName,
+            String interfaceId,
+            String mciIoPrefix,
+            String clientSystemCode,
+            String requestFieldName,
+            String responseOrganizationNoFieldName,
+            String responseOrganizationNameFieldName) {
     }
 }

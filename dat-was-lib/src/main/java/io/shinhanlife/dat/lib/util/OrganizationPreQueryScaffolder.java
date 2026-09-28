@@ -1,0 +1,210 @@
+package io.shinhanlife.dat.lib.util;
+
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.Locale;
+
+/** Generates a Pod-local MCI adapter for organization-number pre-queries. */
+public final class OrganizationPreQueryScaffolder {
+
+    private static final String BASE_PACKAGE = "io.shinhanlife.dat.mcc";
+    private static final Path BASE_PACKAGE_PATH = Path.of("io", "shinhanlife", "dat", "mcc");
+
+    private OrganizationPreQueryScaffolder() {
+    }
+
+    public record Definition(
+            String moduleName,
+            String adapterName,
+            String interfaceId,
+            String mciIoPrefix,
+            String clientSystemCode,
+            String requestFieldName,
+            String responseOrganizationNoFieldName,
+            String responseOrganizationNameFieldName) {
+    }
+
+    public static String scaffold(Definition definition) throws IOException {
+        validate(definition);
+
+        String sourceDirectory = System.getProperty("AXHUB_SOURCE_DIR");
+        if (sourceDirectory == null || sourceDirectory.isBlank()) {
+            throw new IllegalStateException("AXHUB_SOURCE_DIR is required");
+        }
+
+        String adapterName = pascalCase(definition.adapterName());
+        String normalizedSystemCode = definition.clientSystemCode().trim().toUpperCase(Locale.ROOT);
+        String mciPackageSegment = mciPackageSegment(normalizedSystemCode);
+        String clientClassName = "Mci" + pascalCase(mciClientPrefix(normalizedSystemCode).toLowerCase(Locale.ROOT)) + "Client";
+        String ioPrefix = definition.mciIoPrefix().trim().toUpperCase(Locale.ROOT);
+        String adapterPackage = BASE_PACKAGE + ".common.adapter.organization";
+        String mciPackage = BASE_PACKAGE + ".infra.itrf.mci." + mciPackageSegment;
+
+        Path adapterDirectory = Path.of(sourceDirectory)
+                .resolve(definition.moduleName().trim())
+                .resolve("src/main/java")
+                .resolve(BASE_PACKAGE_PATH)
+                .resolve(Path.of("common", "adapter", "organization"));
+        requireExistingMciContract(
+                Path.of(sourceDirectory).resolve(definition.moduleName().trim())
+                        .resolve("src/main/java").resolve(BASE_PACKAGE_PATH),
+                mciPackageSegment, clientClassName, ioPrefix);
+        Files.createDirectories(adapterDirectory);
+
+        writeNew(adapterDirectory.resolve(adapterName + "Adapter.java"), """
+                package %s;
+
+                public interface %sAdapter {
+
+                    %sResult find(%sCommand command);
+                }
+                """.formatted(adapterPackage, adapterName, adapterName, adapterName));
+
+        writeNew(adapterDirectory.resolve(adapterName + "Command.java"), """
+                package %s;
+
+                public record %sCommand(String %s) {
+                }
+                """.formatted(adapterPackage, adapterName, definition.requestFieldName()));
+
+        writeNew(adapterDirectory.resolve(adapterName + "Result.java"), """
+                package %s;
+
+                public record %sResult(
+                        String organizationNo,
+                        String organizationName
+                ) {
+                }
+                """.formatted(adapterPackage, adapterName));
+
+        writeNew(adapterDirectory.resolve("Mci" + adapterName + "Adapter.java"), """
+                package %s;
+
+                import %s.%s;
+                import %s.io.%s_I;
+                import %s.io.%s_O;
+                import io.shinhanlife.glow.communication.dto.Transfer;
+                import lombok.RequiredArgsConstructor;
+                import org.springframework.stereotype.Component;
+
+                @Component
+                @RequiredArgsConstructor
+                public class Mci%sAdapter implements %sAdapter {
+
+                    private static final String INTERFACE_ID = "%s";
+                    private static final String RECEIVE_SERVICE_ID = "%s";
+
+                    private final %s mci;
+
+                    @Override
+                    public %sResult find(%sCommand command) {
+                        if (command == null || command.%s() == null || command.%s().isBlank()) {
+                            throw new IllegalArgumentException("%s is required for organization lookup");
+                        }
+
+                        %s_I mciRequest = new %s_I();
+                        mciRequest.set%s(command.%s());
+
+                        try {
+                            Transfer<%s_O> transfer = mci.callTo(INTERFACE_ID, RECEIVE_SERVICE_ID, mciRequest, %s_O.class);
+                            %s_O mciResponse = transfer == null ? null : transfer.getBody();
+                            if (mciResponse == null || mciResponse.get%s() == null || mciResponse.get%s().isBlank()) {
+                                throw new IllegalStateException("Organization lookup returned no organization number");
+                            }
+                            return new %sResult(
+                                    mciResponse.get%s(),
+                                    mciResponse.get%s()
+                            );
+                        } catch (RuntimeException exception) {
+                            throw exception;
+                        } catch (Exception exception) {
+                            throw new IllegalStateException("Organization lookup MCI call failed", exception);
+                        }
+                    }
+                }
+                """.formatted(
+                adapterPackage,
+                mciPackage, clientClassName,
+                mciPackage, ioPrefix,
+                mciPackage, ioPrefix,
+                adapterName, adapterName,
+                definition.interfaceId().trim().toUpperCase(Locale.ROOT), normalizedSystemCode,
+                clientClassName,
+                adapterName, adapterName,
+                definition.requestFieldName(), definition.requestFieldName(), definition.requestFieldName(),
+                ioPrefix, ioPrefix, capitalize(definition.requestFieldName()), definition.requestFieldName(),
+                ioPrefix, ioPrefix,
+                ioPrefix, capitalize(definition.responseOrganizationNoFieldName()), capitalize(definition.responseOrganizationNoFieldName()),
+                adapterName, capitalize(definition.responseOrganizationNoFieldName()), capitalize(definition.responseOrganizationNameFieldName())));
+
+        return "Generated organization pre-query adapter: " + adapterDirectory;
+    }
+
+    private static void validate(Definition definition) {
+        if (definition == null) {
+            throw new IllegalArgumentException("definition is required");
+        }
+        if (definition.moduleName() == null || !definition.moduleName().matches("[A-Za-z0-9][A-Za-z0-9-]*")) {
+            throw new IllegalArgumentException("moduleName must contain letters, numbers, or hyphens");
+        }
+        requiredIdentifier(definition.adapterName(), "adapterName");
+        requiredIdentifier(definition.interfaceId(), "interfaceId");
+        requiredIdentifier(definition.mciIoPrefix(), "mciIoPrefix");
+        requiredIdentifier(definition.requestFieldName(), "requestFieldName");
+        requiredIdentifier(definition.responseOrganizationNoFieldName(), "responseOrganizationNoFieldName");
+        requiredIdentifier(definition.responseOrganizationNameFieldName(), "responseOrganizationNameFieldName");
+        String systemCode = definition.clientSystemCode() == null ? "" : definition.clientSystemCode().trim();
+        if (systemCode.length() != 4 && systemCode.length() != 9) {
+            throw new IllegalArgumentException("clientSystemCode must contain 4 or 9 characters");
+        }
+    }
+
+    private static void requiredIdentifier(String value, String label) {
+        if (value == null || !value.matches("[A-Za-z][A-Za-z0-9_]*")) {
+            throw new IllegalArgumentException(label + " must be a Java identifier");
+        }
+    }
+
+    private static String mciPackageSegment(String clientSystemCode) {
+        if (clientSystemCode.length() == 9) {
+            return clientSystemCode.substring(1, 4).toLowerCase(Locale.ROOT)
+                    + "." + clientSystemCode.substring(4, 5).toLowerCase(Locale.ROOT);
+        }
+        return clientSystemCode.substring(0, 3).toLowerCase(Locale.ROOT)
+                + "." + clientSystemCode.substring(3).toLowerCase(Locale.ROOT);
+    }
+
+    private static String mciClientPrefix(String clientSystemCode) {
+        return clientSystemCode.length() == 9 ? clientSystemCode.substring(1, 5) : clientSystemCode;
+    }
+
+    private static String pascalCase(String value) {
+        return Character.toUpperCase(value.charAt(0)) + value.substring(1);
+    }
+
+    private static String capitalize(String value) {
+        return Character.toUpperCase(value.charAt(0)) + value.substring(1);
+    }
+
+    private static void writeNew(Path file, String content) throws IOException {
+        if (Files.exists(file)) {
+            throw new IllegalStateException("Refusing to overwrite existing adapter file: " + file);
+        }
+        Files.writeString(file, content, StandardCharsets.UTF_8);
+    }
+
+    private static void requireExistingMciContract(Path sourceRoot, String mciPackageSegment,
+                                                   String clientClassName, String ioPrefix) {
+        Path mciDirectory = sourceRoot.resolve("infra/itrf/mci")
+                .resolve(mciPackageSegment.replace('.', '/'));
+        Path client = mciDirectory.resolve(clientClassName + ".java");
+        Path request = mciDirectory.resolve("io").resolve(ioPrefix + "_I.java");
+        Path response = mciDirectory.resolve("io").resolve(ioPrefix + "_O.java");
+        if (!Files.isRegularFile(client) || !Files.isRegularFile(request) || !Files.isRegularFile(response)) {
+            throw new IllegalStateException("MCI contract is missing. Generate/select "
+                    + ioPrefix + "_I, " + ioPrefix + "_O, and " + clientClassName + " first.");
+        }
+    }
+}

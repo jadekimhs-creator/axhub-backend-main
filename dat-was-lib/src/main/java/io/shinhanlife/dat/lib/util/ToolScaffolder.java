@@ -3151,14 +3151,14 @@ public class ToolScaffolder {
             boolean hasScrPageInfo = fields != null && fields.stream().anyMatch(f -> f != null && "scrPageInfo".equalsIgnoreCase(f.name()));
             if (pagingMode == PagingMode.PAGE_NUMBER) {
                 excluded = Set.of("pageInfo");
-                pagingImport = "import io.shinhanlife.glow.GlowTrgmField;\nimport io.shinhanlife.glow.db.dto.PageInfo;\n";
+                pagingImport = "import io.shinhanlife.glow.communication.annotation.GlowTrgmField;\nimport io.shinhanlife.glow.db.dto.PageInfo;\n";
                 if (!listImport.contains("List")) {
                     pagingImport += "import java.util.List;\n";
                 }
                 pagingField = "    @Schema(description = \"페이지 정보\")\n    @GlowTrgmField(order = 1, description = \"페이지 정보\", type = \"gm\")\n    private List<PageInfo> pageInfo;\n\n";
             } else if (pagingMode == PagingMode.SCROLL) {
                 excluded = Set.of("scrPageInfo");
-                pagingImport = "import io.shinhanlife.glow.GlowTrgmField;\nimport io.shinhanlife.glow.db.dto.ScrPageInfo;\nimport com.fasterxml.jackson.databind.annotation.JsonDeserialize;\nimport io.shinhanlife.dat.lib.paging.ScrPageInfoDeserializer;\n";
+                pagingImport = "import io.shinhanlife.glow.communication.annotation.GlowTrgmField;\nimport io.shinhanlife.glow.db.dto.ScrPageInfo;\nimport com.fasterxml.jackson.databind.annotation.JsonDeserialize;\nimport io.shinhanlife.dat.lib.paging.ScrPageInfoDeserializer;\n";
                 pagingField = "    @Schema(description = \"스크롤 페이지 정보\")\n    @GlowTrgmField(order = 1, length = 306, description = \"스크롤 페이지 정보\")\n    @JsonDeserialize(using = ScrPageInfoDeserializer.class)\n    private ScrPageInfo scrPageInfo;\n\n";
             }
         }

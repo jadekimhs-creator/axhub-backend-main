@@ -791,6 +791,9 @@
                 <button class="nav-link" id="tool-tab" data-bs-toggle="tab" data-bs-target="#tool" type="button" role="tab">Tool Function</button>
             </li>
             <li class="nav-item" role="presentation">
+                <button class="nav-link" id="organization-pre-query-tab" data-bs-toggle="tab" data-bs-target="#organization-pre-query" type="button" role="tab">공통 선조회 Adapter</button>
+            </li>
+            <li class="nav-item" role="presentation">
                 <button class="nav-link" id="mci-response-tab" data-bs-toggle="tab" data-bs-target="#mci-response" type="button" role="tab">MCI Request/Response 변환</button>
             </li>
             <li class="nav-item" role="presentation">
@@ -1213,6 +1216,78 @@
                         
                         <div class="d-flex justify-content-end mt-4">
                             <button type="submit" class="btn-action">Generate Tool</button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Pod-local common organization-number pre-query adapter -->
+                <div class="tab-pane fade" id="organization-pre-query" role="tabpanel" aria-labelledby="organization-pre-query-tab">
+                    <form id="organizationPreQueryForm">
+                        <div class="mb-4">
+                            <h5 class="mb-1" style="font-size: 1rem; font-weight: 600;">조직번호 공통 선조회 Adapter</h5>
+                            <div class="input-hint">선택한 Pod의 <code>common/adapter/organization</code>에 내부 MCI Adapter를 생성합니다. MCP Tool로 등록되지 않으며, MCI Request/Response 변환 화면에서 생성한 <code>_I</code>, <code>_O</code>, MCI Client를 사용합니다.</div>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-md-8">
+                                <label class="form-label">Workspace Path</label>
+                                <div class="input-group">
+                                    <input type="text" class="form-control" name="workspacePath" id="organizationPreQueryWorkspacePath" value="C:\\eGovFrameDev-4.3.1-64bit\\workspace" required>
+                                    <button class="btn btn-outline-secondary" type="button" onclick="openServerFolderPicker('organizationPreQueryWorkspacePath')" style="border-color: #3f3f46; color: #a1a1aa;">폴더 선택</button>
+                                </div>
+                                <div class="input-hint">Pod 프로젝트들이 있는 Workspace를 선택합니다.</div>
+                            </div>
+                            <div class="col-md-4 mt-3 mt-md-0">
+                                <label class="form-label">대상 Pod</label>
+                                <select class="form-select" name="moduleName" id="organizationPreQueryModuleSelect" required>
+                                    <option value="dat-was-pro">dat-was-pro</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-md-3">
+                                <label class="form-label">Adapter 이름</label>
+                                <input type="text" class="form-control" name="adapterName" value="OrganizationLookup" pattern="^[A-Za-z][A-Za-z0-9_]*$" required>
+                                <div class="input-hint">예: OrganizationLookup → OrganizationLookupAdapter</div>
+                            </div>
+                            <div class="col-md-3 mt-3 mt-md-0">
+                                <label class="form-label">조직조회 MCI 전문 ID</label>
+                                <input type="text" class="form-control" name="interfaceId" placeholder="예: CLHTTP00005" pattern="^[A-Za-z][A-Za-z0-9_]*$" oninput="this.value = this.value.toUpperCase()" required>
+                            </div>
+                            <div class="col-md-3 mt-3 mt-md-0">
+                                <label class="form-label">MCI I/O 전문 Prefix</label>
+                                <input type="text" class="form-control" name="mciIoPrefix" placeholder="예: ONCSD1340" pattern="^[A-Za-z][A-Za-z0-9_]*$" oninput="this.value = this.value.toUpperCase()" required>
+                                <div class="input-hint"><code>ONCSD1340_I/O</code> 클래스명 기준입니다.</div>
+                            </div>
+                            <div class="col-md-3 mt-3 mt-md-0">
+                                <label class="form-label">대상 시스템 코드</label>
+                                <input type="text" class="form-control" name="clientSystemCode" placeholder="예: NBCD" pattern="^([A-Za-z0-9]{4}|[A-Za-z0-9]{9})$" maxlength="9" minlength="4" oninput="this.value = this.value.toUpperCase()" required>
+                            </div>
+                        </div>
+                        <div class="mb-2 p-3 rounded" style="background:#18181b; border:1px solid #3f3f46;">
+                            <div class="form-label mb-2">MCI 필드 매핑</div>
+                            <div class="row g-3">
+                                <div class="col-md-4">
+                                    <label class="form-label">조직조회 요청 필드</label>
+                                    <input type="text" class="form-control" name="requestFieldName" placeholder="예: employeeNo" pattern="^[A-Za-z][A-Za-z0-9_]*$" required>
+                                    <div class="input-hint">생성된 <code>XXX_I</code>의 setter 필드명입니다.</div>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label">응답 조직번호 필드</label>
+                                    <input type="text" class="form-control" name="responseOrganizationNoFieldName" value="organizationNo" pattern="^[A-Za-z][A-Za-z0-9_]*$" required>
+                                    <div class="input-hint">생성된 <code>XXX_O</code>의 getter 필드명입니다.</div>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label">응답 조직명 필드</label>
+                                    <input type="text" class="form-control" name="responseOrganizationNameFieldName" value="organizationName" pattern="^[A-Za-z][A-Za-z0-9_]*$" required>
+                                    <div class="input-hint">조직명이 없다면 조직번호와 같은 필드를 입력합니다.</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="alert alert-secondary mt-3 mb-4" style="background:#18181b; border-color:#3f3f46; color:#d4d4d8;">
+                            먼저 MCI Request/Response 변환에서 해당 전문의 <code>_I</code>, <code>_O</code>와 MCI Client를 생성하세요. 이 화면은 기존 MCI 계약을 덮어쓰지 않고 공통 Adapter만 생성합니다.
+                        </div>
+                        <div class="d-flex justify-content-end">
+                            <button type="submit" class="btn-action">공통 Adapter 생성</button>
                         </div>
                     </form>
                 </div>
@@ -1900,14 +1975,18 @@
     }
 
     document.addEventListener('DOMContentLoaded', function() {
-        const loadModules = () => {
-            const workspacePath = document.querySelector('#toolForm input[name="workspacePath"]')?.value || document.querySelector('input[name="workspacePath"]')?.value || '';
+        const loadModules = (workspaceInput) => {
+            const workspacePath = workspaceInput?.value || document.querySelector('#toolForm input[name="workspacePath"]')?.value || document.querySelector('input[name="workspacePath"]')?.value || '';
             fetch(`/api/v1/scaffold/modules?workspacePath=${encodeURIComponent(workspacePath)}`)
                 .then(res => res.json())
                 .then(modules => {
                     const select = document.getElementById('targetModuleSelect');
+                    const preQuerySelect = document.getElementById('organizationPreQueryModuleSelect');
                     if (modules && modules.length > 0) {
                         select.innerHTML = modules.map(m => `<option value="${m}" ${m === 'dat-was-cus' ? 'selected' : ''}>${m}</option>`).join('');
+                        if (preQuerySelect) {
+                            preQuerySelect.innerHTML = modules.map(m => `<option value="${m}" ${m === 'dat-was-pro' ? 'selected' : ''}>${m}</option>`).join('');
+                        }
                     }
                     if (typeof loadCategoriesForSelection === 'function') {
                         loadCategoriesForSelection();
@@ -1918,8 +1997,8 @@
         loadModules();
         const wsInputs = document.querySelectorAll('input[name="workspacePath"]');
         wsInputs.forEach(wsInput => {
-            wsInput.addEventListener('change', loadModules);
-            wsInput.addEventListener('blur', loadModules);
+            wsInput.addEventListener('change', () => loadModules(wsInput));
+            wsInput.addEventListener('blur', () => loadModules(wsInput));
         });
 
         const routingSelect = document.querySelector('#toolForm select[name="routingType"]');
@@ -1957,6 +2036,7 @@
 
     handleFormSubmit('podForm', '/api/v1/scaffold/pod');
     handleFormSubmit('newPodForm', '/api/v1/scaffold/pod-new');
+    handleFormSubmit('organizationPreQueryForm', '/api/v1/scaffold/pre-query/organization');
 
     function currentTargetModules() {
         return Array.from(document.querySelectorAll('#targetModuleSelect option'))
