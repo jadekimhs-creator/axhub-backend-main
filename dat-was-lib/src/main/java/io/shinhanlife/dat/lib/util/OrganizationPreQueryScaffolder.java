@@ -56,30 +56,32 @@ public final class OrganizationPreQueryScaffolder {
         writeNew(adapterDirectory.resolve(adapterName + "Adapter.java"), """
                 package %s;
 
+                import %s.io.%s_I;
+                import %s.io.%s_O;
+
+                /**
+                 * @package %s
+                 * @className %sAdapter
+                 * @description AX HUB 시스템 처리 클래스
+                 * @author 0986406
+                 * @create 2026.09.01
+                 * <pre>
+                 * ---------- 개정이력 ----------
+                 * 수정일      수정자    수정내용
+                 * ---------- -------- ---------------------------
+                 * 2026.09.01  0986406    최초생성
+                 * 
+                 * </pre>
+                 */
                 public interface %sAdapter {
 
-                    %sResult find(%sCommand command);
+                    %s_O find(%s_I request);
                 }
-                """.formatted(adapterPackage, adapterName, adapterName, adapterName));
-
-        writeNew(adapterDirectory.resolve(adapterName + "Command.java"), """
-                package %s;
-
-                public record %sCommand(String %s) {
-                }
-                """.formatted(adapterPackage, adapterName, definition.requestFieldName()));
-
-        writeNew(adapterDirectory.resolve(adapterName + "Result.java"), """
-                package %s;
-
-                public record %sResult(
-                        String %s,
-                        String %s
-                ) {
-                }
-                """.formatted(adapterPackage, adapterName,
-                        definition.responseOrganizationNoFieldName(),
-                        definition.responseOrganizationNameFieldName()));
+                """.formatted(adapterPackage,
+                mciPackage, ioPrefix,
+                mciPackage, ioPrefix,
+                adapterPackage, adapterName,
+                adapterName, ioPrefix, ioPrefix));
 
         writeNew(adapterDirectory.resolve("Mci" + adapterName + "Adapter.java"), """
                 package %s;
@@ -91,6 +93,20 @@ public final class OrganizationPreQueryScaffolder {
                 import lombok.RequiredArgsConstructor;
                 import org.springframework.stereotype.Component;
 
+                /**
+                 * @package %s
+                 * @className Mci%sAdapter
+                 * @description AX HUB 시스템 처리 클래스
+                 * @author 0986406
+                 * @create 2026.09.01
+                 * <pre>
+                 * ---------- 개정이력 ----------
+                 * 수정일      수정자    수정내용
+                 * ---------- -------- ---------------------------
+                 * 2026.09.01  0986406    최초생성
+                 * 
+                 * </pre>
+                 */
                 @Component
                 @RequiredArgsConstructor
                 public class Mci%sAdapter implements %sAdapter {
@@ -101,24 +117,14 @@ public final class OrganizationPreQueryScaffolder {
                     private final %s mci;
 
                     @Override
-                    public %sResult find(%sCommand command) {
-                        if (command == null || command.%s() == null || command.%s().isBlank()) {
-                            throw new IllegalArgumentException("%s is required for organization lookup");
+                    public %s_O find(%s_I request) {
+                        if (request == null) {
+                            throw new IllegalArgumentException("request is required for organization lookup");
                         }
 
-                        %s_I mciRequest = new %s_I();
-                        mciRequest.set%s(command.%s());
-
                         try {
-                            Transfer<%s_O> transfer = mci.callTo(INTERFACE_ID, RECEIVE_SERVICE_ID, mciRequest, %s_O.class);
-                            %s_O mciResponse = transfer == null ? null : transfer.getBody();
-                            if (mciResponse == null || mciResponse.get%s() == null || mciResponse.get%s().isBlank()) {
-                                throw new IllegalStateException("Organization lookup returned no organization number");
-                            }
-                            return new %sResult(
-                                    mciResponse.get%s(),
-                                    mciResponse.get%s()
-                            );
+                            Transfer<%s_O> transfer = mci.callTo(INTERFACE_ID, RECEIVE_SERVICE_ID, request, %s_O.class);
+                            return transfer == null ? null : transfer.getBody();
                         } catch (RuntimeException exception) {
                             throw exception;
                         } catch (Exception exception) {
@@ -131,15 +137,12 @@ public final class OrganizationPreQueryScaffolder {
                 mciPackage, clientClassName,
                 mciPackage, ioPrefix,
                 mciPackage, ioPrefix,
+                adapterPackage, adapterName,
                 adapterName, adapterName,
                 definition.interfaceId().trim().toUpperCase(Locale.ROOT), normalizedSystemCode,
                 clientClassName,
-                adapterName, adapterName,
-                definition.requestFieldName(), definition.requestFieldName(), definition.requestFieldName(),
-                ioPrefix, ioPrefix, capitalize(definition.requestFieldName()), definition.requestFieldName(),
                 ioPrefix, ioPrefix,
-                ioPrefix, capitalize(definition.responseOrganizationNoFieldName()), capitalize(definition.responseOrganizationNoFieldName()),
-                adapterName, capitalize(definition.responseOrganizationNoFieldName()), capitalize(definition.responseOrganizationNameFieldName())));
+                ioPrefix, ioPrefix));
 
         return "Generated organization pre-query adapter: " + adapterDirectory;
     }
