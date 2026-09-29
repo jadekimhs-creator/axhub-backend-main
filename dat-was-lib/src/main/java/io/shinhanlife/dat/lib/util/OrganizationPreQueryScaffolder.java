@@ -73,11 +73,13 @@ public final class OrganizationPreQueryScaffolder {
                 package %s;
 
                 public record %sResult(
-                        String organizationNo,
-                        String organizationName
+                        String %s,
+                        String %s
                 ) {
                 }
-                """.formatted(adapterPackage, adapterName));
+                """.formatted(adapterPackage, adapterName,
+                        definition.responseOrganizationNoFieldName(),
+                        definition.responseOrganizationNameFieldName()));
 
         writeNew(adapterDirectory.resolve("Mci" + adapterName + "Adapter.java"), """
                 package %s;
@@ -156,8 +158,8 @@ public final class OrganizationPreQueryScaffolder {
         requiredIdentifier(definition.responseOrganizationNoFieldName(), "responseOrganizationNoFieldName");
         requiredIdentifier(definition.responseOrganizationNameFieldName(), "responseOrganizationNameFieldName");
         String systemCode = definition.clientSystemCode() == null ? "" : definition.clientSystemCode().trim();
-        if (systemCode.length() != 4 && systemCode.length() != 9) {
-            throw new IllegalArgumentException("clientSystemCode must contain 4 or 9 characters");
+        if (systemCode.length() != 9) {
+            throw new IllegalArgumentException("clientSystemCode must contain exactly 9 characters");
         }
     }
 

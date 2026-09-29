@@ -781,11 +781,11 @@
 
     <div class="panel">
         <ul class="nav nav-tabs" id="myTab" role="tablist">
-            <li class="nav-item" role="presentation">
-                <button class="nav-link active" id="pod-tab" data-bs-toggle="tab" data-bs-target="#pod" type="button" role="tab">Pod Module</button>
+            <li class="nav-item d-none" role="presentation">
+                <button class="nav-link" id="pod-tab" data-bs-toggle="tab" data-bs-target="#pod" type="button" role="tab">Pod Module</button>
             </li>
             <li class="nav-item" role="presentation">
-                <button class="nav-link" id="pod-new-tab" data-bs-toggle="tab" data-bs-target="#pod-new" type="button" role="tab">Pod Module New</button>
+                <button class="nav-link active" id="pod-new-tab" data-bs-toggle="tab" data-bs-target="#pod-new" type="button" role="tab">Pod Module New</button>
             </li>
             <li class="nav-item" role="presentation">
                 <button class="nav-link" id="tool-tab" data-bs-toggle="tab" data-bs-target="#tool" type="button" role="tab">Tool Function</button>
@@ -808,7 +808,7 @@
             <div class="tab-content" id="myTabContent">
                 
                 <!-- Pod Creation Form -->
-                <div class="tab-pane fade show active" id="pod" role="tabpanel">
+                <div class="tab-pane fade" id="pod" role="tabpanel">
                     <form id="podForm">
                         <div class="row mb-4">
                             <div class="col-md-12">
@@ -883,7 +883,7 @@
                 </div>
 
                 <!-- Standalone Pod Creation Form: intentionally separate from the legacy Pod Module flow. -->
-                <div class="tab-pane fade" id="pod-new" role="tabpanel">
+                <div class="tab-pane fade show active" id="pod-new" role="tabpanel">
                     <form id="newPodForm">
                         <div class="mb-4">
                             <label class="form-label">Pod Project Path</label>
@@ -1198,8 +1198,8 @@
                             </div>
                             <div class="col-md-6 mt-3 mt-md-0">
                                 <label class="form-label">Target System Code (MCI Only)</label>
-                                <input type="text" class="form-control" name="clientSystemCode" pattern="^([a-zA-Z0-9]{4}|[a-zA-Z0-9]{9})$" maxlength="9" minlength="4" placeholder="e.g. CFPA or ONBTI2370" oninput="this.value = this.value.toUpperCase()">
-                                <div class="input-hint">Required for MCI Protocol (4 or 9 characters).</div>
+                                <input type="text" class="form-control" name="clientSystemCode" pattern="^[a-zA-Z0-9]{9}$" maxlength="9" minlength="9" placeholder="e.g. ONBTI2370" oninput="this.value = this.value.toUpperCase()">
+                                <div class="input-hint">Required for MCI Protocol (strictly 9 characters).</div>
                             </div>
                         </div>
                         
@@ -1224,15 +1224,44 @@
                 <div class="tab-pane fade" id="organization-pre-query" role="tabpanel" aria-labelledby="organization-pre-query-tab">
                     <form id="organizationPreQueryForm">
                         <div class="mb-4">
-                            <h5 class="mb-1" style="font-size: 1rem; font-weight: 600;">조직번호 공통 선조회 Adapter</h5>
-                            <div class="input-hint">선택한 Pod의 <code>common/adapter/organization</code>에 내부 MCI Adapter를 생성합니다. MCP Tool로 등록되지 않으며, MCI Request/Response 변환 화면에서 생성한 <code>_I</code>, <code>_O</code>, MCI Client를 사용합니다.</div>
+                            <div class="d-flex justify-content-between align-items-center mb-1 flex-wrap gap-2">
+                                <h5 class="mb-0" style="font-size: 1rem; font-weight: 600;">공통 선조회 (Pre-Query) Adapter</h5>
+                                <div class="d-flex gap-2">
+                                    <button type="button" class="btn-secondary-action" style="font-size: 12px; padding: 4px 10px;" onclick="loadPreQueryPreset('organization')">조직 선조회 템플릿</button>
+                                    <button type="button" class="btn-secondary-action" style="font-size: 12px; padding: 4px 10px;" onclick="loadPreQueryPreset('employee')">인사 선조회 템플릿</button>
+                                </div>
+                            </div>
+                            <div class="input-hint">Tool(UseCaseImpl) 본 업무 실행 전, 사용자 입력값(조직명, 직원 성명 등)으로 MCI를 먼저 단건 조회하여 필수 식별값(코드, ID 등)을 사전에 확보하는 내부 Adapter를 생성합니다. (MCP Tool로 직접 노출되지 않는 내부 컴포넌트)</div>
                         </div>
+
+                        <!-- 용도 문구 입력 및 AI 초안 만들기 -->
+                        <div class="mb-4 p-3 rounded" style="background:#18181b; border:1px solid #3f3f46;">
+                            <label class="form-label mb-1">선조회 용도 / 업무 설명</label>
+                            <textarea class="form-control" id="preQueryDescription" rows="2" placeholder="예: FC서비스팀 조직명으로 조직코드와 조직명 조회 또는 직원 성명으로 사번과 부서명 조회"></textarea>
+                            <div class="d-flex justify-content-between align-items-center mt-2 flex-wrap gap-2">
+                                <div class="input-hint">어떤 목적으로 선조회하는지 입력하면 AI가 입출력 필드 매핑 및 Adapter명을 자동 도출하고, 생성 시 전문 파일(*_I, *_O)까지 한 번에 생성합니다.</div>
+                                <div class="d-flex gap-2 align-items-center">
+                                    <select id="preQueryAiModelSelect" class="form-select" aria-label="AI 모델 선택" style="width:200px;">
+                                        <optgroup label="[신한라이프 내부망]"><option value="GLM-5.3-Flash" selected>GLM-5.3-Flash</option><option value="Qwen3-Coder">Qwen3-Coder</option><option value="Gemma-4-31B">Gemma-4-31B</option></optgroup>
+                                        <optgroup label="[외부 OpenRouter 무료]"><option value="cohere/north-mini-code:free">Cohere North Mini Code</option><option value="inclusionai/ling-3.0-flash:free">InclusionAI Ling 3 Flash</option><option value="openai/gpt-oss-20b:free">OpenAI GPT-OSS 20B</option><option value="google/gemma-4-31b-it:free">Google Gemma 4 31B</option><option value="nvidia/nemotron-3-nano-30b-a3b:free">NVIDIA Nemotron 3 Nano</option></optgroup>
+                                    </select>
+                                    <button type="button" class="btn-secondary-action" id="btnPreQueryAiDraft" onclick="generateAiPreQueryDraft(this)">AI 초안 도출</button>
+                                </div>
+                            </div>
+                        </div>
+
                         <div class="row mb-3">
                             <div class="col-md-8">
                                 <label class="form-label">Workspace Path</label>
                                 <div class="input-group">
-                                    <input type="text" class="form-control" name="workspacePath" id="organizationPreQueryWorkspacePath" value="C:\\eGovFrameDev-4.3.1-64bit\\workspace" required>
-                                    <button class="btn btn-outline-secondary" type="button" onclick="openServerFolderPicker('organizationPreQueryWorkspacePath')" style="border-color: #3f3f46; color: #a1a1aa;">폴더 선택</button>
+                                    <input type="text" class="form-control" name="workspacePath" id="organizationPreQueryWorkspacePath" value="C:\Users\09863406\IdeaProjects\dat-was-datmt" required>
+                                    <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" style="border-color: #3f3f46; color: #a1a1aa;">폴더 선택</button>
+                                    <ul class="dropdown-menu dropdown-menu-end dropdown-menu-dark" style="background-color: #18181b; border-color: #3f3f46;">
+                                        <li><a class="dropdown-item" href="#" onclick="const input = document.getElementById('organizationPreQueryWorkspacePath'); input.value='C:\\Users\\09863406\\IdeaProjects\\dat-was-datmt'; input.dispatchEvent(new Event('change')); return false;" style="color: #f4f4f5;">dat-was-datmt (기본)</a></li>
+                                        <li><a class="dropdown-item" href="#" onclick="const input = document.getElementById('organizationPreQueryWorkspacePath'); input.value='c:\\eGovFrameDev-4.3.1-64bit\\workspace-egov\\axhub-backend-main'; input.dispatchEvent(new Event('change')); return false;" style="color: #f4f4f5;">axhub-backend-main</a></li>
+                                        <li><hr class="dropdown-divider" style="border-color: #3f3f46;"></li>
+                                        <li><a class="dropdown-item" href="#" onclick="openServerFolderPicker('organizationPreQueryWorkspacePath'); return false;" style="color: #f4f4f5;">폴더 선택(+)</a></li>
+                                    </ul>
                                 </div>
                                 <div class="input-hint">Pod 프로젝트들이 있는 Workspace를 선택합니다.</div>
                             </div>
@@ -1244,55 +1273,51 @@
                             </div>
                         </div>
                         <div class="row mb-3">
-                            <div class="col-md-3">
+                            <div class="col-md-4">
                                 <label class="form-label">Adapter 이름</label>
-                                <input type="text" class="form-control" name="adapterName" value="OrganizationLookup" pattern="^[A-Za-z][A-Za-z0-9_]*$" required>
-                                <div class="input-hint">예: OrganizationLookup → OrganizationLookupAdapter</div>
+                                <input type="text" class="form-control" name="adapterName" id="preQueryAdapterName" value="OrganizationLookup" pattern="^[A-Za-z][A-Za-z0-9_]*$" required>
+                                <div class="input-hint">예: OrganizationLookup, EmployeeLookup</div>
                             </div>
-                            <div class="col-md-3 mt-3 mt-md-0">
-                                <label class="form-label">조직조회 MCI 전문 ID</label>
-                                <input type="text" class="form-control" name="interfaceId" placeholder="예: CLHTTP00005" pattern="^[A-Za-z][A-Za-z0-9_]*$" oninput="this.value = this.value.toUpperCase()" required>
+                            <div class="col-md-4 mt-3 mt-md-0">
+                                <label class="form-label">Target System Code (MCI Only)</label>
+                                <input type="text" class="form-control" name="clientSystemCode" id="preQueryClientSystemCode" value="ONCSD1340" pattern="^[a-zA-Z0-9]{9}$" maxlength="9" minlength="9" placeholder="e.g. ONBTI2370" oninput="this.value = this.value.toUpperCase()" required>
+                                <div class="input-hint">Required for MCI Protocol (무조건 9자리). Tool Function과 동일하게 MCI I/O 폴더 및 전문 파일명(*_I, *_O)의 기준이 됩니다.</div>
                             </div>
-                            <div class="col-md-3 mt-3 mt-md-0">
-                                <label class="form-label">MCI I/O 전문 Prefix</label>
-                                <input type="text" class="form-control" name="mciIoPrefix" placeholder="예: ONCSD1340" pattern="^[A-Za-z][A-Za-z0-9_]*$" oninput="this.value = this.value.toUpperCase()" required>
-                                <div class="input-hint"><code>ONCSD1340_I/O</code> 클래스명 기준입니다.</div>
-                            </div>
-                            <div class="col-md-3 mt-3 mt-md-0">
-                                <label class="form-label">대상 시스템 코드</label>
-                                <input type="text" class="form-control" name="clientSystemCode" placeholder="예: NBCD" pattern="^([A-Za-z0-9]{4}|[A-Za-z0-9]{9})$" maxlength="9" minlength="4" oninput="this.value = this.value.toUpperCase()" required>
+                            <div class="col-md-4 mt-3 mt-md-0">
+                                <label class="form-label">선조회 MCI 전문 ID</label>
+                                <input type="text" class="form-control" name="interfaceId" id="preQueryInterfaceId" value="CLHTTP00005" placeholder="예: CLHTTP00005" pattern="^[A-Za-z][A-Za-z0-9_]*$" oninput="this.value = this.value.toUpperCase()" required>
                             </div>
                         </div>
-                        <div class="mb-2 p-3 rounded" style="background:#18181b; border:1px solid #3f3f46;">
-                            <div class="form-label mb-2">MCI 필드 매핑</div>
+                        <div class="mb-3 p-3 rounded" style="background:#18181b; border:1px solid #3f3f46;">
+                            <div class="form-label mb-2">선조회 필드 매핑 (AI 자동 도출 또는 직접 수정)</div>
                             <div class="row g-3">
                                 <div class="col-md-4">
-                                    <label class="form-label">조직조회 요청 필드</label>
-                                    <input type="text" class="form-control" name="requestFieldName" placeholder="예: employeeNo" pattern="^[A-Za-z][A-Za-z0-9_]*$" required>
-                                    <div class="input-hint">생성된 <code>XXX_I</code>의 setter 필드명입니다.</div>
+                                    <label class="form-label">선조회 요청 필드 (조회 조건)</label>
+                                    <input type="text" class="form-control" name="requestFieldName" id="preQueryRequestField" placeholder="예: departmentName, employeeName" value="departmentName" pattern="^[A-Za-z][A-Za-z0-9_]*$" required>
+                                    <div class="input-hint">생성될 <code>*_I.java</code>의 조회 파라미터 필드명</div>
                                 </div>
                                 <div class="col-md-4">
-                                    <label class="form-label">응답 조직번호 필드</label>
-                                    <input type="text" class="form-control" name="responseOrganizationNoFieldName" value="organizationNo" pattern="^[A-Za-z][A-Za-z0-9_]*$" required>
-                                    <div class="input-hint">생성된 <code>XXX_O</code>의 getter 필드명입니다.</div>
+                                    <label class="form-label">응답 식별값 필드 (핵심 키값)</label>
+                                    <input type="text" class="form-control" name="responseOrganizationNoFieldName" id="preQueryResponseNoField" placeholder="예: organizationNo, employeeNo" value="organizationNo" pattern="^[A-Za-z][A-Za-z0-9_]*$" required>
+                                    <div class="input-hint">생성될 <code>*_O.java</code> 및 Result의 식별키 필드명</div>
                                 </div>
                                 <div class="col-md-4">
-                                    <label class="form-label">응답 조직명 필드</label>
-                                    <input type="text" class="form-control" name="responseOrganizationNameFieldName" value="organizationName" pattern="^[A-Za-z][A-Za-z0-9_]*$" required>
-                                    <div class="input-hint">조직명이 없다면 조직번호와 같은 필드를 입력합니다.</div>
+                                    <label class="form-label">응답 명칭 필드 (보조 정보)</label>
+                                    <input type="text" class="form-control" name="responseOrganizationNameFieldName" id="preQueryResponseNameField" placeholder="예: organizationName, employeeName" value="organizationName" pattern="^[A-Za-z][A-Za-z0-9_]*$" required>
+                                    <div class="input-hint">생성될 <code>*_O.java</code> 및 Result의 명칭 필드명</div>
                                 </div>
                             </div>
                         </div>
                         <div class="alert alert-secondary mt-3 mb-4" style="background:#18181b; border-color:#3f3f46; color:#d4d4d8;">
-                            먼저 MCI Request/Response 변환에서 해당 전문의 <code>_I</code>, <code>_O</code>와 MCI Client를 생성하세요. 이 화면은 기존 MCI 계약을 덮어쓰지 않고 공통 Adapter만 생성합니다.
+                            MCI I/O 전문 파일(<code>*_I.java</code>, <code>*_O.java</code>) 및 Client 파일이 대상 Pod에 없더라도 자동으로 함께 생성되므로 사전 파일 없이 원스톱 생성이 가능합니다.
                         </div>
                         <div class="d-flex justify-content-end">
-                            <button type="submit" class="btn-action">공통 Adapter 생성</button>
+                            <button type="submit" class="btn-action">공통 Adapter 및 I/O 생성</button>
                         </div>
                     </form>
                 </div>
 
-                <!-- Glow MCI Request/Response Converter -->
+<!-- Glow MCI Request/Response Converter -->
                 <div class="tab-pane fade" id="mci-response" role="tabpanel" aria-labelledby="mci-response-tab">
                     <div class="mb-4 p-3 rounded" style="background:#18181b; border:1px solid #3f3f46;">
                         <div class="d-flex justify-content-between align-items-start gap-3 flex-wrap">
@@ -2036,7 +2061,82 @@
 
     handleFormSubmit('podForm', '/api/v1/scaffold/pod');
     handleFormSubmit('newPodForm', '/api/v1/scaffold/pod-new');
-    handleFormSubmit('organizationPreQueryForm', '/api/v1/scaffold/pre-query/organization');
+        handleFormSubmit('organizationPreQueryForm', '/api/v1/scaffold/pre-query/organization');
+
+    async function generateAiPreQueryDraft(btn) {
+        const descEl = document.getElementById('preQueryDescription');
+        const desc = descEl ? descEl.value.trim() : '';
+        if (!desc) {
+            alert('선조회 용도 / 업무 설명을 입력해주세요.');
+            if (descEl) descEl.focus();
+            return;
+        }
+        const sysCode = document.getElementById('preQueryClientSystemCode')?.value.trim() || 'ONCSD1340';
+        const model = document.getElementById('preQueryAiModelSelect')?.value || 'GLM-5.3-Flash';
+
+        const originalText = btn.innerText;
+        btn.disabled = true;
+        btn.innerText = 'AI 도출 중...';
+
+        try {
+            const res = await fetch('/api/v1/scaffold/pre-query/draft', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ description: desc, clientSystemCode: sysCode, model: model })
+            });
+            if (!res.ok) {
+                const err = await res.json().catch(() => ({}));
+                throw new Error(err.error || 'AI 초안 도출에 실패했습니다.');
+            }
+            const data = await res.json();
+            if (data.adapterName) document.getElementById('preQueryAdapterName').value = data.adapterName;
+            if (data.clientSystemCode) document.getElementById('preQueryClientSystemCode').value = data.clientSystemCode;
+            if (data.interfaceId) document.getElementById('preQueryInterfaceId').value = data.interfaceId;
+            if (data.requestFieldName) document.getElementById('preQueryRequestField').value = data.requestFieldName;
+            if (data.responseOrganizationNoFieldName) document.getElementById('preQueryResponseNoField').value = data.responseOrganizationNoFieldName;
+            if (data.responseOrganizationNameFieldName) document.getElementById('preQueryResponseNameField').value = data.responseOrganizationNameFieldName;
+            alert('초안이 작성되었습니다.');
+        } catch (e) {
+            alert('AI 초안 도출 오류: ' + e.message);
+        } finally {
+            btn.disabled = false;
+            btn.innerText = originalText;
+        }
+    }
+
+    function loadPreQueryPreset(type) {
+        if (type === 'organization') {
+            const nameEl = document.getElementById('preQueryAdapterName');
+            const ifEl = document.getElementById('preQueryInterfaceId');
+            const sysEl = document.getElementById('preQueryClientSystemCode');
+            const reqEl = document.getElementById('preQueryRequestField');
+            const noEl = document.getElementById('preQueryResponseNoField');
+            const nmEl = document.getElementById('preQueryResponseNameField');
+            const descEl = document.getElementById('preQueryDescription');
+            if (nameEl) nameEl.value = 'OrganizationLookup';
+            if (ifEl) ifEl.value = 'CLHTTP00005';
+            if (sysEl) sysEl.value = 'ONCSD1340';
+            if (reqEl) reqEl.value = 'departmentName';
+            if (noEl) noEl.value = 'organizationNo';
+            if (nmEl) nmEl.value = 'organizationName';
+            if (descEl) descEl.value = 'FC서비스팀 등 조직명으로 조직코드 및 조직명 선조회';
+        } else if (type === 'employee') {
+            const nameEl = document.getElementById('preQueryAdapterName');
+            const ifEl = document.getElementById('preQueryInterfaceId');
+            const sysEl = document.getElementById('preQueryClientSystemCode');
+            const reqEl = document.getElementById('preQueryRequestField');
+            const noEl = document.getElementById('preQueryResponseNoField');
+            const nmEl = document.getElementById('preQueryResponseNameField');
+            const descEl = document.getElementById('preQueryDescription');
+            if (nameEl) nameEl.value = 'EmployeeLookup';
+            if (ifEl) ifEl.value = 'CTMNILO00007';
+            if (sysEl) sysEl.value = 'ONBSZ0460';
+            if (reqEl) reqEl.value = 'employeeName';
+            if (noEl) noEl.value = 'employeeNo';
+            if (nmEl) nmEl.value = 'employeeName';
+            if (descEl) descEl.value = '직원 성명으로 인사번호(사번) 및 부서명 선조회';
+        }
+    }
 
     function currentTargetModules() {
         return Array.from(document.querySelectorAll('#targetModuleSelect option'))

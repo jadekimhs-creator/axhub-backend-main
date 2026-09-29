@@ -26,6 +26,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDate;
@@ -286,7 +287,44 @@ public class ScaffoldingController {
         }
     }
 
-    /** Generates a Pod-local internal MCI adapter; it is not exposed as an MCP Tool. */
+    /** Generates AI draft for pre-query adapter based on purpose description. */
+    @PostMapping("/pre-query/draft")
+    public ResponseEntity<?> generatePreQueryDraft(@RequestBody Map<String, String> req) {
+        String description = req.getOrDefault("description", "").trim();
+        if (description.isBlank()) {
+            return ResponseEntity.badRequest().body(Map.of("error", "선조회 용도 / 업무 설명을 입력해주세요."));
+        }
+        String clientSystemCode = req.getOrDefault("clientSystemCode", "ONCSD1340").trim().toUpperCase(Locale.ROOT);
+        if (clientSystemCode.isBlank()) {
+            clientSystemCode = "ONCSD1340";
+        }
+
+        try {
+            String prompt = """
+                    You are an expert system architect analyzing legacy MCI pre-query integrations for AX HUB.
+                    Analyze the user's natural language purpose description and determine the Pre-Query Adapter specifications.
+                    Return JSON only. Do not add Markdown, explanations, or code fences.
+                    The response must have this exact shape:
+                    {
+                      "adapterName": "PascalCaseAdapterName (e.g. OrganizationLookup, EmployeeLookup)",
+                      "clientSystemCode": "%s",
+                      "interfaceId": "CLHTTP00005",
+                      "requestFieldName": "camelCase input field name for query condition (e.g. departmentName, employeeName)",
+                      "responseOrganizationNoFieldName": "camelCase key identifier field in MCI response (e.g. organizationNo, employeeNo)",
+                      "responseOrganizationNameFieldName": "camelCase label/name field in MCI response (e.g. organizationName, departmentName, employeeName)"
+                    }
+                    User purpose description: %s
+                    """.formatted(clientSystemCode, description);
+
+            String response = generateAiContent(prompt, req.get("model"));
+            Map<String, Object> draft = objectMapper.readValue(stripCodeFence(response), new TypeReference<Map<String, Object>>() {});
+            return ResponseEntity.ok(draft);
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().body(Map.of("error", "AI 선조회 초안 생성 실패: " + safeMessage(e)));
+        }
+    }
+
+    /** Generates a Pod-local internal MCI adapter and automatically ensures MCI I/O (*_I, *_O) and Client exist. */
     @PostMapping("/pre-query/organization")
     public ResponseEntity<?> scaffoldOrganizationPreQuery(@RequestBody OrganizationPreQueryRequest request) {
         try {
@@ -298,10 +336,22 @@ public class ScaffoldingController {
                     ? DEFAULT_WORKSPACE : request.workspacePath().trim();
             System.setProperty("AXHUB_SOURCE_DIR", workspacePath);
 
+            String clientSysCode = (request.clientSystemCode() == null) ? "" : request.clientSystemCode().trim().toUpperCase(Locale.ROOT);
+            if (clientSysCode.length() != 9) {
+                throw new IllegalArgumentException("clientSystemCode must contain exactly 9 characters.");
+            }
+            String ioPrefix = (request.mciIoPrefix() != null && !request.mciIoPrefix().isBlank())
+                    ? request.mciIoPrefix().trim().toUpperCase(Locale.ROOT)
+                    : clientSysCode;
+
+            // Ensure MCI contract files (_I, _O, Client) exist; generate them automatically if missing!
+            ensureMciContractFiles(workspacePath, request.moduleName().trim(), clientSysCode, ioPrefix,
+                    request.requestFieldName(), request.responseOrganizationNoFieldName(), request.responseOrganizationNameFieldName());
+
             String result = OrganizationPreQueryScaffolder.scaffold(
                     new OrganizationPreQueryScaffolder.Definition(
                             request.moduleName().trim(), request.adapterName(), request.interfaceId(),
-                            request.mciIoPrefix(), request.clientSystemCode(), request.requestFieldName(),
+                            ioPrefix, clientSysCode, request.requestFieldName(),
                             request.responseOrganizationNoFieldName(), request.responseOrganizationNameFieldName()));
             return ResponseEntity.ok(result);
         } catch (IllegalArgumentException exception) {
@@ -309,6 +359,142 @@ public class ScaffoldingController {
         } catch (Exception exception) {
             return ResponseEntity.internalServerError().body(Map.of("error", safeMessage(exception)));
         }
+    }
+
+    private void ensureMciContractFiles(String workspacePath, String moduleName, String clientSysCode, String ioPrefix,
+                                        String reqField, String resIdField, String resNmField) throws IOException {
+        String mciPackageSegment = mciPackageSegment(clientSysCode);
+        Path mciDir = Path.of(workspacePath).resolve(moduleName)
+                .resolve("src/main/java/io/shinhanlife/dat/mcc/infra/itrf/mci")
+                .resolve(mciPackageSegment.replace('.', '/'));
+        Path ioDir = mciDir.resolve("io");
+        Files.createDirectories(ioDir);
+
+        String clientClassName = "Mci" + toPascalCase(mciClientPrefix(clientSysCode).toLowerCase(Locale.ROOT)) + "Client";
+        Path clientFile = mciDir.resolve(clientClassName + ".java");
+        if (!Files.exists(clientFile)) {
+            String clientContent = """
+                    package io.shinhanlife.dat.mcc.infra.itrf.mci.%s;
+
+                    import io.shinhanlife.dat.lib.integration.mci.component.AxhubMciComponent;
+                    import io.shinhanlife.glow.communication.dto.Transfer;
+                    import lombok.RequiredArgsConstructor;
+                    import org.springframework.stereotype.Component;
+
+                    /**
+                     * @package io.shinhanlife.dat.mcc.infra.itrf.mci.%s
+                     * @className %s
+                     * @description AX HUB 시스템 처리 클래스
+                     * @author 0986406
+                     * @create 2026.09.01
+                     * <pre>
+                     * ---------- 개정이력 ----------
+                     * 수정일      수정자    수정내용
+                     * ---------- -------- ---------------------------
+                     * 2026.09.01  0986406    최초생성
+                     *
+                     * </pre>
+                     */
+                    @Component
+                    @RequiredArgsConstructor
+                    public class %s {
+
+                        private final AxhubMciComponent mciComponent;
+
+                        public <O> Transfer<O> callTo(String interfaceId, String receiveServiceId, Object mciReq, Class<O> resType) {
+                            return mciComponent.callTo(interfaceId, receiveServiceId, mciReq, resType);
+                        }
+                    }
+                    """.formatted(mciPackageSegment, mciPackageSegment, clientClassName, clientClassName);
+            Files.writeString(clientFile, clientContent, StandardCharsets.UTF_8);
+        }
+
+        Path reqFile = ioDir.resolve(ioPrefix + "_I.java");
+        if (!Files.exists(reqFile)) {
+            String reqContent = """
+                    package io.shinhanlife.dat.mcc.infra.itrf.mci.%s.io;
+
+                    import lombok.AllArgsConstructor;
+                    import lombok.Data;
+                    import lombok.NoArgsConstructor;
+
+                    /**
+                     * @package io.shinhanlife.dat.mcc.infra.itrf.mci.%s.io
+                     * @className %s_I
+                     * @description AX HUB 시스템 처리 클래스
+                     * @author 0986406
+                     * @create 2026.09.01
+                     * <pre>
+                     * ---------- 개정이력 ----------
+                     * 수정일      수정자    수정내용
+                     * ---------- -------- ---------------------------
+                     * 2026.09.01  0986406    최초생성
+                     *
+                     * </pre>
+                     */
+                    @Data
+                    @NoArgsConstructor
+                    @AllArgsConstructor
+                    public class %s_I {
+
+                        private String %s;
+                    }
+                    """.formatted(mciPackageSegment, mciPackageSegment, ioPrefix, ioPrefix, reqField);
+            Files.writeString(reqFile, reqContent, StandardCharsets.UTF_8);
+        }
+
+        Path resFile = ioDir.resolve(ioPrefix + "_O.java");
+        if (!Files.exists(resFile)) {
+            String resContent = """
+                    package io.shinhanlife.dat.mcc.infra.itrf.mci.%s.io;
+
+                    import lombok.AllArgsConstructor;
+                    import lombok.Data;
+                    import lombok.NoArgsConstructor;
+
+                    /**
+                     * @package io.shinhanlife.dat.mcc.infra.itrf.mci.%s.io
+                     * @className %s_O
+                     * @description AX HUB 시스템 처리 클래스
+                     * @author 0986406
+                     * @create 2026.09.01
+                     * <pre>
+                     * ---------- 개정이력 ----------
+                     * 수정일      수정자    수정내용
+                     * ---------- -------- ---------------------------
+                     * 2026.09.01  0986406    최초생성
+                     *
+                     * </pre>
+                     */
+                    @Data
+                    @NoArgsConstructor
+                    @AllArgsConstructor
+                    public class %s_O {
+
+                        private String %s;
+                        private String %s;
+                    }
+                    """.formatted(mciPackageSegment, mciPackageSegment, ioPrefix, ioPrefix, resIdField, resNmField);
+            Files.writeString(resFile, resContent, StandardCharsets.UTF_8);
+        }
+    }
+
+    private static String mciPackageSegment(String clientSystemCode) {
+        if (clientSystemCode.length() == 9) {
+            return clientSystemCode.substring(1, 4).toLowerCase(Locale.ROOT)
+                    + "." + clientSystemCode.substring(4, 5).toLowerCase(Locale.ROOT);
+        }
+        return clientSystemCode.substring(0, 3).toLowerCase(Locale.ROOT)
+                + "." + clientSystemCode.substring(3).toLowerCase(Locale.ROOT);
+    }
+
+    private static String mciClientPrefix(String clientSystemCode) {
+        return clientSystemCode.length() == 9 ? clientSystemCode.substring(1, 5) : clientSystemCode;
+    }
+
+    private static String toPascalCase(String value) {
+        if (value == null || value.isEmpty()) return "";
+        return Character.toUpperCase(value.charAt(0)) + value.substring(1);
     }
 
     @PostMapping("/tool-group")
