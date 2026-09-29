@@ -39,19 +39,20 @@ public final class OrganizationPreQueryScaffolder {
         String mciPackageSegment = mciPackageSegment(normalizedSystemCode);
         String clientClassName = "Mci" + pascalCase(mciClientPrefix(normalizedSystemCode).toLowerCase(Locale.ROOT)) + "Client";
         String ioPrefix = definition.mciIoPrefix().trim().toUpperCase(Locale.ROOT);
-        String adapterPackage = BASE_PACKAGE + ".common.adapter.organization";
+        String adapterPackage = BASE_PACKAGE + ".common";
         String mciPackage = BASE_PACKAGE + ".infra.itrf.mci." + mciPackageSegment;
 
         Path adapterDirectory = Path.of(sourceDirectory)
                 .resolve(definition.moduleName().trim())
                 .resolve("src/main/java")
                 .resolve(BASE_PACKAGE_PATH)
-                .resolve(Path.of("common", "adapter", "organization"));
+                .resolve("common");
+        Path implDirectory = adapterDirectory.resolve("impl");
         requireExistingMciContract(
                 Path.of(sourceDirectory).resolve(definition.moduleName().trim())
                         .resolve("src/main/java").resolve(BASE_PACKAGE_PATH),
                 mciPackageSegment, clientClassName, ioPrefix);
-        Files.createDirectories(adapterDirectory);
+        Files.createDirectories(implDirectory);
 
         writeNew(adapterDirectory.resolve(adapterName + "Adapter.java"), """
                 package %s;
@@ -83,9 +84,12 @@ public final class OrganizationPreQueryScaffolder {
                 adapterPackage, adapterName,
                 adapterName, ioPrefix, ioPrefix));
 
-        writeNew(adapterDirectory.resolve("Mci" + adapterName + "Adapter.java"), """
+        String implPackage = adapterPackage + ".impl";
+
+        writeNew(implDirectory.resolve(adapterName + "AdapterImpl.java"), """
                 package %s;
 
+                import %s.%sAdapter;
                 import %s.%s;
                 import %s.io.%s_I;
                 import %s.io.%s_O;
@@ -95,7 +99,7 @@ public final class OrganizationPreQueryScaffolder {
 
                 /**
                  * @package %s
-                 * @className Mci%sAdapter
+                 * @className %sAdapterImpl
                  * @description AX HUB 시스템 처리 클래스
                  * @author 0986406
                  * @create 2026.09.01
@@ -109,7 +113,7 @@ public final class OrganizationPreQueryScaffolder {
                  */
                 @Component
                 @RequiredArgsConstructor
-                public class Mci%sAdapter implements %sAdapter {
+                public class %sAdapterImpl implements %sAdapter {
 
                     private static final String INTERFACE_ID = "%s";
                     private static final String RECEIVE_SERVICE_ID = "%s";
@@ -133,11 +137,12 @@ public final class OrganizationPreQueryScaffolder {
                     }
                 }
                 """.formatted(
-                adapterPackage,
+                implPackage,
+                adapterPackage, adapterName,
                 mciPackage, clientClassName,
                 mciPackage, ioPrefix,
                 mciPackage, ioPrefix,
-                adapterPackage, adapterName,
+                implPackage, adapterName,
                 adapterName, adapterName,
                 definition.interfaceId().trim().toUpperCase(Locale.ROOT), normalizedSystemCode,
                 clientClassName,
