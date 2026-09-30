@@ -2521,7 +2521,193 @@ public class ToolScaffolder {
 
     private static final List<String> HTTP_ENV_PROFILES = List.of("local", "dev", "test", "prod");
 
+    private static Path findGlowLocalConfigFile(Path moduleRoot) {
+        String envSourceDir = System.getProperty("AXHUB_SOURCE_DIR");
+        if (envSourceDir == null || envSourceDir.isBlank()) {
+            envSourceDir = System.getenv("AXHUB_SOURCE_DIR");
+        }
+
+        List<Path> candidateRoots = new ArrayList<>();
+        if (envSourceDir != null && !envSourceDir.isBlank()) {
+            try {
+                Path srcPath = Path.of(envSourceDir).toAbsolutePath().normalize();
+                candidateRoots.add(srcPath);
+                Path p = srcPath.getParent();
+                while (p != null) {
+                    candidateRoots.add(p);
+                    p = p.getParent();
+                }
+            } catch (Exception ignored) {}
+        }
+
+        if (moduleRoot != null) {
+            try {
+                Path current = moduleRoot.toAbsolutePath().normalize();
+                while (current != null) {
+                    candidateRoots.add(current);
+                    current = current.getParent();
+                }
+            } catch (Exception ignored) {}
+        }
+
+        for (Path root : candidateRoots) {
+            if (root == null) continue;
+            Path libDir = root.getFileName() != null && root.getFileName().toString().equals("dat-lib-datmt")
+                    ? root : root.resolve("dat-lib-datmt");
+            if (Files.isDirectory(libDir)) {
+                Path glowLocal = libDir.resolve("dat-was-lib/src/main/resources/glow/application-glow-local.yml");
+                if (Files.exists(glowLocal)) {
+                    return glowLocal;
+                }
+                Path glowLocalDirect = libDir.resolve("dat-was-lib/src/main/resources/application-glow-local.yml");
+                if (Files.exists(glowLocalDirect)) {
+                    return glowLocalDirect;
+                }
+            }
+            Path directGlowLocal = root.resolve("src/main/resources/glow/application-glow-local.yml");
+            if (Files.exists(directGlowLocal)) {
+                return directGlowLocal;
+            }
+        }
+
+        boolean isTempDir = candidateRoots.stream().anyMatch(p -> {
+            String s = p.toString().toLowerCase(Locale.ROOT);
+            return s.contains("temp") || s.contains("tmp");
+        });
+
+        if (!isTempDir) {
+            List<Path> fixedRoots = List.of(
+                    Path.of("C:/eGovFrameDev-4.3.1-64bit/workspace/dat-lib-datmt"),
+                    Path.of("C:/eGovFrameDev-4.3.1-64bit/workspace-egov/dat-lib-datmt"),
+                    Path.of("C:/eGovFrameDev-4.3.1-64bit/workspace-egov/dat-was-datmt")
+            );
+            for (Path libDir : fixedRoots) {
+                if (Files.isDirectory(libDir)) {
+                    Path glowLocal = libDir.resolve("dat-was-lib/src/main/resources/glow/application-glow-local.yml");
+                    if (Files.exists(glowLocal)) {
+                        return glowLocal;
+                    }
+                    Path glowLocalDirect = libDir.resolve("dat-was-lib/src/main/resources/application-glow-local.yml");
+                    if (Files.exists(glowLocalDirect)) {
+                        return glowLocalDirect;
+                    }
+                }
+            }
+        }
+
+        return null;
+    }
+
+    private static void appendHttpApiToGlowConfig(Path glowConfigPath, String httpApiName, String toolName) throws IOException {
+        String existing = Files.readString(glowConfigPath, StandardCharsets.UTF_8);
+        if (Pattern.compile("(?m)^\\s*-\\s+name:\\s*" + Pattern.quote(httpApiName) + "\\s*$").matcher(existing).find()) {
+            return;
+        }
+
+        String environmentKey = toPackageSegment(httpApiName).toUpperCase(Locale.ROOT).replace('-', '_');
+        boolean isCrlf = existing.contains("\r\n");
+        String nl = isCrlf ? "\r\n" : "\n";
+
+        Matcher apiListMatcher = Pattern.compile("(?m)^(\\s*)api-list:\\s*(.*)$").matcher(existing);
+        if (apiListMatcher.find()) {
+            String apiListIndent = apiListMatcher.group(1);
+            String afterApiListHeader = apiListMatcher.group(2).trim();
+
+            if ("[]".equals(afterApiListHeader)) {
+                String itemIndent = apiListIndent + "  ";
+                String propIndent = itemIndent + "  ";
+                String entry = itemIndent + "- name: " + httpApiName + nl
+                        + propIndent + "domain: ${AXHUB_" + environmentKey + "_HTTP_DOMAIN:http://localhost:${server.port}}" + nl
+                        + propIndent + "url: ${AXHUB_" + environmentKey + "_HTTP_URL:/api/mock/http/" + toolName + "}" + nl
+                        + propIndent + "method: POST" + nl
+                        + propIndent + "content-type: application/json;charset=UTF-8" + nl
+                        + propIndent + "biz-pod: false" + nl;
+
+                int replaceStart = apiListMatcher.start();
+                int replaceEnd = apiListMatcher.end();
+                String updated = existing.substring(0, replaceStart) + apiListIndent + "api-list:" + nl + entry + existing.substring(replaceEnd);
+                writeUtf8(glowConfigPath, updated);
+                return;
+            }
+
+            int searchFrom = apiListMatcher.end();
+            String afterApiList = existing.substring(searchFrom);
+            String[] lines = afterApiList.split("\r?\n", -1);
+
+            String itemIndent = "        ";
+            String propIndent = "          ";
+            boolean detectedIndent = false;
+
+            for (String line : lines) {
+                Matcher nameMatcher = Pattern.compile("^(\\s*)-\\s+name:").matcher(line);
+                if (nameMatcher.find()) {
+                    itemIndent = nameMatcher.group(1);
+                    propIndent = itemIndent + "  ";
+                    detectedIndent = true;
+                    break;
+                }
+            }
+            if (!detectedIndent) {
+                itemIndent = apiListIndent + "  ";
+                propIndent = itemIndent + "  ";
+            }
+
+            String entry = itemIndent + "- name: " + httpApiName + nl
+                    + propIndent + "domain: ${AXHUB_" + environmentKey + "_HTTP_DOMAIN:http://localhost:${server.port}}" + nl
+                    + propIndent + "url: ${AXHUB_" + environmentKey + "_HTTP_URL:/api/mock/http/" + toolName + "}" + nl
+                    + propIndent + "method: POST" + nl
+                    + propIndent + "content-type: application/json;charset=UTF-8" + nl
+                    + propIndent + "biz-pod: false" + nl;
+
+            int currentOffset = searchFrom;
+            int insertPos = existing.length();
+            boolean foundBoundary = false;
+
+            for (String line : lines) {
+                String trimmed = line.trim();
+                if (!trimmed.isEmpty()) {
+                    int lineIndent = 0;
+                    while (lineIndent < line.length() && line.charAt(lineIndent) == ' ') {
+                        lineIndent++;
+                    }
+                    if (lineIndent <= apiListIndent.length() && !line.startsWith("\t")) {
+                        insertPos = currentOffset;
+                        foundBoundary = true;
+                        break;
+                    }
+                }
+                currentOffset += line.length() + (isCrlf ? 2 : 1);
+            }
+
+            String updated;
+            if (foundBoundary) {
+                updated = existing.substring(0, insertPos) + entry + existing.substring(insertPos);
+            } else {
+                updated = existing.stripTrailing() + nl + entry;
+            }
+            writeUtf8(glowConfigPath, updated);
+        } else {
+            String fullBlock = nl + "glow:" + nl
+                    + "  communication:" + nl
+                    + "    http:" + nl
+                    + "      api-list:" + nl
+                    + "        - name: " + httpApiName + nl
+                    + "          domain: ${AXHUB_" + environmentKey + "_HTTP_DOMAIN:http://localhost:${server.port}}" + nl
+                    + "          url: ${AXHUB_" + environmentKey + "_HTTP_URL:/api/mock/http/" + toolName + "}" + nl
+                    + "          method: POST" + nl
+                    + "          content-type: application/json;charset=UTF-8" + nl
+                    + "          biz-pod: false" + nl;
+            writeUtf8(glowConfigPath, existing.stripTrailing() + fullBlock);
+        }
+    }
+
     private static List<Path> ensureHttpApiConfigurations(Path moduleRoot, String httpApiName, String toolName) throws IOException {
+        Path glowLocalConfig = findGlowLocalConfigFile(moduleRoot);
+        if (glowLocalConfig != null) {
+            appendHttpApiToGlowConfig(glowLocalConfig, httpApiName, toolName);
+            return List.of(glowLocalConfig);
+        }
+
         Path resourcesDir = moduleRoot.resolve("src/main/resources");
         Files.createDirectories(resourcesDir);
 
