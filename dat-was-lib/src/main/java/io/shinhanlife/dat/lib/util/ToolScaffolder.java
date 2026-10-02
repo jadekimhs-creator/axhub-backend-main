@@ -123,6 +123,75 @@ public class ToolScaffolder {
         }
     }
 
+    public static String normalizeModuleName(String moduleName) {
+        if (moduleName == null) return "dat-was-datcu";
+        String trimmed = moduleName.trim();
+        return switch (trimmed) {
+            case "dat-was-cus", "cus" -> "dat-was-datcu";
+            case "dat-was-pro", "pro" -> "dat-was-datps";
+            case "dat-was-sal", "sal" -> "dat-was-datsa";
+            case "dat-was-sys", "sys" -> "dat-was-datsy";
+            default -> trimmed;
+        };
+    }
+
+    public static Path resolveModuleRoot(Path rootDir, String moduleName) {
+        if (moduleName == null || moduleName.isBlank()) {
+            return rootDir != null ? rootDir : Paths.get(".");
+        }
+        Path path = Paths.get(moduleName.trim());
+        if (path.isAbsolute()) {
+            if (Files.isDirectory(path)) {
+                return path;
+            }
+            if (path.getParent() != null) {
+                String normalized = normalizeModuleName(path.getFileName().toString());
+                Path alt = path.getParent().resolve(normalized);
+                if (Files.isDirectory(alt)) {
+                    return alt;
+                }
+            }
+            return path;
+        }
+
+        if (rootDir != null) {
+            String rootDirName = rootDir.getFileName() != null ? rootDir.getFileName().toString() : "";
+            String normalized = normalizeModuleName(moduleName);
+            if ((rootDirName.equals(moduleName) || rootDirName.equals(normalized))
+                    && (Files.isDirectory(rootDir.resolve("src/main/java")) || Files.isRegularFile(rootDir.resolve("build.gradle")))) {
+                return rootDir;
+            }
+
+            Path direct = rootDir.resolve(moduleName);
+            if (Files.isDirectory(direct)) {
+                return direct;
+            }
+
+            Path normDirect = rootDir.resolve(normalized);
+            if (Files.isDirectory(normDirect)) {
+                return normDirect;
+            }
+
+            Path sub = rootDir.resolve(normalized).resolve(moduleName);
+            if (Files.isDirectory(sub)) {
+                return sub;
+            }
+
+            if (rootDir.getParent() != null) {
+                Path parentDirect = rootDir.getParent().resolve(moduleName);
+                if (Files.isDirectory(parentDirect)) {
+                    return parentDirect;
+                }
+                Path parentNorm = rootDir.getParent().resolve(normalized);
+                if (Files.isDirectory(parentNorm)) {
+                    return parentNorm;
+                }
+            }
+            return direct;
+        }
+        return path;
+    }
+
     public static String scaffoldUseCase(String useCaseName, String moduleName, String author,
                                          String createDate, List<ToolMethodDefinition> tools) throws IOException {
         if (tools == null || tools.isEmpty()) {
@@ -156,8 +225,7 @@ public class ToolScaffolder {
             sourceDir = System.getenv("AXHUB_SOURCE_DIR");
         }
         Path rootDir = sourceDir != null ? Paths.get(sourceDir) : Paths.get(".");
-        Path configuredModule = Paths.get(moduleName);
-        Path moduleRoot = configuredModule.isAbsolute() ? configuredModule : rootDir.resolve(configuredModule);
+        Path moduleRoot = resolveModuleRoot(rootDir, moduleName);
         Path sourceRoot = moduleRoot.resolve(BASE_PACKAGE_PATH);
         Path useCaseDir = sourceRoot.resolve(Paths.get("biz", group, "usecase"));
         Path implDir = useCaseDir.resolve("impl");
@@ -1183,20 +1251,22 @@ public class ToolScaffolder {
             envSourceDir = System.getenv("AXHUB_SOURCE_DIR");
         }
         Path rootDir = envSourceDir != null ? Paths.get(envSourceDir) : Paths.get(".");
+        Path moduleRoot = resolveModuleRoot(rootDir, moduleName);
+        Path sourceRoot = moduleRoot.resolve(BASE_PACKAGE_PATH);
 
-        Path usecaseDir = rootDir.resolve(Paths.get(moduleName, BASE_PACKAGE_PATH, "biz", group.toLowerCase(), "usecase"));
+        Path usecaseDir = sourceRoot.resolve(Paths.get("biz", group.toLowerCase(), "usecase"));
         Path usecaseImplDir = usecaseDir.resolve("impl");
-        Path dtoDir = rootDir.resolve(Paths.get(moduleName, BASE_PACKAGE_PATH, "biz", group.toLowerCase(), "dto"));
+        Path dtoDir = sourceRoot.resolve(Paths.get("biz", group.toLowerCase(), "dto"));
 
-        Path legacyDtoDir = rootDir.resolve(Paths.get(moduleName, BASE_PACKAGE_PATH, "biz", group.toLowerCase(), "legacy"));
+        Path legacyDtoDir = sourceRoot.resolve(Paths.get("biz", group.toLowerCase(), "legacy"));
 
         // Schema Resource 파일 경로(useSchemaResource=true일 때만 생성)
         boolean useSchemaResource = (inputSchemaResource != null && !inputSchemaResource.trim().isEmpty()) || (outputSchemaResource != null && !outputSchemaResource.trim().isEmpty());
         String schemaBaseName = toKebabCase(toolBaseName);
         String inputSchemaFileName  = schemaBaseName + "-resource-input-schema.json";
         String outputSchemaFileName = schemaBaseName + "-resource-output-schema.json";
-        Path schemaDir = rootDir.resolve(Paths.get(moduleName, "src/main/resources/tool-schemas", group.toLowerCase()));
-        Path definitionDir = rootDir.resolve(Paths.get(moduleName, "src/main/resources/tool-definitions", group.toLowerCase()));
+        Path schemaDir = moduleRoot.resolve(Paths.get("src/main/resources/tool-schemas", group.toLowerCase()));
+        Path definitionDir = moduleRoot.resolve(Paths.get("src/main/resources/tool-definitions", group.toLowerCase()));
         String inputSchemaClasspath  = "classpath:tool-schemas/" + group.toLowerCase() + "/" + inputSchemaFileName;
         String outputSchemaClasspath = "classpath:tool-schemas/" + group.toLowerCase() + "/" + outputSchemaFileName;
 
@@ -1210,7 +1280,7 @@ public class ToolScaffolder {
             String clientPrefix = clientSystemCode.length() == 9 ? clientSystemCode.substring(1, 5).toLowerCase() : clientSystemCode.toLowerCase();
             clientPrefixCap = toPascalCase(clientPrefix);
             mciGroupPath = "infra/itrf/mci/" + clientPrefix.substring(0, 3) + "/" + clientPrefix.substring(3);
-            mciClientDir = rootDir.resolve(Paths.get(moduleName, BASE_PACKAGE_PATH, mciGroupPath));
+            mciClientDir = sourceRoot.resolve(mciGroupPath);
         }
 
         String converterPackage = bizPackage + ".converter";
@@ -1221,18 +1291,18 @@ public class ToolScaffolder {
         String converterClassName = (isMci && clientSystemCode != null && !clientSystemCode.isBlank())
                 ? clientSystemCode.toUpperCase(Locale.ROOT) + "Converter"
                 : baseName + "Converter";
-        Path converterDir = rootDir.resolve(Paths.get(moduleName, BASE_PACKAGE_PATH, "biz", group.toLowerCase(), "converter"));
+        Path converterDir = sourceRoot.resolve(Paths.get("biz", group.toLowerCase(), "converter"));
         if (targetSystemPackage != null) {
             for (String segment : targetSystemPackage.split("\\.")) {
                 converterDir = converterDir.resolve(segment);
             }
         }
 
-        Path mciIoDir = rootDir.resolve(Paths.get(moduleName, BASE_PACKAGE_PATH, mciGroupPath, "io"));
+        Path mciIoDir = sourceRoot.resolve(Paths.get(mciGroupPath, "io"));
         String httpApiPackage = toPackageSegment(httpApiName);
         String httpApiClass = toPascalCase(httpApiName);
         String httpGroupPath = "infra/itrf/http/" + httpApiPackage;
-        Path httpClientDir = rootDir.resolve(Paths.get(moduleName, BASE_PACKAGE_PATH, httpGroupPath));
+        Path httpClientDir = sourceRoot.resolve(httpGroupPath);
         Path httpIoDir = httpClientDir.resolve("io");
 
         Files.createDirectories(usecaseDir);
@@ -1251,7 +1321,7 @@ public class ToolScaffolder {
         Files.createDirectories(converterDir);
         StringBuilder log = new StringBuilder();
         if (pagingMode != PagingMode.NONE) {
-            Path pagingDir = rootDir.resolve(Paths.get(moduleName, BASE_PACKAGE_PATH, "biz", group.toLowerCase(Locale.ROOT), "paging"));
+            Path pagingDir = sourceRoot.resolve(Paths.get("biz", group.toLowerCase(Locale.ROOT), "paging"));
             String clientCls = clientPrefixCap.isEmpty() ? "AxhubMciComponent" : "Mci" + clientPrefixCap + "Client";
             String recSvcId = (clientSystemCode != null && !clientSystemCode.isBlank()) ? clientSystemCode.toUpperCase(Locale.ROOT) : "";
             writePagingComponents(pagingDir, bizPackage, baseName, pagingMode, BASE_PACKAGE + "." + mciGroupPath.replace("/", "."), ioPrefix, clientCls, converterPackage, converterClassName, interfaceId, recSvcId);
@@ -2248,19 +2318,18 @@ public class ToolScaffolder {
 
         // Response JSON mock files are intentionally not generated. Runtime response contracts are represented by DTOs.
         if (isHttp) {
-            Path moduleRoot = rootDir.resolve(moduleName).toAbsolutePath().normalize();
             List<Path> httpConfigs = ensureHttpApiConfigurations(moduleRoot, httpApiName, toolName);
             for (Path config : httpConfigs) {
                 log.append("[HTTP Config] ").append(config).append("\n");
             }
         }
 
-        Path generatedTestDir = rootDir.resolve(Paths.get(moduleName, "src/test/java/io/shinhanlife/dat/mcc/biz", group.toLowerCase(), "usecase"));
+        Path generatedTestDir = moduleRoot.resolve(Paths.get("src/test/java/io/shinhanlife/dat/mcc/biz", group.toLowerCase(), "usecase"));
         Files.createDirectories(generatedTestDir);
         Path generatedTestPath = generatedTestDir.resolve(baseName + "UseCaseTest.java");
         writeUtf8(generatedTestPath, useCaseTestContent(bizPackage, baseName));
         log.append("[Unit Test] ").append(generatedTestPath).append("\\n");
-        log.append("[Test Command] .\\gradlew.bat :").append(moduleName.substring(moduleName.lastIndexOf(java.io.File.separator) + 1)).append(":test --tests \"*").append(baseName).append("UseCaseTest\"\\n");
+        log.append("[Test Command] .\\gradlew.bat test --tests \"*").append(baseName).append("UseCaseTest\"\\n");
         // Tool Definition YML is no longer generated. We use @GrowToolHint instead.
         // log.append("[V17 Tool Definition] ...\n");
         log.append("\n Tip: HTTP Tool은 WireMock 실행 후 생성된 mapping URL로 호출을 확인하세요.\n");
@@ -2555,6 +2624,14 @@ public class ToolScaffolder {
             Path libDir = root.getFileName() != null && root.getFileName().toString().equals("dat-lib-datmt")
                     ? root : root.resolve("dat-lib-datmt");
             if (Files.isDirectory(libDir)) {
+                Path directGlowLocal = libDir.resolve("src/main/resources/glow/application-glow-local.yml");
+                if (Files.exists(directGlowLocal)) {
+                    return directGlowLocal;
+                }
+                Path directAppGlowLocal = libDir.resolve("src/main/resources/application-glow-local.yml");
+                if (Files.exists(directAppGlowLocal)) {
+                    return directAppGlowLocal;
+                }
                 Path glowLocal = libDir.resolve("dat-was-lib/src/main/resources/glow/application-glow-local.yml");
                 if (Files.exists(glowLocal)) {
                     return glowLocal;
@@ -2583,6 +2660,14 @@ public class ToolScaffolder {
             );
             for (Path libDir : fixedRoots) {
                 if (Files.isDirectory(libDir)) {
+                    Path directGlowLocal = libDir.resolve("src/main/resources/glow/application-glow-local.yml");
+                    if (Files.exists(directGlowLocal)) {
+                        return directGlowLocal;
+                    }
+                    Path directAppGlowLocal = libDir.resolve("src/main/resources/application-glow-local.yml");
+                    if (Files.exists(directAppGlowLocal)) {
+                        return directAppGlowLocal;
+                    }
                     Path glowLocal = libDir.resolve("dat-was-lib/src/main/resources/glow/application-glow-local.yml");
                     if (Files.exists(glowLocal)) {
                         return glowLocal;

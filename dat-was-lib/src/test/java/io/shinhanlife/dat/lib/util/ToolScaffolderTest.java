@@ -317,6 +317,11 @@ class ToolScaffolderTest {
     @TempDir
     Path root;
 
+    @org.junit.jupiter.api.AfterEach
+    void tearDown() {
+        System.clearProperty("AXHUB_SOURCE_DIR");
+    }
+
     @Test
     void generatesSpringAiToolAndResponseDto() throws Exception {
         String moduleName = "build/scaffold-manifest-test";
@@ -736,5 +741,90 @@ class ToolScaffolderTest {
         assertTrue(Files.exists(localConfig));
         String configYaml = Files.readString(localConfig, StandardCharsets.UTF_8);
         assertTrue(configYaml.contains("- name: emp-dtl"), configYaml);
+    }
+
+    @Test
+    void appendsHttpApiToDatLibDatmtGlowLocalConfigWhenPresent() throws Exception {
+        System.setProperty("AXHUB_SOURCE_DIR", root.toString());
+        Path datLibGlowLocal = root.resolve("dat-lib-datmt/dat-was-lib/src/main/resources/glow/application-glow-local.yml");
+        Files.createDirectories(datLibGlowLocal.getParent());
+        Files.writeString(datLibGlowLocal, """
+                glow:
+                  communication:
+                    http:
+                      api-list:
+                        - name: memo
+                          domain: http://localhost:8080
+                          url: /api/mock/http/memo
+                          method: POST
+                          content-type: application/json;charset=UTF-8
+                          biz-pod: false
+                    mci:
+                      host: localhost
+                """, StandardCharsets.UTF_8);
+
+        String moduleName = "dat-was-datps/dat-was-pro";
+        Path moduleRoot = root.resolve(moduleName);
+        Files.createDirectories(moduleRoot);
+
+        ToolScaffolder.scaffold("claim search", "CLM0001", "보험금 청구 조회", "청구 건을 조회한다.", "cmm", "HTTP",
+                moduleName, "tester", "2026.09.30", false, null, null, null, List.of(), List.of(), "claim-search");
+
+        assertFalse(Files.exists(moduleRoot.resolve("src/main/resources/application_local.yml")));
+        assertFalse(Files.exists(moduleRoot.resolve("src/main/resources/application-local.yml")));
+
+        String updatedYaml = Files.readString(datLibGlowLocal, StandardCharsets.UTF_8);
+        assertTrue(updatedYaml.contains("- name: clm-srch"), updatedYaml);
+        assertTrue(updatedYaml.contains("- name: memo"), updatedYaml);
+        assertTrue(updatedYaml.indexOf("- name: memo") < updatedYaml.indexOf("- name: clm-srch"));
+        assertTrue(updatedYaml.indexOf("- name: clm-srch") < updatedYaml.indexOf("mci:"));
+    }
+
+    @Test
+    void appendsHttpApiToDirectDatLibDatmtGlowLocalConfigWhenPresent() throws Exception {
+        System.setProperty("AXHUB_SOURCE_DIR", root.toString());
+        Path datLibGlowLocal = root.resolve("dat-lib-datmt/src/main/resources/glow/application-glow-local.yml");
+        Files.createDirectories(datLibGlowLocal.getParent());
+        Files.writeString(datLibGlowLocal, """
+                glow:
+                  communication:
+                    http:
+                      api-list:
+                        - name: memo
+                          domain: http://localhost:8080
+                          url: /api/mock/http/memo
+                          method: POST
+                          content-type: application/json;charset=UTF-8
+                          biz-pod: false
+                    mci:
+                      host: localhost
+                """, StandardCharsets.UTF_8);
+
+        String moduleName = "dat-was-datcu";
+        Path moduleRoot = root.resolve(moduleName);
+        Files.createDirectories(moduleRoot);
+
+        ToolScaffolder.scaffold("customer search", "CUS0001", "고객 조회", "고객을 조회한다.", "cmm", "HTTP",
+                moduleName, "tester", "2026.10.02", false, null, null, null, List.of(), List.of(), "customer-search");
+
+        String updatedYaml = Files.readString(datLibGlowLocal, StandardCharsets.UTF_8);
+        assertTrue(updatedYaml.contains("- name: cst-srch"), updatedYaml);
+        assertTrue(updatedYaml.contains("- name: memo"), updatedYaml);
+    }
+
+    @Test
+    void resolvesSingleModulePodWhenLegacyModuleNamePassed() throws Exception {
+        System.setProperty("AXHUB_SOURCE_DIR", root.toString());
+        Path podRoot = root.resolve("dat-was-datcu");
+        Files.createDirectories(podRoot.resolve("src/main/java"));
+
+        // Passing legacy "dat-was-cus" should map to existing "dat-was-datcu"
+        ToolScaffolder.scaffold("contract info", "ONBCD0330", "계약 정보", "계약 정보를 조회한다.", "sal", "MCI",
+                "dat-was-cus", "tester", "2026.10.02", false, "ONBTA2380", null, null,
+                List.of(new ToolScaffolder.FieldDefinition("contractNo", "String", "계약번호", List.of("12345678"), "", true)),
+                List.of(), null, new ToolScaffolder.ToolDefinitionOptions(null, null, null, null, null, List.of(), List.of(), null));
+
+        Path dto = podRoot.resolve("src/main/java/io/shinhanlife/dat/mcc/biz/sal/dto/CntrInfoRequest.java");
+        assertTrue(Files.exists(dto), "DTO should be generated inside dat-was-datcu");
     }
 }

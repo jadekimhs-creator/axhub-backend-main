@@ -168,14 +168,17 @@ public final class NewPodProjectScaffolder {
         Path templateSettings = templateRoot.resolve("settings.gradle");
         Path templateRootBuild = templateRoot.resolve("build.gradle");
         Path templateModuleBuild = templateRoot.resolve("dat-was-cus/build.gradle");
-        if (!Files.isRegularFile(templateSettings) || !Files.isRegularFile(templateRootBuild)
-                || !Files.isRegularFile(templateModuleBuild)) {
+        if (!Files.isRegularFile(templateModuleBuild)) {
+            templateModuleBuild = templateRootBuild;
+        }
+        if (!Files.isRegularFile(templateSettings) || !Files.isRegularFile(templateRootBuild)) {
             throw new IllegalArgumentException("dat-was-datcu Gradle template files are missing: " + templateRoot);
         }
         String settings = Files.readString(templateSettings, StandardCharsets.UTF_8)
                 .replaceFirst("(?m)^rootProject\\.name\\s*=\\s*'[^']*'",
                         "rootProject.name = '" + rootProjectName + "'")
-                .replace("dat-was-cus", moduleName);
+                .replace("dat-was-cus", moduleName)
+                .replace("dat-was-datcu", moduleName);
         write(projectRoot.resolve("settings.gradle"), settings);
         Files.copy(templateRootBuild, projectRoot.resolve("build.gradle"), StandardCopyOption.REPLACE_EXISTING);
 
@@ -195,14 +198,25 @@ public final class NewPodProjectScaffolder {
 
         String bundleId = determineBundleId(rootProjectName, moduleName);
 
-        Path templateResources = templateRoot != null ? templateRoot.resolve("dat-was-cus/src/main/resources") : null;
+        Path templateResources = null;
+        if (templateRoot != null) {
+            Path direct = templateRoot.resolve("src/main/resources");
+            if (Files.isDirectory(direct)) {
+                templateResources = direct;
+            } else {
+                Path legacy = templateRoot.resolve("dat-was-cus/src/main/resources");
+                if (Files.isDirectory(legacy)) {
+                    templateResources = legacy;
+                }
+            }
+        }
         if (templateResources != null && Files.isDirectory(templateResources)) {
             // 1. application.yml
             Path templateAppYml = templateResources.resolve("application.yml");
             if (Files.isRegularFile(templateAppYml)) {
                 String appYml = Files.readString(templateAppYml, StandardCharsets.UTF_8);
                 appYml = appYml.replaceAll("(?m)^(\\s*port:\\s*).*$", "$1\\${PORT:" + port + "}");
-                appYml = appYml.replaceAll("(?m)^\\s*name:\\s*dat-was-cus", "    name: " + moduleName);
+                appYml = appYml.replaceAll("(?m)^\\s*name:\\s*(dat-was-cus|dat-was-datcu|[a-z0-9-]+)", "    name: " + moduleName);
                 appYml = appYml.replaceAll("(?m)^\\s*bundle-id:\\s*.*$", "    bundle-id: " + bundleId);
                 write(targetResources.resolve("application.yml"), appYml);
             }
@@ -346,16 +360,43 @@ public final class NewPodProjectScaffolder {
                 }
 
                 repositories {
-                    // dat-lib-datmt에서 :dat-was-lib:publishToMavenLocal 실행 후
+                    // dat-lib-datmt에서 ./gradlew publishToMavenLocal 실행 후
                     // Maven Local의 io.shinhanlife:dat-lib-datmt JAR/POM을 사용합니다.
                     // 신한라이프 이관 시 mavenLocal() 대신 사내 Nexus repository를 추가합니다.
                     mavenLocal()
                     mavenCentral()
                 }
 
+                dependencyManagement {
+                    imports {
+                        mavenBom org.springframework.boot.gradle.plugin.SpringBootPlugin.BOM_COORDINATES
+                        mavenBom 'io.modelcontextprotocol.sdk:mcp-bom:2.0.0'
+                    }
+                }
+
                 dependencies {
-                    // includeBuild 없이 Maven 좌표로만 공통 MCP Server와 연동 기능을 사용합니다.
+                    // dat-lib-datmt 공통 라이브러리
                     implementation 'io.shinhanlife:dat-lib-datmt:0.0.1-SNAPSHOT'
+                    implementation 'org.apache.poi:poi-ooxml:5.3.0'
+
+                    // Lombok
+                    compileOnly 'org.projectlombok:lombok'
+                    annotationProcessor 'org.projectlombok:lombok'
+                    testCompileOnly 'org.projectlombok:lombok'
+                    testAnnotationProcessor 'org.projectlombok:lombok'
+
+                    // MapStruct
+                    implementation 'org.mapstruct:mapstruct:1.6.3'
+                    annotationProcessor 'org.mapstruct:mapstruct-processor:1.6.3'
+
+                    // Test
+                    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+                    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+                }
+
+                tasks.withType(JavaCompile).configureEach {
+                    options.compilerArgs << '-parameters'
+                    options.compilerArgs << '-Amapstruct.defaultComponentModel=spring'
                 }
 
                 tasks.withType(Test).configureEach { useJUnitPlatform() }
@@ -382,7 +423,18 @@ public final class NewPodProjectScaffolder {
                 }
                 """.formatted(packageName, author, createdDate, className, className));
 
-        Path templateResources = customerPodTemplate != null ? customerPodTemplate.resolve("dat-was-cus/src/main/resources") : null;
+        Path templateResources = null;
+        if (customerPodTemplate != null) {
+            Path direct = customerPodTemplate.resolve("src/main/resources");
+            if (Files.isDirectory(direct)) {
+                templateResources = direct;
+            } else {
+                Path legacy = customerPodTemplate.resolve("dat-was-cus/src/main/resources");
+                if (Files.isDirectory(legacy)) {
+                    templateResources = legacy;
+                }
+            }
+        }
         if (templateResources != null && Files.isDirectory(templateResources)) {
             copyCustomerResources(customerPodTemplate, root, null, moduleName, port);
         } else {

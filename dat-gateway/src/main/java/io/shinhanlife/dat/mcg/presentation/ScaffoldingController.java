@@ -93,7 +93,7 @@ public class ScaffoldingController {
     @PostMapping("/pod")
     public String scaffoldPod(@RequestBody Map<String, String> req) {
         try {
-            String moduleName = req.getOrDefault("moduleName", "dat-was-cus");
+            String moduleName = req.getOrDefault("moduleName", "dat-was-datcu");
             if (!moduleName.startsWith("dat-was-")) moduleName = "dat-was-" + moduleName;
             String port = req.getOrDefault("port", "8085");
             String shortName = moduleName.replace("dat-was-", "").replace("-", "");
@@ -154,7 +154,7 @@ public class ScaffoldingController {
         String description = req.getOrDefault("description", "").trim();
         if (description.isBlank()) return ResponseEntity.badRequest().body(Map.of("error", "Pod 업무 설명을 입력해주세요."));
         try {
-            String moduleName = req.getOrDefault("moduleName", "dat-was-cus").trim();
+            String moduleName = req.getOrDefault("moduleName", "dat-was-datcu").trim();
             if (!moduleName.startsWith("dat-was-")) moduleName = "dat-was-" + moduleName;
             List<String> targetModules = targetModules(req.get("targetModules"));
             String prompt = """
@@ -164,7 +164,7 @@ public class ScaffoldingController {
                     business-outcome, primary-entities, capabilities, select-if, reject-if,
                     confusable-servers, decision-policy, and description-serialization.
                     Except for machine identifiers and YAML keys (name, server-id, category-key), write every value in Korean.
-                    The routing function name must be exactly route_to_<moduleName>, preserving hyphens (for example route_to_dat-was-cus).
+                    The routing function name must be exactly route_to_<moduleName>, preserving hyphens (for example route_to_dat-was-datcu).
                     description_serialization is the Korean tool description generated from business-outcome and decision-policy;
                     do not put JSON, MCP tags, or implementation instructions inside description_serialization.
                     confusable-servers must contain only other plausible target server IDs and must never contain the current server-id.
@@ -244,7 +244,7 @@ public class ScaffoldingController {
                     interfaceId = "HTTP0000001";
                 }
             }
-            String moduleName = req.getOrDefault("moduleName", "dat-was-cus");
+            String moduleName = req.getOrDefault("moduleName", "dat-was-datcu");
             String author = req.get("author");
             if (author == null || author.trim().isEmpty()) author = System.getProperty("user.name");
             String date = req.get("date");
@@ -364,7 +364,7 @@ public class ScaffoldingController {
     private void ensureMciContractFiles(String workspacePath, String moduleName, String clientSysCode, String ioPrefix,
                                         String reqField, String resIdField, String resNmField) throws IOException {
         String mciPackageSegment = mciPackageSegment(clientSysCode);
-        Path mciDir = Path.of(workspacePath).resolve(moduleName)
+        Path mciDir = io.shinhanlife.dat.lib.util.ToolScaffolder.resolveModuleRoot(Path.of(workspacePath), moduleName)
                 .resolve("src/main/java/io/shinhanlife/dat/mcc/infra/itrf/mci")
                 .resolve(mciPackageSegment.replace('.', '/'));
         Path ioDir = mciDir.resolve("io");
@@ -505,7 +505,7 @@ public class ScaffoldingController {
                 throw new IllegalArgumentException("UseCase name must be PascalCase.");
             }
             String moduleName = request.moduleName() == null || request.moduleName().isBlank()
-                    ? "dat-was-cus" : request.moduleName().trim();
+                    ? "dat-was-datcu" : request.moduleName().trim();
             String author = request.author() == null || request.author().isBlank()
                     ? System.getProperty("user.name") : request.author().trim();
             String date = request.date() == null || request.date().isBlank()
@@ -927,15 +927,15 @@ public class ScaffoldingController {
             if (sourceDir == null) sourceDir = System.getProperty("user.dir");
             
             File dir = NewPodProjectScaffolder.resolveWorkspaceRoot(Path.of(sourceDir)).toFile();
-            File[] files = dir.listFiles(f -> f.isDirectory() && f.getName().startsWith("dat-was-") && !f.getName().equals("dat-was-lib"));
+            File[] files = dir.listFiles(f -> f.isDirectory() && f.getName().startsWith("dat-was-") && !f.getName().equals("dat-was-lib") && !f.getName().equals("dat-lib-datmt"));
             
             if (files == null || files.length == 0) {
-                return List.of("dat-was-cus", "dat-was-sal", "dat-was-pro", "dat-was-sys");
+                return List.of("dat-was-datcu", "dat-was-datsa", "dat-was-datps", "dat-was-datsy");
             }
             
             return Arrays.stream(files).map(File::getName).sorted().collect(Collectors.toList());
         } catch (Exception e) {
-            return List.of("dat-was-cus", "dat-was-sal", "dat-was-pro", "dat-was-sys");
+            return List.of("dat-was-datcu", "dat-was-datsa", "dat-was-datps", "dat-was-datsy");
         }
     }
 

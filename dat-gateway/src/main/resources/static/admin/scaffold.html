@@ -890,7 +890,7 @@
                             <div class="input-group">
                                 <input type="text" class="form-control" name="workspacePath" id="newPodWorkspacePathInput"
                                        value="C:\Users\09863406\IdeaProjects\"
-                                       placeholder="새 Pod 프로젝트 루트 경로 (예: ...\\workspace\\dat-was-datsu)" required>
+                                       placeholder="새 Pod 프로젝트 루트 경로 (예: ...\\workspace\\)" required>
                                 <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" style="border-color: #3f3f46; color: #a1a1aa;">폴더 선택</button>
                                 <ul class="dropdown-menu dropdown-menu-end dropdown-menu-dark" style="background-color: #18181b; border-color: #3f3f46;">
                                     <li><a class="dropdown-item" href="#" onclick="const input = document.getElementById('newPodWorkspacePathInput'); input.value='C:\\Users\\09863406\\IdeaProjects\\'; return false;" style="color: #f4f4f5;">IdeaProjects (기본)</a></li>
@@ -898,7 +898,7 @@
                                     <li><a class="dropdown-item" href="#" onclick="openServerFolderPicker('newPodWorkspacePathInput'); return false;" style="color: #f4f4f5;">폴더 선택(+)</a></li>
                                 </ul>
                             </div>
-                            <div class="input-hint">새 Pod 프로젝트 루트(예: <code>...\\workspace\\dat-was-datsu</code>)를 지정하세요. 생성 시 이 폴더 아래에 새 서비스 모듈이 생성되며, 기존 파일이 있으면 덮어쓰지 않습니다.</div>
+                            <div class="input-hint">새 Pod 프로젝트 루트(예: <code>...\\workspace\\</code>)를 지정하세요. 생성 시 이 폴더 아래에 새 서비스 모듈이 생성되며, 기존 파일이 있으면 덮어쓰지 않습니다.</div>
                         </div>
                         <div class="mb-4">
                             <label class="form-label">New Module Name</label>
@@ -958,7 +958,8 @@
                                     <input type="text" class="form-control" name="workspacePath" id="workspacePathInput" placeholder="직접 폴더 경로를 입력(붙여넣기) 하거나 선택하세요" value="C:\Users\09863406\IdeaProjects\dat-was-datmt">
                                     <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" style="border-color: #3f3f46; color: #a1a1aa;">폴더 선택</button>
                                     <ul class="dropdown-menu dropdown-menu-end dropdown-menu-dark" style="background-color: #18181b; border-color: #3f3f46;">
-                                        <li><a class="dropdown-item" href="#" onclick="const input = document.getElementById('workspacePathInput'); input.value='C:\\Users\\09863406\\IdeaProjects\\dat-was-datmt'; input.dispatchEvent(new Event('change')); return false;" style="color: #f4f4f5;">dat-was-datmt (기본)</a></li>
+                                        <li><a class="dropdown-item" href="#" onclick="const input = document.getElementById('workspacePathInput'); input.value='c:\\eGovFrameDev-4.3.1-64bit\\workspace'; input.dispatchEvent(new Event('change')); return false;" style="color: #f4f4f5;">workspace (C:\eGovFrameDev-4.3.1-64bit\workspace)</a></li>
+                                        <li><a class="dropdown-item" href="#" onclick="const input = document.getElementById('workspacePathInput'); input.value='C:\\Users\\09863406\\IdeaProjects\\dat-was-datmt'; input.dispatchEvent(new Event('change')); return false;" style="color: #f4f4f5;">dat-was-datmt</a></li>
                                         <li><a class="dropdown-item" href="#" onclick="const input = document.getElementById('workspacePathInput'); input.value='c:\\eGovFrameDev-4.3.1-64bit\\workspace-egov\\axhub-backend-main'; input.dispatchEvent(new Event('change')); return false;" style="color: #f4f4f5;">axhub-backend-main</a></li>
                                         <li><hr class="dropdown-divider" style="border-color: #3f3f46;"></li>
                                         <li><a class="dropdown-item" href="#" onclick="openServerFolderPicker('workspacePathInput'); return false;" style="color: #f4f4f5;">폴더 선택(+)</a></li>
@@ -984,11 +985,10 @@
                             <div class="col-md-6">
                                 <label class="form-label">Target Module</label>
                                 <select class="form-select" name="moduleName" id="targetModuleSelect" required>
-                                    <option value="dat-was-cus">dat-was-cus</option>
-                                    <option value="dat-was-hr">dat-was-hr</option>
-                                    <option value="dat-was-sal">dat-was-sal</option>
-                                    <option value="dat-was-pro">dat-was-pro</option>
-                                    <option value="dat-was-sys">dat-was-sys</option>
+                                    <option value="dat-was-datcu">dat-was-datcu</option>
+                                    <option value="dat-was-datsa">dat-was-datsa</option>
+                                    <option value="dat-was-datps">dat-was-datps</option>
+                                    <option value="dat-was-datsy">dat-was-datsy</option>
                                 </select>
                                 <div class="input-hint">Destination Pod directory.</div>
                             </div>
@@ -1257,7 +1257,8 @@
                                     <input type="text" class="form-control" name="workspacePath" id="organizationPreQueryWorkspacePath" value="C:\Users\09863406\IdeaProjects\dat-was-datmt" required>
                                     <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" style="border-color: #3f3f46; color: #a1a1aa;">폴더 선택</button>
                                     <ul class="dropdown-menu dropdown-menu-end dropdown-menu-dark" style="background-color: #18181b; border-color: #3f3f46;">
-                                        <li><a class="dropdown-item" href="#" onclick="const input = document.getElementById('organizationPreQueryWorkspacePath'); input.value='C:\\Users\\09863406\\IdeaProjects\\dat-was-datmt'; input.dispatchEvent(new Event('change')); return false;" style="color: #f4f4f5;">dat-was-datmt (기본)</a></li>
+                                        <li><a class="dropdown-item" href="#" onclick="const input = document.getElementById('organizationPreQueryWorkspacePath'); input.value='c:\\eGovFrameDev-4.3.1-64bit\\workspace'; input.dispatchEvent(new Event('change')); return false;" style="color: #f4f4f5;">workspace (C:\eGovFrameDev-4.3.1-64bit\workspace)</a></li>
+                                        <li><a class="dropdown-item" href="#" onclick="const input = document.getElementById('organizationPreQueryWorkspacePath'); input.value='C:\\Users\\09863406\\IdeaProjects\\dat-was-datmt'; input.dispatchEvent(new Event('change')); return false;" style="color: #f4f4f5;">dat-was-datmt</a></li>
                                         <li><a class="dropdown-item" href="#" onclick="const input = document.getElementById('organizationPreQueryWorkspacePath'); input.value='c:\\eGovFrameDev-4.3.1-64bit\\workspace-egov\\axhub-backend-main'; input.dispatchEvent(new Event('change')); return false;" style="color: #f4f4f5;">axhub-backend-main</a></li>
                                         <li><hr class="dropdown-divider" style="border-color: #3f3f46;"></li>
                                         <li><a class="dropdown-item" href="#" onclick="openServerFolderPicker('organizationPreQueryWorkspacePath'); return false;" style="color: #f4f4f5;">폴더 선택(+)</a></li>
@@ -1268,7 +1269,10 @@
                             <div class="col-md-4 mt-3 mt-md-0">
                                 <label class="form-label">대상 Pod</label>
                                 <select class="form-select" name="moduleName" id="organizationPreQueryModuleSelect" required>
-                                    <option value="dat-was-pro">dat-was-pro</option>
+                                    <option value="dat-was-datps">dat-was-datps</option>
+                                    <option value="dat-was-datcu">dat-was-datcu</option>
+                                    <option value="dat-was-datsa">dat-was-datsa</option>
+                                    <option value="dat-was-datsy">dat-was-datsy</option>
                                 </select>
                             </div>
                         </div>
@@ -2008,9 +2012,9 @@
                     const select = document.getElementById('targetModuleSelect');
                     const preQuerySelect = document.getElementById('organizationPreQueryModuleSelect');
                     if (modules && modules.length > 0) {
-                        select.innerHTML = modules.map(m => `<option value="${m}" ${m === 'dat-was-cus' ? 'selected' : ''}>${m}</option>`).join('');
+                        select.innerHTML = modules.map(m => `<option value="${m}" ${m === 'dat-was-datcu' || m === 'dat-was-cus' ? 'selected' : ''}>${m}</option>`).join('');
                         if (preQuerySelect) {
-                            preQuerySelect.innerHTML = modules.map(m => `<option value="${m}" ${m === 'dat-was-pro' ? 'selected' : ''}>${m}</option>`).join('');
+                            preQuerySelect.innerHTML = modules.map(m => `<option value="${m}" ${m === 'dat-was-datps' || m === 'dat-was-pro' ? 'selected' : ''}>${m}</option>`).join('');
                         }
                     }
                     if (typeof loadCategoriesForSelection === 'function') {

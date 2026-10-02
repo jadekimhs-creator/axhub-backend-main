@@ -42,16 +42,12 @@ public final class OrganizationPreQueryScaffolder {
         String adapterPackage = BASE_PACKAGE + ".common";
         String mciPackage = BASE_PACKAGE + ".infra.itrf.mci." + mciPackageSegment;
 
-        Path adapterDirectory = Path.of(sourceDirectory)
-                .resolve(definition.moduleName().trim())
-                .resolve("src/main/java")
-                .resolve(BASE_PACKAGE_PATH)
-                .resolve("common");
+        Path rootDir = Path.of(sourceDirectory);
+        Path moduleRoot = ToolScaffolder.resolveModuleRoot(rootDir, definition.moduleName().trim());
+        Path sourceRoot = moduleRoot.resolve("src/main/java").resolve(BASE_PACKAGE_PATH);
+        Path adapterDirectory = sourceRoot.resolve("common");
         Path implDirectory = adapterDirectory.resolve("impl");
-        requireExistingMciContract(
-                Path.of(sourceDirectory).resolve(definition.moduleName().trim())
-                        .resolve("src/main/java").resolve(BASE_PACKAGE_PATH),
-                mciPackageSegment, clientClassName, ioPrefix);
+        requireExistingMciContract(sourceRoot, mciPackageSegment, clientClassName, ioPrefix);
         Files.createDirectories(implDirectory);
 
         writeNew(adapterDirectory.resolve(adapterName + "Adapter.java"), """

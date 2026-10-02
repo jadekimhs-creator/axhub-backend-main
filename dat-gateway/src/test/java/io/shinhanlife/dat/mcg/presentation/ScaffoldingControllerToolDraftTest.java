@@ -176,14 +176,14 @@ class ScaffoldingControllerToolDraftTest {
         String moduleName = root.resolve("dat-was-customer").toString().replace("\\", "\\\\");
         String request = """
                 {"useCaseName":"Customer","moduleName":"%s","author":"tester","date":"2026.08.12","tools":[
-                  {"baseName":"CustomerGuidance","methodName":"searchGuidance","interfaceId":"CTMNILO00007","title":"Customer guidance","description":"Search guidance","group":"cmm","routingType":"MCI","register":false,"clientSystemCode":"NILD","inputFields":[{"name":"customerId","type":"String","description":"Customer ID","example":"C001","required":true}],"outputFields":[]}
+                  {"baseName":"CustomerGuidance","methodName":"searchGuidance","interfaceId":"CTMNILO00007","title":"Customer guidance","description":"Search guidance","group":"cmm","routingType":"MCI","register":false,"clientSystemCode":"ONILD0007","inputFields":[{"name":"customerId","type":"String","description":"Customer ID","example":"C001","required":true}],"outputFields":[]}
                 ]}
                 """.formatted(moduleName);
 
         mockMvc.perform(post("/api/v1/scaffold/tool-group")
                         .contentType(MediaType.APPLICATION_JSON).content(request))
                 .andExpect(status().isOk())
-                .andExpect(content().string(org.hamcrest.Matchers.containsString("CustomerUseCase.java")));
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("CstUseCase.java")));
     }
 
     @Test
