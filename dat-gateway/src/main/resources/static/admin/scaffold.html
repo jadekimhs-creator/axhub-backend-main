@@ -2004,6 +2004,7 @@
     }
 
     document.addEventListener('DOMContentLoaded', function() {
+        let wsDebounceTimer;
         const loadModules = (workspaceInput) => {
             const workspacePath = workspaceInput?.value || document.querySelector('#toolForm input[name="workspacePath"]')?.value || document.querySelector('input[name="workspacePath"]')?.value || '';
             fetch(`/api/v1/scaffold/modules?workspacePath=${encodeURIComponent(workspacePath)}`)
@@ -2012,9 +2013,15 @@
                     const select = document.getElementById('targetModuleSelect');
                     const preQuerySelect = document.getElementById('organizationPreQueryModuleSelect');
                     if (modules && modules.length > 0) {
-                        select.innerHTML = modules.map(m => `<option value="${m}" ${m === 'dat-was-datcu' || m === 'dat-was-cus' ? 'selected' : ''}>${m}</option>`).join('');
+                        const currentVal = select ? select.value : '';
+                        const normalizedWs = workspacePath.replace(/\\/g, '/').toLowerCase();
+                        const matchedModule = modules.find(m => normalizedWs.endsWith('/' + m.toLowerCase()) || normalizedWs === m.toLowerCase()) || (modules.length === 1 ? modules[0] : null);
+                        const selectedModule = matchedModule || (modules.includes(currentVal) ? currentVal : (modules.includes('dat-was-datcu') ? 'dat-was-datcu' : modules[0]));
+                        if (select) {
+                            select.innerHTML = modules.map(m => `<option value="${m}" ${m === selectedModule ? 'selected' : ''}>${m}</option>`).join('');
+                        }
                         if (preQuerySelect) {
-                            preQuerySelect.innerHTML = modules.map(m => `<option value="${m}" ${m === 'dat-was-datps' || m === 'dat-was-pro' ? 'selected' : ''}>${m}</option>`).join('');
+                            preQuerySelect.innerHTML = modules.map(m => `<option value="${m}" ${m === selectedModule || m === 'dat-was-datps' || m === 'dat-was-pro' ? 'selected' : ''}>${m}</option>`).join('');
                         }
                     }
                     if (typeof loadCategoriesForSelection === 'function') {
@@ -2024,8 +2031,12 @@
                 .catch(err => console.error('Failed to load modules:', err));
         };
         loadModules();
-        const wsInputs = document.querySelectorAll('input[name="workspacePath"]');
+        const wsInputs = document.querySelectorAll('#toolForm input[name="workspacePath"]');
         wsInputs.forEach(wsInput => {
+            wsInput.addEventListener('input', () => {
+                clearTimeout(wsDebounceTimer);
+                wsDebounceTimer = setTimeout(() => loadModules(wsInput), 300);
+            });
             wsInput.addEventListener('change', () => loadModules(wsInput));
             wsInput.addEventListener('blur', () => loadModules(wsInput));
         });
@@ -2310,7 +2321,6 @@
                 useCases.forEach(useCaseName => select.add(new Option(`기존 ${useCaseName}에 함수 추가`, useCaseName)));
             } else {
                 console.error('API Error:', useCases);
-                alert('서버 응답 오류 (UseCase): 배열이 아닙니다.\n\n' + JSON.stringify(useCases, null, 2));
             }
         } catch (error) {
             console.warn(error);
@@ -2329,16 +2339,21 @@
             const categories = await response.json();
             if (Array.isArray(categories)) {
                 categories.forEach(cat => select.add(new Option(`기존 ${cat} 도메인`, cat)));
+                if (categories.length > 0) {
+                    const targetCat = (nameInput.value && categories.includes(nameInput.value)) ? nameInput.value : categories[0];
+                    select.value = targetCat;
+                    nameInput.value = targetCat;
+                    nameInput.readOnly = true;
+                } else {
+                    select.value = "";
+                    nameInput.value = "";
+                    nameInput.readOnly = false;
+                }
             } else {
                 console.error('API Error:', categories);
-                alert('서버 응답 오류 (Category): 배열이 아닙니다.\n\n' + JSON.stringify(categories, null, 2));
             }
         } catch (error) {
             console.warn(error);
-        }
-        if (!nameInput.value) {
-            nameInput.value = '';
-            nameInput.readOnly = false;
         }
         loadUseCasesForSelection();
     }

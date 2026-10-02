@@ -544,8 +544,9 @@ public class ScaffoldingController {
         String sourceDir = (workspacePath != null && !workspacePath.isBlank()) ? workspacePath : System.getProperty("AXHUB_SOURCE_DIR");
         if (sourceDir == null || sourceDir.isBlank()) sourceDir = System.getenv("AXHUB_SOURCE_DIR");
         if (sourceDir == null || sourceDir.isBlank()) sourceDir = System.getProperty("user.dir");
-        File useCaseDir = new File(sourceDir, moduleName + "/src/main/java/io/shinhanlife/dat/mcc/biz/"
-                + categoryKey + "/usecase");
+        Path moduleRoot = ToolScaffolder.resolveModuleRoot(Path.of(sourceDir), moduleName);
+        File useCaseDir = moduleRoot.resolve("src/main/java/io/shinhanlife/dat/mcc/biz/"
+                + categoryKey + "/usecase").toFile();
         File[] files = useCaseDir.listFiles(file -> file.isFile() && file.getName().endsWith("UseCase.java"));
         if (files == null) return List.of();
         return Arrays.stream(files).map(File::getName)
@@ -561,7 +562,8 @@ public class ScaffoldingController {
         String sourceDir = (workspacePath != null && !workspacePath.isBlank()) ? workspacePath : System.getProperty("AXHUB_SOURCE_DIR");
         if (sourceDir == null || sourceDir.isBlank()) sourceDir = System.getenv("AXHUB_SOURCE_DIR");
         if (sourceDir == null || sourceDir.isBlank()) sourceDir = System.getProperty("user.dir");
-        File bizDir = new File(sourceDir, moduleName + "/src/main/java/io/shinhanlife/dat/mcc/biz");
+        Path moduleRoot = ToolScaffolder.resolveModuleRoot(Path.of(sourceDir), moduleName);
+        File bizDir = moduleRoot.resolve("src/main/java/io/shinhanlife/dat/mcc/biz").toFile();
         File[] dirs = bizDir.listFiles(File::isDirectory);
         if (dirs == null) return List.of();
         return Arrays.stream(dirs).map(File::getName)
@@ -926,7 +928,14 @@ public class ScaffoldingController {
             if (sourceDir == null) sourceDir = System.getenv("AXHUB_SOURCE_DIR");
             if (sourceDir == null) sourceDir = System.getProperty("user.dir");
             
-            File dir = NewPodProjectScaffolder.resolveWorkspaceRoot(Path.of(sourceDir)).toFile();
+            Path givenPath = Path.of(sourceDir);
+            File givenDir = givenPath.toFile();
+            if (givenDir.isDirectory() && givenDir.getName().startsWith("dat-was-") && !givenDir.getName().equals("dat-was-lib")) {
+                if (new File(givenDir, "build.gradle").exists() || new File(givenDir, "src").exists()) {
+                    return List.of(givenDir.getName());
+                }
+            }
+            File dir = NewPodProjectScaffolder.resolveWorkspaceRoot(givenPath).toFile();
             File[] files = dir.listFiles(f -> f.isDirectory() && f.getName().startsWith("dat-was-") && !f.getName().equals("dat-was-lib") && !f.getName().equals("dat-lib-datmt"));
             
             if (files == null || files.length == 0) {
