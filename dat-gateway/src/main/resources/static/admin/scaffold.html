@@ -1228,7 +1228,8 @@
                                 <h5 class="mb-0" style="font-size: 1rem; font-weight: 600;">공통 선조회 (Pre-Query) Adapter</h5>
                                 <div class="d-flex gap-2">
                                     <button type="button" class="btn-secondary-action" style="font-size: 12px; padding: 4px 10px;" onclick="loadPreQueryPreset('organization')">조직 선조회 템플릿</button>
-                                    <button type="button" class="btn-secondary-action" style="font-size: 12px; padding: 4px 10px;" onclick="loadPreQueryPreset('employee')">인사 선조회 템플릿</button>
+                                    <button type="button" class="btn-secondary-action" style="font-size: 12px; padding: 4px 10px;" onclick="loadPreQueryPreset('employeeCommon')">공통인사정보(단건) 템플릿</button>
+                                    <button type="button" class="btn-secondary-action" style="font-size: 12px; padding: 4px 10px;" onclick="loadPreQueryPreset('employee')">인사검색목록(페이징) 템플릿</button>
                                 </div>
                             </div>
                             <div class="input-hint">Tool(UseCaseImpl) 본 업무 실행 전, 사용자 입력값(조직명, 직원 성명 등)으로 MCI를 먼저 단건 조회하여 필수 식별값(코드, ID 등)을 사전에 확보하는 내부 Adapter를 생성합니다. (MCP Tool로 직접 노출되지 않는 내부 컴포넌트)</div>
@@ -1254,7 +1255,7 @@
                             <div class="col-md-8">
                                 <label class="form-label">Workspace Path</label>
                                 <div class="input-group">
-                                    <input type="text" class="form-control" name="workspacePath" id="organizationPreQueryWorkspacePath" value="C:\Users\09863406\IdeaProjects\dat-was-datmt" required>
+                                    <input type="text" class="form-control" name="workspacePath" id="organizationPreQueryWorkspacePath" value="c:\eGovFrameDev-4.3.1-64bit\workspace" required>
                                     <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" style="border-color: #3f3f46; color: #a1a1aa;">폴더 선택</button>
                                     <ul class="dropdown-menu dropdown-menu-end dropdown-menu-dark" style="background-color: #18181b; border-color: #3f3f46;">
                                         <li><a class="dropdown-item" href="#" onclick="const input = document.getElementById('organizationPreQueryWorkspacePath'); input.value='c:\\eGovFrameDev-4.3.1-64bit\\workspace'; input.dispatchEvent(new Event('change')); return false;" style="color: #f4f4f5;">workspace (C:\eGovFrameDev-4.3.1-64bit\workspace)</a></li>
@@ -1277,19 +1278,28 @@
                             </div>
                         </div>
                         <div class="row mb-3">
-                            <div class="col-md-4">
+                            <div class="col-md-3">
                                 <label class="form-label">Adapter 이름</label>
                                 <input type="text" class="form-control" name="adapterName" id="preQueryAdapterName" value="OrganizationLookup" pattern="^[A-Za-z][A-Za-z0-9_]*$" required>
                                 <div class="input-hint">예: OrganizationLookup, EmployeeLookup</div>
                             </div>
-                            <div class="col-md-4 mt-3 mt-md-0">
+                            <div class="col-md-3 mt-3 mt-md-0">
                                 <label class="form-label">Target System Code (MCI Only)</label>
                                 <input type="text" class="form-control" name="clientSystemCode" id="preQueryClientSystemCode" value="ONCSD1340" pattern="^[a-zA-Z0-9]{9}$" maxlength="9" minlength="9" placeholder="e.g. ONBTI2370" oninput="this.value = this.value.toUpperCase()" required>
-                                <div class="input-hint">Required for MCI Protocol (무조건 9자리). Tool Function과 동일하게 MCI I/O 폴더 및 전문 파일명(*_I, *_O)의 기준이 됩니다.</div>
+                                <div class="input-hint">MCI Protocol 9자리 (I/O 및 패키지 기준)</div>
                             </div>
-                            <div class="col-md-4 mt-3 mt-md-0">
+                            <div class="col-md-3 mt-3 mt-md-0">
                                 <label class="form-label">선조회 MCI 전문 ID</label>
                                 <input type="text" class="form-control" name="interfaceId" id="preQueryInterfaceId" value="CLHTTP00005" placeholder="예: CLHTTP00005" pattern="^[A-Za-z][A-Za-z0-9_]*$" oninput="this.value = this.value.toUpperCase()" required>
+                            </div>
+                            <div class="col-md-3 mt-3 mt-md-0">
+                                <label class="form-label">페이징 모드</label>
+                                <select class="form-select" name="pagingMode" id="preQueryPagingMode" required>
+                                    <option value="NONE" selected>사용 안함 (단건 조회)</option>
+                                    <option value="SCROLL">스크롤 페이징 (ScrPageInfo)</option>
+                                    <option value="PAGE_NUMBER">넘버 페이징 (PageInfo)</option>
+                                </select>
+                                <div class="input-hint">MCI 페이징 DTO 및 메서드 생성 옵션</div>
                             </div>
                         </div>
                         <div class="mb-3 p-3 rounded" style="background:#18181b; border:1px solid #3f3f46;">
@@ -2120,14 +2130,16 @@
     }
 
     function loadPreQueryPreset(type) {
+        const nameEl = document.getElementById('preQueryAdapterName');
+        const ifEl = document.getElementById('preQueryInterfaceId');
+        const sysEl = document.getElementById('preQueryClientSystemCode');
+        const reqEl = document.getElementById('preQueryRequestField');
+        const noEl = document.getElementById('preQueryResponseNoField');
+        const nmEl = document.getElementById('preQueryResponseNameField');
+        const descEl = document.getElementById('preQueryDescription');
+        const pageEl = document.getElementById('preQueryPagingMode');
+
         if (type === 'organization') {
-            const nameEl = document.getElementById('preQueryAdapterName');
-            const ifEl = document.getElementById('preQueryInterfaceId');
-            const sysEl = document.getElementById('preQueryClientSystemCode');
-            const reqEl = document.getElementById('preQueryRequestField');
-            const noEl = document.getElementById('preQueryResponseNoField');
-            const nmEl = document.getElementById('preQueryResponseNameField');
-            const descEl = document.getElementById('preQueryDescription');
             if (nameEl) nameEl.value = 'OrganizationLookup';
             if (ifEl) ifEl.value = 'CLHTTP00005';
             if (sysEl) sysEl.value = 'ONCSD1340';
@@ -2135,21 +2147,25 @@
             if (noEl) noEl.value = 'organizationNo';
             if (nmEl) nmEl.value = 'organizationName';
             if (descEl) descEl.value = 'FC서비스팀 등 조직명으로 조직코드 및 조직명 선조회';
-        } else if (type === 'employee') {
-            const nameEl = document.getElementById('preQueryAdapterName');
-            const ifEl = document.getElementById('preQueryInterfaceId');
-            const sysEl = document.getElementById('preQueryClientSystemCode');
-            const reqEl = document.getElementById('preQueryRequestField');
-            const noEl = document.getElementById('preQueryResponseNoField');
-            const nmEl = document.getElementById('preQueryResponseNameField');
-            const descEl = document.getElementById('preQueryDescription');
+            if (pageEl) pageEl.value = 'NONE';
+        } else if (type === 'employeeCommon') {
             if (nameEl) nameEl.value = 'EmployeeLookup';
-            if (ifEl) ifEl.value = 'CTMNILO00007';
+            if (ifEl) ifEl.value = 'DATNBSO00005';
             if (sysEl) sysEl.value = 'ONBSZ0460';
-            if (reqEl) reqEl.value = 'employeeName';
-            if (noEl) noEl.value = 'employeeNo';
-            if (nmEl) nmEl.value = 'employeeName';
-            if (descEl) descEl.value = '직원 성명으로 인사번호(사번) 및 부서명 선조회';
+            if (reqEl) reqEl.value = 'prafNo';
+            if (noEl) noEl.value = 'prafNo';
+            if (nmEl) nmEl.value = 'blngOgnzNo';
+            if (descEl) descEl.value = '사번(X-User-No/X-Praf-No)으로 공통 인사정보 단건 선조회 (DATNBSO00005 / ONBSZ0460)';
+            if (pageEl) pageEl.value = 'NONE';
+        } else if (type === 'employee') {
+            if (nameEl) nameEl.value = 'EmployeeLookup';
+            if (ifEl) ifEl.value = 'DATNBSO00004';
+            if (sysEl) sysEl.value = 'ONBSA1030';
+            if (reqEl) reqEl.value = 'prafNm';
+            if (noEl) noEl.value = 'prafNo';
+            if (nmEl) nmEl.value = 'blngOgnzNo';
+            if (descEl) descEl.value = '직원 성명(prafNm)으로 인사검색 목록 선조회 (스크롤페이징 연동: DATNBSO00004 / ONBSA1030)';
+            if (pageEl) pageEl.value = 'SCROLL';
         }
     }
 

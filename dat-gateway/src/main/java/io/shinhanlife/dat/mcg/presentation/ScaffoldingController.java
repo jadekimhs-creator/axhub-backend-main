@@ -344,15 +344,20 @@ public class ScaffoldingController {
                     ? request.mciIoPrefix().trim().toUpperCase(Locale.ROOT)
                     : clientSysCode;
 
+            String pagingMode = request.pagingMode() == null || request.pagingMode().isBlank()
+                    ? "NONE" : request.pagingMode().trim().toUpperCase(Locale.ROOT);
+
             // Ensure MCI contract files (_I, _O, Client) exist; generate them automatically if missing!
             ensureMciContractFiles(workspacePath, request.moduleName().trim(), clientSysCode, ioPrefix,
-                    request.requestFieldName(), request.responseOrganizationNoFieldName(), request.responseOrganizationNameFieldName());
+                    request.requestFieldName(), request.responseOrganizationNoFieldName(), request.responseOrganizationNameFieldName(),
+                    pagingMode);
 
             String result = OrganizationPreQueryScaffolder.scaffold(
                     new OrganizationPreQueryScaffolder.Definition(
                             request.moduleName().trim(), request.adapterName(), request.interfaceId(),
                             ioPrefix, clientSysCode, request.requestFieldName(),
-                            request.responseOrganizationNoFieldName(), request.responseOrganizationNameFieldName()));
+                            request.responseOrganizationNoFieldName(), request.responseOrganizationNameFieldName(),
+                            pagingMode));
             return ResponseEntity.ok(result);
         } catch (IllegalArgumentException exception) {
             return ResponseEntity.badRequest().body(Map.of("error", safeMessage(exception)));
@@ -362,7 +367,7 @@ public class ScaffoldingController {
     }
 
     private void ensureMciContractFiles(String workspacePath, String moduleName, String clientSysCode, String ioPrefix,
-                                        String reqField, String resIdField, String resNmField) throws IOException {
+                                        String reqField, String resIdField, String resNmField, String pagingMode) throws IOException {
         String mciPackageSegment = mciPackageSegment(clientSysCode);
         Path mciDir = io.shinhanlife.dat.lib.util.ToolScaffolder.resolveModuleRoot(Path.of(workspacePath), moduleName)
                 .resolve("src/main/java/io/shinhanlife/dat/mcc/infra/itrf/mci")
@@ -409,11 +414,24 @@ public class ScaffoldingController {
             Files.writeString(clientFile, clientContent, StandardCharsets.UTF_8);
         }
 
+        String reqPagingField = "";
+        String resPagingField = "";
+        if ("SCROLL".equals(pagingMode)) {
+            reqPagingField = "\n    private ScrPageInfo scrPageInfo;\n    private AuditInfo auditInfo;";
+            resPagingField = "\n    private PageInfo pageInfo;\n    private ScrPageInfo scrPageInfo;\n    private AuditInfo auditInfo;";
+        } else if ("PAGE_NUMBER".equals(pagingMode)) {
+            reqPagingField = "\n    private PageInfo pageInfo;\n    private AuditInfo auditInfo;";
+            resPagingField = "\n    private PageInfo pageInfo;\n    private ScrPageInfo scrPageInfo;\n    private AuditInfo auditInfo;";
+        }
+
         Path reqFile = ioDir.resolve(ioPrefix + "_I.java");
         if (!Files.exists(reqFile)) {
             String reqContent = """
                     package io.shinhanlife.dat.mcc.infra.itrf.mci.%s.io;
 
+                    import io.shinhanlife.glow.db.dto.AuditInfo;
+                    import io.shinhanlife.glow.db.dto.PageInfo;
+                    import io.shinhanlife.glow.db.dto.ScrPageInfo;
                     import lombok.AllArgsConstructor;
                     import lombok.Data;
                     import lombok.NoArgsConstructor;
@@ -437,9 +455,9 @@ public class ScaffoldingController {
                     @AllArgsConstructor
                     public class %s_I {
 
-                        private String %s;
+                        private String %s;%s
                     }
-                    """.formatted(mciPackageSegment, mciPackageSegment, ioPrefix, ioPrefix, reqField);
+                    """.formatted(mciPackageSegment, mciPackageSegment, ioPrefix, ioPrefix, reqField, reqPagingField);
             Files.writeString(reqFile, reqContent, StandardCharsets.UTF_8);
         }
 
@@ -448,6 +466,9 @@ public class ScaffoldingController {
             String resContent = """
                     package io.shinhanlife.dat.mcc.infra.itrf.mci.%s.io;
 
+                    import io.shinhanlife.glow.db.dto.AuditInfo;
+                    import io.shinhanlife.glow.db.dto.PageInfo;
+                    import io.shinhanlife.glow.db.dto.ScrPageInfo;
                     import lombok.AllArgsConstructor;
                     import lombok.Data;
                     import lombok.NoArgsConstructor;
@@ -472,9 +493,9 @@ public class ScaffoldingController {
                     public class %s_O {
 
                         private String %s;
-                        private String %s;
+                        private String %s;%s
                     }
-                    """.formatted(mciPackageSegment, mciPackageSegment, ioPrefix, ioPrefix, resIdField, resNmField);
+                    """.formatted(mciPackageSegment, mciPackageSegment, ioPrefix, ioPrefix, resIdField, resNmField, resPagingField);
             Files.writeString(resFile, resContent, StandardCharsets.UTF_8);
         }
     }
@@ -1366,6 +1387,7 @@ public class ScaffoldingController {
             String clientSystemCode,
             String requestFieldName,
             String responseOrganizationNoFieldName,
-            String responseOrganizationNameFieldName) {
+            String responseOrganizationNameFieldName,
+            String pagingMode) {
     }
 }

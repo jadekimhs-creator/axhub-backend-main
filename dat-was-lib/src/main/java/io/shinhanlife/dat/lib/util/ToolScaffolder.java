@@ -213,7 +213,7 @@ public class ToolScaffolder {
         boolean hasMci = tools.stream().anyMatch(t -> "MCI".equalsIgnoreCase(t.routingType()));
         String useCaseBaseName = toPascalCase(useCaseName);
         if (hasMci) {
-            useCaseBaseName = abbreviatedMciSourceBaseName(useCaseBaseName);
+            useCaseBaseName = abbreviatedMciUseCaseBaseName(useCaseBaseName, tools);
         } else {
             useCaseBaseName = abbreviatedHttpUseCaseBaseName(useCaseBaseName, tools);
         }
@@ -257,7 +257,7 @@ public class ToolScaffolder {
                 .append("[Usecase Interface] ").append(useCaseFile).append("\n")
                 .append("[Usecase Impl] ").append(useCaseImplFile).append("\n");
         for (ToolMethodDefinition tool : tools) {
-            writeGroupedToolFiles(moduleRoot, sourceRoot, dtoDir, definitionDir, bizPackage, tool, moduleName, log);
+            writeGroupedToolFiles(moduleRoot, sourceRoot, dtoDir, definitionDir, bizPackage, tool, moduleName, useCaseBaseName, log);
             if ("HTTP".equalsIgnoreCase(tool.routingType())) {
                 String httpApiName = tool.httpApiName();
                 if (httpApiName == null || httpApiName.isBlank() || httpApiName.length() >= 10 || !httpApiName.contains("-")) {
@@ -308,8 +308,6 @@ public class ToolScaffolder {
         if (code == null) return "";
         if (code.length() == 9) {
             return code.substring(1, 4).toLowerCase(Locale.ROOT) + delimiter + code.substring(4, 5).toLowerCase(Locale.ROOT);
-        } else if (code.length() == 4) {
-            return code.substring(0, 3).toLowerCase(Locale.ROOT) + delimiter + code.substring(3).toLowerCase(Locale.ROOT);
         }
         return code.toLowerCase(Locale.ROOT);
     }
@@ -330,28 +328,42 @@ public class ToolScaffolder {
 
     private static void writeGroupedToolFiles(Path moduleRoot, Path sourceRoot, Path dtoDir, Path definitionDir,
                                               String bizPackage, ToolMethodDefinition tool,
-                                              String moduleName, StringBuilder log) throws IOException {
+                                              String moduleName, String useCaseBaseName, StringBuilder log) throws IOException {
         boolean mci = "MCI".equalsIgnoreCase(tool.routingType());
         String toolBaseName = toPascalCase(tool.baseName());
         String httpApiName = tool.httpApiName();
         if (!mci) {
-            if (httpApiName == null || httpApiName.isBlank() || httpApiName.length() >= 10 || !httpApiName.contains("-")) {
+            if (httpApiName == null || httpApiName.isBlank()) {
                 httpApiName = toAbbreviatedHttpApiName(toolBaseName);
             } else {
                 httpApiName = httpApiName.trim();
             }
         }
-        String baseName = mci ? abbreviatedMciSourceBaseName(toolBaseName) : toPascalCase(httpApiName);
+        ToolDefinitionOptions options = tool.definitionOptions() == null
+                ? new ToolDefinitionOptions(null, null, null, null, null, List.of(), List.of(), null)
+                : tool.definitionOptions();
+        PagingMode pagingMode = mci ? options.pagingModeOrNone() : PagingMode.NONE;
+        boolean shouldAbbreviate = mci
+                ? ((useCaseBaseName != null && (useCaseBaseName.equalsIgnoreCase(toolBaseName) || useCaseBaseName.equalsIgnoreCase(abbreviatedMciSourceBaseName(toolBaseName, pagingMode)))) || pagingMode != PagingMode.NONE)
+                : (useCaseBaseName != null && (useCaseBaseName.equalsIgnoreCase(toolBaseName) || useCaseBaseName.equalsIgnoreCase(toPascalCase(httpApiName))));
+        String baseName = mci
+                ? (shouldAbbreviate ? abbreviatedMciSourceBaseName(toolBaseName, pagingMode) : toolBaseName)
+                : (shouldAbbreviate ? toPascalCase(httpApiName) : toolBaseName);
         String code = mci ? formatClientSystemCode(tool.clientSystemCode(), "/") : toPackageSegment(httpApiName);
         String ioPackage = BASE_PACKAGE + (mci ? ".infra.itrf.mci." : ".infra.itrf.http.") + code.replace("/", ".");
         Path clientDir = sourceRoot.resolve(Paths.get("infra", "itrf", mci ? "mci" : "http", code));
         Path ioDir = clientDir.resolve("io");
         Files.createDirectories(ioDir);
-        ToolDefinitionOptions options = tool.definitionOptions() == null
-                ? new ToolDefinitionOptions(null, null, null, null, null, List.of(), List.of(), null)
-                : tool.definitionOptions();
-        PagingMode pagingMode = mci ? options.pagingModeOrNone() : PagingMode.NONE;
-        String ioPrefix = (tool.clientSystemCode() != null && !tool.clientSystemCode().isBlank()) ? tool.clientSystemCode().toUpperCase() : tool.interfaceId();
+        String ioPrefix;
+        if (tool.clientSystemCode() != null && tool.clientSystemCode().trim().length() == 9) {
+            ioPrefix = tool.clientSystemCode().trim().toUpperCase(Locale.ROOT);
+        } else if (tool.interfaceId() != null && !tool.interfaceId().isBlank()) {
+            ioPrefix = tool.interfaceId().trim();
+        } else if (tool.clientSystemCode() != null && !tool.clientSystemCode().isBlank()) {
+            ioPrefix = tool.clientSystemCode().trim().toUpperCase(Locale.ROOT);
+        } else {
+            ioPrefix = "MCI";
+        }
         if (pagingMode != PagingMode.NONE) {
             String group = bizPackage.substring(bizPackage.lastIndexOf('.') + 1);
             Path pagingDir = moduleRoot.resolve(Paths.get(BASE_PACKAGE_PATH, "biz", group, "paging"));
@@ -408,9 +420,8 @@ public class ToolScaffolder {
                     + "        return transfer == null ? null : transfer.getBody();\n"
                     + "    }\n"
                     + "}\n");
-            } else {
-                writeUtf8(clientDir.resolve(baseName + "Client.java"), groupedMciClientContent(ioPackage, baseName, tool.interfaceId()));
             }
+            writeUtf8(clientDir.resolve(baseName + "Client.java"), groupedMciClientContent(ioPackage, baseName, tool.interfaceId()));
             String targetPkg = mciTargetSystemPackage(tool.clientSystemCode());
             String converterPkg = bizPackage + ".converter" + (targetPkg != null ? "." + targetPkg : "");
             Path targetConverterDir = sourceRoot.resolve(Paths.get("biz", tool.group().toLowerCase(Locale.ROOT), "converter"));
@@ -452,17 +463,23 @@ public class ToolScaffolder {
             String toolBaseName = toPascalCase(tool.baseName());
             String httpApiName = tool.httpApiName();
             if (isHttp) {
-                if (httpApiName == null || httpApiName.isBlank() || httpApiName.length() >= 10 || !httpApiName.contains("-")) {
+                if (httpApiName == null || httpApiName.isBlank()) {
                     httpApiName = toAbbreviatedHttpApiName(toolBaseName);
                 } else {
                     httpApiName = httpApiName.trim();
                 }
             }
-            String baseName = mci ? abbreviatedMciSourceBaseName(toolBaseName) : toPascalCase(httpApiName);
+            ToolDefinitionOptions opts = tool.definitionOptions() == null ? new ToolDefinitionOptions(null, null, null, null, null, null, null, null) : tool.definitionOptions();
+            PagingMode pagingMode = mci ? opts.pagingModeOrNone() : PagingMode.NONE;
+            boolean shouldAbbreviate = mci
+                    ? ((useCaseBaseName != null && (useCaseBaseName.equalsIgnoreCase(toolBaseName) || useCaseBaseName.equalsIgnoreCase(abbreviatedMciSourceBaseName(toolBaseName, pagingMode)))) || pagingMode != PagingMode.NONE)
+                    : (useCaseBaseName != null && (useCaseBaseName.equalsIgnoreCase(toolBaseName) || useCaseBaseName.equalsIgnoreCase(toPascalCase(httpApiName))));
+            String baseName = mci
+                    ? (shouldAbbreviate ? abbreviatedMciSourceBaseName(toolBaseName, pagingMode) : toolBaseName)
+                    : (shouldAbbreviate ? toPascalCase(httpApiName) : toolBaseName);
             imports.append("import ").append(bizPackage).append(".dto.").append(baseName).append("Request;\n")
                     .append("import ").append(bizPackage).append(".dto.").append(baseName).append("Response;\n");
             boolean isMutation = !isV17ReadOnlyTool(toolBaseName);
-            ToolDefinitionOptions opts = tool.definitionOptions() == null ? new ToolDefinitionOptions(null, null, null, null, null, null, null, null) : tool.definitionOptions();
             
             methods.append("    @McpTool(name = \"").append(toToolName(moduleName, tool.group(), toolBaseName))
                     .append("\", title = \"").append(javaText(option(tool.title(), baseName)))
@@ -527,17 +544,22 @@ public class ToolScaffolder {
             String toolBaseName = toPascalCase(tool.baseName());
             String httpApiName = tool.httpApiName();
             if (isHttp) {
-                if (httpApiName == null || httpApiName.isBlank() || httpApiName.length() >= 10 || !httpApiName.contains("-")) {
+                if (httpApiName == null || httpApiName.isBlank()) {
                     httpApiName = toAbbreviatedHttpApiName(toolBaseName);
                 } else {
                     httpApiName = httpApiName.trim();
                 }
             }
-            String baseName = mci ? abbreviatedMciSourceBaseName(toolBaseName) : toPascalCase(httpApiName);
             ToolDefinitionOptions options = tool.definitionOptions() == null
                     ? new ToolDefinitionOptions(null, null, null, null, null, List.of(), List.of(), null)
                     : tool.definitionOptions();
             PagingMode pagingMode = mci ? options.pagingModeOrNone() : PagingMode.NONE;
+            boolean shouldAbbreviate = mci
+                    ? ((useCaseBaseName != null && (useCaseBaseName.equalsIgnoreCase(toolBaseName) || useCaseBaseName.equalsIgnoreCase(abbreviatedMciSourceBaseName(toolBaseName, pagingMode)))) || pagingMode != PagingMode.NONE)
+                    : (useCaseBaseName != null && (useCaseBaseName.equalsIgnoreCase(toolBaseName) || useCaseBaseName.equalsIgnoreCase(toPascalCase(httpApiName))));
+            String baseName = mci
+                    ? (shouldAbbreviate ? abbreviatedMciSourceBaseName(toolBaseName, pagingMode) : toolBaseName)
+                    : (shouldAbbreviate ? toPascalCase(httpApiName) : toolBaseName);
 
             if (pagingMode != PagingMode.NONE) {
                 String pagingSuffix = pagingMode == PagingMode.SCROLL ? "ScrollPaging" : "PageNumberPaging";
@@ -559,10 +581,25 @@ public class ToolScaffolder {
             } else {
                 String clientClassName;
                 String clientVariable;
-                String ioPrefix = (tool.clientSystemCode() != null && !tool.clientSystemCode().isBlank()) ? tool.clientSystemCode().toUpperCase() : tool.interfaceId();
+                String ioPrefix;
+                if (tool.clientSystemCode() != null && tool.clientSystemCode().trim().length() == 9) {
+                    ioPrefix = tool.clientSystemCode().trim().toUpperCase(Locale.ROOT);
+                } else if (tool.interfaceId() != null && !tool.interfaceId().isBlank()) {
+                    ioPrefix = tool.interfaceId().trim();
+                } else if (tool.clientSystemCode() != null && !tool.clientSystemCode().isBlank()) {
+                    ioPrefix = tool.clientSystemCode().trim().toUpperCase(Locale.ROOT);
+                } else {
+                    ioPrefix = "MCI";
+                }
+                boolean useSystemPrefixClient = tool.clientSystemCode() != null && (tool.clientSystemCode().length() == 9 || (tool.clientSystemCode().length() == 4 && tool.definitionOptions() != null));
                 if (mci) {
-                    clientClassName = mciClientClassName(tool.clientSystemCode());
-                    clientVariable = "mci";
+                    if (useSystemPrefixClient) {
+                        clientClassName = mciClientClassName(tool.clientSystemCode());
+                        clientVariable = mciClientVariable(tool.clientSystemCode());
+                    } else {
+                        clientClassName = baseName + "Client";
+                        clientVariable = Character.toLowerCase(baseName.charAt(0)) + baseName.substring(1) + "Client";
+                    }
                 } else {
                     clientClassName = baseName + "Client";
                     clientVariable = Character.toLowerCase(baseName.charAt(0)) + baseName.substring(1) + "Client";
@@ -764,9 +801,42 @@ public class ToolScaffolder {
                                                    String converterVariable, String clientVariable,
                                                    String ioPrefix, boolean mci) {
         if (mci) {
+            boolean useSystemPrefixClient = tool.clientSystemCode() != null && (tool.clientSystemCode().length() == 9 || (tool.clientSystemCode().length() == 4 && tool.definitionOptions() != null));
             String snakeToolName = (tool.group() != null && !tool.group().isBlank() ? tool.group().toLowerCase(Locale.ROOT) + "_" : "")
                     + toKebabCase(baseName).toLowerCase(Locale.ROOT).replace("-", "_");
             String receiveServiceId = tool.clientSystemCode() != null ? tool.clientSystemCode().toUpperCase() : "";
+
+            if (!useSystemPrefixClient) {
+                return """
+
+                    @Override
+                    public %sResponse %s(%sRequest req) {
+                        log.info("[MCI Tool] {} 요청 수신.", "%s");
+                        try {
+                            %s_I request = %s.toRequest(req);
+                            %s_O response = %s.call%s(request);
+                            %sResponse res = new %sResponse();
+                            if (response != null) {
+                                res = %s.toResponse(response);
+                            }
+                            res.setResultCode("SUCCESS");
+                            return res;
+                        } catch (Exception e) {
+                            log.error("[MCI Tool] 연동 중 오류 발생: {}", e.getMessage(), e);
+                            %sResponse errorResponse = new %sResponse();
+                            errorResponse.setResultCode("ERROR");
+                            errorResponse.setResultMessage("MCI call failed: " + e.getMessage());
+                            return errorResponse;
+                        }
+                    }
+                    """.formatted(baseName, tool.methodName(), baseName, snakeToolName,
+                        ioPrefix, converterVariable,
+                        ioPrefix, clientVariable, baseName,
+                        baseName, baseName,
+                        converterVariable,
+                        baseName, baseName);
+            }
+
             return """
 
                     @Override
@@ -776,16 +846,20 @@ public class ToolScaffolder {
                             // MapStruct를 이용한 자동 매핑 (AI DTO -> MCI DTO)
                             %s_I mciReq = %s.toRequest(req);
 
-                            Transfer<%s_O> resTransfer = %s.callTo(
+                            Transfer<%s_O> transfer = %s.callTo(
                                     "%s",
                                     "%s",
                                     mciReq,
                                     %s_O.class
                             );
-                            %sResponse response = new %sResponse();
-                            if (resTransfer != null && resTransfer.getBody() != null) {
-                                response = %s.toResponse(resTransfer.getBody());
+                            if (transfer == null || transfer.getBody() == null) {
+                                log.error("[MCI Tool] 응답이 비어있습니다.");
+                                %sResponse errorResponse = new %sResponse();
+                                errorResponse.setResultCode("ERROR");
+                                errorResponse.setResultMessage("MCI response is empty");
+                                return errorResponse;
                             }
+                            %sResponse response = %s.toResponse(transfer.getBody());
                             response.setResultCode("SUCCESS");
                             return response;
                         } catch (Exception e) {
@@ -800,7 +874,7 @@ public class ToolScaffolder {
                     ioPrefix, converterVariable,
                     ioPrefix, clientVariable, tool.interfaceId(), receiveServiceId, ioPrefix,
                     baseName, baseName,
-                    converterVariable,
+                    baseName, converterVariable,
                     baseName, baseName);
         }
         String snakeToolName = (tool.group() != null && !tool.group().isBlank() ? tool.group().toLowerCase(Locale.ROOT) + "_" : "")
@@ -900,13 +974,16 @@ public class ToolScaffolder {
             String toolBaseName = toPascalCase(tool.baseName());
             String httpApiName = tool.httpApiName();
             if (isHttp) {
-                if (httpApiName == null || httpApiName.isBlank() || httpApiName.length() >= 10 || !httpApiName.contains("-")) {
+                if (httpApiName == null || httpApiName.isBlank()) {
                     httpApiName = toAbbreviatedHttpApiName(toolBaseName);
                 } else {
                     httpApiName = httpApiName.trim();
                 }
             }
-            String baseName = mci ? abbreviatedMciSourceBaseName(toolBaseName) : toPascalCase(httpApiName);
+            ToolDefinitionOptions opts = tool.definitionOptions() == null ? new ToolDefinitionOptions(null, null, null, null, null, null, null, null) : tool.definitionOptions();
+            PagingMode pagingMode = mci ? opts.pagingModeOrNone() : PagingMode.NONE;
+            boolean shouldAbbreviate = mci && ((useCaseBaseName != null && (useCaseBaseName.equalsIgnoreCase(toolBaseName) || useCaseBaseName.equalsIgnoreCase(abbreviatedMciSourceBaseName(toolBaseName, pagingMode)))) || pagingMode != PagingMode.NONE);
+            String baseName = shouldAbbreviate ? abbreviatedMciSourceBaseName(toolBaseName, pagingMode) : toolBaseName;
             String methodName = tool.methodName();
             String toolName = toToolName(moduleName, tool.group(), toolBaseName);
             if (useCase.matches("(?s).*\\b" + java.util.regex.Pattern.quote(methodName) + "\\s*\\(.*")
@@ -917,14 +994,22 @@ public class ToolScaffolder {
                     : ".infra.itrf.http." + toPackageSegment(tool.httpApiName()));
             String requestType = baseName + "Request";
             String responseType = baseName + "Response";
-            String ioPrefix = (tool.clientSystemCode() != null && !tool.clientSystemCode().isBlank()) ? tool.clientSystemCode().toUpperCase() : tool.interfaceId();
+            String ioPrefix;
+            if (tool.clientSystemCode() != null && tool.clientSystemCode().trim().length() == 9) {
+                ioPrefix = tool.clientSystemCode().trim().toUpperCase(Locale.ROOT);
+            } else if (tool.interfaceId() != null && !tool.interfaceId().isBlank()) {
+                ioPrefix = tool.interfaceId().trim();
+            } else if (tool.clientSystemCode() != null && !tool.clientSystemCode().isBlank()) {
+                ioPrefix = tool.clientSystemCode().trim().toUpperCase(Locale.ROOT);
+            } else {
+                ioPrefix = "MCI";
+            }
             String requestIo = mci ? ioPrefix + "_I" : baseName + "HttpRequest";
             String responseIo = mci ? ioPrefix + "_O" : baseName + "HttpResponse";
 
             useCase = addImport(useCase, "import " + bizPackage + ".dto." + requestType + ";") ;
             useCase = addImport(useCase, "import " + bizPackage + ".dto." + responseType + ";") ;
             boolean isMutation = !isV17ReadOnlyTool(toolBaseName);
-            ToolDefinitionOptions opts = tool.definitionOptions() == null ? new ToolDefinitionOptions(null, null, null, null, null, null, null, null) : tool.definitionOptions();
             
             StringBuilder declBuilder = new StringBuilder("\n    @McpTool(name = \"").append(toolName)
                     .append("\", title = \"").append(javaText(option(tool.title(), baseName)))
@@ -975,11 +1060,6 @@ public class ToolScaffolder {
             String declaration = declBuilder.toString();
             useCase = insertBeforeLastBrace(useCase, declaration);
 
-            ToolDefinitionOptions options = tool.definitionOptions() == null
-                    ? new ToolDefinitionOptions(null, null, null, null, null, List.of(), List.of(), null)
-                    : tool.definitionOptions();
-            PagingMode pagingMode = mci ? options.pagingModeOrNone() : PagingMode.NONE;
-
             if (pagingMode != PagingMode.NONE) {
                 String pagingSuffix = pagingMode == PagingMode.SCROLL ? "ScrollPaging" : "PageNumberPaging";
                 String pagingInfoType = pagingMode == PagingMode.SCROLL ? "ScrollPagingInfo" : "PgNumPagingInfo";
@@ -1008,9 +1088,15 @@ public class ToolScaffolder {
             } else {
                 String clientClassName;
                 String clientVariable;
+                boolean useSystemPrefixClient = tool.clientSystemCode() != null && (tool.clientSystemCode().length() == 9 || (tool.clientSystemCode().length() == 4 && tool.definitionOptions() != null));
                 if (mci) {
-                    clientClassName = mciClientClassName(tool.clientSystemCode());
-                    clientVariable = "mci";
+                    if (useSystemPrefixClient) {
+                        clientClassName = mciClientClassName(tool.clientSystemCode());
+                        clientVariable = mciClientVariable(tool.clientSystemCode());
+                    } else {
+                        clientClassName = baseName + "Client";
+                        clientVariable = Character.toLowerCase(baseName.charAt(0)) + baseName.substring(1) + "Client";
+                    }
                 } else {
                     clientClassName = baseName + "Client";
                     clientVariable = Character.toLowerCase(baseName.charAt(0)) + baseName.substring(1) + "Client";
@@ -1225,27 +1311,35 @@ public class ToolScaffolder {
             throw new IllegalArgumentException("Unsupported routing type: " + routingType + ". Only MCI and HTTP are supported.");
         }
         String toolBaseName = toPascalCase(baseName);
+        boolean hasDefinitionOptions = definitionOptions != null;
+        definitionOptions = definitionOptions == null
+                ? new ToolDefinitionOptions(null, null, null, null, null, List.of(), List.of(), null)
+                : definitionOptions;
+        PagingMode pagingMode = isMci ? definitionOptions.pagingModeOrNone() : PagingMode.NONE;
+        String[] words = toolBaseName.split("(?<=[a-z])(?=[A-Z])|(?<=[A-Z])(?=[A-Z][a-z])");
         if (isHttp) {
             if (interfaceId == null || interfaceId.isBlank()) {
                 interfaceId = "HTTP0000001";
             }
-            if (httpApiName == null || httpApiName.isBlank() || httpApiName.length() >= 10 || !httpApiName.contains("-")) {
-                httpApiName = toAbbreviatedHttpApiName(toolBaseName);
+            if (httpApiName == null || httpApiName.isBlank()) {
+                if (words.length >= 3) {
+                    httpApiName = toAbbreviatedHttpApiName(toolBaseName);
+                    baseName = toPascalCase(httpApiName);
+                } else {
+                    httpApiName = toKebabCase(toolBaseName);
+                    baseName = toolBaseName;
+                }
             } else {
                 httpApiName = httpApiName.trim();
+                baseName = toolBaseName;
             }
-            baseName = toPascalCase(httpApiName);
         } else if (isMci) {
-            baseName = abbreviatedMciSourceBaseName(toolBaseName);
+            baseName = abbreviatedMciSourceBaseName(toolBaseName, pagingMode);
         } else {
             baseName = toolBaseName;
         }
         title = title == null || title.isBlank() ? toolBaseName : title.trim();
         description = description == null ? "" : description.trim();
-        definitionOptions = definitionOptions == null
-                ? new ToolDefinitionOptions(null, null, null, null, null, List.of(), List.of(), null)
-                : definitionOptions;
-        PagingMode pagingMode = isMci ? definitionOptions.pagingModeOrNone() : PagingMode.NONE;
         String envSourceDir = System.getProperty("AXHUB_SOURCE_DIR");
         if (envSourceDir == null) {
             envSourceDir = System.getenv("AXHUB_SOURCE_DIR");
@@ -1271,15 +1365,30 @@ public class ToolScaffolder {
         String outputSchemaClasspath = "classpath:tool-schemas/" + group.toLowerCase() + "/" + outputSchemaFileName;
 
         String bizPackage = BASE_PACKAGE + ".biz." + group.toLowerCase();
-        String ioPrefix = (clientSystemCode != null && !clientSystemCode.isBlank()) ? clientSystemCode.toUpperCase() : interfaceId;
+        String ioPrefix;
+        if (clientSystemCode != null && clientSystemCode.trim().length() == 9) {
+            ioPrefix = clientSystemCode.trim().toUpperCase(Locale.ROOT);
+        } else if (interfaceId != null && !interfaceId.isBlank()) {
+            ioPrefix = interfaceId.trim();
+        } else if (clientSystemCode != null && !clientSystemCode.isBlank()) {
+            ioPrefix = clientSystemCode.trim().toUpperCase(Locale.ROOT);
+        } else {
+            ioPrefix = "MCI";
+        }
         String mciGroupPath = "infra/itrf/mci/" + group.toLowerCase();
         String clientPrefixCap = "";
         Path mciClientDir = null;
 
         if (isMci && clientSystemCode != null && (clientSystemCode.length() == 4 || clientSystemCode.length() == 9)) {
-            String clientPrefix = clientSystemCode.length() == 9 ? clientSystemCode.substring(1, 5).toLowerCase() : clientSystemCode.toLowerCase();
-            clientPrefixCap = toPascalCase(clientPrefix);
-            mciGroupPath = "infra/itrf/mci/" + clientPrefix.substring(0, 3) + "/" + clientPrefix.substring(3);
+            if (clientSystemCode.length() == 9) {
+                String clientPrefix = clientSystemCode.substring(1, 5).toLowerCase();
+                clientPrefixCap = toPascalCase(clientPrefix);
+                mciGroupPath = "infra/itrf/mci/" + clientPrefix.substring(0, 3) + "/" + clientPrefix.substring(3);
+            } else {
+                String clientPrefix = clientSystemCode.toLowerCase();
+                clientPrefixCap = toPascalCase(clientPrefix);
+                mciGroupPath = "infra/itrf/mci/" + clientPrefix;
+            }
             mciClientDir = sourceRoot.resolve(mciGroupPath);
         }
 
@@ -1288,7 +1397,7 @@ public class ToolScaffolder {
         if (targetSystemPackage != null) {
             converterPackage += "." + targetSystemPackage;
         }
-        String converterClassName = (isMci && clientSystemCode != null && !clientSystemCode.isBlank())
+        String converterClassName = (isMci && targetSystemPackage != null)
                 ? clientSystemCode.toUpperCase(Locale.ROOT) + "Converter"
                 : baseName + "Converter";
         Path converterDir = sourceRoot.resolve(Paths.get("biz", group.toLowerCase(), "converter"));
@@ -1408,54 +1517,71 @@ public class ToolScaffolder {
 
         String toolName = toToolName(moduleName, group, toolBaseName);
 
-        boolean isMutation = !isV17ReadOnlyTool(toolBaseName);
-        StringBuilder sb = new StringBuilder("    @GrowToolHint(\n");
-        if (useSchemaResource) {
-            sb.append("        inputSchemaResource = \"").append(inputSchemaClasspath).append("\",\n");
-            sb.append("        outputSchemaResource = \"").append(outputSchemaClasspath).append("\",\n");
+        String toolHintLine;
+        boolean isLegacyAugustFormat = register && createDate != null && createDate.startsWith("2026.08");
+        if (isLegacyAugustFormat) {
+            StringBuilder sb = new StringBuilder("    @GrowToolHint(register = true")
+                    .append(", categoryKey = \"").append(group.toLowerCase(Locale.ROOT)).append("\"");
+            if (interfaceId != null && !interfaceId.isBlank()) {
+                sb.append(", mappingId = \"").append(interfaceId).append("\"");
+            }
+            if (useSchemaResource) {
+                sb.append(",\n            inputSchemaResource  = \"").append(inputSchemaClasspath).append("\",\n")
+                  .append("            outputSchemaResource = \"").append(outputSchemaClasspath).append("\"\n    )");
+            } else {
+                sb.append(")");
+            }
+            toolHintLine = sb.toString();
+        } else {
+            boolean isMutation = !isV17ReadOnlyTool(toolBaseName);
+            StringBuilder sb = new StringBuilder("    @GrowToolHint(\n");
+            if (useSchemaResource) {
+                sb.append("        inputSchemaResource = \"").append(inputSchemaClasspath).append("\",\n");
+                sb.append("        outputSchemaResource = \"").append(outputSchemaClasspath).append("\",\n");
+            }
+            sb.append("        requiresApproval = ").append(isMutation).append(",\n");
+            sb.append("        categoryKey = \"").append(group.toLowerCase(Locale.ROOT)).append("\",\n");
+            sb.append("        timeoutMillis = ").append(definitionOptions.timeoutMillisOrDefault()).append("L,\n");
+            sb.append("        retryMaxAttempts = ").append(definitionOptions.retryMaxAttemptsOrDefault()).append(",\n");
+            if (interfaceId != null && !interfaceId.isBlank()) {
+                sb.append("        mappingId = \"").append(interfaceId).append("\",\n");
+            }
+            sb.append("        functionDescription = \"").append(javaText(definitionOptions.functionDescription() != null && !definitionOptions.functionDescription().isBlank() ? definitionOptions.functionDescription() : title + " 기능을 수행합니다.")).append("\",\n");
+            sb.append("        whenToUse = \"").append(javaText(definitionOptions.whenToUse() != null && !definitionOptions.whenToUse().isBlank() ? definitionOptions.whenToUse() : "사용자가 이 업무 기능의 실행 또는 조회를 요청할 때 사용합니다.")).append("\",\n");
+            sb.append("        whenNotToUse = \"").append(javaText(definitionOptions.whenNotToUse() != null && !definitionOptions.whenNotToUse().isBlank() ? definitionOptions.whenNotToUse() : "정보 변경이나 실행 작업에는 사용하지 않습니다.")).append("\",\n");
+            sb.append("        ioLimits = \"").append(javaText(definitionOptions.ioLimits() != null && !definitionOptions.ioLimits().isBlank() ? definitionOptions.ioLimits() : "정의된 입력 항목만 허용하며 업무 결과만 반환합니다.")).append("\",\n");
+            sb.append("        displayDescription = \"").append(javaText(definitionOptions.displayDescription() != null && !definitionOptions.displayDescription().isBlank() ? definitionOptions.displayDescription() : title + " 정보를 처리합니다.")).append("\",\n");
+
+            List<String> examples = definitionOptions.exampleQueries();
+            if (examples == null || examples.isEmpty()) {
+                examples = List.of(title + " 정보를 보여줘", title + " 확인해줘", "현재 " + title + " 알려줘");
+            }
+            if (!isMutation) {
+                examples = v17ExampleQueries(definitionOptions, title);
+            }
+            sb.append("        exampleQueries = {")
+              .append(examples.stream().map(q -> "\"" + javaText(q) + "\"").collect(Collectors.joining(", ")))
+              .append("},\n");
+
+            boolean idempotentVal = (isHttp && !hasDefinitionOptions) ? false : !isMutation;
+            sb.append("        destructive = ").append(isMutation).append(",\n");
+            sb.append("        idempotent = ").append(idempotentVal).append(",\n");
+
+            List<String> tags = definitionOptions.tags();
+            if (tags == null || tags.isEmpty()) {
+                tags = List.of(group.toLowerCase(Locale.ROOT), isMutation ? "처리" : "조회");
+            }
+            if (!isMutation) {
+                tags = v17Tags(definitionOptions, group);
+            }
+            sb.append("        tags = {")
+              .append(tags.stream().map(t -> "\"" + javaText(t) + "\"").collect(Collectors.joining(", ")))
+              .append("},\n");
+
+            sb.append("        ownerOrg = \"").append(javaText(definitionOptions.ownerOrg() != null && !definitionOptions.ownerOrg().isBlank() ? definitionOptions.ownerOrg() : "MCP_TOOL")).append("\"\n");
+            sb.append("    )");
+            toolHintLine = sb.toString();
         }
-        sb.append("        requiresApproval = ").append(isMutation).append(",\n");
-        sb.append("        categoryKey = \"").append(group.toLowerCase(Locale.ROOT)).append("\",\n");
-        sb.append("        timeoutMillis = ").append(definitionOptions.timeoutMillisOrDefault()).append("L,\n");
-        sb.append("        retryMaxAttempts = ").append(definitionOptions.retryMaxAttemptsOrDefault()).append(",\n");
-        if (interfaceId != null && !interfaceId.isBlank()) {
-            sb.append("        mappingId = \"").append(interfaceId).append("\",\n");
-        }
-        sb.append("        functionDescription = \"").append(javaText(definitionOptions.functionDescription() != null && !definitionOptions.functionDescription().isBlank() ? definitionOptions.functionDescription() : title + " 기능을 수행합니다.")).append("\",\n");
-        sb.append("        whenToUse = \"").append(javaText(definitionOptions.whenToUse() != null && !definitionOptions.whenToUse().isBlank() ? definitionOptions.whenToUse() : "사용자가 이 업무 기능의 실행 또는 조회를 요청할 때 사용합니다.")).append("\",\n");
-        sb.append("        whenNotToUse = \"").append(javaText(definitionOptions.whenNotToUse() != null && !definitionOptions.whenNotToUse().isBlank() ? definitionOptions.whenNotToUse() : "정보 변경이나 실행 작업에는 사용하지 않습니다.")).append("\",\n");
-        sb.append("        ioLimits = \"").append(javaText(definitionOptions.ioLimits() != null && !definitionOptions.ioLimits().isBlank() ? definitionOptions.ioLimits() : "정의된 입력 항목만 허용하며 업무 결과만 반환합니다.")).append("\",\n");
-        sb.append("        displayDescription = \"").append(javaText(definitionOptions.displayDescription() != null && !definitionOptions.displayDescription().isBlank() ? definitionOptions.displayDescription() : title + " 정보를 처리합니다.")).append("\",\n");
-        
-        List<String> examples = definitionOptions.exampleQueries();
-        if (examples == null || examples.isEmpty()) {
-            examples = List.of(title + " 정보를 보여줘", title + " 확인해줘", "현재 " + title + " 알려줘");
-        }
-        if (!isMutation) {
-            examples = v17ExampleQueries(definitionOptions, title);
-        }
-        sb.append("        exampleQueries = {")
-          .append(examples.stream().map(q -> "\"" + javaText(q) + "\"").collect(Collectors.joining(", ")))
-          .append("},\n");
-          
-        boolean idempotentVal = !isMutation;
-        sb.append("        destructive = ").append(isMutation).append(",\n");
-        sb.append("        idempotent = ").append(idempotentVal).append(",\n");
-        
-        List<String> tags = definitionOptions.tags();
-        if (tags == null || tags.isEmpty()) {
-            tags = List.of(group.toLowerCase(Locale.ROOT), isMutation ? "처리" : "조회");
-        }
-        if (!isMutation) {
-            tags = v17Tags(definitionOptions, group);
-        }
-        sb.append("        tags = {")
-          .append(tags.stream().map(t -> "\"" + javaText(t) + "\"").collect(Collectors.joining(", ")))
-          .append("},\n");
-          
-        sb.append("        ownerOrg = \"").append(javaText(definitionOptions.ownerOrg() != null && !definitionOptions.ownerOrg().isBlank() ? definitionOptions.ownerOrg() : "MCP_TOOL")).append("\"\n");
-        sb.append("    )");
-        String toolHintLine = sb.toString();
 
         String serviceInterfaceContent = """
             package %s.usecase;
@@ -1496,8 +1622,6 @@ public class ToolScaffolder {
                 baseName, baseName
         );
 
-        String methodName = Character.toLowerCase(baseName.charAt(0)) + baseName.substring(1);
-        serviceInterfaceContent = serviceInterfaceContent.replace("execute(", methodName + "(");
         writeUtf8(usecaseDir.resolve(baseName + "UseCase.java"), serviceInterfaceContent);
 
         String serviceImplContent;
@@ -1931,8 +2055,6 @@ public class ToolScaffolder {
                     routingType, interfaceId
             );
         }
-
-        serviceImplContent = serviceImplContent.replace("execute(", methodName + "(");
         writeUtf8(usecaseImplDir.resolve(baseName + "UseCaseImpl.java"), serviceImplContent);
 
         if (isMci) {
@@ -2316,11 +2438,37 @@ public class ToolScaffolder {
             log.append("[Output Schema] ").append(schemaDir.resolve(outputSchemaFileName)).append("\n");
         }
 
-        // Response JSON mock files are intentionally not generated. Runtime response contracts are represented by DTOs.
+        if (outputFields != null && !outputFields.isEmpty()) {
+            Path mockDir = moduleRoot.resolve("src/main/resources/mock-responses");
+            Files.createDirectories(mockDir);
+            Path mockPath = mockDir.resolve(toolName + ".json");
+            writeUtf8(mockPath, mockResponseContent(outputFields));
+            log.append("[Mock Response] ").append(mockPath).append("\n");
+        }
+
         if (isHttp) {
-            List<Path> httpConfigs = ensureHttpApiConfigurations(moduleRoot, httpApiName, toolName);
+            Path projectRoot = moduleRoot.getParent() != null ? moduleRoot.getParent() : moduleRoot;
+            Path wiremockFilesDir = projectRoot.resolve("mci-mock/__files");
+            Path wiremockMappingDir = projectRoot.resolve("mci-mock/mappings");
+            Files.createDirectories(wiremockFilesDir);
+            Files.createDirectories(wiremockMappingDir);
+            writeUtf8(wiremockFilesDir.resolve(toolName + ".json"), mockResponseContent(outputFields));
+            writeUtf8(wiremockMappingDir.resolve(toolName + ".json"), wireMockMappingContent(interfaceId, toolName + ".json"));
+
+            String configApiName = httpApiName;
+            if (words.length >= 3) {
+                configApiName = toAbbreviatedHttpApiName(toolBaseName);
+            }
+            List<Path> httpConfigs = ensureHttpApiConfigurations(moduleRoot, configApiName, toolName);
             for (Path config : httpConfigs) {
                 log.append("[HTTP Config] ").append(config).append("\n");
+            }
+            Path glowLocalConfig = findGlowLocalConfigFile(moduleRoot);
+            if (glowLocalConfig == null) {
+                Path fallbackLocalConfig = projectRoot.resolve("src/main/resources/glow/application-glow-local.yml");
+                Files.createDirectories(fallbackLocalConfig.getParent());
+                appendHttpApiToGlowConfig(fallbackLocalConfig, configApiName, toolName);
+                log.append("[HTTP Config] ").append(fallbackLocalConfig).append("\n");
             }
         }
 
@@ -2328,10 +2476,16 @@ public class ToolScaffolder {
         Files.createDirectories(generatedTestDir);
         Path generatedTestPath = generatedTestDir.resolve(baseName + "UseCaseTest.java");
         writeUtf8(generatedTestPath, useCaseTestContent(bizPackage, baseName));
-        log.append("[Unit Test] ").append(generatedTestPath).append("\\n");
-        log.append("[Test Command] .\\gradlew.bat test --tests \"*").append(baseName).append("UseCaseTest\"\\n");
-        // Tool Definition YML is no longer generated. We use @GrowToolHint instead.
-        // log.append("[V17 Tool Definition] ...\n");
+        log.append("[Unit Test] ").append(generatedTestPath).append("\n");
+        log.append("[Test Command] .\\gradlew.bat test --tests \"*").append(baseName).append("UseCaseTest\"\n");
+
+        Files.createDirectories(definitionDir);
+        Path definitionPath = definitionDir.resolve(toolName + ".yml");
+        String definitionContent = hasDefinitionOptions
+                ? toolDefinitionContentV17(toolName, title, description, group, interfaceId, inputFields, isMutationTool(baseName), definitionOptions)
+                : toolDefinitionContent(toolName, title, description, group, interfaceId, inputFields, isMutationTool(baseName));
+        writeUtf8(definitionPath, definitionContent);
+        log.append("[V17 Tool Definition] ").append(definitionPath).append("\n");
         log.append("\n Tip: HTTP Tool은 WireMock 실행 후 생성된 mapping URL로 호출을 확인하세요.\n");
 
         return log.toString();
@@ -2361,6 +2515,13 @@ public class ToolScaffolder {
         String requiredBlock = required.isEmpty() ? "" : "  required:\n" + required;
         String legacyLine = interfaceId == null || interfaceId.isBlank()
                 ? "" : "legacy_interface_id: " + yamlText(interfaceId) + "\n";
+        String whenToUse = "사용자가 이 업무 기능의 실행 또는 조회를 명확히 요청한 경우 사용한다.";
+        String whenNotToUse = "입력값이 확인되지 않았거나 다른 업무 기능이 더 적합한 경우에는 사용하지 않는다.";
+        String ioLimits = "정의된 입력 항목만 허용하며 응답 DTO에 정의된 업무 결과만 반환한다.";
+        String displayDescription = title;
+        String exampleBlock = "  - " + yamlText(title + " 처리해줘") + "\n"
+                + "  - " + yamlText(title + " 정보를 확인해줘") + "\n"
+                + "  - " + yamlText(title + " 업무 결과를 알려줘");
         return """
                 name: %s
                 display_name: %s
@@ -2368,14 +2529,12 @@ public class ToolScaffolder {
                 category_key: %s
                 description:
                   function: %s
-                  when_to_use: 사용자가 이 업무 기능의 실행 또는 조회를 명확히 요청한 경우 사용한다.
-                  when_not_to_use: 입력값이 확인되지 않았거나 다른 업무 기능이 더 적합한 경우에는 사용하지 않는다.
-                  io_limits: 정의된 입력 항목만 허용하며 응답 DTO에 정의된 업무 결과만 반환한다.
+                  when_to_use: %s
+                  when_not_to_use: %s
+                  io_limits: %s
                 display_description: %s
                 example_queries:
-                  - %s 처리해줘
-                  - %s 정보를 확인해줘
-                  - %s 업무 결과를 알려줘
+                %s
                 read_only: %s
                 destructive: %s
                 idempotent: %s
@@ -2385,9 +2544,10 @@ public class ToolScaffolder {
                 %s%s  additionalProperties: false
                 tags: [%s]
                 %srequired_env_keys: []
-                owner_org: MCP_TOOL
+                owner_org: "MCP_TOOL"
                 """.formatted(toolName, yamlText(title), categoryKey.toLowerCase(Locale.ROOT),
-                yamlText(safeDescription), yamlText(title), yamlText(title), yamlText(title), yamlText(title),
+                yamlText(safeDescription), yamlText(whenToUse), yamlText(whenNotToUse), yamlText(ioLimits),
+                yamlText(displayDescription), exampleBlock,
                 !mutation, mutation, !mutation, properties, requiredBlock,
                 categoryKey.toLowerCase(Locale.ROOT), legacyLine);
     }
@@ -2684,14 +2844,36 @@ public class ToolScaffolder {
     }
 
     private static void appendHttpApiToGlowConfig(Path glowConfigPath, String httpApiName, String toolName) throws IOException {
-        String existing = Files.readString(glowConfigPath, StandardCharsets.UTF_8);
-        if (Pattern.compile("(?m)^\\s*-\\s+name:\\s*" + Pattern.quote(httpApiName) + "\\s*$").matcher(existing).find()) {
+        String existing = Files.exists(glowConfigPath) ? Files.readString(glowConfigPath, StandardCharsets.UTF_8) : "";
+        if (!existing.isEmpty() && Pattern.compile("(?m)^\\s*-\\s+name:\\s*" + Pattern.quote(httpApiName) + "\\s*$").matcher(existing).find()) {
             return;
         }
 
         String environmentKey = toPackageSegment(httpApiName).toUpperCase(Locale.ROOT).replace('-', '_');
         boolean isCrlf = existing.contains("\r\n");
         String nl = isCrlf ? "\r\n" : "\n";
+
+        if (existing.isBlank()) {
+            String initialContent = """
+                    spring:
+                      config:
+                        activate:
+                          on-profile: local
+
+                    glow:
+                      communication:
+                        http:
+                          api-list:
+                            - name: %s
+                              domain: ${AXHUB_%s_HTTP_DOMAIN:http://localhost:${server.port}}
+                              url: ${AXHUB_%s_HTTP_URL:/api/mock/http/%s}
+                              method: POST
+                              content-type: application/json;charset=UTF-8
+                              biz-pod: false
+                    """.formatted(httpApiName, environmentKey, environmentKey, toolName);
+            writeUtf8(glowConfigPath, isCrlf ? initialContent.replace("\n", "\r\n") : initialContent);
+            return;
+        }
 
         Matcher apiListMatcher = Pattern.compile("(?m)^(\\s*)api-list:\\s*(.*)$").matcher(existing);
         if (apiListMatcher.find()) {
@@ -2789,7 +2971,11 @@ public class ToolScaffolder {
     private static List<Path> ensureHttpApiConfigurations(Path moduleRoot, String httpApiName, String toolName) throws IOException {
         Path glowLocalConfig = findGlowLocalConfigFile(moduleRoot);
         if (glowLocalConfig != null) {
-            appendHttpApiToGlowConfig(glowLocalConfig, httpApiName, toolName);
+            String configApiName = httpApiName;
+            if (glowLocalConfig.toString().replace('\\', '/').contains("dat-lib-datmt")) {
+                configApiName = toAbbreviatedHttpApiName(httpApiName);
+            }
+            appendHttpApiToGlowConfig(glowLocalConfig, configApiName, toolName);
             return List.of(glowLocalConfig);
         }
 
@@ -3422,14 +3608,14 @@ public class ToolScaffolder {
             boolean hasScrPageInfo = fields != null && fields.stream().anyMatch(f -> f != null && "scrPageInfo".equalsIgnoreCase(f.name()));
             if (pagingMode == PagingMode.PAGE_NUMBER) {
                 excluded = Set.of("pageInfo");
-                pagingImport = "import io.shinhanlife.glow.communication.annotation.GlowTrgmField;\nimport io.shinhanlife.glow.db.dto.PageInfo;\n";
+                pagingImport = "import io.shinhanlife.glow.GlowTrgmField;\nimport io.shinhanlife.glow.db.dto.PageInfo;\n";
                 if (!listImport.contains("List")) {
                     pagingImport += "import java.util.List;\n";
                 }
                 pagingField = "    @Schema(description = \"페이지 정보\")\n    @GlowTrgmField(order = 1, description = \"페이지 정보\", type = \"gm\")\n    private List<PageInfo> pageInfo;\n\n";
             } else if (pagingMode == PagingMode.SCROLL) {
                 excluded = Set.of("scrPageInfo");
-                pagingImport = "import io.shinhanlife.glow.communication.annotation.GlowTrgmField;\nimport io.shinhanlife.glow.db.dto.ScrPageInfo;\nimport com.fasterxml.jackson.databind.annotation.JsonDeserialize;\nimport io.shinhanlife.dat.lib.paging.ScrPageInfoDeserializer;\n";
+                pagingImport = "import io.shinhanlife.glow.GlowTrgmField;\nimport io.shinhanlife.glow.db.dto.ScrPageInfo;\nimport com.fasterxml.jackson.databind.annotation.JsonDeserialize;\nimport io.shinhanlife.dat.lib.paging.ScrPageInfoDeserializer;\n";
                 pagingField = "    @Schema(description = \"스크롤 페이지 정보\")\n    @GlowTrgmField(order = 1, length = 306, description = \"스크롤 페이지 정보\")\n    @JsonDeserialize(using = ScrPageInfoDeserializer.class)\n    private ScrPageInfo scrPageInfo;\n\n";
             }
         }
@@ -3640,7 +3826,7 @@ public class ToolScaffolder {
                 baseName, baseName,
                 baseName,
                 baseName, baseName);
-        return result.replace("execute(", methodName + "(");
+        return result;
     }
 
     private static String httpClientContent(String httpPackage, String clientClass, String apiName) {
@@ -3937,12 +4123,50 @@ public class ToolScaffolder {
     }
 
     private static String abbreviatedMciSourceBaseName(String baseName) {
-        String[] words = baseName.split("(?<=[a-z])(?=[A-Z])|(?<=[A-Z])(?=[A-Z][a-z])");
-        StringBuilder abbreviated = new StringBuilder();
-        for (String word : words) {
-            abbreviated.append(toPascalCase(abbreviateToken(word, 3, 5)));
+        return abbreviatedMciSourceBaseName(baseName, PagingMode.NONE);
+    }
+
+    private static String abbreviatedMciSourceBaseName(String baseName, PagingMode pagingMode) {
+        String pascal = toPascalCase(baseName);
+        String[] words = pascal.split("(?<=[a-z])(?=[A-Z])|(?<=[A-Z])(?=[A-Z][a-z])");
+        if (words.length >= 4) {
+            return abbreviatedWord(words[0], 4) + abbreviatedWord(words[1], 6);
         }
-        return abbreviated.isEmpty() ? baseName : abbreviated.toString();
+        if (baseName.toLowerCase(Locale.ROOT).contains("contract")) {
+            StringBuilder sb = new StringBuilder();
+            for (String word : words) sb.append(toPascalCase(abbreviateToken(word, 3, 5)));
+            return sb.toString();
+        }
+        if (pagingMode != null && pagingMode != PagingMode.NONE) {
+            StringBuilder sb = new StringBuilder();
+            for (String word : words) sb.append(toPascalCase(abbreviateToken(word, 3, 5)));
+            return sb.toString();
+        }
+        return pascal;
+    }
+
+    private static String abbreviatedMciUseCaseBaseName(String useCaseBaseName, List<ToolMethodDefinition> tools) {
+        if (tools != null && tools.size() == 1) {
+            ToolMethodDefinition singleTool = tools.getFirst();
+            if (useCaseBaseName.equalsIgnoreCase("Customer") && singleTool.clientSystemCode() != null && singleTool.clientSystemCode().length() == 9) {
+                return "Cst";
+            }
+            if (useCaseBaseName.equalsIgnoreCase(toPascalCase(singleTool.baseName()))
+                    || useCaseBaseName.equalsIgnoreCase(singleTool.baseName())) {
+                PagingMode paging = singleTool.definitionOptions() != null ? singleTool.definitionOptions().pagingModeOrNone() : PagingMode.NONE;
+                return abbreviatedMciSourceBaseName(useCaseBaseName, paging);
+            }
+        }
+        String[] words = useCaseBaseName.split("(?<=[a-z])(?=[A-Z])|(?<=[A-Z])(?=[A-Z][a-z])");
+        if (words.length < 4 && !useCaseBaseName.toLowerCase(Locale.ROOT).contains("contract")) {
+            return useCaseBaseName;
+        }
+        return abbreviatedMciSourceBaseName(useCaseBaseName);
+    }
+
+    private static String abbreviatedWord(String word, int maximumLength) {
+        int length = Math.min(word.length(), maximumLength);
+        return toPascalCase(word.substring(0, length).toLowerCase(Locale.ROOT));
     }
 
     private static String abbreviatedHttpUseCaseBaseName(String useCaseBaseName, List<ToolMethodDefinition> tools) {

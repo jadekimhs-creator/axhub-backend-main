@@ -61,6 +61,24 @@ glow:
           method: POST
           content-type: application/json;charset=UTF-8
           biz-pod: false
+        - name: noti-send
+          domain: ${AXHUB_NOTI_SEND_HTTP_DOMAIN:http://localhost:${server.port}}
+          url: ${AXHUB_NOTI_SEND_HTTP_URL:/api/mock/http/cmm_notification_send}
+          method: POST
+          content-type: application/json;charset=UTF-8
+          biz-pod: false
+        - name: clm-srch
+          domain: ${AXHUB_CLM_SRCH_HTTP_DOMAIN:http://localhost:${server.port}}
+          url: ${AXHUB_CLM_SRCH_HTTP_URL:/api/mock/http/cmm_claim_search}
+          method: POST
+          content-type: application/json;charset=UTF-8
+          biz-pod: false
+        - name: notification-send
+          domain: ${AXHUB_NOTIFICATION_SEND_HTTP_DOMAIN:http://localhost:${server.port}}
+          url: ${AXHUB_NOTIFICATION_SEND_HTTP_URL:/api/mock/http/cmm_notification_send}
+          method: POST
+          content-type: application/json;charset=UTF-8
+          biz-pod: false
     mci:
       host: ${GLOW_COMMUNICATION_MCI_HOST:http://localhost}
       port: ${GLOW_COMMUNICATION_MCI_PORT:8080}

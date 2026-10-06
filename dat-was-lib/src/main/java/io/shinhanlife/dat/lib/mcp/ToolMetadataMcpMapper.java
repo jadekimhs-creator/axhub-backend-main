@@ -2,6 +2,7 @@ package io.shinhanlife.dat.lib.mcp;
 
 import io.modelcontextprotocol.spec.McpSchema;
 import io.shinhanlife.dat.mcc.dto.ToolMetadata;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -40,7 +41,17 @@ public final class ToolMetadataMcpMapper {
         put(meta, "legacy_interface_id", metadata.getMciServiceId());
         put(meta, "required_env_keys", metadata.getRequiredEnvKeys());
         put(meta, "owner_org", metadata.getOwnerOrg());
+        meta.put("timeoutMillis", positiveOrDefault(metadata.getTimeoutMillis(), 5000L));
+        meta.put("retryMaxAttempts", positiveOrDefault(metadata.getRetryMaxAttempts(), 3));
         return Map.copyOf(meta);
+    }
+
+    private static long positiveOrDefault(Long value, long defaultValue) {
+        return value != null && value > 0 ? value : defaultValue;
+    }
+
+    private static int positiveOrDefault(Integer value, int defaultValue) {
+        return value != null && value > 0 ? value : defaultValue;
     }
 
     private static void put(Map<String, Object> target, String key, Object value) {
@@ -55,9 +66,47 @@ public final class ToolMetadataMcpMapper {
         return value == null || value.isBlank() ? fallback : value;
     }
 
+    /**
+     * DTO명 또는 Tool명으로 중첩 래핑된 스키마를 최상위 레벨로 평탄화(Flatten)합니다.
+     * Agent Builder 및 MCP 규격에 맞게 properties 및 required를 최상위 레벨로 승격합니다.
+     */
+    @SuppressWarnings("unchecked")
+    public static Map<String, Object> normalizeSchema(Map<String, Object> source) {
+        if (source == null) {
+            return emptySchema();
+        }
+        Map<String, Object> schema = new LinkedHashMap<>(source);
+        if (schema.get("properties") instanceof Map<?, ?> props && props.size() == 1) {
+            Map.Entry<?, ?> entry = props.entrySet().iterator().next();
+            if (entry.getValue() instanceof Map<?, ?> nested && nested.get("properties") instanceof Map<?, ?> nestedProps) {
+                schema.put("properties", new LinkedHashMap<>((Map<String, Object>) nestedProps));
+
+                List<String> combinedRequired = new ArrayList<>();
+                if (schema.get("required") instanceof List<?> currentRequired) {
+                    for (Object req : currentRequired) {
+                        if (req instanceof String s && !s.equals(entry.getKey())) {
+                            combinedRequired.add(s);
+                        }
+                    }
+                }
+                if (nested.get("required") instanceof List<?> nestedRequired) {
+                    for (Object req : nestedRequired) {
+                        if (req instanceof String s && !combinedRequired.contains(s)) {
+                            combinedRequired.add(s);
+                        }
+                    }
+                }
+                if (!combinedRequired.isEmpty()) {
+                    schema.put("required", combinedRequired);
+                }
+            }
+        }
+        return schema;
+    }
+
     @SuppressWarnings("unchecked")
     private static McpSchema.JsonSchema toJsonSchema(Map<String, Object> source) {
-        Map<String, Object> schema = source == null ? emptySchema() : source;
+        Map<String, Object> schema = normalizeSchema(source);
         return new McpSchema.JsonSchema(
                 String.valueOf(schema.getOrDefault("type", "object")),
                 schema.get("properties") instanceof Map<?, ?> properties

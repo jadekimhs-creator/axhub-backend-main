@@ -3,6 +3,7 @@ package io.shinhanlife.dat.lib.manifest;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.shinhanlife.dat.lib.config.McpProperties;
 import io.shinhanlife.dat.mcc.dto.ToolMetadata;
+import io.shinhanlife.dat.lib.mcp.ToolMetadataMcpMapper;
 import io.shinhanlife.dat.lib.mcp.ToolRegistryHeartbeatSender;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
@@ -82,7 +83,7 @@ public class ToolManifestService {
     private ToolManifestItem toManifestItem(ToolMetadata tool) {
         String title = tool.getDisplayName() == null || tool.getDisplayName().isBlank()
                 ? tool.getName() : tool.getDisplayName();
-        Map<String, Object> schema = tool.getParametersSchema() == null ? emptySchema() : tool.getParametersSchema();
+        Map<String, Object> schema = ToolMetadataMcpMapper.normalizeSchema(tool.getParametersSchema());
         return new ToolManifestItem(
                 tool.getName(), endpoint(tool), title, tool.getDescription(), schema, tool.getOutputSchema(),
                 new ToolManifestAnnotations(title, isTrue(tool.getReadOnlyHint()), isTrue(tool.getDestructiveHint()),

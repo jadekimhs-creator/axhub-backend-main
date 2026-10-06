@@ -5,85 +5,130 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.sun.net.httpserver.HttpServer;
 import io.shinhanlife.dat.lib.annotation.GrowToolHint;
 import io.shinhanlife.dat.lib.config.McpProperties;
-import io.shinhanlife.dat.lib.metadata.ToolDefinition;
-import io.shinhanlife.dat.lib.metadata.ToolDefinitionRepository;
-import io.shinhanlife.dat.lib.metadata.ToolDescription;
 import io.shinhanlife.dat.lib.util.ToolSchemaResolver;
-import java.lang.reflect.Field;
-import java.util.List;
+import jakarta.annotation.PreDestroy;
+import java.lang.annotation.Annotation;
+import java.lang.reflect.Method;
+import java.net.InetSocketAddress;
+import java.time.Duration;
 import java.util.Map;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.Test;
 import org.springaicommunity.mcp.annotation.McpTool;
+import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.ApplicationContext;
+import org.springframework.context.event.EventListener;
 
 class ToolRegistryHeartbeatSenderTest {
 
     @Test
-    void excludesRegisterFalseToolFromGatewayRegistrationTargets() throws Exception {
-        ApplicationContext applicationContext = mock(ApplicationContext.class);
-        when(applicationContext.getBeansOfType(Object.class)).thenReturn(Map.of("disabledTool", new DisabledTool()));
-        ToolRegistryHeartbeatSender sender = new ToolRegistryHeartbeatSender(
-                applicationContext, new ObjectMapper(), new McpProperties(), mock(ToolSchemaResolver.class));
+    void applicationReadyDoesNotPushToolsToGateway() throws Exception {
+        try (GatewayProbe gateway = new GatewayProbe()) {
+            ToolRegistryHeartbeatSender sender = senderWithOneTool(gateway.url());
 
-        setField(sender, "podUrl", "http://localhost:8084");
+            sender.init();
+            invokeLifecycleMethods(sender, EventListener.class);
 
-        sender.init();
-
-        assertThat(sender.getAllScannedTools()).singleElement()
-                .extracting(tool -> tool.getIsRegistered())
-                .isEqualTo(false);
-        assertThat(registeredTools(sender)).isEmpty();
+            assertThat(gateway.receivedRequestWithin(Duration.ofMillis(300))).isFalse();
+        }
     }
 
     @Test
-    void keepsOnlyFunctionDescriptionAndStoresUsageGuidanceSeparately() throws Exception {
-        ApplicationContext applicationContext = mock(ApplicationContext.class);
-        when(applicationContext.getBeansOfType(Object.class)).thenReturn(Map.of("tool", new EnabledTool()));
-        ToolDefinitionRepository definitions = mock(ToolDefinitionRepository.class);
-        when(definitions.findByName("test_enabled_tool")).thenReturn(java.util.Optional.of(new ToolDefinition(
-                "test_enabled_tool", "테스트 도구", "1.0.0", "test",
-                new ToolDescription("기능 설명", "사용 시점", "사용 제외", "입출력 제한"),
-                "도구 설명", List.of("질문 1", "질문 2", "질문 3"), true, false, true,
-                Map.of("type", "object", "properties", Map.of(), "additionalProperties", false), null,
-                List.of("test"), null, List.of(), "MCP_TOOL")));
-        ToolRegistryHeartbeatSender sender = new ToolRegistryHeartbeatSender(applicationContext, new ObjectMapper(),
-                new McpProperties(), mock(ToolSchemaResolver.class), definitions);
+    void shutdownDoesNotDeregisterToolsFromGateway() throws Exception {
+        try (GatewayProbe gateway = new GatewayProbe()) {
+            ToolRegistryHeartbeatSender sender = senderWithOneTool(gateway.url());
+
+            sender.init();
+            invokeLifecycleMethods(sender, PreDestroy.class);
+
+            assertThat(gateway.receivedRequestWithin(Duration.ofMillis(300))).isFalse();
+        }
+    }
+
+    @Test
+    void readsResilienceValuesOnlyFromGrowToolHint() throws Exception {
+        ToolRegistryHeartbeatSender sender = senderWithOneTool("http://127.0.0.1:1");
 
         sender.init();
 
-        assertThat(sender.getAllScannedTools()).singleElement().satisfies(tool -> {
-            assertThat(tool.getDescription()).isEqualTo("기능 설명");
-            assertThat(tool.getWhenToUse()).isEqualTo("사용 시점");
-            assertThat(tool.getWhenNotToUse()).isEqualTo("사용 제외");
-            assertThat(tool.getIoLimits()).isEqualTo("입출력 제한");
-        });
+        var metadata = sender.getAllScannedTools().getFirst();
+        assertThat(metadata.getTimeoutMillis()).isEqualTo(12000L);
+        assertThat(metadata.getRetryMaxAttempts()).isEqualTo(1);
+    }
+
+    private ToolRegistryHeartbeatSender senderWithOneTool(String gatewayUrl) throws Exception {
+        ApplicationContext applicationContext = mock(ApplicationContext.class);
+        when(applicationContext.getBeansOfType(Object.class)).thenReturn(Map.of("tool", new SampleTool()));
+        ToolRegistryHeartbeatSender sender = new ToolRegistryHeartbeatSender(
+                applicationContext, new ObjectMapper(), new McpProperties(), mock(ToolSchemaResolver.class));
+        setFieldIfPresent(sender, "gatewayUrl", gatewayUrl);
+        setField(sender, "podUrl", "http://localhost:8084");
+        return sender;
+    }
+
+    private void invokeLifecycleMethods(Object target, Class<? extends Annotation> annotationType) throws Exception {
+        for (Method method : target.getClass().getDeclaredMethods()) {
+            if (method.getAnnotation(annotationType) == null) {
+                continue;
+            }
+            if (method.getParameterCount() == 0) {
+                method.invoke(target);
+            } else if (method.getParameterTypes()[0] == ApplicationReadyEvent.class) {
+                method.invoke(target, mock(ApplicationReadyEvent.class));
+            }
+        }
     }
 
     private void setField(Object target, String name, Object value) throws Exception {
-        Field field = target.getClass().getDeclaredField(name);
+        var field = target.getClass().getDeclaredField(name);
         field.setAccessible(true);
         field.set(target, value);
     }
-    @SuppressWarnings("unchecked")
-    private List<?> registeredTools(ToolRegistryHeartbeatSender sender) throws Exception {
-        Field field = ToolRegistryHeartbeatSender.class.getDeclaredField("registeredTools");
-        field.setAccessible(true);
-        return (List<?>) field.get(sender);
+
+    private void setFieldIfPresent(Object target, String name, Object value) throws Exception {
+        try {
+            setField(target, name, value);
+        } catch (NoSuchFieldException ignored) {
+            // The desired implementation has no Gateway registration configuration.
+        }
     }
 
-    static class DisabledTool {
-
-        @McpTool(name = "test_disabled_tool")
-        @GrowToolHint
+    static class SampleTool {
+        @McpTool(name = "test_sample_tool")
+        @GrowToolHint(timeoutMillis = 12000L, retryMaxAttempts = 1)
         void execute() {
         }
     }
 
-    static class EnabledTool {
-        @McpTool(name = "test_enabled_tool")
-        void execute() {
+    private static final class GatewayProbe implements AutoCloseable {
+        private final HttpServer server;
+        private final CountDownLatch requestReceived = new CountDownLatch(1);
+
+        private GatewayProbe() throws Exception {
+            server = HttpServer.create(new InetSocketAddress("127.0.0.1", 0), 0);
+            server.createContext("/", exchange -> {
+                requestReceived.countDown();
+                exchange.sendResponseHeaders(204, -1);
+                exchange.close();
+            });
+            server.start();
+        }
+
+        private String url() {
+            return "http://127.0.0.1:" + server.getAddress().getPort();
+        }
+
+        private boolean receivedRequestWithin(Duration timeout) throws InterruptedException {
+            return requestReceived.await(timeout.toMillis(), TimeUnit.MILLISECONDS);
+        }
+
+        @Override
+        public void close() {
+            server.stop(0);
         }
     }
 }
