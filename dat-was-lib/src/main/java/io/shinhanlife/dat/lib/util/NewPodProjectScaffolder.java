@@ -9,6 +9,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.util.Comparator;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -468,22 +469,16 @@ public final class NewPodProjectScaffolder {
             }
         }
         String manifestSource = toolServiceManifest == null || toolServiceManifest.isBlank() ? """
-                mcp:
-                  manifest:
-                    routing-functions:
-                      - name: route_to_%s
-                        server-id: %s
-                        category-key: %s
-                        product-boundary: "업무 범위를 입력하세요."
-                        business-domain: "업무 도메인을 입력하세요."
-                        business-outcome: "업무 결과를 입력하세요."
-                        primary-entities: []
-                        capabilities: []
-                        select-if: "이 Pod의 업무 요청인 경우"
-                        reject-if: "다른 업무 Pod 요청인 경우"
-                        confusable-servers: []
-                        decision-policy: "업무 도메인을 기준으로 선택합니다."
-                """.formatted(moduleName, moduleName, shortName) : toolServiceManifest;
+                service_id: "%s"
+                routing_contract:
+                  business_domain: ["%s"]
+                  business_outcome: ["%s 관련 업무를 처리합니다."]
+                  primary_entities: ["%s"]
+                  select_if: ["%s 관련 요청인 경우"]
+                  reject_if: ["다른 업무 Pod 요청인 경우"]
+                  capability_index: []
+                  confusable_servers: []
+                """.formatted(moduleName, shortName, shortName, shortName, shortName) : toolServiceManifest;
         write(root.resolve("src/main/resources/tool-service-manifest.yml"),
                 normalizeToolServiceManifest(manifestSource, moduleName, targetModules));
         write(root.resolve("Dockerfile"), """
@@ -559,20 +554,58 @@ public final class NewPodProjectScaffolder {
     public static String normalizeToolServiceManifest(String source, String moduleName, List<String> targetModules)
             throws IOException {
         Map<String, Object> root = YAML_MAPPER.readValue(source, Map.class);
-        if (!(root.get("mcp") instanceof Map<?, ?> mcp)
-                || !(mcp.get("manifest") instanceof Map<?, ?> manifest)
-                || !(manifest.get("routing-functions") instanceof List<?> functions)
-                || functions.isEmpty()
-                || !(functions.getFirst() instanceof Map<?, ?> function)) {
-            throw new IOException("tool-service-manifest.yml의 mcp.manifest.routing-functions 형식이 올바르지 않습니다.");
+        List<String> allowedTargets = selectedTargetModules(moduleName, targetModules);
+
+        Object routingContractObj = root.get("routing_contract");
+        if (routingContractObj == null) routingContractObj = root.get("routing-contract");
+
+        Map<String, Object> manifestMap = null;
+        if (routingContractObj == null && root.get("mcp") instanceof Map<?, ?> mcp && mcp.get("manifest") instanceof Map<?, ?> mf) {
+            manifestMap = (Map<String, Object>) mf;
+            routingContractObj = manifestMap.get("routing_contract");
+            if (routingContractObj == null) routingContractObj = manifestMap.get("routing-contract");
         }
-        Map<String, Object> routingFunction = (Map<String, Object>) function;
-        routingFunction.put("name", "route_to_" + moduleName);
-        routingFunction.put("server-id", moduleName);
-        routingFunction.put("category-key", moduleName.substring("dat-was-".length()));
-        routingFunction.put("confusable-servers", selectedTargetModules(moduleName, targetModules));
-        ((Map<String, Object>) manifest).put("routing-functions", List.of(routingFunction));
-        return YAML_MAPPER.writeValueAsString(root);
+
+        if (routingContractObj instanceof Map<?, ?> contractRaw) {
+            Map<String, Object> contract = new LinkedHashMap<>((Map<String, Object>) contractRaw);
+            if (contract.containsKey("confusable_servers")) {
+                contract.put("confusable_servers", allowedTargets);
+            } else {
+                contract.put("confusable-servers", allowedTargets);
+            }
+            if (manifestMap != null) {
+                manifestMap.put("service-id", moduleName);
+                if (manifestMap.containsKey("routing_contract")) {
+                    manifestMap.put("routing_contract", contract);
+                } else {
+                    manifestMap.put("routing-contract", contract);
+                }
+            } else {
+                root.put("service_id", moduleName);
+                if (root.containsKey("routing_contract")) {
+                    root.put("routing_contract", contract);
+                } else {
+                    root.put("routing-contract", contract);
+                }
+            }
+            return YAML_MAPPER.writeValueAsString(root);
+        }
+
+        if (manifestMap == null && root.get("mcp") instanceof Map<?, ?> mcp && mcp.get("manifest") instanceof Map<?, ?> mf) {
+            manifestMap = (Map<String, Object>) mf;
+        }
+        if (manifestMap != null && manifestMap.get("routing-functions") instanceof List<?> functions
+                && !functions.isEmpty() && functions.getFirst() instanceof Map<?, ?> function) {
+            Map<String, Object> routingFunction = (Map<String, Object>) function;
+            routingFunction.put("name", "route_to_" + moduleName);
+            routingFunction.put("server-id", moduleName);
+            routingFunction.put("category-key", moduleName.substring("dat-was-".length()));
+            routingFunction.put("confusable-servers", allowedTargets);
+            manifestMap.put("routing-functions", List.of(routingFunction));
+            return YAML_MAPPER.writeValueAsString(root);
+        }
+
+        throw new IOException("tool-service-manifest.yml의 routing_contract 또는 routing-functions 형식이 올바르지 않습니다.");
     }
 
     private static List<String> selectedTargetModules(String moduleName, List<String> targetModules) {
@@ -603,22 +636,28 @@ public final class NewPodProjectScaffolder {
     }
 
     private static String addConfusableServer(String manifest, String moduleName) {
-        Matcher matcher = Pattern.compile("(?m)^(\\s*)confusable-servers:\\s*\\[([^]]*)]\\s*$").matcher(manifest);
-        if (!matcher.find()) {
-            return manifest;
-        }
-        LinkedHashSet<String> servers = new LinkedHashSet<>();
-        for (String value : matcher.group(2).split(",")) {
-            String normalized = value.trim();
-            if (!normalized.isBlank()) {
-                servers.add(normalized);
+        Matcher matcher = Pattern.compile("(?m)^(\\s*)(confusable[-_]servers:\\s*\\[)([^]]*)(]\\s*)$").matcher(manifest);
+        if (matcher.find()) {
+            LinkedHashSet<String> servers = new LinkedHashSet<>();
+            for (String value : matcher.group(3).split(",")) {
+                String normalized = value.trim();
+                if (!normalized.isBlank()) {
+                    servers.add(normalized);
+                }
             }
+            if (!servers.add(moduleName)) {
+                return manifest;
+            }
+            String replacement = matcher.group(1) + matcher.group(2) + String.join(", ", servers) + matcher.group(4);
+            return matcher.replaceFirst(Matcher.quoteReplacement(replacement));
         }
-        if (!servers.add(moduleName)) {
-            return manifest;
+        Matcher contract = Pattern.compile("(?m)^(\\s*)(business[-_]domain:[^\\r\\n]*)$").matcher(manifest);
+        if (contract.find()) {
+            String replacement = contract.group() + System.lineSeparator() + contract.group(1)
+                    + "confusable_servers: [" + moduleName + "]";
+            return contract.replaceFirst(Matcher.quoteReplacement(replacement));
         }
-        String replacement = matcher.group(1) + "confusable-servers: [" + String.join(", ", servers) + "]";
-        return matcher.replaceFirst(Matcher.quoteReplacement(replacement));
+        return manifest;
     }
 
     private static void mergeMove(Path source, Path target) throws IOException {

@@ -431,23 +431,16 @@ public class PodScaffolder {
     private static String defaultToolServiceManifest(String moduleName) {
         String key = moduleName.replace("dat-was-", "");
         return """
-            mcp:
-              manifest:
-                routing-functions:
-                  - name: route_to_%s
-                    description-serialization: %s 업무 서버로 요청을 라우팅합니다. %s 관련 업무를 처리합니다. 요청의 주요 업무 영역을 기준으로 서버를 선택합니다.
-                    server-id: %s
-                    category-key: %s
-                    product-boundary: insurance
-                    business-domain: %s 업무
-                    business-outcome: %s 관련 업무를 처리합니다.
-                    primary-entities: []
-                    capabilities: []
-                    select-if: %s 관련 요청인 경우
-                    reject-if: 다른 업무 영역이 주된 요청인 경우
-                    confusable-servers: []
-                    decision-policy: 요청의 주요 업무 영역을 기준으로 서버를 선택합니다.
-            """.formatted(moduleName, key, key, moduleName, key, key, key, key);
+            service_id: "%s"
+            routing_contract:
+              business_domain: ["%s"]
+              business_outcome: ["%s 관련 업무 처리"]
+              primary_entities: ["%s"]
+              select_if: ["%s 관련 요청인 경우"]
+              reject_if: ["다른 업무 영역이 주된 요청인 경우"]
+              capability_index: []
+              confusable_servers: []
+            """.formatted(moduleName, key, key, key, key);
     }
 
     private static String applicationProfileYml(String profile, String port) {
@@ -490,39 +483,77 @@ public class PodScaffolder {
         Map<String, Object> root = parseManifestYaml(source);
         Map<String, Object> manifest = manifestNode(root);
         if (manifest == null) {
-            throw new IOException("tool-service-manifest.yml의 mcp.manifest.routing-functions 형식이 올바르지 않습니다.");
+            throw new IOException("tool-service-manifest.yml의 routing-contract 또는 routing-functions 형식이 올바르지 않습니다.");
+        }
+
+        Object routingContractObj = manifest.get("routing-contract");
+        if (routingContractObj == null) routingContractObj = manifest.get("routing_contract");
+
+        if (routingContractObj instanceof Map<?, ?> contractMap) {
+            Map<String, Object> contract = new java.util.LinkedHashMap<>((Map<String, Object>) contractMap);
+            contract.put("confusable_servers", allowedTargetModules(rootDir, moduleName, targetModules));
+            manifest.put("routing_contract", contract);
+            manifest.put("service_id", moduleName);
+            return YAML_MAPPER.writeValueAsString(root);
         }
 
         Object routingFunctions = manifest.get("routing-functions");
         Map<String, Object> routingFunction = routingFunction(routingFunctions);
-        if (routingFunction == null) {
-            throw new IOException("tool-service-manifest.yml의 routing-functions에 라우팅 함수가 없습니다.");
+        if (routingFunction != null) {
+            routingFunction.put("name", "route_to_" + moduleName);
+            routingFunction.put("server-id", moduleName);
+            routingFunction.put("category-key", categoryKey);
+            routingFunction.put("confusable-servers", allowedTargetModules(rootDir, moduleName, targetModules));
+            manifest.put("routing-functions", List.of(routingFunction));
+            return YAML_MAPPER.writeValueAsString(root);
         }
-        routingFunction.put("name", "route_to_" + moduleName);
-        routingFunction.put("server-id", moduleName);
-        routingFunction.put("category-key", categoryKey);
-        routingFunction.put("confusable-servers", allowedTargetModules(rootDir, moduleName, targetModules));
-        manifest.put("routing-functions", List.of(routingFunction));
-        return YAML_MAPPER.writeValueAsString(root);
+
+        throw new IOException("tool-service-manifest.yml에 routing-contract 또는 routing-functions가 없습니다.");
     }
 
     @SuppressWarnings("unchecked")
     private static Map<String, Object> manifestNode(Map<String, Object> root) {
-        if (root.get("mcp") instanceof Map<?, ?> mcp
-                && mcp.get("manifest") instanceof Map<?, ?> manifest) {
+        if (root.containsKey("routing_contract") || root.containsKey("routing-contract")) {
+            return root;
+        }
+
+        if (root.get("mcp") instanceof Map<?, ?> mcp) {
+            if (mcp.get("manifest") instanceof Map<?, ?> manifest) {
+                return (Map<String, Object>) manifest;
+            }
+            if (mcp.containsKey("routing_contract") || mcp.containsKey("routing-contract") || mcp.containsKey("routing-functions")) {
+                return (Map<String, Object>) mcp;
+            }
+        }
+
+        if (root.get("manifest") instanceof Map<?, ?> manifest) {
             return (Map<String, Object>) manifest;
         }
 
-        Object routingFunctions = root.remove("mcp.manifest.routing-functions");
-        if (routingFunctions == null) {
-            return null;
+        Object routingContract = root.remove("mcp.manifest.routing-contract");
+        if (routingContract == null) {
+            routingContract = root.remove("mcp.manifest.routing_contract");
         }
-        Map<String, Object> manifest = new java.util.LinkedHashMap<>();
-        manifest.put("routing-functions", routingFunctions);
-        Map<String, Object> mcp = new java.util.LinkedHashMap<>();
-        mcp.put("manifest", manifest);
-        root.put("mcp", mcp);
-        return manifest;
+        if (routingContract != null) {
+            Map<String, Object> manifest = new java.util.LinkedHashMap<>();
+            manifest.put("routing_contract", routingContract);
+            Map<String, Object> mcp = new java.util.LinkedHashMap<>();
+            mcp.put("manifest", manifest);
+            root.put("mcp", mcp);
+            return manifest;
+        }
+
+        Object routingFunctions = root.remove("mcp.manifest.routing-functions");
+        if (routingFunctions != null) {
+            Map<String, Object> manifest = new java.util.LinkedHashMap<>();
+            manifest.put("routing-functions", routingFunctions);
+            Map<String, Object> mcp = new java.util.LinkedHashMap<>();
+            mcp.put("manifest", manifest);
+            root.put("mcp", mcp);
+            return manifest;
+        }
+
+        return null;
     }
 
     @SuppressWarnings("unchecked")
@@ -642,14 +673,35 @@ public class PodScaffolder {
     @SuppressWarnings("unchecked")
     private static List<String> extractConfusableServers(String manifest) throws IOException {
         Map<String, Object> root = YAML_MAPPER.readValue(manifest, Map.class);
-        Object mcpValue = root.get("mcp");
-        if (!(mcpValue instanceof Map<?, ?> mcp)) return List.of();
-        Object manifestValue = mcp.get("manifest");
-        if (!(manifestValue instanceof Map<?, ?> manifestMap)) return List.of();
-        Object functionsValue = manifestMap.get("routing-functions");
-        if (!(functionsValue instanceof List<?> functions) || functions.isEmpty()
-                || !(functions.getFirst() instanceof Map<?, ?> function)) return List.of();
-        Object serversValue = function.get("confusable-servers");
+        Map<?, ?> contract = null;
+        if (root.get("routing_contract") instanceof Map<?, ?> map) {
+            contract = map;
+        } else if (root.get("routing-contract") instanceof Map<?, ?> map) {
+            contract = map;
+        } else {
+            Object mcpValue = root.get("mcp");
+            if (mcpValue instanceof Map<?, ?> mcp) {
+                Object manifestValue = mcp.get("manifest");
+                if (manifestValue instanceof Map<?, ?> manifestMap) {
+                    if (manifestMap.get("routing_contract") instanceof Map<?, ?> rc) {
+                        contract = rc;
+                    } else if (manifestMap.get("routing-contract") instanceof Map<?, ?> rc) {
+                        contract = rc;
+                    } else {
+                        Object functionsValue = manifestMap.get("routing-functions");
+                        if (functionsValue instanceof List<?> functions && !functions.isEmpty()
+                                && functions.getFirst() instanceof Map<?, ?> function) {
+                            contract = function;
+                        }
+                    }
+                }
+            }
+        }
+        if (contract == null) return List.of();
+        Object serversValue = contract.get("confusable_servers");
+        if (serversValue == null) {
+            serversValue = contract.get("confusable-servers");
+        }
         if (!(serversValue instanceof Collection<?> servers)) return List.of();
         LinkedHashSet<String> values = new LinkedHashSet<>();
         for (Object value : servers) {
@@ -660,17 +712,23 @@ public class PodScaffolder {
     }
 
     private static String addConfusableServer(String manifest, String moduleName) {
-        Pattern pattern = Pattern.compile("(?m)^(\\s*)confusable-servers:\\s*\\[([^]]*)]\\s*$");
+        Pattern pattern = Pattern.compile("(?m)^(\\s*)(confusable[-_]servers:\\s*\\[)([^]]*)(]\\s*)$");
         Matcher matcher = pattern.matcher(manifest);
         if (matcher.find()) {
             LinkedHashSet<String> values = new LinkedHashSet<>();
-            for (String value : matcher.group(2).split(",")) {
+            for (String value : matcher.group(3).split(",")) {
                 String normalized = value.trim();
                 if (!normalized.isBlank()) values.add(normalized);
             }
             if (!values.add(moduleName)) return manifest;
-            String replacement = matcher.group(1) + "confusable-servers: [" + String.join(", ", values) + "]";
+            String replacement = matcher.group(1) + matcher.group(2) + String.join(", ", values) + matcher.group(4);
             return matcher.replaceFirst(Matcher.quoteReplacement(replacement));
+        }
+        Matcher contract = Pattern.compile("(?m)^(\\s*)(business[-_]domain:[^\\r\\n]*)$").matcher(manifest);
+        if (contract.find()) {
+            String replacement = contract.group() + System.lineSeparator() + contract.group(1)
+                    + "confusable_servers: [" + moduleName + "]";
+            return contract.replaceFirst(Matcher.quoteReplacement(replacement));
         }
         Matcher category = Pattern.compile("(?m)^(\\s*)category-key:[^\\r\\n]*$").matcher(manifest);
         if (!category.find()) return manifest;

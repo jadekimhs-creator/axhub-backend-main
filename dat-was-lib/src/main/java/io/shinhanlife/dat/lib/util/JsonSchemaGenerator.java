@@ -73,7 +73,7 @@ public class JsonSchemaGenerator {
 
             Schema schemaAnnotation = field.getAnnotation(Schema.class);
             if (schemaAnnotation != null) {
-                if (!schemaAnnotation.description().isEmpty() && !fieldSchema.containsKey("description")) {
+                if (!schemaAnnotation.description().isEmpty()) {
                     fieldSchema.put("description", schemaAnnotation.description());
                 }
                 if ((schemaAnnotation.required() || schemaAnnotation.requiredMode() == Schema.RequiredMode.REQUIRED)

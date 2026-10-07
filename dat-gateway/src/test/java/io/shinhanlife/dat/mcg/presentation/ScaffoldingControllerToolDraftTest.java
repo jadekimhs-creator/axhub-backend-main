@@ -562,6 +562,57 @@ class ScaffoldingControllerToolDraftTest {
     }
 
     @Test
+    void podNewDraftGeneratesRoutingContractWithAllowedConfusableServers() {
+        ChatClient.Builder builder = mock(ChatClient.Builder.class);
+        ChatClient chatClient = mock(ChatClient.class);
+        ChatClient.ChatClientRequestSpec requestSpec = mock(ChatClient.ChatClientRequestSpec.class);
+        ChatClient.CallResponseSpec responseSpec = mock(ChatClient.CallResponseSpec.class);
+        when(builder.build()).thenReturn(chatClient);
+        when(chatClient.prompt()).thenReturn(requestSpec);
+        when(requestSpec.user(anyString())).thenReturn(requestSpec);
+        when(requestSpec.options(any(ChatOptions.class))).thenReturn(requestSpec);
+        when(requestSpec.call()).thenReturn(responseSpec);
+        when(responseSpec.content()).thenReturn("""
+                service_id: "dat-was-pro"
+                routing_contract:
+                  business_domain:
+                    - "보험 계약"
+                  business_outcome:
+                    - "보험 계약 처리"
+                  primary_entities:
+                    - "계약"
+                  select_if:
+                    - "보험 계약 관련"
+                  reject_if:
+                    - "기타 업무"
+                  capability_index:
+                    - "contract_lookup"
+                  confusable_servers:
+                    - "dat-was-hrd"
+                """);
+
+        ScaffoldingController controller = new ScaffoldingController(builder, new ObjectMapper());
+        ReflectionTestUtils.setField(controller, "openRouterApiKey", "test-openrouter-key");
+        var response = controller.generateNewPodManifestDraft(java.util.Map.of(
+                "description", "보험 계약 업무를 처리합니다.",
+                "moduleName", "dat-was-pro",
+                "targetModules", "[\"dat-was-cus\",\"dat-was-sal\",\"dat-was-pro\"]"));
+
+        assertEquals(org.springframework.http.HttpStatus.OK, response.getStatusCode());
+        String manifest = (String) ((java.util.Map<?, ?>) response.getBody()).get("toolServiceManifest");
+        assertTrue(manifest.contains("service_id: \"dat-was-pro\"") || manifest.contains("service_id: dat-was-pro"));
+        assertTrue(manifest.contains("routing_contract:"));
+        assertTrue(manifest.contains("business_domain:"));
+        List<String> confusableServers = manifest.lines()
+                .map(String::trim)
+                .filter(line -> line.startsWith("- \"dat-was-") || line.startsWith("- dat-was-"))
+                .map(line -> line.replace("- ", "").replace("\"", ""))
+                .toList();
+        assertEquals(List.of("dat-was-cus", "dat-was-sal"), confusableServers);
+        assertFalse(manifest.contains("dat-was-hrd"), manifest);
+    }
+
+    @Test
     void validatesHttpToolDraftWithAbbreviatedHttpApiNameAndBaseName() {
         ScaffoldingController controller = new ScaffoldingController(mock(ChatClient.Builder.class), new ObjectMapper());
         ScaffoldingController.ToolDraft draft = new ScaffoldingController.ToolDraft(

@@ -94,4 +94,47 @@ class ToolMetadataMcpMapperTest {
         assertTrue(properties.containsKey("customerName"));
         assertEquals(List.of("claimNo"), tool.inputSchema().get("required"));
     }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void unwrapsNestedListPropertiesAndPromotesRequiredToTopLevel() {
+        // Given: Image 1과 동일한 inputSchema > properties > contractDetailInquiryList > items > properties / required 구조
+        Map<String, Object> listSchema = Map.of(
+                "type", "object",
+                "additionalProperties", false,
+                "properties", Map.of(
+                        "contractDetailInquiryList", Map.of(
+                                "type", "array",
+                                "items", Map.of(
+                                        "type", "object",
+                                        "properties", Map.of(
+                                                "insurancePolicyNumber", Map.of("type", "string", "description", "보험계약번호")
+                                        ),
+                                        "required", List.of("insurancePolicyNumber")
+                                )
+                        )
+                )
+        );
+
+        ToolMetadata metadata = ToolMetadata.builder()
+                .name("pro_detail_contract_detail")
+                .parametersSchema(listSchema)
+                .build();
+
+        // When
+        McpSchema.Tool tool = ToolMetadataMcpMapper.toTool(metadata);
+
+        // Then
+        assertNotNull(tool.inputSchema());
+        assertEquals("object", tool.inputSchema().get("type"));
+
+        Map<String, Object> properties = (Map<String, Object>) tool.inputSchema().get("properties");
+        assertNotNull(properties);
+        assertTrue(properties.containsKey("insurancePolicyNumber"));
+        assertFalse(properties.containsKey("contractDetailInquiryList"));
+
+        List<String> required = (List<String>) tool.inputSchema().get("required");
+        assertNotNull(required);
+        assertEquals(List.of("insurancePolicyNumber"), required);
+    }
 }

@@ -159,22 +159,34 @@ public class ScaffoldingController {
             List<String> targetModules = targetModules(req.get("targetModules"));
             String prompt = """
                     Generate only YAML for an MCP tool service manifest.
-                    The root must be mcp.manifest.routing-functions with one routing function.
-                    Include name, server-id, category-key, product-boundary, business-domain,
-                    business-outcome, primary-entities, capabilities, select-if, reject-if,
-                    confusable-servers, decision-policy, and description-serialization.
-                    Except for machine identifiers and YAML keys (name, server-id, category-key), write every value in Korean.
-                    The routing function name must be exactly route_to_<moduleName>, preserving hyphens (for example route_to_dat-was-datcu).
-                    description_serialization is the Korean tool description generated from business-outcome and decision-policy;
-                    do not put JSON, MCP tags, or implementation instructions inside description_serialization.
-                    confusable-servers must contain only other plausible target server IDs and must never contain the current server-id.
-                    descriptions, business domains, outcomes, entities, capabilities, selection/rejection rules,
-                    and decision policy must all be natural and specific Korean text.
-                    Enclose every scalar string value in double quotes so Korean text containing a colon (for example "예: 급여") remains valid YAML.
-                    Use valid YAML only, without Markdown fences or explanations.
+                    The root keys must be exactly:
+                    service_id: "%s"
+                    routing_contract:
+                      business_domain:
+                        - "..."
+                      business_outcome:
+                        - "..."
+                      primary_entities:
+                        - "..."
+                      select_if:
+                        - "..."
+                      reject_if:
+                        - "..."
+                      capability_index:
+                        - "..."
+                      confusable_servers:
+                        - "..."
+
+                    Rules:
+                    1. Every field under routing_contract must be a YAML list (array) of double-quoted strings.
+                    2. Write natural and specific Korean text for business_domain, business_outcome, primary_entities, select_if, reject_if, capability_index.
+                    3. confusable_servers must be a list of plausible other server IDs (for example dat-was-cus, dat-was-sal, dat-was-sys) and must never contain the current service_id (%s).
+                    4. Enclose every scalar string value in double quotes so Korean text containing a colon or special characters remains valid YAML.
+                    5. Output valid YAML only, without Markdown fences (```) or any explanations.
+
                     Pod module: %s
                     Business description: %s
-                    """.formatted(moduleName, description);
+                    """.formatted(moduleName, moduleName, moduleName, description);
             String content = PodScaffolder.normalizeToolServiceManifest(
                     stripCodeFence(generateAiContent(prompt, req.get("model"))), moduleName, targetModules);
             return ResponseEntity.ok(Map.of("toolServiceManifest", content));
@@ -193,16 +205,34 @@ public class ScaffoldingController {
             List<String> targetModules = targetModules(req.get("targetModules"));
             String prompt = """
                     Generate only YAML for an MCP tool service manifest.
-                    The root must be mcp.manifest.routing-functions with one routing function.
-                    Include name, server-id, category-key, product-boundary, business-domain,
-                    business-outcome, primary-entities, capabilities, select-if, reject-if,
-                    confusable-servers, decision-policy, and description-serialization.
-                    Except for machine identifiers and YAML keys (name, server-id, category-key), write every value in Korean.
-                    The routing function name must be exactly route_to_<moduleName>, preserving hyphens.
-                    Use valid YAML only, without Markdown fences or explanations.
+                    The root keys must be exactly:
+                    service_id: "%s"
+                    routing_contract:
+                      business_domain:
+                        - "..."
+                      business_outcome:
+                        - "..."
+                      primary_entities:
+                        - "..."
+                      select_if:
+                        - "..."
+                      reject_if:
+                        - "..."
+                      capability_index:
+                        - "..."
+                      confusable_servers:
+                        - "..."
+
+                    Rules:
+                    1. Every field under routing_contract must be a YAML list (array) of double-quoted strings.
+                    2. Write natural and specific Korean text for business_domain, business_outcome, primary_entities, select_if, reject_if, capability_index.
+                    3. confusable_servers must be a list of plausible other server IDs (for example dat-was-cus, dat-was-sal, dat-was-sys) and must never contain the current service_id (%s).
+                    4. Enclose every scalar string value in double quotes so Korean text containing a colon or special characters remains valid YAML.
+                    5. Output valid YAML only, without Markdown fences (```) or any explanations.
+
                     Pod module: %s
                     Business description: %s
-                    """.formatted(moduleName, description);
+                    """.formatted(moduleName, moduleName, moduleName, description);
             String content = NewPodProjectScaffolder.normalizeToolServiceManifest(
                     stripCodeFence(generateAiContent(prompt, req.get("model"))), moduleName, targetModules);
             return ResponseEntity.ok(Map.of("toolServiceManifest", content));
@@ -1310,7 +1340,12 @@ public class ScaffoldingController {
         if (response == null) {
             throw new IllegalArgumentException("AI 응답이 비어 있습니다.");
         }
-        return response.trim().replaceFirst("^```(?:json)?\\s*", "").replaceFirst("\\s*```$", "").trim();
+        String trimmed = response.trim();
+        java.util.regex.Matcher matcher = java.util.regex.Pattern.compile("```(?:json|ya?ml)?\\s*([\\s\\S]*?)\\s*```").matcher(trimmed);
+        if (matcher.find()) {
+            return matcher.group(1).trim();
+        }
+        return trimmed.replaceFirst("^```(?:json|ya?ml)?\\s*", "").replaceFirst("\\s*```$", "").trim();
     }
 
     private String safeMessage(Exception e) {

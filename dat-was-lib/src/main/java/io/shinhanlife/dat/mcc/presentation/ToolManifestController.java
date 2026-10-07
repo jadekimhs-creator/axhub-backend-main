@@ -2,6 +2,7 @@ package io.shinhanlife.dat.mcc.presentation;
 
 import io.shinhanlife.dat.lib.manifest.ToolManifestResponse;
 import io.shinhanlife.dat.lib.manifest.ToolManifestService;
+import io.shinhanlife.dat.lib.manifest.ToolServiceManifestResponse;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -31,6 +32,11 @@ public class ToolManifestController {
             @PathVariable("categoryKey") String categoryKey,
             @RequestHeader(value = HttpHeaders.IF_NONE_MATCH, required = false) String ifNoneMatch) {
         return handleManifest(toolManifestService.currentManifest(categoryKey), ifNoneMatch);
+    }
+
+    @GetMapping(value = "/tool-service-manifest", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<ToolServiceManifestResponse> getToolServiceManifest() {
+        return ResponseEntity.ok(toolManifestService.currentToolServiceManifest());
     }
 
     private ResponseEntity<ToolManifestResponse> handleManifest(ToolManifestResponse manifest, String ifNoneMatch) {

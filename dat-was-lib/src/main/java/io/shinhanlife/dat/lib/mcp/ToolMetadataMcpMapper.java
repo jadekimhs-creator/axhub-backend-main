@@ -69,6 +69,7 @@ public final class ToolMetadataMcpMapper {
     /**
      * DTO명 또는 Tool명으로 중첩 래핑된 스키마를 최상위 레벨로 평탄화(Flatten)합니다.
      * Agent Builder 및 MCP 규격에 맞게 properties 및 required를 최상위 레벨로 승격합니다.
+     * (단일 Object DTO 및 단일 List(Array) DTO 래퍼 모두 지원)
      */
     @SuppressWarnings("unchecked")
     public static Map<String, Object> normalizeSchema(Map<String, Object> source) {
@@ -78,30 +79,46 @@ public final class ToolMetadataMcpMapper {
         Map<String, Object> schema = new LinkedHashMap<>(source);
         if (schema.get("properties") instanceof Map<?, ?> props && props.size() == 1) {
             Map.Entry<?, ?> entry = props.entrySet().iterator().next();
-            if (entry.getValue() instanceof Map<?, ?> nested && nested.get("properties") instanceof Map<?, ?> nestedProps) {
-                schema.put("properties", new LinkedHashMap<>((Map<String, Object>) nestedProps));
-
-                List<String> combinedRequired = new ArrayList<>();
-                if (schema.get("required") instanceof List<?> currentRequired) {
-                    for (Object req : currentRequired) {
-                        if (req instanceof String s && !s.equals(entry.getKey())) {
-                            combinedRequired.add(s);
-                        }
-                    }
+            String wrapperKey = String.valueOf(entry.getKey());
+            if (entry.getValue() instanceof Map<?, ?> nested) {
+                // Case 1: 단일 Object DTO 래퍼
+                if (nested.get("properties") instanceof Map<?, ?> nestedProps) {
+                    schema.put("properties", new LinkedHashMap<>((Map<String, Object>) nestedProps));
+                    promoteRequired(schema, (Map<String, Object>) nested, wrapperKey);
                 }
-                if (nested.get("required") instanceof List<?> nestedRequired) {
-                    for (Object req : nestedRequired) {
-                        if (req instanceof String s && !combinedRequired.contains(s)) {
-                            combinedRequired.add(s);
-                        }
-                    }
-                }
-                if (!combinedRequired.isEmpty()) {
-                    schema.put("required", combinedRequired);
+                // Case 2: 단일 List(Array) DTO 래퍼 (items 내부의 properties/required를 최상위로 승격)
+                else if (nested.get("items") instanceof Map<?, ?> itemsMap
+                        && itemsMap.get("properties") instanceof Map<?, ?> itemsProps) {
+                    schema.put("properties", new LinkedHashMap<>((Map<String, Object>) itemsProps));
+                    promoteRequired(schema, (Map<String, Object>) itemsMap, wrapperKey);
                 }
             }
         }
         return schema;
+    }
+
+    @SuppressWarnings("unchecked")
+    private static void promoteRequired(Map<String, Object> schema, Map<String, Object> nestedSource, String wrapperKey) {
+        List<String> combinedRequired = new ArrayList<>();
+        if (schema.get("required") instanceof List<?> currentRequired) {
+            for (Object req : currentRequired) {
+                if (req instanceof String s && !s.equals(wrapperKey)) {
+                    combinedRequired.add(s);
+                }
+            }
+        }
+        if (nestedSource.get("required") instanceof List<?> nestedRequired) {
+            for (Object req : nestedRequired) {
+                if (req instanceof String s && !combinedRequired.contains(s)) {
+                    combinedRequired.add(s);
+                }
+            }
+        }
+        if (!combinedRequired.isEmpty()) {
+            schema.put("required", combinedRequired);
+        } else {
+            schema.remove("required");
+        }
     }
 
     @SuppressWarnings("unchecked")

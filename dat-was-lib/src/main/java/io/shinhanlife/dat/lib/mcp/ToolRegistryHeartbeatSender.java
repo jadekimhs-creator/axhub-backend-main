@@ -193,7 +193,8 @@ public class ToolRegistryHeartbeatSender {
                     try {
 
                         Class<?> paramType = method.getParameterTypes()[0];
-                        Map<String, Object> finalSchema = toolSchemaResolver.resolve(functionAnnotation, hintAnnotation, paramType);
+                        Map<String, Object> finalSchema = ToolMetadataMcpMapper.normalizeSchema(
+                                toolSchemaResolver.resolve(functionAnnotation, hintAnnotation, paramType));
                         meta.setParametersSchema(finalSchema);
                         Map<String, Object> outputSchema = toolSchemaResolver.resolveOutput(functionAnnotation, method.getReturnType(), hintAnnotation);
                         if (!outputSchema.isEmpty()) {
@@ -308,7 +309,7 @@ public class ToolRegistryHeartbeatSender {
         boolean explicitOutputResource = hintAnnotation != null && !hintAnnotation.outputSchemaResource().isBlank();
 
         if (!explicitInputResource) {
-            meta.setParametersSchema(definition.parametersSchema());
+            meta.setParametersSchema(ToolMetadataMcpMapper.normalizeSchema(definition.parametersSchema()));
         }
 
         if (!explicitOutputResource && definition.outputSchema() != null && !definition.outputSchema().isEmpty()) {
