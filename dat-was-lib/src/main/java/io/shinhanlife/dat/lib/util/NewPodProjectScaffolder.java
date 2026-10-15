@@ -550,62 +550,8 @@ public final class NewPodProjectScaffolder {
         return value == null || value.isBlank() ? fallback : value;
     }
 
-    @SuppressWarnings("unchecked")
-    public static String normalizeToolServiceManifest(String source, String moduleName, List<String> targetModules)
-            throws IOException {
-        Map<String, Object> root = YAML_MAPPER.readValue(source, Map.class);
-        List<String> allowedTargets = selectedTargetModules(moduleName, targetModules);
-
-        Object routingContractObj = root.get("routing_contract");
-        if (routingContractObj == null) routingContractObj = root.get("routing-contract");
-
-        Map<String, Object> manifestMap = null;
-        if (routingContractObj == null && root.get("mcp") instanceof Map<?, ?> mcp && mcp.get("manifest") instanceof Map<?, ?> mf) {
-            manifestMap = (Map<String, Object>) mf;
-            routingContractObj = manifestMap.get("routing_contract");
-            if (routingContractObj == null) routingContractObj = manifestMap.get("routing-contract");
-        }
-
-        if (routingContractObj instanceof Map<?, ?> contractRaw) {
-            Map<String, Object> contract = new LinkedHashMap<>((Map<String, Object>) contractRaw);
-            if (contract.containsKey("confusable_servers")) {
-                contract.put("confusable_servers", allowedTargets);
-            } else {
-                contract.put("confusable-servers", allowedTargets);
-            }
-            if (manifestMap != null) {
-                manifestMap.put("service-id", moduleName);
-                if (manifestMap.containsKey("routing_contract")) {
-                    manifestMap.put("routing_contract", contract);
-                } else {
-                    manifestMap.put("routing-contract", contract);
-                }
-            } else {
-                root.put("service_id", moduleName);
-                if (root.containsKey("routing_contract")) {
-                    root.put("routing_contract", contract);
-                } else {
-                    root.put("routing-contract", contract);
-                }
-            }
-            return YAML_MAPPER.writeValueAsString(root);
-        }
-
-        if (manifestMap == null && root.get("mcp") instanceof Map<?, ?> mcp && mcp.get("manifest") instanceof Map<?, ?> mf) {
-            manifestMap = (Map<String, Object>) mf;
-        }
-        if (manifestMap != null && manifestMap.get("routing-functions") instanceof List<?> functions
-                && !functions.isEmpty() && functions.getFirst() instanceof Map<?, ?> function) {
-            Map<String, Object> routingFunction = (Map<String, Object>) function;
-            routingFunction.put("name", "route_to_" + moduleName);
-            routingFunction.put("server-id", moduleName);
-            routingFunction.put("category-key", moduleName.substring("dat-was-".length()));
-            routingFunction.put("confusable-servers", allowedTargets);
-            manifestMap.put("routing-functions", List.of(routingFunction));
-            return YAML_MAPPER.writeValueAsString(root);
-        }
-
-        throw new IOException("tool-service-manifest.yml의 routing_contract 또는 routing-functions 형식이 올바르지 않습니다.");
+    public static String normalizeToolServiceManifest(String source, String moduleName, List<String> targetModules) {
+        return PodScaffolder.normalizeToolServiceManifest(source, moduleName, targetModules);
     }
 
     private static List<String> selectedTargetModules(String moduleName, List<String> targetModules) {

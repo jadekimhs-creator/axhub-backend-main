@@ -471,44 +471,107 @@ public class PodScaffolder {
     }
 
     @SuppressWarnings("unchecked")
-    public static String normalizeToolServiceManifest(String source, String moduleName, List<String> targetModules)
-            throws IOException {
+    public static String normalizeToolServiceManifest(String source, String moduleName, List<String> targetModules) {
         return normalizeToolServiceManifest(source, null, moduleName,
                 moduleName.replaceFirst("^dat-was-", ""), targetModules);
     }
 
-    private static String normalizeToolServiceManifest(String source, Path rootDir, String moduleName, String categoryKey,
-                                                        List<String> targetModules)
-            throws IOException {
-        Map<String, Object> root = parseManifestYaml(source);
-        Map<String, Object> manifest = manifestNode(root);
-        if (manifest == null) {
-            throw new IOException("tool-service-manifest.yml의 routing-contract 또는 routing-functions 형식이 올바르지 않습니다.");
+    public static String normalizeToolServiceManifest(String source, Path rootDir, String moduleName, String categoryKey,
+                                                        List<String> targetModules) {
+        try {
+            return doNormalizeManifest(source, rootDir, moduleName, categoryKey, targetModules);
+        } catch (Exception e) {
+            return fallbackToolServiceManifest(moduleName, safeAllowedTargetModules(rootDir, moduleName, targetModules), null);
         }
+    }
+
+    private static List<String> safeAllowedTargetModules(Path rootDir, String moduleName, List<String> targetModules) {
+        try {
+            return allowedTargetModules(rootDir, moduleName, targetModules);
+        } catch (Exception e) {
+            return targetModules != null ? targetModules : List.of();
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    private static String doNormalizeManifest(String source, Path rootDir, String moduleName, String categoryKey,
+                                               List<String> targetModules) throws IOException {
+        List<String> confusableServers = allowedTargetModules(rootDir, moduleName, targetModules);
+        if (source == null || source.isBlank()) {
+            return defaultToolServiceManifest(moduleName);
+        }
+
+        Map<String, Object> root;
+        try {
+            root = parseManifestYaml(source);
+        } catch (Exception e) {
+            return defaultToolServiceManifest(moduleName);
+        }
+
+        Map<String, Object> manifest = manifestNode(root);
+        if (manifest == null) manifest = root;
 
         Object routingContractObj = manifest.get("routing-contract");
         if (routingContractObj == null) routingContractObj = manifest.get("routing_contract");
 
         if (routingContractObj instanceof Map<?, ?> contractMap) {
             Map<String, Object> contract = new java.util.LinkedHashMap<>((Map<String, Object>) contractMap);
-            contract.put("confusable_servers", allowedTargetModules(rootDir, moduleName, targetModules));
+            contract.put("confusable_servers", confusableServers);
             manifest.put("routing_contract", contract);
             manifest.put("service_id", moduleName);
             return YAML_MAPPER.writeValueAsString(root);
         }
 
         Object routingFunctions = manifest.get("routing-functions");
+        if (routingFunctions == null) routingFunctions = manifest.get("routing_functions");
         Map<String, Object> routingFunction = routingFunction(routingFunctions);
         if (routingFunction != null) {
             routingFunction.put("name", "route_to_" + moduleName);
             routingFunction.put("server-id", moduleName);
             routingFunction.put("category-key", categoryKey);
-            routingFunction.put("confusable-servers", allowedTargetModules(rootDir, moduleName, targetModules));
+            routingFunction.put("confusable-servers", confusableServers);
             manifest.put("routing-functions", List.of(routingFunction));
             return YAML_MAPPER.writeValueAsString(root);
         }
 
-        throw new IOException("tool-service-manifest.yml에 routing-contract 또는 routing-functions가 없습니다.");
+        return defaultToolServiceManifest(moduleName);
+    }
+
+    private static List<String> toList(Object val) {
+        if (val == null) return List.of();
+        if (val instanceof List<?> list) {
+            return list.stream()
+                    .filter(java.util.Objects::nonNull)
+                    .map(Object::toString)
+                    .map(String::trim)
+                    .filter(s -> !s.isBlank())
+                    .toList();
+        }
+        String str = val.toString().trim();
+        return str.isBlank() ? List.of() : List.of(str);
+    }
+
+    public static String fallbackToolServiceManifest(String moduleName, List<String> confusableServers, String description) {
+        String key = moduleName.replace("dat-was-", "");
+        String desc = description != null && !description.isBlank() ? description : key + " 관련 업무를 처리합니다.";
+        Map<String, Object> finalRoot = new java.util.LinkedHashMap<>();
+        finalRoot.put("service_id", moduleName);
+
+        Map<String, Object> contract = new java.util.LinkedHashMap<>();
+        contract.put("business_domain", List.of(key));
+        contract.put("business_outcome", List.of(desc));
+        contract.put("primary_entities", List.of(key));
+        contract.put("select_if", List.of(key + " 관련 요청인 경우"));
+        contract.put("reject_if", List.of("다른 업무 Pod가 주된 요청인 경우"));
+        contract.put("capability_index", List.of());
+        contract.put("confusable_servers", confusableServers != null ? confusableServers : List.of());
+
+        finalRoot.put("routing_contract", contract);
+        try {
+            return YAML_MAPPER.writeValueAsString(finalRoot);
+        } catch (Exception e) {
+            return "service_id: \"" + moduleName + "\"\nrouting_contract:\n  business_domain: [\"" + key + "\"]\n";
+        }
     }
 
     @SuppressWarnings("unchecked")

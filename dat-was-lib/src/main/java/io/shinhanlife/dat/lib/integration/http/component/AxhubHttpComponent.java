@@ -44,7 +44,22 @@ public class AxhubHttpComponent {
 
     public <T, R> R call(String apiName, String uri, T inputDto, Class<R> responseBodyClass, int timeout) {
         AxhubHttpProperties.ApiDefinition api = resolveApi(apiName);
-        return execute(api, uri, inputDto, responseBodyClass, timeout);
+        return execute(api, uri, inputDto, responseBodyClass, null, timeout);
+    }
+
+    /** Calls the exact URL configured for the API name with custom headers. */
+    public <T, R> R call(String apiName, T inputDto, Class<R> responseBodyClass, java.util.Map<String, String> headers) {
+        return call(apiName, "", inputDto, responseBodyClass, headers, 0);
+    }
+
+    /** Calls the configured URL with an optional resource suffix and custom headers. */
+    public <T, R> R call(String apiName, String uri, T inputDto, Class<R> responseBodyClass, java.util.Map<String, String> headers) {
+        return call(apiName, uri, inputDto, responseBodyClass, headers, 0);
+    }
+
+    public <T, R> R call(String apiName, String uri, T inputDto, Class<R> responseBodyClass, java.util.Map<String, String> headers, int timeout) {
+        AxhubHttpProperties.ApiDefinition api = resolveApi(apiName);
+        return execute(api, uri, inputDto, responseBodyClass, headers, timeout);
     }
 
     /** Calls the configured URL only when the target is marked as a business Pod. */
@@ -53,12 +68,12 @@ public class AxhubHttpComponent {
         if (!api.bizPod()) {
             throw new IllegalArgumentException("Configured API is not a business Pod: " + apiName);
         }
-        return execute(api, "", inputDto, responseBodyClass, 0);
+        return execute(api, "", inputDto, responseBodyClass, null, 0);
     }
 
     private <T, R> R execute(AxhubHttpProperties.ApiDefinition api, String uri, T inputDto,
-                             Class<R> responseBodyClass, int timeout) {
-        HttpHeader header = createHeader(api, timeout);
+                             Class<R> responseBodyClass, java.util.Map<String, String> headers, int timeout) {
+        HttpHeader header = createHeader(api, headers, timeout);
         String requestUri = joinPath(api.url(), uri);
         HttpTransfer<T> request = HttpTransfer.<T>http()
                 .header(header)
@@ -83,7 +98,7 @@ public class AxhubHttpComponent {
                 .orElseThrow(() -> new IllegalArgumentException("No HTTP API configuration for name: " + apiName));
     }
 
-    private HttpHeader createHeader(AxhubHttpProperties.ApiDefinition api, int timeout) {
+    private HttpHeader createHeader(AxhubHttpProperties.ApiDefinition api, java.util.Map<String, String> headers, int timeout) {
         HttpHeader header = new HttpHeader();
         if (api.bizPod()) {
             header.set("X-POD-TO-POD", "true");
@@ -98,8 +113,43 @@ public class AxhubHttpComponent {
             putIfPresent(header, "employee-no", inbound.employeeNo());
             putIfPresent(header, "virtual-employee-no", inbound.virtualEmployeeNo());
         }
+
+        // 1. Global default headers (glow.communication.http.default-headers)
+        if (properties != null && properties.getDefaultHeaders() != null) {
+            properties.getDefaultHeaders().forEach((name, value) -> putIfPresent(header, name, value));
+        }
+
+        // 2. System-level headers (glow.communication.http.systems.{system}.headers)
+        if (properties != null && properties.getSystems() != null) {
+            String systemName = resolveSystemName(api);
+            if (systemName != null) {
+                AxhubHttpProperties.SystemDefinition sysDef = properties.getSystems().get(systemName);
+                if (sysDef != null && sysDef.headers() != null) {
+                    sysDef.headers().forEach((name, value) -> putIfPresent(header, name, value));
+                }
+            }
+        }
+
+        // 3. Runtime dynamic headers passed to call() (highest priority)
+        if (headers != null && !headers.isEmpty()) {
+            headers.forEach((name, value) -> putIfPresent(header, name, value));
+        }
         header.setReadTimeout(timeout == 0 ? defaultReadTimeout() : timeout);
         return header;
+    }
+
+    private String resolveSystemName(AxhubHttpProperties.ApiDefinition api) {
+        if (api.name() != null) {
+            int hyphenIdx = api.name().indexOf("-");
+            if (hyphenIdx > 0) {
+                return api.name().substring(0, hyphenIdx).toLowerCase();
+            }
+            int underIdx = api.name().indexOf("_");
+            if (underIdx > 0) {
+                return api.name().substring(0, underIdx).toLowerCase();
+            }
+        }
+        return null;
     }
 
     private int defaultReadTimeout() {

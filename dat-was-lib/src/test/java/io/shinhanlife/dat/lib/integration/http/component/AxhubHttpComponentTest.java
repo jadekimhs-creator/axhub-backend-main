@@ -129,6 +129,54 @@ class AxhubHttpComponentTest {
         method.invoke(null);
     }
 
+    @Test
+    void callWithCustomHeadersPassesHeadersToRequest() {
+        RestClient.Builder builder = RestClient.builder();
+        MockRestServiceServer server = MockRestServiceServer.bindTo(builder).build();
+        GlowHttpComponent glowHttpComponent = new GlowHttpComponent(builder);
+        AxhubHttpProperties properties = new AxhubHttpProperties();
+        properties.setApiList(List.of(new AxhubHttpProperties.ApiDefinition(
+                "eiam-012", "https://api.example.test", "/api/eiam/submit", HttpMethod.POST, "application/json", false)));
+        AxhubHttpComponent component = new AxhubHttpComponent(
+                glowHttpComponent, new ObjectMapper(), new GlowCommunicationProperties(), properties);
+
+        server.expect(requestTo("https://api.example.test/api/eiam/submit"))
+                .andExpect(header("X-API-KEY", "eiam-dev-test"))
+                .andExpect(header("Idempotency-Key", "test-key-123"))
+                .andRespond(withSuccess("{\"status\":\"OK\"}", APPLICATION_JSON));
+
+        SampleResponse response = component.call("eiam-012", "request-body", SampleResponse.class,
+                Map.of("X-API-KEY", "eiam-dev-test", "Idempotency-Key", "test-key-123"));
+
+        assertThat(response.status()).isEqualTo("OK");
+        server.verify();
+    }
+
+    @Test
+    void callAutomaticallyInjectsSystemLevelHeaders() {
+        RestClient.Builder builder = RestClient.builder();
+        MockRestServiceServer server = MockRestServiceServer.bindTo(builder).build();
+        GlowHttpComponent glowHttpComponent = new GlowHttpComponent(builder);
+        AxhubHttpProperties properties = new AxhubHttpProperties();
+        properties.setApiList(List.of(new AxhubHttpProperties.ApiDefinition(
+                "eiam-001", "https://api.example.test", "/api/eiam/my-roles", HttpMethod.POST, "application/json", false)));
+        properties.setSystems(Map.of("eiam", new AxhubHttpProperties.SystemDefinition(
+                Map.of("X-API-KEY", "eiam-dev-test"))));
+
+        AxhubHttpComponent component = new AxhubHttpComponent(
+                glowHttpComponent, new ObjectMapper(), new GlowCommunicationProperties(), properties);
+
+        server.expect(requestTo("https://api.example.test/api/eiam/my-roles"))
+                .andExpect(header("X-API-KEY", "eiam-dev-test"))
+                .andRespond(withSuccess("{\"status\":\"OK\"}", APPLICATION_JSON));
+
+        // Call WITHOUT passing any headers in Java code:
+        SampleResponse response = component.call("eiam-001", "request-body", SampleResponse.class);
+
+        assertThat(response.status()).isEqualTo("OK");
+        server.verify();
+    }
+
     record SampleResponse(String status) {
     }
 }

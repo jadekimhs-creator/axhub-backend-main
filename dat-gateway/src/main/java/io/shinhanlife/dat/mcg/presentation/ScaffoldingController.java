@@ -153,10 +153,11 @@ public class ScaffoldingController {
     public ResponseEntity<?> generatePodManifestDraft(@RequestBody Map<String, String> req) {
         String description = req.getOrDefault("description", "").trim();
         if (description.isBlank()) return ResponseEntity.badRequest().body(Map.of("error", "Pod 업무 설명을 입력해주세요."));
+        String moduleName = req.getOrDefault("moduleName", "dat-was-datcu").trim();
+        if (!moduleName.startsWith("dat-was-")) moduleName = "dat-was-" + moduleName;
+        List<String> targetModules = List.of();
         try {
-            String moduleName = req.getOrDefault("moduleName", "dat-was-datcu").trim();
-            if (!moduleName.startsWith("dat-was-")) moduleName = "dat-was-" + moduleName;
-            List<String> targetModules = targetModules(req.get("targetModules"));
+            targetModules = targetModules(req.get("targetModules"));
             String prompt = """
                     Generate only YAML for an MCP tool service manifest.
                     The root keys must be exactly:
@@ -187,11 +188,13 @@ public class ScaffoldingController {
                     Pod module: %s
                     Business description: %s
                     """.formatted(moduleName, moduleName, moduleName, description);
+            String aiRaw = generateAiContent(prompt, req.get("model"));
             String content = PodScaffolder.normalizeToolServiceManifest(
-                    stripCodeFence(generateAiContent(prompt, req.get("model"))), moduleName, targetModules);
+                    stripCodeFence(aiRaw), moduleName, targetModules);
             return ResponseEntity.ok(Map.of("toolServiceManifest", content));
         } catch (Exception e) {
-            return ResponseEntity.internalServerError().body(Map.of("error", "AI Manifest 초안 생성 실패: " + safeMessage(e)));
+            String fallback = PodScaffolder.fallbackToolServiceManifest(moduleName, targetModules, description);
+            return ResponseEntity.ok(Map.of("toolServiceManifest", fallback));
         }
     }
 
@@ -199,10 +202,11 @@ public class ScaffoldingController {
     public ResponseEntity<?> generateNewPodManifestDraft(@RequestBody Map<String, String> req) {
         String description = req.getOrDefault("description", "").trim();
         if (description.isBlank()) return ResponseEntity.badRequest().body(Map.of("error", "Pod 업무 설명을 입력해주세요."));
+        String moduleName = req.getOrDefault("moduleName", "dat-was-new").trim();
+        if (!moduleName.startsWith("dat-was-")) moduleName = "dat-was-" + moduleName;
+        List<String> targetModules = List.of();
         try {
-            String moduleName = req.getOrDefault("moduleName", "dat-was-new").trim();
-            if (!moduleName.startsWith("dat-was-")) moduleName = "dat-was-" + moduleName;
-            List<String> targetModules = targetModules(req.get("targetModules"));
+            targetModules = targetModules(req.get("targetModules"));
             String prompt = """
                     Generate only YAML for an MCP tool service manifest.
                     The root keys must be exactly:
@@ -233,11 +237,13 @@ public class ScaffoldingController {
                     Pod module: %s
                     Business description: %s
                     """.formatted(moduleName, moduleName, moduleName, description);
+            String aiRaw = generateAiContent(prompt, req.get("model"));
             String content = NewPodProjectScaffolder.normalizeToolServiceManifest(
-                    stripCodeFence(generateAiContent(prompt, req.get("model"))), moduleName, targetModules);
+                    stripCodeFence(aiRaw), moduleName, targetModules);
             return ResponseEntity.ok(Map.of("toolServiceManifest", content));
         } catch (Exception e) {
-            return ResponseEntity.internalServerError().body(Map.of("error", "AI Manifest 초안 생성 실패: " + safeMessage(e)));
+            String fallback = PodScaffolder.fallbackToolServiceManifest(moduleName, targetModules, description);
+            return ResponseEntity.ok(Map.of("toolServiceManifest", fallback));
         }
     }
 
