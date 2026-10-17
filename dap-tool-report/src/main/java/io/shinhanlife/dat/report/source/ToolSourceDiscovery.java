@@ -18,7 +18,20 @@ import java.util.Map;
 import java.util.EnumMap;
 import org.springframework.stereotype.Component;
 
-/** 프로젝트의 @McpTool 선언을 읽기 전용으로 탐색한다. */
+/**
+ * @package io.shinhanlife.dat.report.source
+ * @className ToolSourceDiscovery
+ * @description AX HUB 시스템 처리 클래스
+ * @author 0986406
+ * @create 2026.09.01
+ * <pre>
+ * ---------- 개정이력 ----------
+ * 수정일      수정자    수정내용
+ * ---------- -------- ---------------------------
+ * 2026.09.01  0986406    최초생성
+ * 
+ * </pre>
+ */
 @Component
 public class ToolSourceDiscovery {
 
@@ -26,18 +39,23 @@ public class ToolSourceDiscovery {
 
     public ToolSourceDiscovery(ReportProperties properties) {
         sourceRoots.put(ToolSourceType.DAP_WAS_DAPMT,
-                resolveConfiguredRoot(properties.dapWasDapmtSourceRoot(), "report.dap-was-dapmt-source-root"));
+                resolveConfiguredRoot(ToolSourceType.DAP_WAS_DAPMT, properties.dapWasDapmtSourceRoot()));
         sourceRoots.put(ToolSourceType.DAP_ADMIN,
-                resolveConfiguredRoot(properties.dapAdminSourceRoot(), "report.dap-admin-source-root"));
+                resolveConfiguredRoot(ToolSourceType.DAP_ADMIN, properties.dapAdminSourceRoot()));
+        sourceRoots.put(ToolSourceType.DAT_WAS_DATPS,
+                resolveConfiguredRoot(ToolSourceType.DAT_WAS_DATPS, properties.datWasDatpsSourceRoot()));
     }
 
     public Path sourceRoot(ToolSourceType sourceType) {
-        return sourceRoots.get(sourceType);
+        return sourceRoots.get(sourceType == null ? ToolSourceType.DAP_WAS_DAPMT : sourceType);
     }
 
     public List<ToolSummary> discover(ToolSourceType sourceType) {
-        Path sourceRoot = sourceRoot(sourceType);
-        if (!Files.isDirectory(sourceRoot)) {
+        return discover(sourceRoot(sourceType));
+    }
+
+    public List<ToolSummary> discover(Path sourceRoot) {
+        if (sourceRoot == null || !Files.isDirectory(sourceRoot)) {
             throw new IllegalStateException("Report source root does not exist: " + sourceRoot);
         }
         List<ToolSummary> tools = new ArrayList<>();
@@ -54,23 +72,74 @@ public class ToolSourceDiscovery {
                 .toList();
     }
 
-    private Path resolveConfiguredRoot(String configuredRoot, String propertyName) {
-        if (configuredRoot == null || configuredRoot.isBlank()) {
-            throw new IllegalArgumentException(propertyName + " must not be blank");
+    private Path resolveConfiguredRoot(ToolSourceType type, String configuredRoot) {
+        List<Path> candidates = new ArrayList<>();
+        if (configuredRoot != null && !configuredRoot.isBlank()) {
+            candidates.add(Path.of(configuredRoot));
         }
-        return resolveProjectRoot(Path.of(configuredRoot).toAbsolutePath().normalize());
+
+        switch (type) {
+            case DAP_WAS_DAPMT -> {
+                candidates.add(Path.of("../dat-was-datmt"));
+                candidates.add(Path.of("../../dat-was-datmt"));
+                candidates.add(Path.of("../dap-was-dapmt"));
+                candidates.add(Path.of("../../dap-was-dapmt"));
+                candidates.add(Path.of("C:/eGovFrameDev-4.3.1-64bit/workspace-egov/dat-was-datmt"));
+                candidates.add(Path.of("C:/eGovFrameDev-4.3.1-64bit/workspace-egov/dap-was-dapmt"));
+            }
+            case DAT_WAS_DATPS -> {
+                candidates.add(Path.of("../../workspace/dat-was-datps"));
+                candidates.add(Path.of("../workspace/dat-was-datps"));
+                candidates.add(Path.of("../dat-was-datps"));
+                candidates.add(Path.of("../../dat-was-datps"));
+                candidates.add(Path.of("C:/eGovFrameDev-4.3.1-64bit/workspace/dat-was-datps"));
+            }
+            case DAP_ADMIN -> {
+                candidates.add(Path.of("."));
+                candidates.add(Path.of(".."));
+                candidates.add(Path.of("C:/eGovFrameDev-4.3.1-64bit/workspace-egov/axhub-backend-main"));
+            }
+        }
+
+        for (Path candidate : candidates) {
+            Path normalized = candidate.toAbsolutePath().normalize();
+            if (Files.isDirectory(normalized)) {
+                Path resolved = resolveProjectRoot(normalized, type);
+                if (resolved != null && Files.isDirectory(resolved)) {
+                    return resolved;
+                }
+            }
+        }
+
+        return candidates.isEmpty() ? Path.of(".").toAbsolutePath().normalize()
+                : candidates.get(0).toAbsolutePath().normalize();
     }
 
-    private Path resolveProjectRoot(Path configuredPath) {
+    private Path resolveProjectRoot(Path configuredPath, ToolSourceType type) {
         Path candidate = configuredPath;
         while (candidate != null) {
-            if (Files.isRegularFile(candidate.resolve("settings.gradle"))
-                    && Files.isDirectory(candidate.resolve("dat-was-lib"))) {
+            if (isProjectRootForType(candidate, type)) {
                 return candidate;
             }
-            candidate = candidate.getParent();
+            Path parent = candidate.getParent();
+            if (parent == null || parent.equals(candidate)) break;
+            if (candidate.getFileName() != null && candidate.getFileName().toString().startsWith("workspace")) {
+                break;
+            }
+            candidate = parent;
         }
         return configuredPath;
+    }
+
+    private boolean isProjectRootForType(Path path, ToolSourceType type) {
+        if (!Files.isDirectory(path)) return false;
+        return switch (type) {
+            case DAP_WAS_DAPMT -> Files.isDirectory(path.resolve("dat-was-cus"))
+                    || (Files.isRegularFile(path.resolve("settings.gradle")) && Files.isDirectory(path.resolve("dat-was-lib")) && !Files.isDirectory(path.resolve("dat-gateway")));
+            case DAT_WAS_DATPS -> Files.isRegularFile(path.resolve("build.gradle")) && Files.isDirectory(path.resolve("src"));
+            case DAP_ADMIN -> Files.isDirectory(path.resolve("dat-gateway"))
+                    || (Files.isRegularFile(path.resolve("settings.gradle")) && Files.isDirectory(path.resolve("dat-gateway")));
+        };
     }
 
     private boolean isUseCaseSource(Path path) {
@@ -78,7 +147,14 @@ public class ToolSourceDiscovery {
         return Files.isRegularFile(path)
                 && path.getFileName().toString().endsWith("UseCase.java")
                 && normalized.contains("/src/main/java/")
-                && !normalized.contains("/dap-tool-report/");
+                && !normalized.contains("/build/classes/")
+                && !normalized.contains("/build/reports/")
+                && !normalized.contains("/build/test-results/")
+                && !normalized.contains("/build/tmp/")
+                && !normalized.contains("/.gradle/")
+                && !normalized.contains("/bin/")
+                && !normalized.contains("/dap-tool-report/")
+                && !normalized.contains("/dat-lib-datmt/");
     }
 
     private void parse(Path sourceRoot, Path path, List<ToolSummary> tools) {
@@ -90,7 +166,7 @@ public class ToolSourceDiscovery {
                         .ifPresent(annotation -> tools.add(toSummary(sourceRoot, path, owner, method, annotation)));
             }
         } catch (Exception exception) {
-            throw new IllegalStateException("Failed to parse tool source: " + path, exception);
+            System.err.println("Warning: failed to parse tool source: " + path + " - " + exception.getMessage());
         }
     }
 

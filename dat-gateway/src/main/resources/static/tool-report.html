@@ -1,4 +1,4 @@
-﻿<!doctype html>
+<!doctype html>
 <html lang="ko">
 <head>
   <meta charset="utf-8">
@@ -55,10 +55,18 @@
     #message { color: #a1a1aa; font-size: 13px; }
     #message.error { color: #fca5a5; }
     .loading-row { padding: 42px !important; color: #71717a; text-align: center !important; }
+    .workspace-bar { display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-bottom: 1px solid #27272a; background: #141416; }
+    .workspace-bar label { font-size: 12px; font-weight: 600; color: #a1a1aa; white-space: nowrap; }
+    .workspace-bar .ws-input-wrap { display: flex; flex: 1; gap: 8px; align-items: center; }
+    .workspace-bar input[type="text"] { flex: 1; min-width: 260px; }
+    .workspace-bar select { width: 220px; }
+    .workspace-bar button { white-space: nowrap; }
     @media (max-width: 900px) {
       .nav-shell { overflow-x: auto; }
       .version { display: none; }
       nav { gap: 14px; }
+      .workspace-bar { flex-direction: column; align-items: stretch; }
+      .workspace-bar .ws-input-wrap { flex-wrap: wrap; }
       .toolbar { grid-template-columns: 1fr 1fr; }
       .page-heading { align-items: flex-start; flex-direction: column; }
     }
@@ -88,16 +96,27 @@
   <div class="page-heading">
     <div>
       <h1>Tool Report</h1>
-      <p class="subtitle">보고서에 포함할 MCP 툴을 선택하고, 소스 어노테이션과 전문 필드를 동일한 Excel 양식으로 생성합니다.</p>
+      <p class="subtitle">Workspace 경로를 지정하여 하위 Pod 모듈(dat-was-*)을 탐색하고, 선택한 툴의 Excel 보고서를 생성합니다.</p>
     </div>
     <span id="summaryBadge" class="count-badge">Loading tools...</span>
   </div>
 
   <section class="panel">
+    <div class="workspace-bar">
+      <label for="workspacePathInput">Workspace / Pod 경로</label>
+      <div class="ws-input-wrap">
+        <input id="workspacePathInput" type="text" value="C:\eGovFrameDev-4.3.1-64bit\workspace" placeholder="Workspace 루트 경로 (예: C:\...\workspace)">
+        <select id="workspacePresets" aria-label="워크스페이스 프리셋">
+          <option value="C:\eGovFrameDev-4.3.1-64bit\workspace">workspace (기본)</option>
+          <option value="C:\eGovFrameDev-4.3.1-64bit\workspace-egov">workspace-egov</option>
+          <option value="C:\eGovFrameDev-4.3.1-64bit\workspace-egov\axhub-backend-main">axhub-backend-main</option>
+        </select>
+        <button id="browseFolderBtn" type="button">폴더 선택</button>
+      </div>
+    </div>
     <div class="toolbar">
-      <select id="sourceType" aria-label="Tool 소스 프로젝트">
-        <option value="DAP_WAS_DAPMT">dap-was-dapmt 소스</option>
-        <option value="DAP_ADMIN">dap-admin 소스</option>
+      <select id="moduleSelect" aria-label="Pod 모듈 선택">
+        <option value="">모듈을 불러오는 중...</option>
       </select>
       <input id="keyword" type="search" autocomplete="off" placeholder="툴명, 제목 또는 설명 검색">
       <select id="category"><option value="">전체 카테고리</option></select>
@@ -118,12 +137,22 @@
 </main>
 
 <script>
-  const state = { tools: [], selected: new Set(), sourceType: 'DAP_WAS_DAPMT' };
+  const state = {
+    workspacePath: 'C:\\eGovFrameDev-4.3.1-64bit\\workspace',
+    selectedModule: 'ALL',
+    projectPath: 'C:\\eGovFrameDev-4.3.1-64bit\\workspace',
+    tools: [],
+    selected: new Set()
+  };
   const el = id => document.getElementById(id);
 
   const gateway = location.origin;
   el('gatewayHome').href = gateway + '/index.html';
   document.querySelectorAll('[data-gateway-path]').forEach(link => link.href = gateway + link.dataset.gatewayPath);
+
+  function escapeHtml(value) {
+    return String(value ?? '').replace(/[&<>'"]/g, char => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[char]));
+  }
 
   function filtered() {
     const keyword = el('keyword').value.trim().toLowerCase();
@@ -153,26 +182,100 @@
     el('download').disabled = state.selected.size === 0;
   }
 
-  function escapeHtml(value) {
-    return String(value ?? '').replace(/[&<>'"]/g, char => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[char]));
+  async function loadModules() {
+    const ws = el('workspacePathInput').value.trim();
+    if (!ws) return;
+    state.workspacePath = ws;
+    el('moduleSelect').innerHTML = '<option value="">모듈 목록 탐색 중...</option>';
+    try {
+      const res = await fetch(`/api/v1/scaffold/modules?workspacePath=${encodeURIComponent(ws)}`);
+      const modules = await res.json().catch(() => []);
+      const validModules = (Array.isArray(modules) ? modules : [])
+        .filter(m => m && m.startsWith('dat-was-') && m !== 'dat-was-lib' && m !== 'dat-lib-datmt');
+      
+      const select = el('moduleSelect');
+      select.innerHTML = '';
+
+      if (validModules.length > 1) {
+        const allOpt = document.createElement('option');
+        allOpt.value = 'ALL';
+        allOpt.textContent = `전체 모듈 (${validModules.length}개)`;
+        select.appendChild(allOpt);
+      }
+
+      if (validModules.length === 0) {
+        const selfOpt = document.createElement('option');
+        selfOpt.value = 'SELF';
+        selfOpt.textContent = ws.replace(/[\\/]+$/, '').split(/[\\/]/).pop() || '선택한 폴더';
+        select.appendChild(selfOpt);
+      } else {
+        validModules.forEach(m => {
+          const opt = document.createElement('option');
+          opt.value = m;
+          opt.textContent = m;
+          select.appendChild(opt);
+        });
+      }
+
+      if (state.selectedModule && validModules.includes(state.selectedModule)) {
+        select.value = state.selectedModule;
+      } else {
+        state.selectedModule = select.value;
+      }
+      computeProjectPath();
+      loadTools();
+    } catch (err) {
+      console.error(err);
+      el('moduleSelect').innerHTML = '<option value="ALL">전체 모듈</option>';
+      computeProjectPath();
+      loadTools();
+    }
   }
 
-  async function load() {
+  function computeProjectPath() {
+    const ws = state.workspacePath.replace(/[\\/]+$/, '').replace(/\\/g, '/');
+    const mod = state.selectedModule;
+    if (mod === 'ALL' || mod === 'SELF' || !mod) {
+      state.projectPath = ws;
+    } else {
+      const normalizedWs = ws.toLowerCase();
+      if (normalizedWs.endsWith('/' + mod.toLowerCase())) {
+        state.projectPath = ws;
+      } else {
+        state.projectPath = ws + '/' + mod;
+      }
+    }
+  }
+
+  async function loadTools() {
     try {
-      state.sourceType = el('sourceType').value;
       state.selected.clear();
       state.tools = [];
-      el('tools').innerHTML = '<tr><td class="loading-row" colspan="6">선택한 프로젝트의 Tool 소스를 분석하고 있습니다.</td></tr>';
-      const response = await fetch(`/report/api/report-tools?sourceType=${encodeURIComponent(state.sourceType)}`);
+      el('category').innerHTML = '<option value="">전체 카테고리</option>';
+      el('tools').innerHTML = '<tr><td class="loading-row" colspan="6">선택한 모듈의 Tool 소스를 분석하고 있습니다.</td></tr>';
+      const response = await fetch(`/report/api/report-tools?projectPath=${encodeURIComponent(state.projectPath)}`);
       const body = await response.json().catch(() => null);
       if (!response.ok) {
-        throw new Error(body?.error || body?.message || `툴 목록 조회에 실패했습니다. (${response.status})`);
+        const errorMsg = body?.error?.message || body?.error || body?.message || `툴 목록 조회에 실패했습니다. (${response.status})`;
+        throw new Error(typeof errorMsg === 'object' ? JSON.stringify(errorMsg) : errorMsg);
+      }
+      if (body && body.error) {
+        const errorMsg = body.error.message || body.error;
+        throw new Error(typeof errorMsg === 'object' ? JSON.stringify(errorMsg) : errorMsg);
       }
       const tools = Array.isArray(body) ? body : body?.result?.tools;
       if (!Array.isArray(tools)) {
         throw new Error('툴 목록 응답 형식이 올바르지 않습니다.');
       }
       state.tools = tools;
+      if (state.selectedModule && state.selectedModule !== 'ALL' && state.selectedModule !== 'SELF') {
+        const mod = state.selectedModule.toLowerCase();
+        state.tools = state.tools.filter(tool => {
+          const sf = (tool.sourceFile || '').toLowerCase().replace(/\\/g, '/');
+          if (sf.includes(mod + '/') || sf.includes('/' + mod)) return true;
+          return sf.startsWith('src/') && !sf.includes('dat-was-');
+        });
+      }
       [...new Set(state.tools.map(tool => tool.categoryKey))].sort().forEach(category => {
         const option = document.createElement('option');
         option.value = category; option.textContent = category; el('category').appendChild(option);
@@ -185,20 +288,54 @@
     }
   }
 
-  el('keyword').addEventListener('input', render);
-  el('sourceType').addEventListener('change', () => {
-    el('category').innerHTML = '<option value="">전체 카테고리</option>';
-    load();
+  function openServerFolderPicker() {
+    fetch('/api/v1/scaffold/browse-folder')
+      .then(res => res.text())
+      .then(path => {
+        if (path && !path.startsWith('Error:') && path !== '') {
+          el('workspacePathInput').value = path;
+          loadModules();
+        } else if (path && path.startsWith('Error:')) {
+          alert(path);
+        }
+      })
+      .catch(err => console.error(err));
+  }
+
+  el('workspacePresets').addEventListener('change', () => {
+    el('workspacePathInput').value = el('workspacePresets').value;
+    loadModules();
   });
+
+  el('browseFolderBtn').addEventListener('click', openServerFolderPicker);
+
+  let wsDebounceTimer;
+  el('workspacePathInput').addEventListener('input', () => {
+    clearTimeout(wsDebounceTimer);
+    wsDebounceTimer = setTimeout(loadModules, 400);
+  });
+  el('workspacePathInput').addEventListener('change', loadModules);
+
+  el('moduleSelect').addEventListener('change', () => {
+    state.selectedModule = el('moduleSelect').value;
+    computeProjectPath();
+    loadTools();
+  });
+
+  el('keyword').addEventListener('input', render);
   el('category').addEventListener('change', render);
   el('selectAll').addEventListener('click', () => { filtered().forEach(tool => state.selected.add(tool.name)); render(); });
   el('clearAll').addEventListener('click', () => { filtered().forEach(tool => state.selected.delete(tool.name)); render(); });
+
   el('download').addEventListener('click', async () => {
     el('download').disabled = true; updateStatus('소스를 분석하고 Excel을 생성하는 중입니다.');
     try {
       const response = await fetch('/report/api/tool-reports/excel', {
         method: 'POST', headers: {'Content-Type':'application/json'},
-        body: JSON.stringify({toolNames: [...state.selected], sourceType: state.sourceType})
+        body: JSON.stringify({
+          toolNames: [...state.selected],
+          projectPath: state.projectPath
+        })
       });
       if (!response.ok) {
         const body = await response.json().catch(() => ({}));
@@ -213,7 +350,7 @@
     } finally { el('download').disabled = state.selected.size === 0; }
   });
 
-  load();
+  loadModules();
 </script>
 </body>
 </html>

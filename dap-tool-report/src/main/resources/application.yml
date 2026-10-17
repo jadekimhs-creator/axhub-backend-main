@@ -7,6 +7,7 @@ spring:
     name: dap-tool-report
 
 report:
-  dap-was-dapmt-source-root: ${REPORT_DAP_WAS_DAPMT_SOURCE_ROOT:../dap-was-dapmt}
+  dap-was-dapmt-source-root: ${REPORT_DAP_WAS_DAPMT_SOURCE_ROOT:../dat-was-datmt}
   dap-admin-source-root: ${REPORT_DAP_ADMIN_SOURCE_ROOT:.}
+  dat-was-datps-source-root: ${REPORT_DAT_WAS_DATPS_SOURCE_ROOT:../../workspace/dat-was-datps}
   output-filename-prefix: tool-report

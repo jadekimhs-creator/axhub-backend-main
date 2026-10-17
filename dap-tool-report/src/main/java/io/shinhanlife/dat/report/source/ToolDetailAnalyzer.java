@@ -16,9 +16,23 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Comparator;
 import org.springframework.stereotype.Component;
 
-/** 선택한 프로젝트의 DTO와 전문 Java 어노테이션에서 Report 파라미터를 수집한다. */
+/**
+ * @package io.shinhanlife.dat.report.source
+ * @className ToolDetailAnalyzer
+ * @description AX HUB 시스템 처리 클래스
+ * @author 0986406
+ * @create 2026.09.01
+ * <pre>
+ * ---------- 개정이력 ----------
+ * 수정일      수정자    수정내용
+ * ---------- -------- ---------------------------
+ * 2026.09.01  0986406    최초생성
+ * 
+ * </pre>
+ */
 @Component
 public class ToolDetailAnalyzer {
 
@@ -29,9 +43,12 @@ public class ToolDetailAnalyzer {
     }
 
     public ToolReportModel analyze(ToolSummary tool, ToolSourceType sourceType) {
+        return analyze(tool, discovery.sourceRoot(sourceType));
+    }
+
+    public ToolReportModel analyze(ToolSummary tool, Path sourceRoot) {
         List<FieldDefinition> fields = new ArrayList<>();
         List<String> diagnostics = new ArrayList<>();
-        Path sourceRoot = discovery.sourceRoot(sourceType);
         Map<String, Path> javaFiles = indexJavaFiles(sourceRoot);
 
         collectJavaType(sourceRoot, tool, javaFiles.get(tool.requestType()), "DTO", "INPUT", fields, diagnostics);
@@ -47,13 +64,45 @@ public class ToolDetailAnalyzer {
 
     private Map<String, Path> indexJavaFiles(Path sourceRoot) {
         Map<String, Path> result = new LinkedHashMap<>();
-        try (var paths = Files.walk(sourceRoot)) {
-            paths.filter(path -> Files.isRegularFile(path) && path.getFileName().toString().endsWith(".java"))
-                    .forEach(path -> result.putIfAbsent(path.getFileName().toString().replace(".java", ""), path));
-        } catch (IOException exception) {
-            throw new IllegalStateException("Failed to index Java sources: " + sourceRoot, exception);
+        if (sourceRoot == null || !Files.isDirectory(sourceRoot)) {
+            return result;
+        }
+        indexDirectory(sourceRoot, result);
+        Path parent = sourceRoot.getParent();
+        if (parent != null) {
+            Path libmt = parent.resolve("dat-lib-datmt");
+            if (Files.isDirectory(libmt) && !libmt.equals(sourceRoot)) {
+                indexDirectory(libmt, result);
+            }
         }
         return result;
+    }
+
+    private void indexDirectory(Path dir, Map<String, Path> result) {
+        try (var paths = Files.walk(dir)) {
+            paths.filter(this::isAnalyzableJavaSource)
+                    .sorted(Comparator.comparing((Path p) -> p.toString().replace('\\', '/').contains("/src/main/java/") ? 0 : 1))
+                    .forEach(path -> result.putIfAbsent(path.getFileName().toString().replace(".java", ""), path));
+        } catch (IOException exception) {
+            // Ignore directory indexing errors for fallback
+        }
+    }
+
+    private boolean isAnalyzableJavaSource(Path path) {
+        if (!Files.isRegularFile(path) || !path.getFileName().toString().endsWith(".java")) {
+            return false;
+        }
+        String normalized = path.toString().replace('\\', '/');
+        return !normalized.contains("/.gradle/")
+                && !normalized.contains("/.git/")
+                && !normalized.contains("/.metadata/")
+                && !normalized.contains("/build/classes/")
+                && !normalized.contains("/build/reports/")
+                && !normalized.contains("/build/test-results/")
+                && !normalized.contains("/build/tmp/")
+                && !normalized.contains("/bin/")
+                && !normalized.contains("/out/")
+                && !normalized.contains("/dap-tool-report/");
     }
 
     private void collectJavaType(Path sourceRoot, ToolSummary tool, Path path, String sourceKind, String direction,
@@ -77,6 +126,20 @@ public class ToolDetailAnalyzer {
 
     private void collectFields(Path sourceRoot, ToolSummary tool, Path path, TypeDeclaration<?> owner,
                                String sourceKind, String direction, List<FieldDefinition> fields) {
+        if (owner.isRecordDeclaration()) {
+            com.github.javaparser.ast.body.RecordDeclaration recordDecl = owner.asRecordDeclaration();
+            for (com.github.javaparser.ast.body.Parameter parameter : recordDecl.getParameters()) {
+                AnnotationExpr param = JavaAnnotationReader.find(parameter.getAnnotations(), "McpToolParam").orElse(null);
+                AnnotationExpr schema = JavaAnnotationReader.find(parameter.getAnnotations(), "Schema").orElse(null);
+                AnnotationExpr telegram = JavaAnnotationReader.find(parameter.getAnnotations(), "GlowTrgmField").orElse(null);
+                fields.add(new FieldDefinition(
+                        tool.name(), sourceKind, direction, owner.getNameAsString(), parameter.getNameAsString(),
+                        parameter.getTypeAsString(),
+                        param == null ? null : JavaAnnotationReader.bool(param, "required", false),
+                        param == null ? "" : JavaAnnotationReader.string(param, "description", ""),
+                        annotationConstraints(schema, telegram), relative(sourceRoot, path)));
+            }
+        }
         for (FieldDeclaration declaration : owner.getFields()) {
             AnnotationExpr param = JavaAnnotationReader.find(declaration.getAnnotations(), "McpToolParam").orElse(null);
             AnnotationExpr schema = JavaAnnotationReader.find(declaration.getAnnotations(), "Schema").orElse(null);
