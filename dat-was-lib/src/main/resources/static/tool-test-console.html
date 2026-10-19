@@ -24,6 +24,7 @@
         .modal-header { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:18px; } .modal-header h2 { margin:0; font-size:17px; }
         .modal-close { padding:4px 8px; font-size:18px; line-height:1; } .modal-actions { display:flex; justify-content:flex-end; margin-top:18px; }
         .footer-note { margin-top:18px; color:#71717a; font-size:12px; } @media (max-width:900px) { .grid { grid-template-columns:1fr; } .header-inner { padding:0 16px; } main { padding:20px 16px; } }
+        .dto-folder-item:hover, #dtoPickLocalFolderItem:hover, #dtoOpenExplorerFolderItem:hover { background:#27272a; }
     </style>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -80,13 +81,22 @@
             <h2 id="dtoDownloadTitle">MCI DTO 설계서 다운로드</h2>
             <button id="dtoModalCloseButton" class="modal-close" type="button" aria-label="닫기">&times;</button>
         </div>
-        <div style="margin-bottom:14px;">
+        <div style="margin-bottom:14px; position:relative;">
             <label for="dtoWorkspacePath">Workspace Path</label>
             <div style="display:flex; gap:6px;">
                 <input type="text" id="dtoWorkspacePath" placeholder="예: c:\eGovFrameDev-4.3.1-64bit\workspace" style="flex:1;">
+                <button id="dtoFolderBrowseBtn" type="button" style="white-space:nowrap; padding:8px 12px; font-size:12px; background:var(--surface2);" title="Windows 폴더 탐색기 열기">📁 폴더 선택</button>
+                <button id="dtoFolderDropdownBtn" type="button" style="white-space:nowrap; padding:8px 10px; font-size:12px; background:var(--surface2);" title="자주 쓰는 경로 바로가기">▾</button>
                 <button id="dtoScanButton" type="button" style="white-space:nowrap; padding:8px 14px;">조회</button>
             </div>
-            <p style="font-size:11px; color:#71717a; margin:4px 0 0;">지정한 워크스페이스 또는 Pod 폴더의 MCI DTO 소스(*_I, *_O)를 실시간 스캔합니다.</p>
+            <!-- Dropdown menu for quick preset paths -->
+            <div id="dtoFolderDropdown" class="hidden" style="position:absolute; left:0; right:0; top:64px; z-index:120; background:#18181b; border:1px solid #3f3f46; border-radius:8px; padding:6px 0; box-shadow:0 12px 30px rgba(0,0,0,0.7);">
+                <div style="padding:4px 14px; font-size:11px; color:#71717a; font-weight:bold;">자주 쓰는 경로 바로가기</div>
+                <div class="dto-folder-item" data-path="c:\eGovFrameDev-4.3.1-64bit\workspace" style="padding:8px 14px; font-size:12px; cursor:pointer; color:#f4f4f5;">workspace (c:\eGovFrameDev-4.3.1-64bit\workspace)</div>
+                <div class="dto-folder-item" data-path="c:\eGovFrameDev-4.3.1-64bit\workspace-egov\axhub-backend-main" style="padding:8px 14px; font-size:12px; cursor:pointer; color:#f4f4f5;">axhub-backend-main (workspace-egov)</div>
+                <div class="dto-folder-item" data-path="C:\Users\09863406\IdeaProjects" style="padding:8px 14px; font-size:12px; cursor:pointer; color:#f4f4f5;">IdeaProjects</div>
+            </div>
+            <p style="font-size:11px; color:#71717a; margin:6px 0 0;">지정한 워크스페이스 또는 Pod 폴더의 MCI DTO 소스(*_I, *_O)를 실시간 스캔합니다.</p>
         </div>
         <div style="margin-bottom:14px;">
             <label for="dtoSelect">DTO 선택</label>
@@ -148,6 +158,7 @@
 
   function closeDtoModal() {
     $('dtoDownloadModal').classList.add('hidden');
+    $('dtoFolderDropdown')?.classList.add('hidden');
     $('dtoDownloadButton').focus();
   }
 
@@ -403,6 +414,50 @@
   $('dtoConfirmButton').addEventListener('click', downloadSelectedDto);
   $('dtoScanButton').addEventListener('click', loadDtoOptions);
   $('dtoWorkspacePath').addEventListener('keydown', event => { if (event.key === 'Enter') { event.preventDefault(); loadDtoOptions(); } });
+
+  const folderBrowseBtn = $('dtoFolderBrowseBtn');
+  const folderDropdownBtn = $('dtoFolderDropdownBtn');
+  const folderDropdown = $('dtoFolderDropdown');
+
+  if (folderBrowseBtn) {
+    folderBrowseBtn.addEventListener('click', () => {
+      folderDropdown?.classList.add('hidden');
+      fetch('/api/v1/scaffold/browse-folder')
+        .then(res => res.text())
+        .then(path => {
+          if (path && !path.startsWith('Error:') && path !== '') {
+            $('dtoWorkspacePath').value = path;
+            loadDtoOptions();
+          }
+        })
+        .catch(err => console.error('Folder picker error:', err));
+    });
+  }
+
+  if (folderDropdownBtn && folderDropdown) {
+    folderDropdownBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      folderDropdown.classList.toggle('hidden');
+    });
+
+    document.querySelectorAll('.dto-folder-item').forEach(el => {
+      el.addEventListener('click', () => {
+        const path = el.getAttribute('data-path');
+        if (path) {
+          $('dtoWorkspacePath').value = path;
+          folderDropdown.classList.add('hidden');
+          loadDtoOptions();
+        }
+      });
+    });
+
+    document.addEventListener('click', (e) => {
+      if (folderDropdown && !folderDropdown.contains(e.target) && e.target !== folderDropdownBtn) {
+        folderDropdown.classList.add('hidden');
+      }
+    });
+  }
+
   $('dtoDownloadModal').addEventListener('click', event => { if (event.target === $('dtoDownloadModal')) closeDtoModal(); });
   document.addEventListener('keydown', event => { if (event.key === 'Escape' && !$('dtoDownloadModal').classList.contains('hidden')) closeDtoModal(); });
   $('caseList').addEventListener('click', async event => { const id = event.target.dataset.run || event.target.dataset.delete; if (!id) return; const item = state.cases.find(candidate => candidate.id === id); if (event.target.dataset.delete) { state.cases = state.cases.filter(candidate => candidate.id !== id); persistCases(); return; } const tool = state.tools.find(candidate => candidate.name === item.toolName); try { await execute(tool, item.arguments); } catch (error) { result.textContent = error.message; } });

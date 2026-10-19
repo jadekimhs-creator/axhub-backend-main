@@ -905,25 +905,9 @@ routing_contract:
                                     <li><a class="dropdown-item" href="#" onclick="const input = document.getElementById('newPodWorkspacePathInput'); input.value='c:\\eGovFrameDev-4.3.1-64bit\\workspace-egov\\axhub-backend-main'; input.dispatchEvent(new Event('change')); return false;" style="color: #f4f4f5;">axhub-backend-main (workspace-egov)</a></li>
                                     <li><a class="dropdown-item" href="#" onclick="const input = document.getElementById('newPodWorkspacePathInput'); input.value='C:\\Users\\09863406\\IdeaProjects\\'; input.dispatchEvent(new Event('change')); return false;" style="color: #f4f4f5;">IdeaProjects</a></li>
                                     <li><hr class="dropdown-divider" style="border-color: #3f3f46;"></li>
-                                    <li><a class="dropdown-item" href="#" onclick="document.getElementById('newPodFolderPicker').click(); return false;" style="color: #f4f4f5;">내 PC 폴더 찾기...</a></li>
-                                    <li><a class="dropdown-item" href="#" onclick="openServerFolderPicker('newPodWorkspacePathInput'); return false;" style="color: #f4f4f5;">탐색기 다이얼로그(+)</a></li>
+                                    <li><a class="dropdown-item" href="#" onclick="openServerFolderPicker('newPodWorkspacePathInput'); return false;" style="color: #60a5fa; font-weight: 600;">🖥️ 탐색기에서 폴더 선택...</a></li>
                                 </ul>
                             </div>
-                            <input type="file" id="newPodFolderPicker" webkitdirectory directory style="display: none;" onchange="
-                                if(this.files && this.files.length > 0) {
-                                    if(this.files[0].path) {
-                                        let firstFilePath = this.files[0].path;
-                                        let relPath = this.files[0].webkitRelativePath;
-                                        let folderPath = firstFilePath.substring(0, firstFilePath.length - relPath.length);
-                                        if (folderPath.endsWith('\\') || folderPath.endsWith('/')) {
-                                            folderPath = folderPath.substring(0, folderPath.length - 1);
-                                        }
-                                        const input = document.getElementById('newPodWorkspacePathInput');
-                                        input.value = folderPath;
-                                        input.dispatchEvent(new Event('change'));
-                                    }
-                                }
-                            ">
                             <div class="input-hint">새 Pod 프로젝트 루트(예: <code>...\\workspace\\</code>)를 지정하세요. 직접 입력하거나 <b>[폴더 선택]</b>을 통해 선택할 수 있습니다.</div>
                         </div>
                         <div class="mb-4">
