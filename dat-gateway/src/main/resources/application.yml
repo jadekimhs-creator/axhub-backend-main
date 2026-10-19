@@ -6,6 +6,9 @@ spring:
   sql:
     init:
       mode: always
+  jackson:
+    deserialization:
+      fail-on-unknown-properties: false
   lifecycle:
     timeout-per-shutdown-phase: 20s
   ai:
@@ -13,7 +16,7 @@ spring:
     openai:
       # 외부 무료 모델 5개는 OpenRouter 키 하나를 공용으로 사용합니다.
       # 키는 소스에 저장하지 말고 Gateway 실행 환경의 OPENROUTER_API_KEY로 주입합니다.
-      api-key: ${OPENROUTER_API_KEY:NOT_CONFIGURED}
+      api-key: ${OPENROUTER_API_KEY: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}
       base-url: https://openrouter.ai/api/v1
       chat:
         completions-path: /chat/completions
@@ -36,7 +39,7 @@ server:
   shutdown: graceful
 
 report:
-  service-url: ${REPORT_SERVICE_URL:http://tool-report:8092}
+  service-url: ${REPORT_SERVICE_URL:http://localhost:8092}
 
 mcp:
   tool-server-api-key: tool-server-key
