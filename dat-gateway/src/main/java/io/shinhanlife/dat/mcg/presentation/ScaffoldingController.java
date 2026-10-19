@@ -252,11 +252,23 @@ public class ScaffoldingController {
         try {
             System.setProperty("java.awt.headless", "false");
             javax.swing.JFileChooser chooser = new javax.swing.JFileChooser();
-            chooser.setCurrentDirectory(new java.io.File("c:\\eGovFrameDev-4.3.1-64bit\\workspace-egov"));
+            File defaultDir = new File("c:\\eGovFrameDev-4.3.1-64bit\\workspace");
+            if (!defaultDir.exists()) {
+                defaultDir = new File("c:\\eGovFrameDev-4.3.1-64bit\\workspace-egov");
+            }
+            chooser.setCurrentDirectory(defaultDir);
             chooser.setDialogTitle("Select Workspace Folder");
             chooser.setFileSelectionMode(javax.swing.JFileChooser.DIRECTORIES_ONLY);
             chooser.setAcceptAllFileFilterUsed(false);
-            if (chooser.showOpenDialog(null) == javax.swing.JFileChooser.APPROVE_OPTION) {
+
+            javax.swing.JFrame frame = new javax.swing.JFrame();
+            frame.setAlwaysOnTop(true);
+            frame.setDefaultCloseOperation(javax.swing.JFrame.DISPOSE_ON_CLOSE);
+            frame.setLocationRelativeTo(null);
+            int result = chooser.showOpenDialog(frame);
+            frame.dispose();
+
+            if (result == javax.swing.JFileChooser.APPROVE_OPTION) {
                 return chooser.getSelectedFile().getAbsolutePath();
             }
         } catch (Exception e) {

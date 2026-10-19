@@ -897,16 +897,34 @@ routing_contract:
                             <label class="form-label">Pod Project Path</label>
                             <div class="input-group">
                                 <input type="text" class="form-control" name="workspacePath" id="newPodWorkspacePathInput"
-                                       value="C:\Users\09863406\IdeaProjects\"
+                                       value="c:\eGovFrameDev-4.3.1-64bit\workspace"
                                        placeholder="새 Pod 프로젝트 루트 경로 (예: ...\\workspace\\)" required>
                                 <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" style="border-color: #3f3f46; color: #a1a1aa;">폴더 선택</button>
                                 <ul class="dropdown-menu dropdown-menu-end dropdown-menu-dark" style="background-color: #18181b; border-color: #3f3f46;">
-                                    <li><a class="dropdown-item" href="#" onclick="const input = document.getElementById('newPodWorkspacePathInput'); input.value='C:\\Users\\09863406\\IdeaProjects\\'; return false;" style="color: #f4f4f5;">IdeaProjects (기본)</a></li>
+                                    <li><a class="dropdown-item" href="#" onclick="const input = document.getElementById('newPodWorkspacePathInput'); input.value='c:\\eGovFrameDev-4.3.1-64bit\\workspace'; input.dispatchEvent(new Event('change')); return false;" style="color: #f4f4f5;">workspace (c:\eGovFrameDev-4.3.1-64bit\workspace)</a></li>
+                                    <li><a class="dropdown-item" href="#" onclick="const input = document.getElementById('newPodWorkspacePathInput'); input.value='c:\\eGovFrameDev-4.3.1-64bit\\workspace-egov\\axhub-backend-main'; input.dispatchEvent(new Event('change')); return false;" style="color: #f4f4f5;">axhub-backend-main (workspace-egov)</a></li>
+                                    <li><a class="dropdown-item" href="#" onclick="const input = document.getElementById('newPodWorkspacePathInput'); input.value='C:\\Users\\09863406\\IdeaProjects\\'; input.dispatchEvent(new Event('change')); return false;" style="color: #f4f4f5;">IdeaProjects</a></li>
                                     <li><hr class="dropdown-divider" style="border-color: #3f3f46;"></li>
-                                    <li><a class="dropdown-item" href="#" onclick="openServerFolderPicker('newPodWorkspacePathInput'); return false;" style="color: #f4f4f5;">폴더 선택(+)</a></li>
+                                    <li><a class="dropdown-item" href="#" onclick="document.getElementById('newPodFolderPicker').click(); return false;" style="color: #f4f4f5;">내 PC 폴더 찾기...</a></li>
+                                    <li><a class="dropdown-item" href="#" onclick="openServerFolderPicker('newPodWorkspacePathInput'); return false;" style="color: #f4f4f5;">탐색기 다이얼로그(+)</a></li>
                                 </ul>
                             </div>
-                            <div class="input-hint">새 Pod 프로젝트 루트(예: <code>...\\workspace\\</code>)를 지정하세요. 생성 시 이 폴더 아래에 새 서비스 모듈이 생성되며, 기존 파일이 있으면 덮어쓰지 않습니다.</div>
+                            <input type="file" id="newPodFolderPicker" webkitdirectory directory style="display: none;" onchange="
+                                if(this.files && this.files.length > 0) {
+                                    if(this.files[0].path) {
+                                        let firstFilePath = this.files[0].path;
+                                        let relPath = this.files[0].webkitRelativePath;
+                                        let folderPath = firstFilePath.substring(0, firstFilePath.length - relPath.length);
+                                        if (folderPath.endsWith('\\') || folderPath.endsWith('/')) {
+                                            folderPath = folderPath.substring(0, folderPath.length - 1);
+                                        }
+                                        const input = document.getElementById('newPodWorkspacePathInput');
+                                        input.value = folderPath;
+                                        input.dispatchEvent(new Event('change'));
+                                    }
+                                }
+                            ">
+                            <div class="input-hint">새 Pod 프로젝트 루트(예: <code>...\\workspace\\</code>)를 지정하세요. 직접 입력하거나 <b>[폴더 선택]</b>을 통해 선택할 수 있습니다.</div>
                         </div>
                         <div class="mb-4">
                             <label class="form-label">New Module Name</label>
@@ -3579,18 +3597,35 @@ function setMciResponseStatus(message, error) {
 
 <script>
 function openServerFolderPicker(inputId) {
+    const input = document.getElementById(inputId);
     fetch("/api/v1/scaffold/browse-folder")
     .then(res => res.text())
     .then(path => {
         if(path && !path.startsWith("Error:") && path !== "") {
-            const input = document.getElementById(inputId);
-            input.value = path;
-            input.dispatchEvent(new Event("change"));
+            if (input) {
+                input.value = path;
+                input.dispatchEvent(new Event("input"));
+                input.dispatchEvent(new Event("change"));
+                input.dispatchEvent(new Event("blur"));
+            }
         } else if (path.startsWith("Error:")) {
-            alert(path);
+            const pickerId = inputId === 'newPodWorkspacePathInput' ? 'newPodFolderPicker' :
+                             inputId === 'podWorkspacePathInput' ? 'podFolderPicker' :
+                             inputId === 'workspacePathInput' ? 'toolFolderPicker' : null;
+            if (pickerId && document.getElementById(pickerId)) {
+                document.getElementById(pickerId).click();
+            } else {
+                alert(path);
+            }
         }
     })
-    .catch(err => console.error(err));
+    .catch(err => {
+        console.error("Folder picker error:", err);
+        const pickerId = inputId === 'newPodWorkspacePathInput' ? 'newPodFolderPicker' : null;
+        if (pickerId && document.getElementById(pickerId)) {
+            document.getElementById(pickerId).click();
+        }
+    });
 }
 </script>
 </body>

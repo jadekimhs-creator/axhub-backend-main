@@ -69,22 +69,32 @@
         </aside>
         <section class="stack">
             <section class="card"><h2>2. 요청 JSON</h2><div class="notice">필수값과 형식은 Tool의 inputSchema 기준입니다. MCI·외부 연동 Tool은 업무에 맞는 테스트 데이터를 입력한 후 저장하세요.</div><textarea id="arguments" spellcheck="false" aria-label="요청 JSON"></textarea><div class="buttons" style="margin-top:12px"><button id="saveButton">현재 요청 저장</button><button class="primary" id="executeButton">실행</button></div></section>
-            <section class="card"><h2>3. 실행 결과</h2><div class="meta"><span class="badge" id="httpStatus">대기</span><span class="badge" id="latency">-</span><span class="badge" id="traceId">trace-id: -</span><span class="badge" id="requestId">request-id: -</span></div><pre class="result" id="result">Tool을 선택하고 실행하세요.</pre></section>
+            <section class="card"><h2>3. 실행 결과</h2><div class="meta"><span class="badge" id="httpStatus">대기</span><span class="badge" id="latency">-</span><span class="badge" id="traceId">X-Guid: -</span><span class="badge" id="requestId">X-Request-Id: -</span></div><pre class="result" id="result">Tool을 선택하고 실행하세요.</pre></section>
         </section>
     </div>
     <p class="footer-note">이 화면은 현재 Tool Pod의 <code>/tool-manifest</code>와 <code>/mcp/{toolName}</code>만 사용합니다. 저장된 케이스는 이 브라우저의 localStorage에만 보관됩니다.</p>
 </main>
 <div id="dtoDownloadModal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="dtoDownloadTitle">
-    <div class="modal">
+    <div class="modal" style="width:min(480px,100%);">
         <div class="modal-header">
-            <h2 id="dtoDownloadTitle">DTO 다운로드</h2>
+            <h2 id="dtoDownloadTitle">MCI DTO 설계서 다운로드</h2>
             <button id="dtoModalCloseButton" class="modal-close" type="button" aria-label="닫기">&times;</button>
         </div>
-        <label for="dtoSelect">DTO 선택</label>
-        <select id="dtoSelect">
-            <option value="">DTO 목록 불러오는 중...</option>
-        </select>
-        <div class="modal-actions"><button id="dtoConfirmButton" class="primary" type="button">확인</button></div>
+        <div style="margin-bottom:14px;">
+            <label for="dtoWorkspacePath">Workspace Path</label>
+            <div style="display:flex; gap:6px;">
+                <input type="text" id="dtoWorkspacePath" placeholder="예: c:\eGovFrameDev-4.3.1-64bit\workspace" style="flex:1;">
+                <button id="dtoScanButton" type="button" style="white-space:nowrap; padding:8px 14px;">조회</button>
+            </div>
+            <p style="font-size:11px; color:#71717a; margin:4px 0 0;">지정한 워크스페이스 또는 Pod 폴더의 MCI DTO 소스(*_I, *_O)를 실시간 스캔합니다.</p>
+        </div>
+        <div style="margin-bottom:14px;">
+            <label for="dtoSelect">DTO 선택</label>
+            <select id="dtoSelect">
+                <option value="">DTO 목록 불러오는 중...</option>
+            </select>
+        </div>
+        <div class="modal-actions"><button id="dtoConfirmButton" class="primary" type="button">설계서 다운로드(_I, _O)</button></div>
     </div>
 </div>
 <script>
@@ -94,11 +104,22 @@
   const $ = id => document.getElementById(id);
   const select = $('toolSelect'), args = $('arguments'), result = $('result');
 
+  const DTO_WS_STORAGE_KEY = 'axhub.tool-test-console.workspacePath.v1';
+
   async function loadDtoOptions() {
-    // 서버가 itrf/mci/**/io 패키지에서 찾은 DTO를 _I/_O 접미사 없이 이름 단위로 묶어 셀렉트박스를 구성한다.
     const dtoSelect = $('dtoSelect');
+    const wsInput = $('dtoWorkspacePath');
+    const wsPath = wsInput ? wsInput.value.trim() : '';
+    if (wsPath) {
+      localStorage.setItem(DTO_WS_STORAGE_KEY, wsPath);
+    }
+    dtoSelect.innerHTML = '<option value="">DTO 목록 불러오는 중...</option>';
     try {
-      const response = await fetch('/dto-download/options', { headers: { 'Cache-Control': 'no-cache' } });
+      let url = '/dto-download/options';
+      if (wsPath) {
+        url += `?workspacePath=${encodeURIComponent(wsPath)}`;
+      }
+      const response = await fetch(url, { headers: { 'Cache-Control': 'no-cache' } });
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
       const dtoNames = await response.json();
       dtoSelect.innerHTML = '';
@@ -108,17 +129,33 @@
         option.textContent = dtoName;
         dtoSelect.appendChild(option);
       }
-      if (!dtoNames.length) dtoSelect.innerHTML = '<option value="">DTO 파일이 없습니다.</option>';
+      if (!dtoNames.length) dtoSelect.innerHTML = '<option value="">해당 경로에 DTO 파일이 없습니다.</option>';
     } catch (error) {
       dtoSelect.innerHTML = '<option value="">DTO 목록을 불러오지 못했습니다.</option>';
     }
   }
-  function openDtoModal() { $('dtoDownloadModal').classList.remove('hidden'); loadDtoOptions(); $('dtoSelect').focus(); }
-  function closeDtoModal() { $('dtoDownloadModal').classList.add('hidden'); $('dtoDownloadButton').focus(); }
+
+  function openDtoModal() {
+    $('dtoDownloadModal').classList.remove('hidden');
+    const wsInput = $('dtoWorkspacePath');
+    if (wsInput && !wsInput.value) {
+      const saved = localStorage.getItem(DTO_WS_STORAGE_KEY);
+      wsInput.value = saved || 'c:\\eGovFrameDev-4.3.1-64bit\\workspace';
+    }
+    loadDtoOptions();
+    $('dtoSelect').focus();
+  }
+
+  function closeDtoModal() {
+    $('dtoDownloadModal').classList.add('hidden');
+    $('dtoDownloadButton').focus();
+  }
+
   async function downloadSelectedDto() {
-    // 선택한 DTO 이름의 _I/_O 엑셀 생성 API를 순차 호출해 존재하는 파일을 각각 브라우저 다운로드로 저장한다.
     const baseName = $('dtoSelect').value;
     if (!baseName) return alert('다운로드할 DTO를 선택해주세요.');
+    const wsInput = $('dtoWorkspacePath');
+    const wsPath = wsInput ? wsInput.value.trim() : '';
     const confirmButton = $('dtoConfirmButton');
     confirmButton.disabled = true;
     const errors = [];
@@ -127,29 +164,29 @@
       for (const variant of ['I', 'O']) {
         const dtoName = `${baseName}_${variant}`;
         try {
-          const response = await fetch(`/dto-download/${encodeURIComponent(dtoName)}`, {
+          let url = `/dto-download/${encodeURIComponent(dtoName)}`;
+          if (wsPath) {
+            url += `?workspacePath=${encodeURIComponent(wsPath)}`;
+          }
+          const response = await fetch(url, {
             cache: 'no-store',
             headers: { 'Cache-Control': 'no-cache' }
           });
-          if (response.status === 404) continue; // _I/_O 중 한쪽만 존재하는 DTO는 정상 케이스이므로 건너뛴다.
+          if (response.status === 404) continue;
           if (!response.ok) {
-            // 422는 GlowTrgmField 메타데이터가 없어 설계서 양식으로 변환할 수 없는 경우다.
             const message = (await response.text()).trim();
-            throw new Error(response.status === 422
-              ? `${dtoName}: dto의 내용이 엑셀파일 양식에 맞지않습니다 파일을 확인해주세요`
-              : message || `${dtoName} 다운로드에 실패했습니다. (HTTP ${response.status})`);
+            throw new Error(message || `${dtoName} 다운로드에 실패했습니다. (HTTP ${response.status})`);
           }
           const blob = await response.blob();
-          const url = URL.createObjectURL(blob);
+          const urlObj = URL.createObjectURL(blob);
           const link = document.createElement('a');
-          link.href = url;
+          link.href = urlObj;
           link.download = `${dtoName}.xlsx`;
           document.body.appendChild(link);
           link.click();
           link.remove();
-          URL.revokeObjectURL(url);
+          URL.revokeObjectURL(urlObj);
           successCount += 1;
-          // 브라우저가 연속 다운로드를 한 번에 차단하지 않도록 다음 요청 전에 짧은 간격을 둔다.
           await new Promise(resolve => setTimeout(resolve, 300));
         } catch (error) {
           errors.push(error.message);
@@ -257,11 +294,29 @@
     const fallback = `/mcp/${encodeURIComponent(tool.name)}`;
     try { const endpoint = new URL(tool.endpoint || fallback, window.location.origin); return endpoint.origin === window.location.origin ? `${endpoint.pathname}${endpoint.search}` : fallback; } catch (_) { return fallback; }
   }
-  function resetResult() { $('httpStatus').textContent = '대기'; $('httpStatus').className = 'badge'; $('latency').textContent = '-'; $('traceId').textContent = 'trace-id: -'; $('requestId').textContent = 'request-id: -'; }
+  function resetResult() { $('httpStatus').textContent = '대기'; $('httpStatus').className = 'badge'; $('latency').textContent = '-'; $('traceId').textContent = 'X-Guid: -'; $('requestId').textContent = 'X-Request-Id: -'; }
+  function toolHeaders(guid, request, session) {
+    return {
+      'Content-Type': 'application/json',
+      'X-Guid': guid,
+      'X-Praf-No': '100001',
+      'X-Request-Id': request,
+      'X-Request-Time': new Date().toISOString(),
+      'X-Vrtl-Praf-No': 'V100001',
+      'X-App-Code': 'DATMT',
+      'X-Project-Code': 'AXHUB',
+      'X-User-Ip': '127.0.0.1',
+      'X-Caller-Ip': '127.0.0.1',
+      'X-Caller-Host': window.location.hostname || 'localhost',
+      'X-Channel': 'TOOL-TEST-CONSOLE',
+      'X-Agent-Id': 'TOOL-TEST-CONSOLE',
+      'mcp-session-id': session
+    };
+  }
 
   async function execute(tool = state.selected, body = null) {
     if (!tool) throw new Error('실행할 Tool을 선택하세요.');
-    const payload = body || parseArguments(); const trace = requestId(), request = requestId(), started = performance.now();
+    const payload = body || parseArguments(); const guid = requestId(), request = requestId(), session = requestId(), started = performance.now();
     $('executeButton').disabled = true; $('httpStatus').textContent = '실행 중'; $('httpStatus').className = 'badge';
     try {
       let response;
@@ -269,13 +324,13 @@
           const reqPayload = { jsonrpc: "2.0", method: "tools/call", params: { name: tool.name, arguments: payload }, id: Date.now() };
           response = await fetch('/mcp/api/v1/tools/call', { 
               method: 'POST', 
-              headers: { 'Content-Type':'application/json', 'trace-id':trace, 'request-id':request, 'X-Request-Id':request }, 
+              headers: toolHeaders(guid, request, session),
               body: JSON.stringify(reqPayload) 
           });
       } else {
           response = await fetch(endpointFor(tool), { 
               method: 'POST', 
-              headers: { 'Content-Type':'application/json', 'trace-id':trace, 'request-id':request, 'X-Request-Id':request }, 
+              headers: toolHeaders(guid, request, session),
               body: JSON.stringify(payload) 
           });
       }
@@ -290,7 +345,7 @@
       
       const elapsed = Math.round(performance.now() - started);
       $('httpStatus').textContent = `HTTP ${displayStatus}`; $('httpStatus').className = `badge ${isOk ? 'ok' : 'fail'}`;
-      $('latency').textContent = `${elapsed}ms`; $('traceId').textContent = `trace-id: ${response.headers.get('trace-id') || trace}`; $('requestId').textContent = `request-id: ${response.headers.get('request-id') || request}`;
+      $('latency').textContent = `${elapsed}ms`; $('traceId').textContent = `X-Guid: ${response.headers.get('X-Guid') || guid}`; $('requestId').textContent = `X-Request-Id: ${response.headers.get('X-Request-Id') || request}`;
       let displayData = data;
       if (isGatewayMode && data && typeof data === 'object') {
           if (data.result && data.result.result) {
@@ -346,6 +401,8 @@
   $('dtoDownloadButton').addEventListener('click', openDtoModal);
   $('dtoModalCloseButton').addEventListener('click', closeDtoModal);
   $('dtoConfirmButton').addEventListener('click', downloadSelectedDto);
+  $('dtoScanButton').addEventListener('click', loadDtoOptions);
+  $('dtoWorkspacePath').addEventListener('keydown', event => { if (event.key === 'Enter') { event.preventDefault(); loadDtoOptions(); } });
   $('dtoDownloadModal').addEventListener('click', event => { if (event.target === $('dtoDownloadModal')) closeDtoModal(); });
   document.addEventListener('keydown', event => { if (event.key === 'Escape' && !$('dtoDownloadModal').classList.contains('hidden')) closeDtoModal(); });
   $('caseList').addEventListener('click', async event => { const id = event.target.dataset.run || event.target.dataset.delete; if (!id) return; const item = state.cases.find(candidate => candidate.id === id); if (event.target.dataset.delete) { state.cases = state.cases.filter(candidate => candidate.id !== id); persistCases(); return; } const tool = state.tools.find(candidate => candidate.name === item.toolName); try { await execute(tool, item.arguments); } catch (error) { result.textContent = error.message; } });
