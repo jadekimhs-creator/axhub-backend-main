@@ -16,7 +16,7 @@ spring:
     openai:
       # 외부 무료 모델 5개는 OpenRouter 키 하나를 공용으로 사용합니다.
       # 키는 소스에 저장하지 말고 Gateway 실행 환경의 OPENROUTER_API_KEY로 주입합니다.
-      api-key: {}
+      api-key:
       base-url: https://openrouter.ai/api/v1
       chat:
         completions-path: /chat/completions
