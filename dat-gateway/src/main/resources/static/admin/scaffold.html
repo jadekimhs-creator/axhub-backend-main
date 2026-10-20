@@ -1808,11 +1808,11 @@ routing_contract:
         state.selected = state.tools[Number(dg('docgenToolSelect').value)] || null;
         const tool = state.selected;
         if (!tool) return;
-        dg('docgenVersion').value = normalizeVersion(tool.semver || dg('docgenVersion').value || '1.0');
+        dg('docgenVersion').value = normalizeVersion(tool.semver || tool._meta?.version || dg('docgenVersion').value || '1.0');
         dg('docgenToolTitle').classList.remove('docgen-loading', 'docgen-error');
-        dg('docgenToolTitle').textContent = tool.displayName || tool.name;
+        dg('docgenToolTitle').textContent = tool.displayName || tool.title || tool.name;
         dg('docgenToolDescription').textContent = tool.description || '설명이 등록되지 않은 Tool입니다.';
-        dg('docgenCategoryTag').textContent = `Category · ${tool.categoryKey || '-'}`;
+        dg('docgenCategoryTag').textContent = `Category · ${tool.categoryKey || tool._meta?.category_key || '-'}`;
         dg('docgenInterfaceTag').textContent = `Interface · ${tool.integrationType || '-'}`;
         dg('docgenMetadataStatus').textContent = tool.enabled === false ? 'DISABLED' : 'READY';
         updateOutputPreview();
@@ -1839,8 +1839,17 @@ routing_contract:
     }
 
     async function generateFiles() {
-        const tool = state.selected;
-        if (!tool) return notify('생성할 Tool을 선택하세요.');
+        const rawTool = state.selected;
+        if (!rawTool) return notify('생성할 Tool을 선택하세요.');
+        const tool = {
+            ...rawTool,
+            displayName: rawTool.displayName || rawTool.title,
+            parametersSchema: rawTool.parametersSchema || rawTool.inputSchema,
+            outputSchema: rawTool.outputSchema,
+            categoryKey: rawTool.categoryKey || rawTool._meta?.category_key,
+            mciServiceId: rawTool.mciServiceId || rawTool._meta?.legacy_interface_id,
+            semver: rawTool.semver || rawTool._meta?.version || '1.0.0'
+        };
         const button = dg('docgenGenerateBtn');
         const version = safeVersion(dg('docgenVersion').value);
         const date = yyyymmdd();

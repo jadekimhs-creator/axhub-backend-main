@@ -131,7 +131,8 @@ public class DocumentGeneratorService {
         set(sheet, "B10", label);
         set(sheet, "E10", tool.getOperationType() == null ? "-" : tool.getOperationType().name());
         set(sheet, "H10", Boolean.FALSE.equals(tool.getVisible()) ? "비공개" : "공개");
-        set(sheet, "B11", schemaFields(tool.getParametersSchema()).size()
+        Map<String, Object> inSchema = tool.getParametersSchema() != null ? tool.getParametersSchema() : tool.getInputSchema();
+        set(sheet, "B11", schemaFields(inSchema).size()
                 + "개 파라미터가 Tool JSON 스키마에서 자동 매핑되었습니다.");
         set(sheet, "B14", value(tool.getCategoryKey()));
         set(sheet, "E14", value(tool.getPodUrl()));
@@ -221,22 +222,47 @@ public class DocumentGeneratorService {
         set(sheet, "B7", response ? "데이터 수신시스템 · 응답 (Response Out)" : "데이터 송신시스템 · 요청 (Request In)");
 
         clearInterfaceRows(sheet);
+        int maxRows = INTERFACE_LAST_ROW - INTERFACE_FIRST_ROW + 1;
         if (response) {
-            writeInterfaceField(sheet, INTERFACE_FIRST_ROW, interfaceId, "AX HUB\nMCP Gateway", "Body",
-                    interfaceId + "_O", new SchemaField("resultData", "object", "결과 데이터", "-", true, "", false));
-            set(sheet, "C33", prettyJson(Map.of("resultData", Map.of("status", "SUCCESS"))));
-        } else {
-            List<SchemaField> fields = schemaFields(tool.getParametersSchema());
-            if (fields.size() > INTERFACE_LAST_ROW - INTERFACE_FIRST_ROW + 1) {
-                throw new IllegalArgumentException("인터페이스 양식은 최대 23개 요청 필드를 지원합니다.");
+            Map<String, Object> outSchema = tool.getOutputSchema();
+            List<SchemaField> fields = schemaFields(outSchema);
+            if (fields.isEmpty()) {
+                writeInterfaceField(sheet, INTERFACE_FIRST_ROW, interfaceId, "AX HUB\nMCP Gateway", "Body",
+                        interfaceId + "_O", new SchemaField("resultData", "object", "결과 데이터", "-", true, "", false));
+                set(sheet, "C33", prettyJson(Map.of("resultData", Map.of("status", "SUCCESS"))));
+            } else {
+                int writeCount = Math.min(fields.size(), maxRows);
+                for (int index = 0; index < writeCount; index++) {
+                    writeInterfaceField(sheet, INTERFACE_FIRST_ROW + index, interfaceId,
+                            "AX HUB\nMCP Gateway", "Body", interfaceId + "_O", fields.get(index));
+                }
+                Object exampleObj = exampleFromSchema(outSchema);
+                if (exampleObj instanceof Map<?, ?> map && map.isEmpty()) {
+                    set(sheet, "C33", prettyJson(Map.of("resultData", Map.of("status", "SUCCESS"))));
+                } else {
+                    set(sheet, "C33", prettyJson(exampleObj));
+                }
             }
-            for (int index = 0; index < fields.size(); index++) {
+            if (fields.size() > maxRows) {
+                set(sheet, "A34", "※ 전체 " + fields.size() + "개 필드 중 상위 " + maxRows + "개 필드가 표시되었습니다.");
+            } else {
+                set(sheet, "A34", "※ ToolMetadata를 기준으로 자동 생성된 검토용 문서입니다.");
+            }
+        } else {
+            Map<String, Object> inSchema = tool.getParametersSchema() != null ? tool.getParametersSchema() : tool.getInputSchema();
+            List<SchemaField> fields = schemaFields(inSchema);
+            int writeCount = Math.min(fields.size(), maxRows);
+            for (int index = 0; index < writeCount; index++) {
                 writeInterfaceField(sheet, INTERFACE_FIRST_ROW + index, interfaceId,
                         defaultValue(tool.getIntegrationType(), "Tool"), "Body", interfaceId + "_I", fields.get(index));
             }
-            set(sheet, "C33", prettyJson(exampleFromSchema(tool.getParametersSchema())));
+            set(sheet, "C33", prettyJson(exampleFromSchema(inSchema)));
+            if (fields.size() > maxRows) {
+                set(sheet, "A34", "※ 전체 " + fields.size() + "개 필드 중 상위 " + maxRows + "개 필드가 표시되었습니다.");
+            } else {
+                set(sheet, "A34", "※ ToolMetadata를 기준으로 자동 생성된 검토용 문서입니다.");
+            }
         }
-        set(sheet, "A34", "※ ToolMetadata를 기준으로 자동 생성된 검토용 문서입니다.");
     }
 
     private void writeInterfaceField(Sheet sheet, int rowIndex, String interfaceId, String system, String level,

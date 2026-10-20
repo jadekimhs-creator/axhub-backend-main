@@ -13,6 +13,9 @@ import java.util.Set;
 import java.util.List;
 import java.util.HashSet;
 import io.shinhanlife.dat.lib.dto.OperationType;
+import com.fasterxml.jackson.annotation.JsonAlias;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
 /**
  * Tool(Agent)의 명세 및 라우팅 정보를 담고 있는 메타데이터 클래스
  * Redis 레지스트리에 저장되며, Planner와 Router 간의 통신 객체(Plan)로 사용됩니다.
@@ -36,11 +39,14 @@ import io.shinhanlife.dat.lib.dto.OperationType;
 @AllArgsConstructor
 @Getter
 @Setter
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class ToolMetadata {
 
     // 1. Tool 기본 정보
     private String uid;               // UUID 형식의 고유 식별자
+    @JsonAlias({"semver", "version"})
     private String semver;            // 버전 (예: 1.0.0)
+    @JsonAlias({"displayName", "title"})
     private String displayName;              // 사람이 읽는 라벨 (1-128자)
     private String name;       // MCP 서브툴 명칭 (64자 이하, 예: CustomerSearchTool)
     private String description;       // 툴의 목적 및 설명 (LLM 프롬프트에 활용 가능)
@@ -55,13 +61,16 @@ public class ToolMetadata {
     private List<String> requiredEnvKeys;
 
     // 2. 파라미터 스키마 (JSON Schema 형태의 Map)
+    @JsonAlias({"parametersSchema", "inputSchema"})
     private Map<String, Object> parametersSchema;
+    @JsonAlias({"outputSchema", "responseSchema"})
     private Map<String, Object> outputSchema;
 
     // 2-0. 프론트엔드 UI용 함수별 프롬프트 매핑 (추가됨)
     private Map<String, String> actionPrompts;
 
     // 2-1. 도메인 부서 그룹명 (category_key, 슬러그 형식)
+    @JsonAlias({"categoryKey", "category_key"})
     private String categoryKey;
 
     // 2-1-1. 어플리케이션(모듈) 이름 (예: dat-was-cus)
@@ -107,6 +116,7 @@ public class ToolMetadata {
     private String integrationType;   // 연동 타입: "DIRECT" 또는 "MCI_EAI"
 
     // 4. 레거시(MCI/EAI) 연동 시 필수 정보 (integrationType이 "MCI_EAI"일 때 사용)
+    @JsonAlias({"mciServiceId", "legacyInterfaceId", "legacy_interface_id"})
     private String mciServiceId;      // MCI/EAI 호출을 위한 서비스 ID (예: CRM_001, LICO_992)
 
     // 5. 인프라 상태 정보 (DIRECT 연동 시 사용)
@@ -143,4 +153,21 @@ public class ToolMetadata {
         if (parametersSchema == null || !parametersSchema.containsKey("required")) return Set.of();
         return new HashSet<>((List<String>) parametersSchema.get("required"));
     }
+
+    public Map<String, Object> getInputSchema() {
+        return parametersSchema;
+    }
+
+    public void setInputSchema(Map<String, Object> inputSchema) {
+        this.parametersSchema = inputSchema;
+    }
+
+    public String getTitle() {
+        return displayName;
+    }
+
+    public void setTitle(String title) {
+        this.displayName = title;
+    }
+
 }

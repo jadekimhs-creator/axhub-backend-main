@@ -189,6 +189,15 @@ public class McpRouterController {
             toolMap.put("inputSchema", t.getParametersSchema());
             toolMap.put("outputSchema", t.getOutputSchema());
             toolMap.put("title", t.getDisplayName());
+            toolMap.put("displayName", t.getDisplayName());
+            toolMap.put("parametersSchema", t.getParametersSchema());
+            toolMap.put("semver", t.getSemver());
+            toolMap.put("categoryKey", t.getCategoryKey());
+            toolMap.put("mciServiceId", t.getMciServiceId());
+            toolMap.put("integrationType", t.getIntegrationType());
+            toolMap.put("endpoint", t.getEndpoint());
+            toolMap.put("podUrl", t.getPodUrl());
+            toolMap.put("enabled", t.getEnabled());
             
             Map<String, Object> annotations = new HashMap<>();
             annotations.put("readOnlyHint", t.getReadOnlyHint() != null ? t.getReadOnlyHint() : false);
