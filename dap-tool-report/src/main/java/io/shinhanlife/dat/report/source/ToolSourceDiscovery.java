@@ -1,5 +1,7 @@
 package io.shinhanlife.dat.report.source;
 
+import com.github.javaparser.JavaParser;
+import com.github.javaparser.ParserConfiguration;
 import com.github.javaparser.StaticJavaParser;
 import com.github.javaparser.ast.CompilationUnit;
 import com.github.javaparser.ast.body.MethodDeclaration;
@@ -34,6 +36,9 @@ import org.springframework.stereotype.Component;
  */
 @Component
 public class ToolSourceDiscovery {
+
+    private final JavaParser javaParser = new JavaParser(
+            new ParserConfiguration().setLanguageLevel(ParserConfiguration.LanguageLevel.JAVA_21));
 
     private final Map<ToolSourceType, Path> sourceRoots = new EnumMap<>(ToolSourceType.class);
 
@@ -144,8 +149,9 @@ public class ToolSourceDiscovery {
 
     private boolean isUseCaseSource(Path path) {
         String normalized = path.toString().replace('\\', '/');
+        String fileName = path.getFileName().toString();
         return Files.isRegularFile(path)
-                && path.getFileName().toString().endsWith("UseCase.java")
+                && (fileName.endsWith("UseCase.java") || fileName.endsWith("Usecase.java"))
                 && normalized.contains("/src/main/java/")
                 && !normalized.contains("/build/classes/")
                 && !normalized.contains("/build/reports/")
@@ -159,7 +165,10 @@ public class ToolSourceDiscovery {
 
     private void parse(Path sourceRoot, Path path, List<ToolSummary> tools) {
         try {
-            CompilationUnit unit = StaticJavaParser.parse(path);
+            CompilationUnit unit = javaParser.parse(path).getResult().orElse(null);
+            if (unit == null) {
+                return;
+            }
             String owner = unit.getPrimaryTypeName().orElse(path.getFileName().toString().replace(".java", ""));
             for (MethodDeclaration method : unit.findAll(MethodDeclaration.class)) {
                 JavaAnnotationReader.find(method.getAnnotations(), "McpTool")

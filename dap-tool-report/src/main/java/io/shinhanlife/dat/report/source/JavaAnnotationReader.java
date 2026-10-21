@@ -3,12 +3,15 @@ package io.shinhanlife.dat.report.source;
 import com.github.javaparser.ast.NodeList;
 import com.github.javaparser.ast.expr.AnnotationExpr;
 import com.github.javaparser.ast.expr.ArrayInitializerExpr;
+import com.github.javaparser.ast.expr.BinaryExpr;
 import com.github.javaparser.ast.expr.BooleanLiteralExpr;
 import com.github.javaparser.ast.expr.Expression;
 import com.github.javaparser.ast.expr.MemberValuePair;
 import com.github.javaparser.ast.expr.NormalAnnotationExpr;
 import com.github.javaparser.ast.expr.SingleMemberAnnotationExpr;
 import com.github.javaparser.ast.expr.StringLiteralExpr;
+import com.github.javaparser.ast.expr.TextBlockLiteralExpr;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -37,10 +40,28 @@ final class JavaAnnotationReader {
 
     static String string(AnnotationExpr annotation, String key, String fallback) {
         return value(annotation, key)
-                .filter(StringLiteralExpr.class::isInstance)
-                .map(StringLiteralExpr.class::cast)
-                .map(StringLiteralExpr::asString)
+                .map(JavaAnnotationReader::expressionToString)
+                .filter(Objects::nonNull)
                 .orElse(fallback);
+    }
+
+    static String expressionToString(Expression expr) {
+        if (expr instanceof StringLiteralExpr str) {
+            return str.asString();
+        }
+        if (expr instanceof TextBlockLiteralExpr textBlock) {
+            return textBlock.asString();
+        }
+        if (expr instanceof BinaryExpr binary && binary.getOperator() == BinaryExpr.Operator.PLUS) {
+            String left = expressionToString(binary.getLeft());
+            String right = expressionToString(binary.getRight());
+            if (left != null && right != null) {
+                return left + right;
+            }
+            if (left != null) return left;
+            if (right != null) return right;
+        }
+        return null;
     }
 
     static boolean bool(AnnotationExpr annotation, String key, boolean fallback) {
@@ -56,9 +77,8 @@ final class JavaAnnotationReader {
                 .filter(ArrayInitializerExpr.class::isInstance)
                 .map(ArrayInitializerExpr.class::cast)
                 .map(array -> array.getValues().stream()
-                        .filter(StringLiteralExpr.class::isInstance)
-                        .map(StringLiteralExpr.class::cast)
-                        .map(StringLiteralExpr::asString)
+                        .map(JavaAnnotationReader::expressionToString)
+                        .filter(Objects::nonNull)
                         .collect(Collectors.joining(" | ")))
                 .orElse("");
     }

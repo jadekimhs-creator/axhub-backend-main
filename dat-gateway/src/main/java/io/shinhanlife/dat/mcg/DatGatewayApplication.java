@@ -21,7 +21,10 @@ import org.springframework.boot.context.properties.ConfigurationPropertiesScan;
 import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.scheduling.annotation.EnableScheduling;
 
-@SpringBootApplication(scanBasePackages = {"io.shinhanlife.dat.mcg", "io.shinhanlife.dat.lib.mcp", "io.shinhanlife.dat.lib.config"})
+@SpringBootApplication(
+        scanBasePackages = {"io.shinhanlife.dat.mcg", "io.shinhanlife.dat.lib.mcp", "io.shinhanlife.dat.lib.config"},
+        excludeName = {"org.springframework.ai.mcp.server.common.autoconfigure.McpServerAutoConfiguration"}
+)
 @ConfigurationPropertiesScan(basePackages = {"io.shinhanlife.dat.mcg", "io.shinhanlife.dat.lib.mcp", "io.shinhanlife.dat.lib.config"})
 @EnableCaching
 @EnableScheduling

@@ -33,6 +33,7 @@ public class ToolMcpServerConfiguration {
 
     /** Creates the Tool Pod MCP server directly with MCP Java SDK 2.0.0. */
     @Bean(destroyMethod = "close")
+    @Primary
     public McpSyncServer toolMcpServer(HttpServletStreamableServerTransportProvider transportProvider) {
         return McpServer.sync(transportProvider)
                 .serverInfo("dap-tool-pod", "2.0.0")

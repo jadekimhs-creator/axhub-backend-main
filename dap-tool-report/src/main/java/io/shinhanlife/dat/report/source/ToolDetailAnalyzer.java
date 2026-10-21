@@ -1,5 +1,7 @@
 package io.shinhanlife.dat.report.source;
 
+import com.github.javaparser.JavaParser;
+import com.github.javaparser.ParserConfiguration;
 import com.github.javaparser.StaticJavaParser;
 import com.github.javaparser.ast.CompilationUnit;
 import com.github.javaparser.ast.body.FieldDeclaration;
@@ -37,6 +39,10 @@ import org.springframework.stereotype.Component;
 public class ToolDetailAnalyzer {
 
     private final ToolSourceDiscovery discovery;
+    private final JavaParser javaParser = new JavaParser(
+            new ParserConfiguration().setLanguageLevel(ParserConfiguration.LanguageLevel.JAVA_21));
+
+    private final Map<Path, Map<String, Path>> indexedRootsCache = new java.util.concurrent.ConcurrentHashMap<>();
 
     public ToolDetailAnalyzer(ToolSourceDiscovery discovery) {
         this.discovery = discovery;
@@ -47,23 +53,27 @@ public class ToolDetailAnalyzer {
     }
 
     public ToolReportModel analyze(ToolSummary tool, Path sourceRoot) {
+        return analyze(tool, sourceRoot, indexJavaFiles(sourceRoot));
+    }
+
+    public ToolReportModel analyze(ToolSummary tool, Path sourceRoot, Map<String, Path> javaFiles) {
         List<FieldDefinition> fields = new ArrayList<>();
         List<String> diagnostics = new ArrayList<>();
-        Map<String, Path> javaFiles = indexJavaFiles(sourceRoot);
+        Map<String, Path> resolvedFiles = (javaFiles != null && !javaFiles.isEmpty()) ? javaFiles : indexJavaFiles(sourceRoot);
 
-        collectJavaType(sourceRoot, tool, javaFiles.get(tool.requestType()), "DTO", "INPUT", fields, diagnostics);
-        collectJavaType(sourceRoot, tool, javaFiles.get(tool.responseType()), "DTO", "OUTPUT", fields, diagnostics);
+        collectJavaType(sourceRoot, tool, resolvedFiles.get(tool.requestType()), "DTO", "INPUT", fields, diagnostics);
+        collectJavaType(sourceRoot, tool, resolvedFiles.get(tool.responseType()), "DTO", "OUTPUT", fields, diagnostics);
 
-        String telegramServiceId = resolveTelegramServiceId(tool, javaFiles);
+        String telegramServiceId = resolveTelegramServiceId(tool, resolvedFiles);
         if (telegramServiceId != null && !telegramServiceId.isBlank()) {
-            collectJavaType(sourceRoot, tool, javaFiles.get(telegramServiceId + "_I"),
+            collectJavaType(sourceRoot, tool, resolvedFiles.get(telegramServiceId + "_I"),
                     "TELEGRAM", "INPUT", fields, diagnostics);
-            collectJavaType(sourceRoot, tool, javaFiles.get(telegramServiceId + "_O"),
+            collectJavaType(sourceRoot, tool, resolvedFiles.get(telegramServiceId + "_O"),
                     "TELEGRAM", "OUTPUT", fields, diagnostics);
         } else if (!tool.mappingId().isBlank()) {
-            collectJavaType(sourceRoot, tool, javaFiles.get(tool.mappingId() + "_I"),
+            collectJavaType(sourceRoot, tool, resolvedFiles.get(tool.mappingId() + "_I"),
                     "TELEGRAM", "INPUT", fields, diagnostics);
-            collectJavaType(sourceRoot, tool, javaFiles.get(tool.mappingId() + "_O"),
+            collectJavaType(sourceRoot, tool, resolvedFiles.get(tool.mappingId() + "_O"),
                     "TELEGRAM", "OUTPUT", fields, diagnostics);
         }
         return new ToolReportModel(tool, List.copyOf(fields), List.copyOf(diagnostics));
@@ -104,11 +114,15 @@ public class ToolDetailAnalyzer {
         return null;
     }
 
-    private Map<String, Path> indexJavaFiles(Path sourceRoot) {
-        Map<String, Path> result = new LinkedHashMap<>();
+    public Map<String, Path> indexJavaFiles(Path sourceRoot) {
         if (sourceRoot == null || !Files.isDirectory(sourceRoot)) {
-            return result;
+            return Map.of();
         }
+        return indexedRootsCache.computeIfAbsent(sourceRoot.toAbsolutePath().normalize(), this::doIndexJavaFiles);
+    }
+
+    private Map<String, Path> doIndexJavaFiles(Path sourceRoot) {
+        Map<String, Path> result = new LinkedHashMap<>();
         indexDirectory(sourceRoot, result);
         Path parent = sourceRoot.getParent();
         if (parent != null) {
@@ -125,7 +139,7 @@ public class ToolDetailAnalyzer {
         if (Files.isDirectory(altDatps) && !altDatps.equals(sourceRoot)) {
             indexDirectory(altDatps, result);
         }
-        return result;
+        return Map.copyOf(result);
     }
 
     private void indexDirectory(Path dir, Map<String, Path> result) {
@@ -162,7 +176,11 @@ public class ToolDetailAnalyzer {
             return;
         }
         try {
-            CompilationUnit unit = StaticJavaParser.parse(path);
+            CompilationUnit unit = javaParser.parse(path).getResult().orElse(null);
+            if (unit == null) {
+                diagnostics.add(sourceKind + " 분석 실패: " + relative(sourceRoot, path));
+                return;
+            }
             for (TypeDeclaration<?> type : unit.getTypes()) {
                 collectFields(sourceRoot, tool, path, type, sourceKind, direction, fields);
                 type.getMembers().stream().filter(TypeDeclaration.class::isInstance)

@@ -71,9 +71,10 @@ public class ToolReportService {
             throw new IllegalArgumentException("분석할 원천 소스가 없는 툴입니다: " + missingSources);
         }
 
+        Map<String, Path> javaFiles = analyzer.indexJavaFiles(sourceRoot);
         List<ToolReportModel> reports = selectedNames.stream().distinct()
                 .map(sourceTools::get)
-                .map(tool -> analyzer.analyze(tool, sourceRoot))
+                .map(tool -> analyzer.analyze(tool, sourceRoot, javaFiles))
                 .toList();
 
         if (reports.size() == 1) {

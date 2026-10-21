@@ -12,6 +12,7 @@ import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 
 /** Registers the Tool Pod's existing annotated tools with its MCP SDK server. */
@@ -23,7 +24,7 @@ public class ToolPodMcpToolSynchronizer {
     private final McpToolExecutionService toolExecutionService;
     private final ObjectMapper objectMapper;
 
-    public ToolPodMcpToolSynchronizer(McpSyncServer mcpServer, ToolRegistryHeartbeatSender heartbeatSender,
+    public ToolPodMcpToolSynchronizer(@Qualifier("toolMcpServer") McpSyncServer mcpServer, ToolRegistryHeartbeatSender heartbeatSender,
                                       McpToolExecutionService toolExecutionService, ObjectMapper objectMapper) {
         this.mcpServer = mcpServer;
         this.heartbeatSender = heartbeatSender;

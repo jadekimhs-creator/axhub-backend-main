@@ -39,7 +39,10 @@ public class ToolReportProxyController {
 
     public ToolReportProxyController(RestClient.Builder restClientBuilder,
                                      @Value("${report.service-url}") String reportServiceUrl) {
-        this.restClient = restClientBuilder.build();
+        org.springframework.http.client.SimpleClientHttpRequestFactory factory = new org.springframework.http.client.SimpleClientHttpRequestFactory();
+        factory.setConnectTimeout(10_000);
+        factory.setReadTimeout(300_000);
+        this.restClient = restClientBuilder.requestFactory(factory).build();
         this.reportServiceUrl = reportServiceUrl.replaceAll("/+$", "");
     }
 
