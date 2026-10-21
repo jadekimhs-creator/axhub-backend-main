@@ -68,6 +68,54 @@ class ToolSourceDiscoveryTest {
         }
     }
 
+    @Test
+    void parsesTextBlockAndConcatenation() {
+        String code = """
+            package io.shinhanlife.dat.mcc.biz.pro.usecase;
+
+            public interface ManuaHrClosiListUseCase {
+
+                @McpTool(
+                    name = "pro_search_manual_hr_closing",
+                    title = "수작업인사마감특별처리목록 조회",
+                    description = \"\"\"
+                        [수작업인사마감특별처리 시스템] 수작업인사마감특별처리 채널을 통해 마감년월을 기준으로 수작업인사마감특별처리 내역을 다건 목록으로 조회하는 읽기 전용 도구입니다.\\s
+                        본 틀은 마감월도를 기준으로 인사번호, 인사명, 특별처리코드, 특별처리명, 입력 데이터 정보를 다건 목록으로 조회하는 검색(목록) 들입니다.\\s
+                        \"\"\"
+                )
+                @GrowToolHint(
+                    requiresApproval = true,
+                    categoryKey = "pro",
+                    timeoutMillis = 10000L,
+                    retryMaxAttempts = 3,
+                    mappingId = "DATNBT00002",
+                    functionDescription = "[수작업인사마감특별처리 시스템] 마감년월, 조직분류를 입력받아 수작업인사마감특별처리 내역을 다건 목록으로 조회하는 읽기 전용 도구입니다." +
+                        "*마감년월(closingYearMonth)은 필수 선행 입력이며, 사용자가 기간을 지정하지 않으면 시스템이 현재 기준 연월로 세팅합니다."
+                )
+                void testMethod();
+            }
+            """;
+        com.github.javaparser.ast.CompilationUnit unit = null;
+        var parser = new com.github.javaparser.JavaParser(
+                new com.github.javaparser.ParserConfiguration()
+                        .setLanguageLevel(com.github.javaparser.ParserConfiguration.LanguageLevel.JAVA_21));
+        var parseResult = parser.parse(code);
+        assertThat(parseResult.isSuccessful()).isTrue();
+        unit = parseResult.getResult().orElseThrow();
+        assertThat(unit).isNotNull();
+        var method = unit.findAll(com.github.javaparser.ast.body.MethodDeclaration.class).get(0);
+        var mcpTool = JavaAnnotationReader.find(method.getAnnotations(), "McpTool").orElseThrow();
+        var name = JavaAnnotationReader.string(mcpTool, "name", "fallback");
+        var title = JavaAnnotationReader.string(mcpTool, "title", "fallback");
+        var desc = JavaAnnotationReader.string(mcpTool, "description", "fallback");
+        assertThat(name).isEqualTo("pro_search_manual_hr_closing");
+        assertThat(title).isEqualTo("수작업인사마감특별처리목록 조회");
+        assertThat(desc).contains("수작업인사마감특별처리 시스템").contains("마감년월");
+        var hint = JavaAnnotationReader.find(method.getAnnotations(), "GrowToolHint").orElseThrow();
+        var funcDesc = JavaAnnotationReader.string(hint, "functionDescription", "fallback");
+        assertThat(funcDesc).contains("수작업인사마감특별처리 시스템").contains("*마감년월(closingYearMonth)");
+    }
+
     private ToolSourceDiscovery discovery() {
         return new ToolSourceDiscovery(new ReportProperties(
                 dapmtRoot.toString(), adminRoot.toString(), "tool-report"));
