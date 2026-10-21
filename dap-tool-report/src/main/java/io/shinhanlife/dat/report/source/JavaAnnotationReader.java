@@ -63,6 +63,15 @@ final class JavaAnnotationReader {
                 .orElse("");
     }
 
+    static int integer(AnnotationExpr annotation, String key, int fallback) {
+        return value(annotation, key)
+                .filter(com.github.javaparser.ast.expr.IntegerLiteralExpr.class::isInstance)
+                .map(com.github.javaparser.ast.expr.IntegerLiteralExpr.class::cast)
+                .map(com.github.javaparser.ast.expr.IntegerLiteralExpr::asNumber)
+                .map(Number::intValue)
+                .orElse(fallback);
+    }
+
     static Optional<AnnotationExpr> nested(AnnotationExpr annotation, String key) {
         return value(annotation, key).filter(AnnotationExpr.class::isInstance).map(AnnotationExpr.class::cast);
     }

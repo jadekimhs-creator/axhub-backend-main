@@ -40,6 +40,8 @@
     button.primary { min-width: 174px; border-color: #2563eb; background: #2563eb; color: #fff; }
     button.primary:hover { background: #1d4ed8; }
     button:disabled { cursor: not-allowed; opacity: .45; }
+    .btn-row-dl { min-height: 28px; padding: 4px 10px; font-size: 12px; font-weight: 500; border-radius: 6px; background: #27272a; border: 1px solid #3f3f46; color: #60a5fa; white-space: nowrap; }
+    .btn-row-dl:hover { background: #3b82f6; border-color: #3b82f6; color: #ffffff; }
     .table-wrap { max-height: 570px; overflow: auto; }
     table { width: 100%; min-width: 980px; border-collapse: collapse; }
     th, td { padding: 13px 15px; border-bottom: 1px solid #27272a; text-align: left; vertical-align: top; }
@@ -61,6 +63,7 @@
     .workspace-bar input[type="text"] { flex: 1; min-width: 260px; }
     .workspace-bar select { width: 220px; }
     .workspace-bar button { white-space: nowrap; }
+    .sheet-badge { display: inline-flex; align-items: center; gap: 4px; padding: 2px 7px; border-radius: 4px; font-size: 11px; background: rgba(59,130,246,0.1); color: #60a5fa; border: 1px solid rgba(59,130,246,0.25); }
     @media (max-width: 900px) {
       .nav-shell { overflow-x: auto; }
       .version { display: none; }
@@ -96,7 +99,9 @@
   <div class="page-heading">
     <div>
       <h1>Tool Report</h1>
-      <p class="subtitle">Workspace 경로를 지정하여 하위 Pod 모듈(dat-was-*)을 탐색하고, 선택한 툴의 Excel 보고서를 생성합니다.</p>
+      <p class="subtitle">
+        툴 파일 기준으로 <strong>3개 시트(툴 상세정보 · Request Input DTO · Response Output DTO)</strong>가 포함된 Excel 인터페이스 설계서를 생성합니다.
+      </p>
     </div>
     <span id="summaryBadge" class="count-badge">Loading tools...</span>
   </div>
@@ -125,13 +130,25 @@
     </div>
     <div class="table-wrap">
       <table>
-        <thead><tr><th>선택</th><th>툴명</th><th>제목</th><th>카테고리</th><th>연계 ID</th><th>설명</th></tr></thead>
-        <tbody id="tools"><tr><td class="loading-row" colspan="6">툴 목록을 불러오는 중입니다.</td></tr></tbody>
+        <thead>
+          <tr>
+            <th>선택</th>
+            <th>툴명</th>
+            <th>제목</th>
+            <th>카테고리</th>
+            <th>연계 ID</th>
+            <th>설명</th>
+            <th style="width:110px; text-align:center;">설계서 (3시트)</th>
+          </tr>
+        </thead>
+        <tbody id="tools">
+          <tr><td class="loading-row" colspan="7">툴 목록을 불러오는 중입니다.</td></tr>
+        </tbody>
       </table>
     </div>
     <div class="panel-footer">
       <span id="message">소스 인덱스를 준비하고 있습니다.</span>
-      <button id="download" type="button" class="primary" disabled>Excel 보고서 생성</button>
+      <button id="download" type="button" class="primary" disabled>Excel 보고서 생성 (3개 시트)</button>
     </div>
   </section>
 </main>
@@ -165,21 +182,51 @@
     const visible = filtered();
     el('tools').innerHTML = visible.length ? visible.map(tool => `<tr>
       <td><input type="checkbox" aria-label="${escapeHtml(tool.name)} 선택" data-name="${escapeHtml(tool.name)}" ${state.selected.has(tool.name) ? 'checked' : ''}></td>
-      <td><code>${escapeHtml(tool.name)}</code></td><td>${escapeHtml(tool.title)}</td>
-      <td>${escapeHtml(tool.categoryKey)}</td><td>${escapeHtml(tool.mappingId || '-')}</td><td class="muted">${escapeHtml(tool.description)}</td>
-    </tr>`).join('') : '<tr><td class="loading-row" colspan="6">조건에 맞는 툴이 없습니다.</td></tr>';
+      <td><code>${escapeHtml(tool.name)}</code></td>
+      <td>${escapeHtml(tool.title || '-')}</td>
+      <td><span class="sheet-badge">${escapeHtml(tool.categoryKey || '-')}</span></td>
+      <td>${escapeHtml(tool.mappingId || '-')}</td>
+      <td class="muted">${escapeHtml(tool.description || '-')}</td>
+      <td style="text-align:center;">
+        <button type="button" class="btn-row-dl" data-tool="${escapeHtml(tool.name)}" title="${escapeHtml(tool.name)} 3시트 설계서 다운로드">다운로드</button>
+      </td>
+    </tr>`).join('') : '<tr><td class="loading-row" colspan="7">조건에 맞는 툴이 없습니다.</td></tr>';
+
+    // 체크박스 바인딩
     el('tools').querySelectorAll('input[type=checkbox]').forEach(box => box.addEventListener('change', event => {
       event.target.checked ? state.selected.add(event.target.dataset.name) : state.selected.delete(event.target.dataset.name);
       updateStatus();
     }));
+
+    // 개별 다운로드 버튼 바인딩
+    el('tools').querySelectorAll('.btn-row-dl').forEach(btn => btn.addEventListener('click', event => {
+      const toolName = event.target.dataset.tool;
+      if (toolName) downloadReports([toolName]);
+    }));
+
     updateStatus();
   }
 
   function updateStatus(text) {
-    el('message').textContent = text || `전체 ${state.tools.length}개 중 ${state.selected.size}개 선택`;
+    const count = state.selected.size;
+    if (text) {
+      el('message').textContent = text;
+    } else {
+      el('message').textContent = count === 0
+        ? `전체 ${state.tools.length}개 툴 준비됨 (선택 또는 개별 다운로드)`
+        : `전체 ${state.tools.length}개 중 ${count}개 선택됨`;
+    }
     el('message').classList.remove('error');
-    el('summaryBadge').textContent = `${state.tools.length} tools · ${state.selected.size} selected`;
-    el('download').disabled = state.selected.size === 0;
+    el('summaryBadge').textContent = `${state.tools.length} tools · ${count} selected`;
+    el('download').disabled = count === 0;
+
+    if (count === 1) {
+      el('download').textContent = '선택 툴 설계서 다운로드 (3개 시트)';
+    } else if (count > 1) {
+      el('download').textContent = `선택한 ${count}개 툴 일괄 다운로드 (ZIP)`;
+    } else {
+      el('download').textContent = 'Excel 보고서 생성 (3개 시트)';
+    }
   }
 
   async function loadModules() {
@@ -252,7 +299,7 @@
       state.selected.clear();
       state.tools = [];
       el('category').innerHTML = '<option value="">전체 카테고리</option>';
-      el('tools').innerHTML = '<tr><td class="loading-row" colspan="6">선택한 모듈의 Tool 소스를 분석하고 있습니다.</td></tr>';
+      el('tools').innerHTML = '<tr><td class="loading-row" colspan="7">선택한 모듈의 Tool 소스를 분석하고 있습니다.</td></tr>';
       const response = await fetch(`/report/api/report-tools?projectPath=${encodeURIComponent(state.projectPath)}`);
       const body = await response.json().catch(() => null);
       if (!response.ok) {
@@ -282,7 +329,7 @@
       });
       render();
     } catch (error) {
-      el('tools').innerHTML = '<tr><td class="loading-row" colspan="6">툴 목록을 표시할 수 없습니다.</td></tr>';
+      el('tools').innerHTML = '<tr><td class="loading-row" colspan="7">툴 목록을 표시할 수 없습니다.</td></tr>';
       el('message').textContent = error.message; el('message').classList.add('error');
       el('summaryBadge').textContent = 'Load failed';
     }
@@ -327,27 +374,78 @@
   el('selectAll').addEventListener('click', () => { filtered().forEach(tool => state.selected.add(tool.name)); render(); });
   el('clearAll').addEventListener('click', () => { filtered().forEach(tool => state.selected.delete(tool.name)); render(); });
 
-  el('download').addEventListener('click', async () => {
-    el('download').disabled = true; updateStatus('소스를 분석하고 Excel을 생성하는 중입니다.');
+  async function downloadReports(toolNames) {
+    if (!toolNames || !toolNames.length) return;
+    const isSingle = toolNames.length === 1;
+    const targetDesc = isSingle ? toolNames[0] : `${toolNames.length}개 툴`;
+    updateStatus(`[${targetDesc}] 소스를 분석하고 3개 시트 설계서를 생성하는 중입니다...`);
+
+    const downloadBtn = el('download');
+    downloadBtn.disabled = true;
+
     try {
       const response = await fetch('/report/api/tool-reports/excel', {
-        method: 'POST', headers: {'Content-Type':'application/json'},
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          toolNames: [...state.selected],
+          toolNames: toolNames,
           projectPath: state.projectPath
         })
       });
+
       if (!response.ok) {
         const body = await response.json().catch(() => ({}));
         throw new Error(body.error || '보고서 생성에 실패했습니다.');
       }
+
+      // 서버 응답 헤더에서 filename 추출
+      const matchedTool = state.tools.find(t => t.name === toolNames[0]);
+      const dateStr = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+      const titlePart = (matchedTool && matchedTool.title && matchedTool.title !== matchedTool.name)
+        ? `_(${matchedTool.title.trim()})`
+        : `_(설계서)`;
+      let filename = isSingle ? `${toolNames[0]}${titlePart}_v${dateStr}.xlsx` : `tool-reports_${dateStr}.zip`;
+      const disposition = response.headers.get('Content-Disposition');
+      if (disposition) {
+        // 1. RFC 5987 filename*=UTF-8''... 우선 파싱
+        const utf8Match = disposition.match(/filename\*=UTF-8''([^;\r\n]+)/i);
+        if (utf8Match && utf8Match[1]) {
+          try {
+            filename = decodeURIComponent(utf8Match[1].replace(/["']/g, '').trim());
+          } catch (_) {}
+        } else {
+          // 2. 일반 filename="..." 파싱 (MIME Q-인코딩 잔여물 방어)
+          const plainMatch = disposition.match(/filename=(?:"([^"]+)"|([^;\r\n]+))/i);
+          if (plainMatch) {
+            let extracted = (plainMatch[1] || plainMatch[2] || '').trim();
+            if (!extracted.startsWith('=?') && !extracted.startsWith('=_UTF-8') && !extracted.includes('?Q?')) {
+              filename = extracted;
+            }
+          }
+        }
+      }
+
       const blob = await response.blob();
-      const url = URL.createObjectURL(blob); const anchor = document.createElement('a');
-      anchor.href = url; anchor.download = 'tool-report.xlsx'; anchor.click(); URL.revokeObjectURL(url);
-      updateStatus(`선택한 ${state.selected.size}개 툴의 보고서를 생성했습니다.`);
+      const url = URL.createObjectURL(blob);
+      const anchor = document.createElement('a');
+      anchor.href = url;
+      anchor.download = filename;
+      document.body.appendChild(anchor);
+      anchor.click();
+      anchor.remove();
+      URL.revokeObjectURL(url);
+
+      updateStatus(`[${targetDesc}] 다운로드를 완료했습니다. (파일: ${filename})`);
     } catch (error) {
-      el('message').textContent = error.message; el('message').classList.add('error');
-    } finally { el('download').disabled = state.selected.size === 0; }
+      el('message').textContent = error.message;
+      el('message').classList.add('error');
+    } finally {
+      downloadBtn.disabled = state.selected.size === 0;
+    }
+  }
+
+  el('download').addEventListener('click', () => {
+    downloadReports([...state.selected]);
   });
 
   loadModules();

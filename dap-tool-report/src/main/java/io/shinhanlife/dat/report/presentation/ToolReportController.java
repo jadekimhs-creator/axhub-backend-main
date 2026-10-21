@@ -1,13 +1,12 @@
 package io.shinhanlife.dat.report.presentation;
 
 import io.shinhanlife.dat.report.application.ToolReportService;
+import io.shinhanlife.dat.report.application.ToolReportService.ReportExportResult;
 import io.shinhanlife.dat.report.config.ReportProperties;
 import io.shinhanlife.dat.report.model.ToolReportRequest;
 import io.shinhanlife.dat.report.model.ToolSummary;
-import java.util.List;
 import java.nio.charset.StandardCharsets;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
+import java.util.List;
 import java.util.Map;
 import org.springframework.http.ContentDisposition;
 import org.springframework.http.HttpHeaders;
@@ -15,25 +14,15 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 /**
- * @package io.shinhanlife.dat.report.presentation
- * @className ToolReportController
- * @description AX HUB 시스템 처리 클래스
- * @author 0986406
- * @create 2026.09.01
- * <pre>
- * ---------- 개정이력 ----------
- * 수정일      수정자    수정내용
- * ---------- -------- ---------------------------
- * 2026.09.01  0986406    최초생성
- * 
- * </pre>
+ * Tool 보고서 생성 및 다운로드 API 컨트롤러.
  */
 @RestController
 @RequestMapping("/api")
@@ -48,20 +37,23 @@ public class ToolReportController {
     }
 
     @PostMapping(value = "/tool-reports/excel",
-            produces = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+            produces = {
+                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                    "application/zip",
+                    "application/octet-stream"
+            })
     public ResponseEntity<byte[]> excel(@RequestBody ToolReportRequest request) {
-        byte[] content = service.createExcel(request.toolNames(), request.sourceType(), request.projectPath());
-        String prefix = properties.outputFilenamePrefix() == null || properties.outputFilenamePrefix().isBlank()
-                ? "tool-report" : properties.outputFilenamePrefix();
-        String filename = prefix + "-" + LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd-HHmmss")) + ".xlsx";
-        ContentDisposition disposition = ContentDisposition.attachment()
-                .filename(filename, StandardCharsets.UTF_8)
-                .build();
+        ReportExportResult result = service.exportReports(request.toolNames(), request.sourceType(), request.projectPath());
+        String rawName = result.filename();
+        String encodedName = java.net.URLEncoder.encode(rawName, StandardCharsets.UTF_8).replace("+", "%20");
+        String asciiFallback = rawName.replaceAll("[^a-zA-Z0-9._-]", "_");
+        String disposition = "attachment; filename=\"" + asciiFallback + "\"; filename*=UTF-8''" + encodedName;
+
         return ResponseEntity.ok()
-                .header(HttpHeaders.CONTENT_DISPOSITION, disposition.toString())
-                .contentType(MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
-                .contentLength(content.length)
-                .body(content);
+                .header(HttpHeaders.CONTENT_DISPOSITION, disposition)
+                .contentType(MediaType.parseMediaType(result.contentType()))
+                .contentLength(result.content().length)
+                .body(result.content());
     }
 
     @GetMapping("/report-tools")
@@ -77,7 +69,7 @@ public class ToolReportController {
     }
 
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<Map<String, String>> internalError(Exception exception) {
-        return ResponseEntity.status(500).body(Map.of("error", exception.getMessage() == null ? "Internal server error" : exception.getMessage()));
+    public ResponseEntity<Map<String, String>> failure(Exception exception) {
+        return ResponseEntity.internalServerError().body(Map.of("error", exception.getMessage()));
     }
 }

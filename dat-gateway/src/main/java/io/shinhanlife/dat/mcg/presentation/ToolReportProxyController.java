@@ -15,6 +15,7 @@ import org.springframework.web.client.RestClient;
 
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.client.RestClientException;
+import org.springframework.web.client.RestClientResponseException;
 
 /**
  * @package io.shinhanlife.dat.mcg.presentation
@@ -67,7 +68,11 @@ public class ToolReportProxyController {
 
     @PostMapping(value = "/report/api/tool-reports/excel",
             consumes = MediaType.APPLICATION_JSON_VALUE,
-            produces = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+            produces = {
+                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                    "application/zip",
+                    "application/octet-stream"
+            })
     public ResponseEntity<byte[]> excel(@RequestBody Map<String, Object> request) {
         Map<String, Object> body = new java.util.LinkedHashMap<>(request);
         if (body.get("projectPath") instanceof String p && !p.isBlank()) {
@@ -84,11 +89,18 @@ public class ToolReportProxyController {
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<Map<String, String>> handleError(Exception e) {
-        String msg = e.getMessage();
-        if (e instanceof RestClientException) {
-            msg = "Tool Report 서비스(" + reportServiceUrl + ")에 연결할 수 없습니다. dap-tool-report 서비스가 실행 중인지 확인해 주세요.";
+        if (e instanceof RestClientResponseException rre) {
+            String respBody = rre.getResponseBodyAsString();
+            return ResponseEntity.status(rre.getStatusCode())
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .body(Map.of("error", respBody != null && !respBody.isBlank() ? respBody : "Downstream error: " + rre.getMessage()));
         }
-        return ResponseEntity.status(503).body(Map.of("error", msg == null ? "Tool Report 서비스 오류" : msg));
+        if (e instanceof RestClientException) {
+            return ResponseEntity.status(503).body(Map.of(
+                    "error", "Tool Report 서비스(" + reportServiceUrl + ")에 연결할 수 없습니다. dap-tool-report 서비스가 실행 중인지 확인해 주세요. (" + e.getMessage() + ")"
+            ));
+        }
+        return ResponseEntity.status(500).body(Map.of("error", e.getMessage() == null ? "Tool Report 서비스 오류" : e.getMessage()));
     }
 
     private ResponseEntity<byte[]> copy(ResponseEntity<byte[]> response) {

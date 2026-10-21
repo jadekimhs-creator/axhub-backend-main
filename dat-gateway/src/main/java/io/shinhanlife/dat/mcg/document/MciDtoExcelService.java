@@ -410,7 +410,7 @@ public class MciDtoExcelService {
         style.setFillForegroundColor(new XSSFColor(java.awt.Color.decode("#" + fillColor), null));
         style.setFillPattern(FillPatternType.SOLID_FOREGROUND);
         Font font = workbook.createFont();
-        font.setFontName("맑은 고딕");
+        font.setFontName("원신한 Light");
         font.setFontHeightInPoints(fontSize);
         font.setBold(bold);
         font.setColor("FFFFFF".equals(fontColor) ? IndexedColors.WHITE.getIndex() : IndexedColors.BLACK.getIndex());
@@ -421,7 +421,7 @@ public class MciDtoExcelService {
 
     private CellStyle borderedStyle(XSSFWorkbook workbook, String fillColor,
                                     boolean bold, HorizontalAlignment alignment) {
-        return style(workbook, fillColor, "000000", bold, (short) 9, alignment, true);
+        return style(workbook, fillColor, "000000", bold, (short) 10, alignment, true);
     }
 
     private void setBorders(CellStyle style) {

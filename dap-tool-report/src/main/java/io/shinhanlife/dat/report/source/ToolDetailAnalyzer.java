@@ -53,13 +53,55 @@ public class ToolDetailAnalyzer {
 
         collectJavaType(sourceRoot, tool, javaFiles.get(tool.requestType()), "DTO", "INPUT", fields, diagnostics);
         collectJavaType(sourceRoot, tool, javaFiles.get(tool.responseType()), "DTO", "OUTPUT", fields, diagnostics);
-        if (!tool.mappingId().isBlank()) {
+
+        String telegramServiceId = resolveTelegramServiceId(tool, javaFiles);
+        if (telegramServiceId != null && !telegramServiceId.isBlank()) {
+            collectJavaType(sourceRoot, tool, javaFiles.get(telegramServiceId + "_I"),
+                    "TELEGRAM", "INPUT", fields, diagnostics);
+            collectJavaType(sourceRoot, tool, javaFiles.get(telegramServiceId + "_O"),
+                    "TELEGRAM", "OUTPUT", fields, diagnostics);
+        } else if (!tool.mappingId().isBlank()) {
             collectJavaType(sourceRoot, tool, javaFiles.get(tool.mappingId() + "_I"),
                     "TELEGRAM", "INPUT", fields, diagnostics);
             collectJavaType(sourceRoot, tool, javaFiles.get(tool.mappingId() + "_O"),
                     "TELEGRAM", "OUTPUT", fields, diagnostics);
         }
         return new ToolReportModel(tool, List.copyOf(fields), List.copyOf(diagnostics));
+    }
+
+    private String resolveTelegramServiceId(ToolSummary tool, Map<String, Path> javaFiles) {
+        String mappingId = tool.mappingId() != null ? tool.mappingId().trim() : "";
+        if (mappingId.matches("^ON[A-Z0-9]{6}$")) {
+            return mappingId;
+        }
+
+        // 인사/직원 관련 툴인 경우 ONBSA1030 우선
+        if ("DATNBSO00004".equalsIgnoreCase(mappingId)
+                || tool.name().contains("employee")
+                || tool.name().contains("praf")
+                || (tool.title() != null && (tool.title().contains("인사") || tool.title().contains("직원")))
+                || (tool.description() != null && (tool.description().contains("인사검색") || tool.description().contains("ONBSA1030")))) {
+            if (javaFiles.containsKey("ONBSA1030_I") || javaFiles.containsKey("ONBSA1030_O")) {
+                return "ONBSA1030";
+            }
+        }
+
+        Map<String, String> ifToService = Map.of(
+                "DATNBSO00004", "ONBSA1030",
+                "DATNBSO00005", "ONBSZ0460",
+                "DATNBTO00001", "ONBTI2370",
+                "DATNCSO00001", "ONCSC1340",
+                "CLYMCI00001", "ONCST1341",
+                "CLHTTP00005", "ONCSD1340"
+        );
+        if (ifToService.containsKey(mappingId)) {
+            String srv = ifToService.get(mappingId);
+            if (javaFiles.containsKey(srv + "_I") || javaFiles.containsKey(srv + "_O")) {
+                return srv;
+            }
+        }
+
+        return null;
     }
 
     private Map<String, Path> indexJavaFiles(Path sourceRoot) {
@@ -74,6 +116,14 @@ public class ToolDetailAnalyzer {
             if (Files.isDirectory(libmt) && !libmt.equals(sourceRoot)) {
                 indexDirectory(libmt, result);
             }
+            Path datps = parent.resolve("dat-was-datps");
+            if (Files.isDirectory(datps) && !datps.equals(sourceRoot)) {
+                indexDirectory(datps, result);
+            }
+        }
+        Path altDatps = Path.of("C:/eGovFrameDev-4.3.1-64bit/workspace/dat-was-datps");
+        if (Files.isDirectory(altDatps) && !altDatps.equals(sourceRoot)) {
+            indexDirectory(altDatps, result);
         }
         return result;
     }
